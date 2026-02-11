@@ -4,12 +4,13 @@ Shared [Agent Skills](https://agentskills.io) and Claude Code plugin for the Ink
 
 ## How it works
 
-Two skills:
+Three skills:
 
 | Skill | Invoke | Description |
 |-------|--------|-------------|
 | `research` | `/research <topic>` | Evidence-driven research with formal reports and evidence files collected from high authority web sources, **inspecting open source code repos**, docs, research articles, etc. |
 | `write-skill` | `/write-skill <goal>` | Create or refine/revise Agent Skills (SKILL.md + references/scripts/assets) from existing knowledge or giving it iterative feedback. |
+| `write-agent` | `/write-agent <goal>` | Design and write Claude Code agents and prompts — single-purpose subagents (reviewers, implementers, researchers) and workflow orchestrators (multi-phase coordinators). |
 
 
 ## Use cases:
@@ -82,9 +83,22 @@ Two skills:
 
 | Method | Command | Works in |
 |--------|---------|----------|
+| **Claude Code Plugin** | `claude plugin marketplace add ...` then `claude plugin install ...` | Claude Code |
 | **Skills CLI** | `npx skills add inkeep/team-skills -y` | Claude Code, Cursor, Cline, Codex |
 
-### Skills CLI (recommended)
+### Claude Code Plugin (recommended)
+
+```bash
+# Add the marketplace (one-time)
+claude plugin marketplace add https://github.com/inkeep/team-skills.git
+
+# Install individual skills
+claude plugin install research@inkeep-team-skills
+claude plugin install write-skill@inkeep-team-skills
+claude plugin install write-agent@inkeep-team-skills
+```
+
+### Skills CLI
 
 ```bash
 npx skills add inkeep/team-skills -y
@@ -95,6 +109,11 @@ This will add them to your `~/.claude`, `~/.cursor`, etc. global folders.
 ## Update
 
 ```bash
+# Claude Code Plugin
+claude plugin marketplace update inkeep-team-skills
+claude plugin update <plugin-name>
+
+# Skills CLI
 npx skills update   # reinstall from latest
 ```
 
@@ -192,5 +211,31 @@ skill-name/
 ```
 
 Note: after using a skill in an interactive session, you can invoke /write-skill at the end of the session and give it feedback how that session could have gone better.
+
+---
+
+## Using `write-agent`
+
+Invoke with `/write-agent <goal>` when you want to create or update Claude Code agents (`.claude/agents/*.md`).
+
+### What it does
+
+Designs and writes agent prompts for two flavors:
+
+- **Single-purpose subagents** — reviewers, implementers, researchers with read-only or scoped tools
+- **Workflow orchestrators** — multi-phase coordinators (e.g. pr-review, feature-development, bug-fix) that delegate to subagents via the Task tool
+
+### Common interactions
+
+```
+# Create a reviewer subagent
+/write-agent Create a security reviewer agent that checks code changes
+
+# Create a workflow orchestrator
+/write-agent Create a pr-review orchestrator that runs code-quality, security, and test-coverage reviewers
+
+# Update an existing agent
+/write-agent Update the pr-review orchestrator to add a docs-review phase
+```
 
 
