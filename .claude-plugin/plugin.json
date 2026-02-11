@@ -1,0 +1,9 @@
+{
+  "name": "inkeep-team-skills",
+  "description": "Shared skills for the Inkeep team — research, skill authoring, and more",
+  "version": "1.0.0",
+  "author": {
+    "name": "Inkeep"
+  },
+  "repository": "https://github.com/inkeep/team-skills"
+}
