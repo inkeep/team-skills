@@ -1,13 +1,34 @@
 {
-  "name": "inkeep-tools",
+  "$schema": "https://anthropic.com/claude-code/marketplace.schema.json",
+  "name": "inkeep-team-skills",
+  "description": "Shared skills for the Inkeep team",
   "owner": {
     "name": "Inkeep"
   },
   "plugins": [
     {
-      "name": "inkeep-team-skills",
-      "source": ".",
-      "description": "Shared skills for the Inkeep team — research, skill authoring, and more"
+      "name": "research",
+      "description": "Conduct technical research and optionally produce formal reports",
+      "version": "1.0.0",
+      "author": { "name": "Inkeep" },
+      "source": "./skills/research",
+      "category": "productivity"
+    },
+    {
+      "name": "write-skill",
+      "description": "Create or revise Claude Code-compatible Agent Skills",
+      "version": "1.0.0",
+      "author": { "name": "Inkeep" },
+      "source": "./skills/write-skill",
+      "category": "development"
+    },
+    {
+      "name": "write-agent",
+      "description": "Design and write high-quality Claude Code agents and agent prompts",
+      "version": "1.0.0",
+      "author": { "name": "Inkeep" },
+      "source": "./skills/write-agent",
+      "category": "development"
     }
   ]
 }
