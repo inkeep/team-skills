@@ -216,26 +216,6 @@ Note: after using a skill in an interactive session, you can invoke /write-skill
 
 ## Using `write-agent`
 
-Invoke with `/write-agent <goal>` when you want to create or update Claude Code agents (`.claude/agents/*.md`).
-
-### What it does
-
-Designs and writes agent prompts for two flavors:
-
-- **Single-purpose subagents** — reviewers, implementers, researchers with read-only or scoped tools
-- **Workflow orchestrators** — multi-phase coordinators (e.g. pr-review, feature-development, bug-fix) that delegate to subagents via the Task tool
-
-### Common interactions
-
-```
-# Create a reviewer subagent
-/write-agent Create a security reviewer agent that checks code changes
-
-# Create a workflow orchestrator
-/write-agent Create a pr-review orchestrator that runs code-quality, security, and test-coverage reviewers
-
-# Update an existing agent
-/write-agent Update the pr-review orchestrator to add a docs-review phase
-```
+`/write-agent <goal>` — creates or updates Claude Code agents (`.claude/agents/*.md`). Handles single-purpose subagents and multi-phase workflow orchestrators.
 
 
