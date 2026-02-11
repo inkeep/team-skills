@@ -1,34 +1,34 @@
 {
   "$schema": "https://anthropic.com/claude-code/marketplace.schema.json",
   "name": "inkeep-team-skills",
-  "description": "Shared skills for the Inkeep team",
+  "description": "Shared and team-specific skills for the Inkeep team",
   "owner": {
     "name": "Inkeep"
   },
   "plugins": [
     {
-      "name": "research",
-      "description": "Conduct technical research and optionally produce formal reports",
+      "name": "inkeep-eng",
+      "description": "Skills for the Inkeep engineering team",
       "version": "1.0.0",
       "author": { "name": "Inkeep" },
-      "source": "./skills/research",
+      "source": "./skills/eng",
+      "category": "development"
+    },
+    {
+      "name": "inkeep-gtm",
+      "description": "Skills for the Inkeep GTM team",
+      "version": "1.0.0",
+      "author": { "name": "Inkeep" },
+      "source": "./skills/gtm",
       "category": "productivity"
     },
     {
-      "name": "write-skill",
-      "description": "Create or revise Claude Code-compatible Agent Skills",
+      "name": "inkeep-shared",
+      "description": "Shared skills across all Inkeep teams",
       "version": "1.0.0",
       "author": { "name": "Inkeep" },
-      "source": "./skills/write-skill",
-      "category": "development"
-    },
-    {
-      "name": "write-agent",
-      "description": "Design and write high-quality Claude Code agents and agent prompts",
-      "version": "1.0.0",
-      "author": { "name": "Inkeep" },
-      "source": "./skills/write-agent",
-      "category": "development"
+      "source": "./skills/shared",
+      "category": "productivity"
     }
   ]
 }
