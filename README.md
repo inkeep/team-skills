@@ -11,7 +11,7 @@ npx skills add inkeep/team-skills -y
 To install a specific skill only:
 
 ```bash
-npx skills add inkeep/team-skills --skill technical-research
+npx skills add inkeep/team-skills --skill research
 npx skills add inkeep/team-skills --skill write-skill
 ```
 
@@ -26,15 +26,15 @@ npx skills update   # reinstall from latest
 
 | Skill | Description |
 |-------|-------------|
-| `technical-research` | Evidence-driven technical research with formal reports, direct answers, or report updates |
+| `research` | Evidence-driven technical research with formal reports, direct answers, or report updates |
 | `write-skill` | Create or revise Claude Code-compatible Agent Skills (SKILL.md + references/scripts/assets) |
 
-## Post-install (technical-research only)
+## Post-install (research only)
 
-The `technical-research` skill includes a catalogue generator script. If you want to use it:
+The `research` skill includes a catalogue generator script. If you want to use it:
 
 ```bash
-cd ~/.claude/skills/technical-research/scripts
+cd ~/.claude/skills/research/scripts
 bun install
 ```
 

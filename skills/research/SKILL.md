@@ -1,5 +1,5 @@
 ---
-name: technical-research
+name: research
 description: "Conduct technical research and optionally produce formal reports, deliver findings directly, or update/extend an existing report in ~/.claude/reports/. Use when investigating technologies, comparing systems, analyzing codebases, documenting architectures, gathering context for decisions, or when asked to refresh/update prior research. Ask if unclear whether to produce a report or a direct answer."
 argument-hint: "[research topic OR existing report] (optional: specific questions, scope constraints, output format)"
 ---
@@ -62,7 +62,7 @@ Before scoping new research, scan what already exists.
 
 1. Regenerate the catalogue (fast — takes seconds):
    ```bash
-   bun ~/.claude/skills/technical-research/scripts/generate-catalogue.ts --reports-dir ~/.claude/reports
+   bun ~/.claude/skills/research/scripts/generate-catalogue.ts --reports-dir ~/.claude/reports
    ```
 2. Read `~/.claude/reports/CATALOGUE.md`. This is a structured index of all reports with title, description, topics, subjects, evidence count, and last-updated date.
 3. Scan the summary table and detail cards for **semantic overlap** with the user's topic — match on title, description, topics, and subjects. You are looking for conceptual relevance, not just keyword matches.
