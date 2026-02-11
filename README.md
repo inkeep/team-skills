@@ -4,64 +4,77 @@ Shared [Agent Skills](https://agentskills.io) and Claude Code plugin for the Ink
 
 ## How it works
 
-Two skills, two use cases — both start with `/research`.
+Two skills:
+
+| Skill | Invoke | Description |
+|-------|--------|-------------|
+| `research` | `/research <topic>` | Evidence-driven research with formal reports and evidence files collected from high authority web sources, **inspecting open source code repos**, docs, research articles, etc. |
+| `write-skill` | `/write-skill <goal>` | Create or refine/revise Agent Skills (SKILL.md + references/scripts/assets) from existing knowledge or giving it iterative feedback. |
+
+
+## Use cases:
 
 ```
-                          YOU
-                           |
-            ┌──────────────┴──────────────┐
-            |                             |
-    "How does X work?"          "I need agents to be
-    "How do others do Y?"        great at doing X"
-            |                             |
-            ▼                             ▼
-   ┌─────────────────┐          ┌─────────────────┐
-   │   /research      │          │   /research      │
-   │                  │          │                  │
-   │ Prior art &      │          │ Gather the best  │
-   │ deep dives       │          │ human knowledge  │
-   └────────┬─────────┘          └────────┬─────────┘
-            │                             │
-            ▼                             ▼
-   ┌─────────────────┐          ┌─────────────────┐
-   │ REPORT           │          │ REPORT           │
-   │ ├ REPORT.md      │          │ ├ REPORT.md      │
-   │ └ evidence/*.md  │          │ └ evidence/*.md  │
-   └────────┬─────────┘          └────────┬─────────┘
-            │                             │
-            ▼                             ▼
-   ┌─────────────────┐          ┌─────────────────┐
-   │                  │          │  /write-skill    │
-   │  Learn from it,  │          │  Convert report  │
-   │  make decisions  │          │  into a SKILL    │
-   │                  │          │  agents execute  │
-   └──────────────────┘          └────────┬─────────┘
-                                          │
-                                          ▼
-                                 ┌─────────────────┐
-                                 │ SKILL            │
-                                 │ ├ SKILL.md       │
-                                 │ ├ references/    │
-                                 │ ├ scripts/       │
-                                 │ └ templates/     │
-                                 └────────┬─────────┘
-                                          │
-                                          ▼
-                                 ┌─────────────────┐
-                                 │ Any agent can    │
-                                 │ now do X with    │
-                                 │ expert-level     │
-                                 │ knowledge        │
-                                 │                  │
-                                 │ Claude Code      │
-                                 │ Cursor           │
-                                 │ Codex            │
-                                 └─────────────────┘
-
-
+                            YOU
+                             |
+              ┌──────────────┴──────────────┐
+              |                             |
+      "How does X work?"          "I need agents to be
+      "How do others do Y?"        great at doing X"
+              |                             |
+              ▼                             ▼
+     ┌─────────────────┐          ┌─────────────────┐
+     │  /research       │          │  /research       │
+     │                  │          │                  │
+     │  Prior art &     │          │  Gather the best │
+     │  deep dives      │          │  human knowledge │
+     └────────┬─────────┘          └────────┬─────────┘
+              │                             │
+              ▼                             ▼
+     ┌─────────────────┐          ┌─────────────────┐
+     │  REPORT          │          │  REPORT          │
+     │  ├ REPORT.md     │          │  ├ REPORT.md     │
+     │  └ evidence/*.md │          │  └ evidence/*.md │
+     └────────┬─────────┘          └────────┬─────────┘
+              │                             │
+              ▼                             ▼
+     ┌─────────────────┐          ┌─────────────────┐
+     │  Read the report │          │  /write-skill    │
+     │  or ask Claude   │          │                  │
+     │  questions       │          │  Distill into a  │
+     │  about it        │          │  SKILL.md agents │
+     └────────┬─────────┘          │  can execute     │
+              │                    └────────┬─────────┘
+              ▼                             │
+     ┌─────────────────┐                    ▼
+     │  Want to go      │          ┌─────────────────┐
+     │  deeper?         │          │  SKILL           │
+     │                  │          │  ├ SKILL.md      │
+     │  /research ─────┐│          │  ├ references/   │
+     │  with follow-up ││          │  ├ scripts/      │
+     └─────────────────┘│          │  └ templates/    │
+              ▲          │          └────────┬─────────┘
+              └──────────┘                  │
+            report is refined               ▼
+            & expanded            ┌─────────────────┐
+                                  │  Use the skill   │
+                                  │  in a real       │
+                                  │  session         │
+                                  └────────┬─────────┘
+                                           │
+                                           ▼
+                                  ┌─────────────────┐
+                                  │  Notice a gap?   │
+                                  │                  │
+                                  │  /write-skill ──┐│
+                                  │  with feedback  ││
+                                  └─────────────────┘│
+                                           ▲          │
+                                           └──────────┘
+                                         refine until sharp
 ```
 
-**Use case 1 — Prior art research.** How does Stripe handle webhooks? How does Linear model project hierarchies? What retry strategies does our queue library actually support? `/research` digs through docs, code, and articles so you get a sourced report instead of guessing or tab-hopping.
+**Use case 1 — Prior art research.** How does Stripe handle webhooks? How does Linear model project hierarchies? What retry strategies does our queue library actually support? `/research` digs through docs, **OSS code repos**, and articles so you get a sourced report instead of guessing or tab-hopping.
 
 **Use case 2 — Skill generation.** Same research step, but then `/write-skill` distills the findings into a SKILL.md that agents can execute. The report is raw analytical knowledge; the skill is the operationalized workflow from that knowledge.
 
@@ -85,14 +98,7 @@ This will add them to your `~/.claude`, `~/.cursor`, etc. global folders.
 npx skills update   # reinstall from latest
 ```
 
-## Skills
-
-| Skill | Invoke | Description |
-|-------|--------|-------------|
-| `research` | `/research <topic>` | Evidence-driven research with formal reports and evidence files collected from high authority web sources + inspecting open source code repos. |
-| `write-skill` | `/write-skill <goal>` | Create or refine/revise Agent Skills (SKILL.md + references/scripts/assets) using best practices. |
-
----
+## Using Them
 
 ## Using `research`
 
