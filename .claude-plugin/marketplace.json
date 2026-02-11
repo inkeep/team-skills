@@ -1,0 +1,13 @@
+{
+  "name": "inkeep-tools",
+  "owner": {
+    "name": "Inkeep"
+  },
+  "plugins": [
+    {
+      "name": "inkeep-team-skills",
+      "source": ".",
+      "description": "Shared skills for the Inkeep team — research, skill authoring, and more"
+    }
+  ]
+}

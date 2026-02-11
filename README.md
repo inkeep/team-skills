@@ -17,13 +17,18 @@ npx skills add inkeep/team-skills --skill research
 npx skills add inkeep/team-skills --skill write-skill
 ```
 
-### Cowork / Claude Code plugin
+### Claude Code plugin (via marketplace)
+
+```bash
+/plugin marketplace add inkeep/team-skills
+/plugin install inkeep-team-skills@inkeep-tools
+```
+
+### Local development
 
 ```bash
 claude --plugin-dir /path/to/team-skills
 ```
-
-Or add to a project marketplace for team-wide access.
 
 ## Update
 
