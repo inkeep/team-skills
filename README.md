@@ -2,13 +2,74 @@
 
 Shared [Agent Skills](https://agentskills.io) and Claude Code plugin for the Inkeep team.
 
+## How it works
+
+Two skills, two use cases — both start with `/research`.
+
+```
+                          YOU
+                           |
+            ┌──────────────┴──────────────┐
+            |                             |
+    "How does X work?"          "I need agents to be
+    "How do others do Y?"        great at doing X"
+            |                             |
+            ▼                             ▼
+   ┌─────────────────┐          ┌─────────────────┐
+   │   /research      │          │   /research      │
+   │                  │          │                  │
+   │ Prior art &      │          │ Gather the best  │
+   │ deep dives       │          │ human knowledge  │
+   └────────┬─────────┘          └────────┬─────────┘
+            │                             │
+            ▼                             ▼
+   ┌─────────────────┐          ┌─────────────────┐
+   │ REPORT           │          │ REPORT           │
+   │ ├ REPORT.md      │          │ ├ REPORT.md      │
+   │ └ evidence/*.md  │          │ └ evidence/*.md  │
+   └────────┬─────────┘          └────────┬─────────┘
+            │                             │
+            ▼                             ▼
+   ┌─────────────────┐          ┌─────────────────┐
+   │                  │          │  /write-skill    │
+   │  Learn from it,  │          │  Convert report  │
+   │  make decisions  │          │  into a SKILL    │
+   │                  │          │  agents execute  │
+   └──────────────────┘          └────────┬─────────┘
+                                          │
+                                          ▼
+                                 ┌─────────────────┐
+                                 │ SKILL            │
+                                 │ ├ SKILL.md       │
+                                 │ ├ references/    │
+                                 │ ├ scripts/       │
+                                 │ └ templates/     │
+                                 └────────┬─────────┘
+                                          │
+                                          ▼
+                                 ┌─────────────────┐
+                                 │ Any agent can    │
+                                 │ now do X with    │
+                                 │ expert-level     │
+                                 │ knowledge        │
+                                 │                  │
+                                 │ Claude Code      │
+                                 │ Cursor           │
+                                 │ Codex            │
+                                 └─────────────────┘
+
+
+```
+
+**Use case 1 — Prior art research.** How does Stripe handle webhooks? How does Linear model project hierarchies? What retry strategies does our queue library actually support? `/research` digs through docs, code, and articles so you get a sourced report instead of guessing or tab-hopping.
+
+**Use case 2 — Skill generation.** Same research step, but then `/write-skill` distills the findings into a SKILL.md that agents can execute. The report is raw analytical knowledge; the skill is the operationalized workflow from that knowledge.
+
 ## Install
 
 | Method | Command | Works in |
 |--------|---------|----------|
 | **Skills CLI** | `npx skills add inkeep/team-skills -y` | Claude Code, Cursor, Cline, Codex |
-| **Plugin marketplace** | `/plugin marketplace add inkeep/team-skills` | Claude Code CLI |
-| **Local dev** | `claude --plugin-dir /path/to/team-skills` | Claude Code CLI |
 
 ### Skills CLI (recommended)
 
@@ -16,24 +77,11 @@ Shared [Agent Skills](https://agentskills.io) and Claude Code plugin for the Ink
 npx skills add inkeep/team-skills -y
 ```
 
-To install a specific skill only:
-
-```bash
-npx skills add inkeep/team-skills --skill research
-npx skills add inkeep/team-skills --skill write-skill
-```
-
-### Claude Code plugin marketplace
-
-```bash
-/plugin marketplace add inkeep/team-skills
-/plugin install inkeep-team-skills@inkeep-tools
-```
+This will add them to your `~/.claude`, `~/.cursor`, etc. global folders.
 
 ## Update
 
 ```bash
-npx skills check    # see what's stale
 npx skills update   # reinstall from latest
 ```
 
@@ -41,28 +89,40 @@ npx skills update   # reinstall from latest
 
 | Skill | Invoke | Description |
 |-------|--------|-------------|
-| `research` | `/research <topic>` | Evidence-driven technical research with formal reports, direct answers, or report updates |
-| `write-skill` | `/write-skill <goal>` | Create or revise Claude Code-compatible Agent Skills (SKILL.md + references/scripts/assets) |
+| `research` | `/research <topic>` | Evidence-driven research with formal reports and evidence files collected from high authority web sources + inspecting open source code repos. |
+| `write-skill` | `/write-skill <goal>` | Create or refine/revise Agent Skills (SKILL.md + references/scripts/assets) using best practices. |
 
 ---
 
 ## Using `research`
 
-Invoke with `/research <topic>` or let Claude auto-invoke when you ask it to investigate something.
+Invoke by typing `/research <topic>` within Claude Code or Cursor.
 
 ### What it does
 
 Conducts evidence-driven research and produces one of three outputs:
 
-- **Formal report** — persistent artifact in `~/.claude/reports/<name>/` with evidence files. Default for non-trivial research.
-- **Direct answer** — findings delivered in conversation. Use when you say "just tell me" or it's a quick question.
-- **Report update** — surgical additions to an existing report. Triggered when you reference an existing report.
+- **Formal report** — persistent artifact in `~/.claude/reports/<name>/` with evidence files. **Default** for non-trivial research.
+- **Report update** — refinement or additions to an existing report. Triggered when you're iterating on an existing report or mention it e.g. `update X report with new research on XYZ`. Automatically figures out best way to update the report.
+- **Direct answer** — findings delivered in conversation. Used when you say "just tell me" or it's a quick question.
+
+### Report structure
+
+Reports live in `~/.claude/reports/<name>/` with:
+- `REPORT.md` — synthesized findings with executive summary, rubric, detailed sections
+- `evidence/*.md` — primary-source proof files (one per dimension)
+- `meta/_changelog.md` — append-only history of updates
+
+To open the directory of reports in Cursor:
+`cursor ~/.claude/reports` or simply navigate to it. 
+
+In MacOS, while in your Home directory (e.g. `nickgomez/`, click on `cmd + shift + . ` to see hidden `.claude` folder.)
 
 ### Key behaviors
 
 - **Checks existing reports first.** Before starting new research, it scans `~/.claude/reports/` for overlap. If prior research covers your topic, it surfaces those findings and asks whether to reuse, extend, or start fresh.
 - **Scopes before researching.** It proposes a research rubric (dimensions, depth, stance) and waits for your confirmation before diving in. You can adjust scope, add/remove dimensions, or change the output format.
-- **Evidence-backed.** Every finding links to an evidence file with primary sources (code snippets, doc quotes, URLs). Claims are labeled CONFIRMED / INFERRED / UNCERTAIN / NOT FOUND.
+- **Evidence-backed.** Every finding links to an evidence file with primary sources (code snippets for OSS repos, doc quotes, research studies, etc.). Claims are labeled CONFIRMED / INFERRED / UNCERTAIN / NOT FOUND. **Auto-prioritizes by time and authority**.
 - **Recaps and suggests follow-ups.** After delivering findings, it summarizes key results and offers 2-4 natural next directions.
 
 ### Common interactions
@@ -81,13 +141,6 @@ Conducts evidence-driven research and produces one of three outputs:
 /research Compare pg-boss vs BullMQ for job queues — focus on persistence, retry, and observability
 ```
 
-### Report structure
-
-Reports live in `~/.claude/reports/<name>/` with:
-- `REPORT.md` — synthesized findings with executive summary, rubric, detailed sections
-- `evidence/*.md` — primary-source proof files (one per dimension)
-- `meta/_changelog.md` — append-only history of updates
-
 ---
 
 ## Using `write-skill`
@@ -101,24 +154,17 @@ Guides you through authoring a SKILL.md (+ optional references/, scripts/, templ
 ### Key behaviors
 
 - **Asks clarifying questions first.** Captures intent, audience, constraints, and success criteria before drafting. For ambiguous requests, it offers 2-4 targeted questions with recommended defaults.
-- **Routes by request type.** Handles five modes: Create, Refactor, Harden, Integrate (with subagents), and Update (intent-preserving). Updates are conservative by default — it won't change meaning without asking.
 - **Outputs the full skill.** Delivers folder tree + complete file contents. No partial stubs.
-- **Validates structure.** Checks frontmatter, invocation posture, standalone readability, and progressive disclosure.
+- **Use to update a skill as well!** If you give it feedback on how a skill could behave better (e.g. after trying out a real skill elsewhere), it'll procedurally update the skill in a conservative way to align it with what you describe as the correct behavior.
 
 ### Common interactions
 
 ```
 # Create a new skill from scratch
-/write-skill Create a skill for writing cold outbound emails
+/write-skill Create a skill for writing cold outbound emails called 'write-email'
 
-# Update an existing skill (preserves intent)
-/write-skill Update the research skill — add a coherence audit step
-
-# Refactor for size
-/write-skill The pr-review skill is too large, split it into references
-
-# Create a skill from unstructured notes
-/write-skill Here are my notes on how we do code review <paste> — turn this into a skill
+# Create a new skill from a report
+/write-skill Create a skill for writing cold outbound emails by looking at the 'b2b-outbound-email' report and evidence. Help me turn that knowledge into a skill 'write-email'.
 ```
 
 ### Skill structure it produces
@@ -131,17 +177,14 @@ skill-name/
 └── templates/            # Reusable output templates
 ```
 
----
+### Auto-improving skills
 
-## Post-install (research only)
+```
+# Update an existing skill (preserves intent)
+/write-skill The emails being produced by 'write-email' sound too abstract for the 'b2b-, help me update the skill so that the emails don't use abstract concepts. 
 
-The `research` skill includes a catalogue generator script. If you want to use it:
-
-```bash
-cd ~/.claude/skills/research/scripts
-bun install
 ```
 
-## Supported Agents
+Note: after using a skill in an interactive session, you can invoke /write-skill at the end of the session and give it feedback how that session could have gone better.
 
-These skills work with any agent that supports the [Agent Skills](https://agentskills.io) standard, including Claude Code, Cursor, Cline, Codex, and others.
+
