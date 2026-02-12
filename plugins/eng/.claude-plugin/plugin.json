@@ -1,0 +1,9 @@
+{
+  "name": "eng",
+  "description": "Skills for the Inkeep engineering team",
+  "version": "1.0.0",
+  "author": {
+    "name": "Inkeep"
+  },
+  "repository": "https://github.com/inkeep/team-skills"
+}

@@ -1,0 +1,9 @@
+{
+  "name": "shared",
+  "description": "Shared skills across all Inkeep teams",
+  "version": "1.0.0",
+  "author": {
+    "name": "Inkeep"
+  },
+  "repository": "https://github.com/inkeep/team-skills"
+}
