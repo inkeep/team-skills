@@ -1,41 +1,71 @@
 # Inkeep Team Skills
 
-Shared [Agent Skills](https://agentskills.io) and Claude Code plugins for the Inkeep team.
+Collection of [Agent Skills](https://agentskills.io) for our internal teams.
 
-## How it works
-
-Three shared skills available to all teams:
-
-| Skill | Invoke | Description |
-|-------|--------|-------------|
-| `research` | `/research <topic>` | Evidence-driven research with formal reports and evidence files collected from high authority web sources, **inspecting open source code repos**, docs, research articles, etc. |
-| `write-skill` | `/write-skill <goal>` | Create or refine/revise Agent Skills (SKILL.md + references/scripts/assets) from existing knowledge or giving it iterative feedback. |
-| `write-agent` | `/write-agent <goal>` | Design and write Claude Code agents and prompts — single-purpose subagents (reviewers, implementers, researchers) and workflow orchestrators (multi-phase coordinators). |
-
-## Repo structure
+## Quick install
 
 ```
-plugins/
-├── shared/     ← actual skill files (source of truth)
-│   └── skills/
-│       ├── research/
-│       ├── write-skill/
-│       └── write-agent/
-├── eng/        ← engineering team plugin (symlinks shared + eng-only skills)
-│   └── skills/
-│       ├── research -> ../../shared/skills/research
-│       ├── write-skill -> ../../shared/skills/write-skill
-│       └── write-agent -> ../../shared/skills/write-agent
-└── gtm/        ← GTM team plugin (symlinks shared + gtm-only skills)
-    └── skills/
-        ├── research -> ../../shared/skills/research
-        ├── write-skill -> ../../shared/skills/write-skill
-        └── write-agent -> ../../shared/skills/write-agent
+npx skills add inkeep/team-skills/plugins/shared -y
 ```
 
-Each team plugin (`eng`, `gtm`) is a proper Claude Code plugin with its own `.claude-plugin/plugin.json`. They symlink to shared skills so everyone gets the common ones, and each team can add team-specific skills alongside the symlinks.
+### Use
 
-## Use cases:
+Use by typing e.g. `/skill-name` in Claude Code or Cursor, e.g. `/research`.
+
+**Shared** skills include:
+
+| Example | Description |
+|--------|-------------|
+| `/research <topic>` | Evidence-driven research with formal reports and evidence files collected from high authority web sources, **inspecting open source code repos**, docs, research articles, etc. |
+| `/write-skill <goal>` | Create or refine/revise Agent Skills (SKILL.md + references/scripts/assets) from existing knowledge or giving it iterative feedback. |
+| `/write-agent <goal>` | (advanced) Design and write Claude Code agents and prompts. |
+
+## Team-specific skills
+
+Each team plugin (`eng`, `gtm`) is a proper Claude Code plugin with its own `.claude-plugin/plugin.json` which contains all the `shared` skills in addition to team-specific skills.
+
+## Install
+
+### Skills CLI (cross-agent)
+
+Works with Claude Code, Cursor, Cline, Codex, and other supported agents:
+
+```bash
+# Install a team's skills
+npx skills add inkeep/team-skills/plugins/eng -y    # engineering
+npx skills add inkeep/team-skills/plugins/gtm -y    # GTM
+
+# Or install all shared skills
+npx skills add inkeep/team-skills/plugins/shared -y
+```
+
+### Claude Code Plugin
+
+```bash
+# Add the marketplace (one-time)
+claude plugin marketplace add https://github.com/inkeep/team-skills.git
+
+# Install a team's plugin
+claude plugin install eng@inkeep-team-skills    # engineering
+claude plugin install gtm@inkeep-team-skills    # GTM
+```
+
+## Update
+
+```bash
+# Skills CLI
+npx skills update
+```
+
+```
+# Claude Code Plugin
+claude plugin marketplace update inkeep-team-skills
+claude plugin update eng    # or gtm
+```
+
+## `/research` + `/write-skill`
+
+The two most powerful shared skills.
 
 ```
                             YOU
@@ -97,47 +127,31 @@ Each team plugin (`eng`, `gtm`) is a proper Claude Code plugin with its own `.cl
                                          refine until sharp
 ```
 
-**Use case 1 — Prior art research.** How does Stripe handle webhooks? How does Linear model project hierarchies? What retry strategies does our queue library actually support? `/research` digs through docs, **OSS code repos**, and articles so you get a sourced report instead of guessing or tab-hopping.
+**Use case 1: Prior art research.** How does Stripe handle webhooks? How does Linear model project hierarchies? What retry strategies does our queue library actually support? `/research` digs through docs, **OSS code repos**, and articles so you get a sourced report instead of guessing or tab-hopping.
 
-**Use case 2 — Skill generation.** Same research step, but then `/write-skill` distills the findings into a SKILL.md that agents can execute. The report is raw analytical knowledge; the skill is the operationalized workflow from that knowledge.
-
-## Install
-
-### Claude Code Plugin (recommended)
-
-```bash
-# Add the marketplace (one-time)
-claude plugin marketplace add https://github.com/inkeep/team-skills.git
-
-# Install your team's plugin
-claude plugin install eng@inkeep-team-skills    # engineering
-claude plugin install gtm@inkeep-team-skills    # GTM
-```
-
-### Skills CLI (cross-agent)
-
-Installs shared skills to Claude Code, Cursor, Cline, Codex, and other supported agents:
-
-```bash
-npx skills add inkeep/team-skills -y
-```
-
-## Update
-
-```bash
-# Claude Code Plugin
-claude plugin marketplace update inkeep-team-skills
-claude plugin update eng    # or gtm
-
-# Skills CLI
-npx skills update
-```
+**Use case 2: Skill generation.** Same `/research` step as above, but then `/write-skill` distills the findings into a SKILL.md that agents can execute. The report is raw analytical knowledge; the skill is the operationalized workflow from that knowledge.
 
 ## Using Them
 
 ## Using `research`
 
 Invoke by typing `/research <topic>` within Claude Code or Cursor.
+
+### Common examples
+
+```
+# New research (defaults to formal report)
+/research How does Temporal handle workflow versioning?
+
+# Quick answer (no report)
+/research Just tell me — does Better Auth support SCIM?
+
+# Extend an existing report
+/research Update the claude-plugins-architecture report with Cowork CLI parity findings
+
+# Compare systems
+/research Compare pg-boss vs BullMQ for job queues — focus on persistence, retry, and observability
+```
 
 ### What it does
 
@@ -157,34 +171,28 @@ Reports live in `~/.claude/reports/<name>/` with:
 To open the directory of reports in Cursor:
 `cursor ~/.claude/reports` or simply navigate to it.
 
-In MacOS, while in your Home directory (e.g. `nickgomez/`, click on `cmd + shift + . ` to see hidden `.claude` folder.)
+In MacOS, while in a Home directory (e.g. `nickgomez/`, click on `cmd + shift + . ` to see hidden `.claude` folder.)
 
 ### Key behaviors
 
-- **Checks existing reports first.** Before starting new research, it scans `~/.claude/reports/` for overlap. If prior research covers your topic, it surfaces those findings and asks whether to reuse, extend, or start fresh.
-- **Scopes before researching.** It proposes a research rubric (dimensions, depth, stance) and waits for your confirmation before diving in. You can adjust scope, add/remove dimensions, or change the output format.
+- **Checks existing reports first.** Before starting new research, it scans `~/.claude/reports/` for overlap. If prior research covers a topic, it surfaces those findings and asks whether to reuse, extend, or start fresh.
+- **Scopes before researching.** It proposes a research rubric (dimensions, depth, stance) and waits for a confirmation before diving in. You can adjust scope, add/remove dimensions, or change the output format.
 - **Evidence-backed.** Every finding links to an evidence file with primary sources (code snippets for OSS repos, doc quotes, research studies, etc.). Claims are labeled CONFIRMED / INFERRED / UNCERTAIN / NOT FOUND. **Auto-prioritizes by time and authority**.
 - **Recaps and suggests follow-ups.** After delivering findings, it summarizes key results and offers 2-4 natural next directions.
-
-### Common interactions
-
-```
-# New research (defaults to formal report)
-/research How does Temporal handle workflow versioning?
-
-# Quick answer (no report)
-/research Just tell me — does Better Auth support SCIM?
-
-# Extend an existing report
-/research Update the claude-plugins-architecture report with Cowork CLI parity findings
-
-# Compare systems
-/research Compare pg-boss vs BullMQ for job queues — focus on persistence, retry, and observability
-```
 
 ---
 
 ## Using `write-skill`
+
+### Common interactions
+
+```
+# Create a new skill from scratch
+/write-skill Create a skill for writing cold outbound emails called 'write-email'
+
+# Create a new skill from a report
+/write-skill Create a skill for writing cold outbound emails by looking at the 'b2b-outbound-email' report and evidence. Help me turn that knowledge into a skill 'write-email'.
+```
 
 Invoke with `/write-skill <goal>` when you want to create or modify an Agent Skill.
 
@@ -197,16 +205,6 @@ Guides you through authoring a SKILL.md (+ optional references/, scripts/, templ
 - **Asks clarifying questions first.** Captures intent, audience, constraints, and success criteria before drafting. For ambiguous requests, it offers 2-4 targeted questions with recommended defaults.
 - **Outputs the full skill.** Delivers folder tree + complete file contents. No partial stubs.
 - **Use to update a skill as well!** If you give it feedback on how a skill could behave better (e.g. after trying out a real skill elsewhere), it'll procedurally update the skill in a conservative way to align it with what you describe as the correct behavior.
-
-### Common interactions
-
-```
-# Create a new skill from scratch
-/write-skill Create a skill for writing cold outbound emails called 'write-email'
-
-# Create a new skill from a report
-/write-skill Create a skill for writing cold outbound emails by looking at the 'b2b-outbound-email' report and evidence. Help me turn that knowledge into a skill 'write-email'.
-```
 
 ### Skill structure it produces
 
@@ -232,4 +230,10 @@ Note: after using a skill in an interactive session, you can invoke /write-skill
 
 ## Using `write-agent`
 
-`/write-agent <goal>` — creates or updates Claude Code agents (`.claude/agents/*.md`). Handles single-purpose subagents and multi-phase workflow orchestrators.
+Claude-code specific skill that creates or updates Claude Code agents (`.claude/agents/*.md`). Handles single-purpose subagents and multi-phase workflow orchestrators.
+
+Useful pattern:
+
+```bash
+/write-agent can you take skills /research-prospect and /write-email and help me write an agent that researches prospects and writes a sequenece of emails?
+```
