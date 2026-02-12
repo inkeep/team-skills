@@ -7,7 +7,7 @@
   },
   "plugins": [
     {
-      "name": "inkeep-eng",
+      "name": "eng",
       "description": "Skills for the Inkeep engineering team",
       "version": "1.0.0",
       "author": { "name": "Inkeep" },
@@ -15,7 +15,7 @@
       "category": "development"
     },
     {
-      "name": "inkeep-gtm",
+      "name": "gtm",
       "description": "Skills for the Inkeep GTM team",
       "version": "1.0.0",
       "author": { "name": "Inkeep" },
@@ -23,7 +23,7 @@
       "category": "productivity"
     },
     {
-      "name": "inkeep-shared",
+      "name": "shared",
       "description": "Shared skills across all Inkeep teams",
       "version": "1.0.0",
       "author": { "name": "Inkeep" },
