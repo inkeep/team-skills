@@ -1,6 +1,6 @@
 ---
 name: ship
-description: "Orchestrate full-stack feature development from spec to merge-ready PR. Composes /spec, /ralph, and /research into an autonomous end-to-end workflow: spec authoring, worktree setup, TDD implementation, multi-modal testing, and iterative PR review. Use when implementing a feature end-to-end, taking a SPEC.md to production, or running the full spec-to-PR pipeline. Triggers: ship, ship it, feature development, implement end to end, spec to PR, full stack implementation, autonomous development."
+description: "Orchestrate full-stack feature development from spec to merge-ready PR. Composes /spec, /ralph, /review, and /research into an autonomous end-to-end workflow: spec authoring, worktree setup, TDD implementation, multi-modal testing, and iterative PR review. Use when implementing a feature end-to-end, taking a SPEC.md to production, or running the full spec-to-PR pipeline. Triggers: ship, ship it, feature development, implement end to end, spec to PR, full stack implementation, autonomous development."
 argument-hint: "[feature description or path to SPEC.md]"
 ---
 
@@ -145,57 +145,25 @@ Do not proceed to Phase 5 until you have high confidence in the implementation. 
 
 ### Phase 5: Review iteration loop
 
-**Load:** `references/review-iteration-protocol.md`
+Invoke `/review` with the PR number and the path to the SPEC.md:
 
-This phase has two stages. Complete Stage 1 before moving to Stage 2.
+```
+/review <pr-number> --spec <path/to/SPEC.md>
+```
 
-**Stage 1 — Review loop (Claude Code reviewer is the primary signal):**
+`/review` manages the full review lifecycle autonomously: polling for reviewer feedback, assessing each suggestion with evidence, implementing fixes, resolving threads, and driving CI/CD to green. It operates in two stages — Stage 1 (review feedback loop) completes before Stage 2 (CI/CD resolution).
 
-1. **Push** to the PR branch. Update the PR description to reflect current state.
-2. **Poll** every ~4 minutes using the provided scripts:
-   ```bash
-   # Primary: fetch all review feedback (reviews, inline comments, discussion)
-   ./scripts/fetch-pr-feedback.sh <pr-number> --reviews-only
+**When `/review` escalates back to you:**
 
-   # Secondary (opportunistic): check CI/CD status
-   ./scripts/fetch-pr-feedback.sh <pr-number> --checks-only
-   ```
-   Do NOT wait for CI/CD if review feedback is already available.
-3. **When review feedback arrives**, assess each suggestion with evidence before acting:
-   - You are a peer engineer, not a subordinate. Reviewer comments are hypotheses — investigate them, don't blindly apply them.
-   - Gather evidence: read the relevant code paths, check the spec, use `/inspect` (purpose: reviewing) to verify convention claims against actual codebase patterns. Use web search or `/research` when uncertain.
-   - Evaluate: validity, correctness, applicability, relevancy, tradeoffs, side effects. Then decide — accept, decline, or partially accept — with reasoning.
-   - See the full assessment protocol in `references/review-iteration-protocol.md` (step 3).
-   - If CI/CD results happen to be ready at the same time, assess those too. If not, proceed with review feedback alone.
-4. **Implement** changes, **test** locally (at minimum: Tier 1), **push**, and repeat.
-5. **Resolve** feedback threads as you go (accepted with code changes, or declined with reasoning).
-6. **Exit Stage 1** when you determine there is no more actionable, valid review feedback remaining.
-
-**When review feedback exceeds review-fix scope:**
-
-Not all review feedback is a small fix. If a reviewer surfaces something that requires substantial new work, classify and act:
+`/review` will pause and consult you (the orchestrator) when feedback exceeds fix-and-push scope. When this happens, classify and act:
 
 | Feedback scope | Action |
 |---|---|
-| Bug fix or correctness issue in existing code | Fix directly in the review loop. |
 | New functionality not in the SPEC.md (scope expansion) | Pause. Consult the user — this is a product decision. |
-| Architectural rework of existing implementation | Evaluate via the calibration principle (ownership principle #4). If warranted, implement directly or via subagent. If not, decline with reasoning. |
-| New stories with clear acceptance criteria (additive) | Add to prd.json and run another `/ralph` iteration, then re-enter the review loop. |
+| New stories with clear acceptance criteria (additive) | Add to prd.json and run another `/ralph` iteration, then re-invoke `/review`. |
+| Architectural rework that `/review` flagged as disproportionate | Evaluate via the calibration principle (ownership principle #4). If warranted, implement and re-invoke `/review`. If not, instruct `/review` to decline with reasoning. |
 
-Do not force substantial rework into the review loop's fix-and-push cycle. Larger changes need their own implementation and testing before they merge into the review flow.
-
-**Stage 2 — CI/CD resolution (after review loop is finalized):**
-
-1. **Monitor** the PR for CI/CD pipeline results:
-   ```bash
-   ./scripts/fetch-pr-feedback.sh <pr-number> --checks-only
-   ```
-2. **As soon as** any check reports a failure, investigate using:
-   ```bash
-   ./scripts/investigate-ci-failures.sh <pr-number> --compare-main
-   ```
-3. Work through failures meticulously: classify each (PR-caused vs pre-existing vs flaky), fix what is relevant, push, and monitor the next run.
-4. **Exit Stage 2** when the pipeline is green (or all remaining failures are documented as pre-existing/unrelated) and you are satisfied with implementation quality.
+Do not proceed to Phase 6 until `/review` reports completion (all threads resolved, CI/CD green or documented).
 
 ---
 
@@ -268,8 +236,6 @@ These govern your behavior throughout:
 | Path | Use when | Impact if skipped |
 |---|---|---|
 | `/ralph` skill | Implementing the feature via Ralph loop (Phase 3) | Missing prd.json validation, prompt crafting, post-implementation review |
+| `/review` skill | Running the push → review → fix → CI/CD loop (Phase 5) | Missed feedback, unresolved threads, mechanical response to reviews, CI/CD failures not investigated |
 | `references/worktree-setup.md` | Setting up isolated development environment (Phase 2) | Wrong pnpm version, broken lockfile, work bleeds into main directory |
-| `references/review-iteration-protocol.md` | Running the push → review → fix loop (Phase 5) | Missed feedback, unresolved threads, mechanical response to reviews |
 | `references/testing-strategy.md` | Planning and executing tests (Phase 4) | Gaps in coverage, untested edge cases, false confidence |
-| `scripts/fetch-pr-feedback.sh` | Fetching review feedback and CI/CD status (Phase 5) | Agent uses wrong/deprecated `gh` commands, misses inline review comments |
-| `scripts/investigate-ci-failures.sh` | Investigating CI/CD failures with logs (Phase 5, Stage 2) | Agent struggles to find run IDs, fetch logs, or compare with main |

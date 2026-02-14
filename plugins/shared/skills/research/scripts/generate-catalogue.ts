@@ -444,7 +444,7 @@ function main() {
   // Scan for report directories
   const entries = fs.readdirSync(reportsDir, { withFileTypes: true });
   const reportDirs = entries
-    .filter((e) => e.isDirectory())
+    .filter((e) => e.isDirectory() && !e.name.startsWith("."))
     .map((e) => path.join(reportsDir, e.name));
 
   const validReports: ValidReport[] = [];
