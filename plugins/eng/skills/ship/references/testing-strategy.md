@@ -52,25 +52,37 @@ pnpm format:check
 
 In these cases, write tests after implementation but before declaring Phase 3 complete.
 
-### Tier 2: Manual integration testing (mandatory for user-facing changes)
+### Tier 2: You are the QA engineer (mandatory for user-facing changes)
 
-These are tests you run yourself using available tools, simulating how a real user would interact with the feature.
+You own this feature. Tier 2 is where you verify the *experience* — things the formal test suite cannot capture. A feature can pass every unit test and still have a broken layout, a confusing flow, or an interaction that doesn't work as a user would expect.
+
+Think of this the way a good human engineer tests before shipping: they open the UI, click through the feature, try to break it, check that the visual output looks right, walk the full user journey, and stress-test the scenarios the test harness can't reach. You have tools that let you do exactly this — use them.
+
+**What Tier 2 covers that Tier 1 cannot:**
+- **Visual correctness** — layout, spacing, alignment, responsiveness, error state rendering
+- **End-to-end user journeys** — multi-step flows where each step depends on the previous one, tested as a user would experience them (not as isolated unit tests)
+- **Usability** — does the flow make sense? Are labels clear? Do error messages help the user recover?
+- **Integration reality** — does the feature work when connected to real services, real data, real UI, not just mocks?
+- **"Does this feel right?"** — the subjective-but-critical judgment a good engineer applies before shipping
 
 **When to use each tool:**
 
-| Tool | Use for | Example |
-|---|---|---|
-| Bash | API testing, CLI verification, data validation | `curl` to test endpoints, run CLI commands, check database state |
-| Chrome automation (`mcp__claude-in-chrome__*`) | UI testing, form submission, visual verification | Navigate to UI, fill forms, verify rendering |
-| macOS computer use (`mcp__peekaboo__*`) | End-to-end OS-level scenarios, multi-app workflows | Test desktop interactions, screenshot verification |
+| Tool | Use for | Example | If unavailable |
+|---|---|---|---|
+| Bash | API testing, CLI verification, data validation | `curl` to test endpoints, run CLI commands, check database state | Always available |
+| Chrome automation (`mcp__claude-in-chrome__*`) | UI testing, form submission, visual verification, full user journey walkthrough | Navigate to UI, fill forms, verify rendering, click through multi-step flows, audit layout | Substitute with Bash-based API/endpoint testing; document untested UI scenarios |
+| macOS computer use (`mcp__peekaboo__*`) | End-to-end OS-level scenarios, multi-app workflows | Test desktop interactions, screenshot verification | Skip OS-level testing; document the gap |
+
+Not all tools are available in every environment (e.g., Docker/headless contexts lack browser and OS automation). Use what is available, maximize Bash-based testing as a fallback, and explicitly document any scenarios that could not be verified due to tool limitations.
 
 **Manual testing checklist:**
 1. Start from a clean state (fresh database, no cached state)
-2. Walk through the happy path as described in the SPEC.md user journeys
+2. Walk through the happy path as described in the SPEC.md user journeys — end-to-end, not just individual steps
 3. Test each failure mode identified in the spec
 4. Test with unexpected input (empty strings, very long strings, special characters)
 5. Test with boundary conditions (first item, last item, zero items, many items)
-6. If the feature has a UI: test on different viewport sizes, test keyboard navigation
+6. If the feature has a UI: audit layout and visual correctness, test on different viewport sizes, test keyboard navigation
+7. Try to break it — attempt scenarios the spec didn't anticipate, abuse edge cases, stress-test the flow
 
 **Recording results:**
 Document what you tested and the outcome. If you find a bug during manual testing:

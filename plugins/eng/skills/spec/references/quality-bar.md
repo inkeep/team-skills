@@ -29,6 +29,7 @@ Impact: Specs are not implementable, not testable, or fail to capture user value
 - [ ] Alternatives considered (why not)
 - [ ] Risks and mitigations with owners
 - [ ] Phasing is ordered by architectural risk validation + user value (not just "small chunks")
+- [ ] Phase 2+ sections pass the qualification bar (concrete acceptance criteria, owner, timeframe) — if not, move to documented deferrals
 
 **Escalation note:** Should-have items become must-have when any "High-stakes stop and verify" trigger applies (below), unless the user explicitly accepts the risk of skipping.
 

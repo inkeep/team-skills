@@ -10,6 +10,24 @@ Impact: Wrong pnpm version breaks lockfile; work bleeds into main directory; CI 
 
 A git worktree creates a separate working directory on its own branch while sharing the same `.git` directory. This keeps feature work isolated from the user's main `~/InkeepDev/agents` directory, where they may be doing other work.
 
+## Detect existing environment
+
+Before creating a worktree, check whether you are already in one:
+
+```bash
+# Check if currently in a worktree
+git worktree list
+git branch --show-current
+```
+
+**If you are already on a feature branch** (e.g., invoked via Conductor, or the user set up the branch manually):
+- Do NOT create a new worktree. Use the current directory.
+- Verify branch is not `main` or `master`.
+- Skip to step 2 (install dependencies) to ensure the environment is clean.
+
+**If you are on `main`/`master`** in the primary repo:
+- Proceed with step 1 to create a fresh worktree.
+
 ## Setup procedure
 
 ### 1. Create the worktree
@@ -61,18 +79,34 @@ npx pnpm@10.10.0 test --run
 
 ### 5. Create draft PR
 
+Use the SPEC.md as the basis for the PR body. At this stage (pre-implementation), the Approach section reflects the plan; the Changes section is a placeholder. Both will be updated as implementation progresses.
+
 ```bash
 cd ../<feature-name>
 git push -u origin feat/<feature-name>
-gh pr create --draft --title "feat: <feature description>" --body "## Summary
-<initial description from SPEC.md>
+gh pr create --draft --title "feat: <feature description>" --body "$(cat <<'EOF'
+## Summary
+<distill from SPEC.md §1 — what this PR will do and why>
+
+## Motivation
+<distill from SPEC.md §1-§2 — problem, why now, who benefits>
+
+## Approach
+<distill from SPEC.md §9 — planned design and key decisions>
+
+## Changes
+_Implementation in progress._
 
 ## Test plan
 - [ ] Unit tests passing
 - [ ] Integration tests passing
 - [ ] Manual verification complete
 
-Generated with [Claude Code](https://claude.com/claude-code)"
+**Spec:** <link or path to SPEC.md>
+
+Generated with [Claude Code](https://claude.com/claude-code)
+EOF
+)"
 ```
 
 ## Cleanup (after PR is merged)

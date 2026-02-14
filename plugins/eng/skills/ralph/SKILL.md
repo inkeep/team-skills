@@ -1,27 +1,44 @@
 ---
 name: ralph
-description: "Convert PRDs to prd.json format for the Ralph autonomous agent system. Use when you have an existing PRD and need to convert it to Ralph's JSON format. Triggers on: convert this prd, turn this into ralph format, create prd.json from this, ralph json."
+description: "Autonomous implementation methodology: convert SPEC.md to prd.json, prepare the environment, run the Ralph loop for iterative development, and review outputs. Use when implementing features via Ralph, converting specs to prd.json, or running the autonomous implementation loop. Triggers: ralph, implement with ralph, prd.json, ralph loop, autonomous implementation, run ralph, convert spec."
+argument-hint: "[path to SPEC.md or prd.json]"
 ---
 
-# Ralph PRD Converter
+# Ralph
 
-Converts existing PRDs to the prd.json format that Ralph uses for autonomous execution.
+Full autonomous implementation methodology for taking a SPEC.md through iterative development to completion. Ralph operates in four phases:
+
+1. **Convert** — Transform SPEC.md into a structured prd.json
+2. **Prepare** — Validate the prd.json, craft the implementation prompt
+3. **Run** — Execute the Ralph loop for iterative development
+4. **Review** — Inspect every file Ralph produced, fix what doesn't meet the bar
+
+Each phase can be entered independently. If you already have a prd.json, start at Phase 2. If you only need conversion, stop after Phase 1.
 
 ---
 
-## The Job
+## Detect starting point
 
-Take a PRD (markdown file or text) and convert it to `prd.json` in your ralph directory.
+| Condition | Begin at |
+|---|---|
+| SPEC.md exists, no prd.json | Phase 1 (Convert) |
+| prd.json exists, implementation needed | Phase 2 (Prepare) |
+| Called with only a conversion request | Phase 1, then stop |
 
 ---
 
-## Output Format
+## Phase 1: Convert (SPEC.md to prd.json)
+
+Take a SPEC.md and convert it to `prd.json` in the working directory.
+
+### Output format
 
 ```json
 {
   "project": "[Project Name]",
   "branchName": "ralph/[feature-name-kebab-case]",
-  "description": "[Feature description from PRD title/intro]",
+  "description": "[Feature description from SPEC.md title/intro]",
+  "implementationContext": "[Concise prose summary of architecture, constraints, key decisions, and current state from the SPEC.md — everything the implementer needs to know that doesn't fit in individual stories]",
   "userStories": [
     {
       "id": "US-001",
@@ -40,30 +57,26 @@ Take a PRD (markdown file or text) and convert it to `prd.json` in your ralph di
 }
 ```
 
----
-
-## Story Size: The Number One Rule
+### Story size: the number one rule
 
 **Each story must be completable in ONE Ralph iteration (one context window).**
 
-Ralph spawns a fresh Amp instance per iteration with no memory of previous work. If a story is too big, the LLM runs out of context before finishing and produces broken code.
+Ralph receives the same prompt each iteration with no memory of previous work — only files and git history persist. If a story is too big, the LLM runs out of context before finishing and produces broken code.
 
-### Right-sized stories:
+**Right-sized stories:**
 - Add a database column and migration
 - Add a UI component to an existing page
 - Update a server action with new logic
 - Add a filter dropdown to a list
 
-### Too big (split these):
-- "Build the entire dashboard" - Split into: schema, queries, UI components, filters
-- "Add authentication" - Split into: schema, middleware, login UI, session handling
-- "Refactor the API" - Split into one story per endpoint or pattern
+**Too big (split these):**
+- "Build the entire dashboard" — Split into: schema, queries, UI components, filters
+- "Add authentication" — Split into: schema, middleware, login UI, session handling
+- "Refactor the API" — Split into one story per endpoint or pattern
 
 **Rule of thumb:** If you cannot describe the change in 2-3 sentences, it is too big.
 
----
-
-## Story Ordering: Dependencies First
+### Story ordering: dependencies first
 
 Stories execute in priority order. Earlier stories must not depend on later ones.
 
@@ -77,26 +90,24 @@ Stories execute in priority order. Earlier stories must not depend on later ones
 1. UI component (depends on schema that does not exist yet)
 2. Schema change
 
----
-
-## Acceptance Criteria: Must Be Verifiable
+### Acceptance criteria: must be verifiable
 
 Each criterion must be something Ralph can CHECK, not something vague.
 
-### Good criteria (verifiable):
+**Good criteria (verifiable):**
 - "Add `status` column to tasks table with default 'pending'"
 - "Filter dropdown has options: All, Active, Completed"
 - "Clicking delete shows confirmation dialog"
 - "Typecheck passes"
 - "Tests pass"
 
-### Bad criteria (vague):
+**Bad criteria (vague):**
 - "Works correctly"
 - "User can do X easily"
 - "Good UX"
 - "Handles edge cases"
 
-### Always include as final criterion:
+**Always include as final criterion:**
 ```
 "Typecheck passes"
 ```
@@ -106,16 +117,14 @@ For stories with testable logic, also include:
 "Tests pass"
 ```
 
-### For stories that change UI, also include:
+For stories that change UI, also include:
 ```
 "Verify in browser using dev-browser skill"
 ```
 
 Frontend stories are NOT complete until visually verified. Ralph will use the dev-browser skill to navigate to the page, interact with the UI, and confirm changes work.
 
----
-
-## Conversion Rules
+### Conversion rules
 
 1. **Each user story becomes one JSON entry**
 2. **IDs**: Sequential (US-001, US-002, etc.)
@@ -124,11 +133,30 @@ Frontend stories are NOT complete until visually verified. Ralph will use the de
 5. **branchName**: Derive from feature name, kebab-case, prefixed with `ralph/`
 6. **Always add**: "Typecheck passes" to every story's acceptance criteria
 
----
+### Extracting implementation context from the SPEC.md
 
-## Splitting Large PRDs
+The `implementationContext` field captures spec-level knowledge that applies across all stories — things the implementer needs every iteration but that don't belong in any single story's acceptance criteria.
 
-If a PRD has big features, split them:
+Extract from these SPEC.md sections:
+
+| SPEC.md section | What to extract | Why it matters |
+|---|---|---|
+| §9 Proposed solution — System design | Architecture overview, data model, API shape, auth/permissions model | Without this, the implementer guesses the architecture or contradicts the spec's design |
+| §6 Non-functional requirements | Performance targets, security constraints, reliability requirements, operability needs | These constrain *how* every story is implemented, not *what* |
+| §10 Decision log | Settled decisions (especially 1-way doors) with brief rationale | Prevents the implementer from revisiting or contradicting decisions made during the spec process |
+| §8 Current state | How the system works today, key integration points, known gaps | The implementer needs to know what exists to integrate with it correctly |
+
+**What to write:** A concise prose summary (3-8 sentences). Not a copy-paste of the spec sections — a distillation of what the implementer needs to hold in mind while working on every story.
+
+**Good example:**
+> "The feature adds a `status` column to the tasks table with an enum type. The API uses the existing RESTful pattern in `/api/tasks/`. Auth is handled by the existing tenant-scoped middleware — do not add new auth logic. The current task list fetches via `getTasksByProject()` in the data-access layer; the new filter must use the same query pattern. Decision D3: we chose server-side filtering over client-side because the dataset can exceed 10k rows."
+
+**Bad example (too vague):**
+> "Implement the task status feature following good practices."
+
+### Splitting large specs
+
+If a SPEC.md has large features, split them:
 
 **Original:**
 > "Add user notification system"
@@ -143,11 +171,50 @@ If a PRD has big features, split them:
 
 Each is one focused change that can be completed and verified independently.
 
----
+### Converting failure paths into acceptance criteria
 
-## Example
+SPEC.md §5 (User journeys) includes failure/recovery paths and debug experience per persona. These are often the difference between a feature that works in demos and one that works in production.
 
-**Input PRD:**
+Do not discard failure paths during conversion. For each failure scenario in the spec:
+
+1. **Identify which story it belongs to** — match the failure to the story that implements the relevant functionality.
+2. **Convert it to a verifiable acceptance criterion** on that story.
+
+**Example:**
+
+SPEC.md failure path:
+> Failure: User sets an invalid status value via API → System returns 400 with error message "Invalid status. Allowed values: pending, in_progress, done"
+
+Becomes an acceptance criterion on the relevant story:
+```
+"API returns 400 with descriptive error when status value is not in [pending, in_progress, done]"
+```
+
+If a failure scenario spans multiple stories (e.g., "network error during save should show retry button"), attach the criterion to the story where the user-facing behavior lives (the UI story, not the backend story).
+
+### Applying non-functional requirements as cross-cutting criteria
+
+SPEC.md §6 includes non-functional requirements: performance, reliability, security/privacy, operability, cost. These constrain *how* stories are implemented.
+
+For each non-functional requirement in the spec:
+
+1. **Determine if it's universally applicable** (e.g., "all endpoints must validate tenant isolation") or **story-specific** (e.g., "list query must return in <200ms for 10k rows").
+2. **Universal constraints**: add as a criterion to every story they apply to.
+3. **Story-specific constraints**: add as a criterion to the relevant story only.
+
+**Examples:**
+
+| Non-functional requirement | Becomes criterion on |
+|---|---|
+| "All API endpoints must validate tenant isolation" | Every story that adds/modifies an API endpoint |
+| "List query must paginate and return in <200ms" | The story that implements the list/filter |
+| "Status changes must be audit-logged" | The story that implements the status toggle |
+
+Do not create separate "non-functional" stories. These constraints should be woven into the stories that implement the relevant functionality.
+
+### Example
+
+**Input SPEC.md (abbreviated):**
 ```markdown
 # Task Status Feature
 
@@ -158,6 +225,17 @@ Add ability to mark tasks with different statuses.
 - Filter list by status
 - Show status badge on each task
 - Persist status in database
+
+## Non-functional requirements
+- Status changes must be tenant-scoped
+
+## User journeys — Failure paths
+- Invalid status value via API → return 400 with descriptive error
+
+## Current state
+- Tasks stored in tasks table, accessed via getTasksByProject()
+- API uses RESTful patterns under /api/tasks/
+- UI uses TaskCard component in components/tasks/
 ```
 
 **Output prd.json:**
@@ -166,6 +244,7 @@ Add ability to mark tasks with different statuses.
   "project": "TaskApp",
   "branchName": "ralph/task-status",
   "description": "Task Status Feature - Track task progress with status indicators",
+  "implementationContext": "Tasks are stored in a tasks table accessed via getTasksByProject() in the data-access layer. The API follows RESTful patterns under /api/tasks/. Auth uses existing tenant-scoped middleware. The status field should be an enum column with a database-level constraint. UI components use the existing TaskCard component in components/tasks/.",
   "userStories": [
     {
       "id": "US-001",
@@ -202,6 +281,8 @@ Add ability to mark tasks with different statuses.
         "Each row has status dropdown or toggle",
         "Changing status saves immediately",
         "UI updates without page refresh",
+        "API returns 400 with descriptive error when status value is not in [pending, in_progress, done]",
+        "Status update is tenant-scoped (uses existing tenant middleware)",
         "Typecheck passes",
         "Verify in browser using dev-browser skill"
       ],
@@ -227,9 +308,7 @@ Add ability to mark tasks with different statuses.
 }
 ```
 
----
-
-## Archiving Previous Runs
+### Archiving previous runs
 
 **Before writing a new prd.json, check if there is an existing one from a different feature:**
 
@@ -240,11 +319,7 @@ Add ability to mark tasks with different statuses.
    - Copy current `prd.json` and `progress.txt` to archive
    - Reset `progress.txt` with fresh header
 
-**The ralph.sh script handles this automatically** when you run it, but if you are manually updating prd.json between runs, archive first.
-
----
-
-## Checklist Before Saving
+### Phase 1 checklist
 
 Before writing prd.json, verify:
 
@@ -255,3 +330,147 @@ Before writing prd.json, verify:
 - [ ] UI stories have "Verify in browser using dev-browser skill" as criterion
 - [ ] Acceptance criteria are verifiable (not vague)
 - [ ] No story depends on a later story
+- [ ] **`implementationContext` extracted** from SPEC.md §8, §9, §10, §6 — concise prose, not a copy-paste
+- [ ] **Failure/recovery paths** from SPEC.md §5 converted into acceptance criteria on relevant stories
+- [ ] **Non-functional requirements** from SPEC.md §6 applied as cross-cutting criteria where applicable
+
+---
+
+## Phase 2: Prepare
+
+Before starting the Ralph loop, validate the prd.json and set up for execution.
+
+### Validate prd.json against SPEC.md
+
+Compare each user story to its corresponding requirement in the SPEC.md:
+
+- [ ] Stories are correctly scoped (each completable in one iteration)
+- [ ] Stories are properly ordered (dependencies first)
+- [ ] Acceptance criteria are specific and verifiable
+- [ ] No requirements from the SPEC.md are missing from prd.json
+- [ ] No stories exceed what the SPEC.md calls for
+
+Fix discrepancies before starting Ralph — errors here compound through every iteration.
+
+### Place prd.json
+
+Put `prd.json` in the worktree root or `.claude/` directory where Ralph can find it.
+
+### Verify branch safety
+
+Do not run Ralph on `main` or `master`. Verify you are on a feature branch before proceeding.
+
+### Craft the implementation prompt
+
+The prompt is what Ralph sees each iteration. It must be self-contained — Ralph has no memory between iterations beyond files and git history.
+
+The prompt should include:
+
+- Reference to `prd.json` for requirements and `implementationContext` for spec-level architecture, constraints, and design decisions
+- TDD approach: write tests first, then implementation (where practical)
+- Repo conventions from CLAUDE.md (testing patterns, file locations, formatting)
+- Codebase context: the specific patterns, shared vocabulary, and abstractions in the area being modified (more actionable than generic CLAUDE.md guidance)
+- Quality gates: run `pnpm typecheck`, `pnpm lint`, and `pnpm test --run` before declaring completion
+
+**Per-iteration workflow to encode in the prompt:**
+
+1. Read `prd.json` for user stories and their completion status
+2. Check `progress.txt` for learnings from previous iterations
+3. Select the highest-priority incomplete story (`passes: false`)
+4. Implement the story (one story per iteration — keep changes focused)
+5. Verify quality: run typecheck, lint, and tests — all must pass
+6. Commit with message format: `[story-id] description`
+7. Update `prd.json`: set `passes: true` for completed story
+8. Log progress: append to `progress.txt` with what you implemented, files changed, and learnings
+9. If stuck on a story, document the blocker in `progress.txt` and move to the next story
+
+**Progress log format** (encode in prompt so Ralph follows it):
+
+```
+## Iteration N - [timestamp]
+
+### Story: [story-id] - [title]
+
+**Implementation:**
+- [what you did]
+
+**Files Changed:**
+- [list of files]
+
+**Learnings:**
+- [patterns discovered]
+- [gotchas encountered]
+- [insights for future iterations]
+
+---
+```
+
+**Completion signal:**
+
+When ALL user stories have `passes: true`, Ralph should output:
+```
+<promise>IMPLEMENTATION COMPLETE</promise>
+```
+
+Ralph must ONLY output this when the statement is genuinely true. Do not output false promises to escape the loop.
+
+---
+
+## Phase 3: Run
+
+Invoke `/ralph-loop` with appropriate bounds:
+
+```
+/ralph-loop "<implementation prompt>" --max-iterations 30 --completion-promise "IMPLEMENTATION COMPLETE"
+```
+
+**Tuning iteration limits:**
+
+| Feature complexity | Recommended max-iterations |
+|---|---|
+| Small (1-3 stories) | 10-15 |
+| Medium (4-8 stories) | 20-30 |
+| Large (9+ stories) | 30-50 |
+
+These are safety limits, not targets. Ralph should finish well before the limit if stories are right-sized.
+
+**Monitoring progress:**
+
+While Ralph runs, you can check iteration count:
+```bash
+grep '^iteration:' .claude/ralph-loop.local.md
+```
+
+If Ralph hits the iteration limit without completing, investigate:
+- Check `progress.txt` for blockers
+- Check `prd.json` for stories that remain `passes: false`
+- Consider whether stuck stories need to be split further or rewritten
+
+---
+
+## Phase 4: Review
+
+After Ralph finishes (or hits the iteration limit), you own the output. Ralph's work is your starting point, not your endpoint.
+
+**Read every file Ralph created or modified.** For each change:
+- Understand what it does and why it does it that way
+- Verify it matches the SPEC.md intent
+- If you cannot explain a piece of code, do not accept it — rewrite it or investigate until you understand it
+
+**Fix anything that does not meet your quality bar:**
+- Correctness: does it actually work as specified?
+- Clarity: could another engineer understand this without explanation?
+- Codebase alignment: does it follow existing patterns and conventions?
+- Proportionality: does the complexity of the solution match the actual requirements, or did Ralph over-build for hypothetical concerns? Conversely, did Ralph cut corners on validated requirements to keep things simple?
+
+**Ensure tests exist and pass.** If Ralph skipped tests for any story, write them yourself. Every acceptance criterion should have at least one corresponding test.
+
+### Phase 4 checklist
+
+- [ ] Read every file Ralph created or modified
+- [ ] Each change is understood and intentional
+- [ ] Code matches SPEC.md intent
+- [ ] Tests exist and pass (`pnpm test --run`)
+- [ ] Typecheck passes (`pnpm typecheck`)
+- [ ] Lint passes (`pnpm lint`)
+- [ ] No unexplained or cargo-culted code remains

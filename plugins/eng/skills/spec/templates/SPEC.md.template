@@ -11,6 +11,7 @@ Impact: No durable spec; decisions and research do not converge into an implemen
 **Last updated:** YYYY-MM-DD
 **Links:**
 - Research report(s): <.claude/reports/...> (if any)
+- Evidence: <./evidence/...> (spec-local findings, if any)
 - Design artifacts: <Figma/diagrams>
 - Tracking: <issue/epic>
 
@@ -133,7 +134,15 @@ Assumptions are temporary scaffolding. Every assumption must have confidence, a 
 - Acceptance criteria:
 - Risks + mitigations:
 
-### Phase 2
+### Additional phases
+<!-- Add a phase only when it passes the qualification bar: concrete goal,
+     verifiable acceptance criteria, assigned owner, and planned timeframe.
+     If you can't fill these in, the item belongs in Documented Deferrals (section 15).
+     Not every feature needs multiple phases — Phase 1 + deferrals is often right. -->
+
+<!-- For each additional phase, copy this template:
+
+### Phase N
 - Goal:
 - Non-goals:
 - In scope:
@@ -144,16 +153,7 @@ Assumptions are temporary scaffolding. Every assumption must have confidence, a 
 - Acceptance criteria:
 - Risks + mitigations:
 
-### Phase 3
-- Goal:
-- Non-goals:
-- In scope:
-- Out of scope:
-- Blockers:
-- Owner(s)/DRI:
-- Next actions:
-- Acceptance criteria:
-- Risks + mitigations:
+-->
 
 ## 14) Risks & mitigations
 | Risk | Likelihood | Impact | Mitigation | Owner |

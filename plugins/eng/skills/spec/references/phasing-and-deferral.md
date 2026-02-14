@@ -21,6 +21,32 @@ Phase 1 should:
 
 If Phase 1 requires rework to support Phase 2, the phase boundary is wrong.
 
+## Phase 2+ qualification (phases are earned, not default)
+
+Phase 1 is always present. Additional phases must earn their way in — they are committed, executable plans, not aspirational buckets.
+
+A phase is warranted when you can concretely fill in **all** of these:
+- **Goal:** What specific assumption does this validate or what user value does it deliver?
+- **Acceptance criteria:** Verifiable conditions (not "works correctly" or "supports more providers")
+- **Owner:** Who will execute this?
+- **Timeframe:** When is this planned? ("after Phase 1", "Q3", etc. — not "someday")
+
+If you cannot fill these in concretely, the item belongs in **Documented Deferrals** — not a phase.
+
+### Phase vs. Deferral
+
+| Signal | Phase | Deferral |
+|---|---|---|
+| Acceptance criteria | Concrete, verifiable | Vague or aspirational |
+| Owner | Assigned or assignable | TBD or none |
+| Timeframe | Planned | "Eventually" or "when needed" |
+| Scope | Well-defined (you could write user stories) | Exploratory or open-ended |
+| Dependencies | Clear (blocked by Phase N, needs X first) | Unclear or speculative |
+
+### Scale check
+
+Not every feature needs multiple phases. A small feature with Phase 1 + documented deferrals is often the right shape. Don't manufacture Phase 2 just because the template has a section for it — the template is a menu, not a mandatory form.
+
 ## Technical vs product milestones
 Call out explicitly:
 - **Technical milestone:** internal validation; may deliver no user value
@@ -57,7 +83,6 @@ For reversible choices:
 When deferring:
 - What we learned (summary)
 - Why we're not doing it now (scope/risk/time)
-- What phase it belongs to (tentative)
 - Triggers to revisit (scale, customer demand, failures)
 - Implementation sketch (enough to avoid re-research)
 

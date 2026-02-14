@@ -16,15 +16,27 @@ Phase 5 has two stages. Stage 1 (review loop) runs first and takes priority. Sta
 
 This skill provides two scripts for reliable GitHub data retrieval. Always prefer these over manual `gh` commands — they handle pagination, formatting, and common pitfalls (like `gh pr view --comments` missing inline review comments).
 
+**Path resolution:** Script paths (`./scripts/...`) are relative to this skill's base directory, not the current working directory. When invoking from a worktree or other directory, use the full path to the skill's `scripts/` folder. If the scripts are not found (e.g., in a Docker or isolated environment where the skill directory is not mounted), fall back to the equivalent `gh api` commands documented inline.
+
 | Script | Purpose | Usage |
 |---|---|---|
 | `scripts/fetch-pr-feedback.sh` | Fetch reviews, inline comments, discussion comments, CI/CD status | `./scripts/fetch-pr-feedback.sh <pr> [--reviews-only] [--checks-only] [--since ISO]` |
 | `scripts/investigate-ci-failures.sh` | Investigate failures: logs, failing steps, main comparison | `./scripts/investigate-ci-failures.sh <pr> [--compare-main] [--log-lines N]` |
 
-For replying to review comment threads (not scripted — content varies each time):
+For responding to feedback (not scripted — content varies each time):
+
 ```bash
+# Reply to an inline review comment thread
 gh api --method POST repos/{owner}/{repo}/pulls/{pr_number}/comments/{comment_id}/replies -f body="<reply>"
+
+# Resolve an inline review comment thread (after replying)
+gh api graphql -f query='mutation($id:ID!){resolveReviewThread(input:{threadId:$id}){thread{isResolved}}}' -f id="<thread_node_id>"
+
+# Post a top-level PR comment (for responding to review body or general discussion)
+gh pr comment <pr_number> --body "<reply>"
 ```
+
+To get thread node IDs for resolving, use the GraphQL API or extract them from the output of `fetch-pr-feedback.sh`.
 
 ---
 
@@ -38,17 +50,41 @@ Claude Code reviewer feedback is the primary signal. CI/CD is secondary and oppo
 git push
 ```
 
-Update the PR description if the implementation has changed materially:
+Update the PR description if the implementation has changed materially — if the Approach or Changes sections no longer describe what the code actually does, update them. Not every small fix requires a PR body edit.
+
+**Use the SPEC.md as the source material for the PR body.** Distill it — don't copy the entire spec. The PR body should be a high-resolution summary that gives reviewers full context without requiring them to read the spec end-to-end. Link to the full SPEC.md for anyone who wants complete context.
+
+| PR section | Source | What to write |
+|---|---|---|
+| Summary | SPEC.md §1 (Problem statement) | 1-3 sentences: what this PR does and why. |
+| Motivation | SPEC.md §1-§2 (Problem + Goals) | What problem this solves, why now, who benefits. |
+| Approach | SPEC.md §9 (Proposed solution) + §10 (Decision log) | Key design decisions and why they were chosen over alternatives. Include decisions made *during implementation* that aren't in the spec. |
+| Changes | Implementation-specific | Bullet list of what changed, organized by area. This is the one section the spec can't provide — it reflects what was actually built. |
+| Deviations | Implementation-specific | What diverged from the spec and why. Omit if implementation matched the spec exactly. |
+| Test plan | Implementation-specific | What was tested, how, and key scenarios verified — both automated and manual. |
+| Spec link | — | Link to the SPEC.md file for full context. |
+
 ```bash
 gh pr edit <number> --body "$(cat <<'EOF'
 ## Summary
-<updated summary>
+<distill from SPEC.md §1 — what this PR does and why>
+
+## Motivation
+<distill from SPEC.md §1-§2 — what problem, why now, who benefits>
+
+## Approach
+<distill from SPEC.md §9 + §10 — key design decisions and rationale, including any decisions made during implementation>
 
 ## Changes
-<bullet list of what changed>
+<bullet list of what actually changed, organized by area>
+
+## Deviations from spec
+<what diverged from the SPEC.md during implementation and why — omit if none>
 
 ## Test plan
-<updated test plan>
+<what was tested, how, and key scenarios verified — both automated and manual>
+
+**Spec:** <link or path to SPEC.md>
 
 Generated with [Claude Code](https://claude.com/claude-code)
 EOF
@@ -140,6 +176,22 @@ After investigation, classify and act:
 - **If declining:** Explain your reasoning with **specific evidence** — code references, spec sections, tradeoff analysis, or research findings. Be respectful but direct. Do not apologize for disagreeing; explain why you disagree. Mark resolved.
 - **If partially accepting:** Explain what you're taking and what you're not, and why. This is often the right answer — a suggestion may be directionally correct but the specific implementation wrong.
 
+#### 3e. Close the loop (response mechanics by feedback type)
+
+Different GitHub feedback types have different resolution mechanisms. Use the right one:
+
+| Feedback type | How to respond | How to close |
+|---|---|---|
+| **Inline review comment thread** (comment on a specific line of code) | Reply to the thread with your reasoning or acknowledgment. | **Resolve the conversation** via `resolveReviewThread` GraphQL mutation. This is the primary closure mechanism — it signals the thread is addressed. |
+| **Review body** (top-level text in an APPROVE / REQUEST_CHANGES / COMMENT review) | Post a top-level PR comment addressing the points raised. | No "resolve" mechanism exists. Your reply serves as the closure. If the review requested changes and you have addressed them, the next review cycle from the reviewer supersedes it. |
+| **PR discussion comment** (general comment on the PR, not part of a code review) | Reply in the thread. | No "resolve" mechanism. Your reply closes the loop. |
+| **CI/CD failure** | Not a comment — handled in Stage 2. | Fix and push, or document as pre-existing. |
+
+**When to resolve vs. when to reply only:**
+- **Resolve** inline threads once the matter is settled — whether you accepted (and pushed the fix) or declined (and explained why). Do not leave threads open if you have made a final decision.
+- **Do not resolve** threads where you are asking a follow-up question or where you expect further discussion. Leave those open for the reviewer to respond.
+- For review-body-level feedback (REQUEST_CHANGES), your top-level PR comment should summarize which items you addressed and which you declined, so the reviewer can quickly re-evaluate.
+
 ### 4. Implement changes and test
 
 **For small changes** (< 20 lines, single file, clear fix):
@@ -152,6 +204,12 @@ After investigation, classify and act:
 - Spin up a subagent with clear, specific instructions and full context (see Subagent delegation template below).
 - Review the subagent's output before committing. You are still the owner.
 
+Before pushing, evaluate your own changes against the same quality bar you apply to Ralph's output:
+- **Correctness**: does the change actually fix the issue or implement the suggestion correctly?
+- **Clarity**: could another engineer understand this without explanation?
+- **Codebase alignment**: does it follow existing patterns and conventions?
+- **Proportionality**: does the fix match the scope of the problem, or did you over-build or under-build?
+
 At minimum, run Tier 1 tests after any changes:
 ```bash
 pnpm test --run
@@ -159,7 +217,7 @@ pnpm typecheck
 pnpm lint
 ```
 
-If changes affect user-facing behavior, also run Tier 2 (manual integration) tests.
+If changes affect user-facing behavior, also run Tier 2 (QA) tests.
 
 ### 5. Push and repeat
 

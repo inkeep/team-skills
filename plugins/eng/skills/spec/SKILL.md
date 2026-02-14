@@ -138,6 +138,7 @@ Do:
   - Priority: P0/P1/P2
   - Reversibility: 1-way door vs reversible
   - Blocking: blocks Phase 1 or not
+  - Confidence: HIGH / MEDIUM / LOW
 
 Then:
 - Propose the next **Decision Batch** (numbered), and a **Research Plan** to unblock it.
@@ -169,7 +170,7 @@ Loop steps:
    - Current behavior trace (code path, runtime/config/UI)
    - Dependency capability check (API/types/source)
 
-   **When evidence matters, invoke `/research`.**
+   **When evidence matters, invoke `/research`.** When findings emerge (from research, `/inspect`, codebase traces, etc.), route them to the right place — see `references/artifact-strategy.md` "Where evidence goes." Spec-specific context goes in spec-local `evidence/`; broader findings go to existing or new `/research` reports.
 3b. When research completes, convert it into **decision inputs** before presenting options:
    - **What we learned**
    - **What constraints this creates**
@@ -189,6 +190,8 @@ Loop steps:
 
 Do:
 - Define phases by **risk reduction and validation**, not just feature completeness.
+- **Phase 1 is always present. Phase 2+ must earn their way in** — if you can't write concrete acceptance criteria, assign an owner, and state a timeframe, it's a deferral, not a phase. Use the qualification test and decision aid in the reference.
+- Scale to the feature: a small feature with Phase 1 + documented deferrals is often the right shape. Don't manufacture phases.
 - Distinguish:
   - **Technical milestone** (validates architecture internally)
   - **Product milestone** (first user value, onboarding, docs, UX)
