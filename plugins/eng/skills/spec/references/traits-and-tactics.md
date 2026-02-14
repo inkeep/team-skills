@@ -1,0 +1,108 @@
+Use when: You want to enforce the transcript-derived meta-process reliably (decision batching, scope accordion, vertical slicing, proactive research).
+Priority: P1
+Impact: The agent becomes "helpful" but not rigorous; the process loses the distinctive decision discipline.
+
+---
+
+# Traits and tactics
+
+This is the behavioral "operating system" of the spec process.
+Each trait includes: signal → the move you should make → what to record.
+
+---
+
+## Process traits
+
+### 1) Seed + Delegate + Steer
+**Signal:** User gives a high-level seed.
+**Move:** Propose a structured plan (questions + research angles) and invite user steering via numbered choices.
+**Record:** initial assumptions + backlog + plan.
+
+### 2) Numbered Decision Batches
+**Signal:** Many decisions are pending.
+**Move:** Present 3-8 decisions as a numbered batch; request a numbered reply.
+**Record:** decisions with dates + rationale.
+
+### 3) Drill-down spiral
+**Signal:** One area becomes interesting/uncertain.
+**Move:** Go one layer deeper repeatedly: concept → current state → blast radius → implementation implications.
+**Record:** why the drill-down matters; what it changes.
+
+### 4) Scope accordion
+**Signal:** You're exploring architecture and future directions.
+**Move:** Expand to validate generality; contract to ship; preserve expansion as appendices.
+**Record:** deferrals with "what we learned" + triggers.
+
+### 5) Decision velocity calibration
+**Signal:** Some items are easy; one is hard.
+**Move:** Clear easy items quickly; slow down and research the hard one.
+**Record:** which items need more evidence and why.
+
+### 6) Gap-probing discipline
+**Signal:** A milestone feels "done".
+**Move:** Proactively restate: what's resolved, what's still open, what's blocking.
+**Record:** current Open Questions list (top P0).
+
+### 7) Documented deferral
+**Signal:** You say "later" or "Phase 2".
+**Move:** Create a self-contained appendix: learnings, rationale, triggers, sketch.
+**Record:** deferral entry, not a vague bullet.
+
+### 8) Recursive refinement loop
+**Signal:** New findings change old decisions.
+**Move:** Explicitly call out the revision and update affected parts of the spec.
+**Record:** decision revisions + what they invalidate.
+
+### 9) Spontaneous insight accommodation
+**Signal:** "Oh, one thing..." pivot emerges.
+**Move:** Integrate it; re-check impacted decisions; update backlog.
+**Record:** pivot + cascade analysis.
+
+### 10) Research delegation as team management
+**Signal:** There are multiple unknowns.
+**Move:** Propose your own research plan; ask user to approve/adjust.
+**Record:** research tasks + expected decision impact.
+
+---
+
+## Cognitive traits
+
+### 11) Vertical slice thinking
+**Signal:** Decisions span multiple layers.
+**Move:** Always describe implications across UX/API/data/runtime/ops in one thread.
+**Record:** vertical-slice summary in spec.
+
+### 12) Pragmatic idealism
+**Signal:** There is a "dream end-state" vision.
+**Move:** Evaluate each pragmatic step by "does it foreclose the ideal?"
+**Record:** explicit "does not foreclose because..." notes.
+
+### 13) Scenario-based generalization testing
+**Signal:** A pattern may become precedent.
+**Move:** Test against 2-3 hypothetical future cases.
+**Record:** generalization notes + constraints.
+
+### 14) Uncertainty as a research allocator
+**Signal:** hedging language ("maybe", "idk", "hmmm").
+**Move:** Propose targeted research rather than guess.
+**Record:** uncertainty + plan to resolve.
+
+### 15) User as domain knowledge contributor
+**Signal:** User has internal context not in the code.
+**Move:** Ask for internal patterns, constraints, surface maps; treat them as evidence.
+**Record:** user-provided constraints (with caveats).
+
+### 16) Constraint propagation
+**Signal:** A decision impacts many downstream areas.
+**Move:** Explicitly list what it unlocks/blocks; update backlog.
+**Record:** cascade notes.
+
+### 17) Latent issue discovery
+**Signal:** Research for one question surfaces something unexpected — a bug, a race condition, an inconsistency, a gap in another area.
+**Move:** Don't bury it. Flag it immediately ("While researching X, I found Y"), assess whether it affects the current design, and add it to the backlog.
+**Record:** the issue, its impact assessment, and whether it changes any prior decisions.
+
+---
+
+## Evaluation facets (apply to major decisions)
+**Load:** `references/evaluation-facets.md` for the full set with "what to check" guidance.
