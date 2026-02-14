@@ -9,7 +9,7 @@ Impact: Specs become untraceable across sessions; decisions get lost; research i
 ## Default artifact set (recommended)
 **One canonical spec artifact** that contains both PRD + Technical Spec content:
 
-- `PROPOSAL.md` (PRD section + Technical Spec section)
+- `SPEC.md` (PRD section + Technical Spec section)
   - includes: Open Questions, Decision Log, Assumptions, Risks, Appendices/Deferrals
 
 Optional supporting artifacts (only if they reduce friction):
@@ -21,17 +21,26 @@ Optional supporting artifacts (only if they reduce friction):
 - Use `/research` when deep evidence is required.
 - Keep raw evidence in the research report; keep the spec as synthesis.
 
-## Where to store artifacts (defaults + escape hatches)
+## Where to store artifacts
 
-| Situation | Default location | Why |
-|---|---|---|
-| Repo already has a convention (`docs/`, `rfcs/`, `specs/`) | Use that | Aligns with team habits |
-| No clear convention | `.claude/specs/<spec-name>/PROPOSAL.md` | Stable, tool-friendly, survives long sessions |
-| User wants "chat-only" | Produce Markdown in chat | Still keep a single canonical artifact in the thread |
+**Default:** `~/.claude/specs/<spec-name>/SPEC.md`
+
+Override sources (checked in priority order):
+
+| Priority | Source | Example |
+|----------|--------|---------|
+| 1 | User says so in the current session | "Put the spec in `docs/rfcs/`" |
+| 2 | Env var `CLAUDE_SPECS_DIR` | `CLAUDE_SPECS_DIR=./specs` → `./specs/<spec-name>/SPEC.md` |
+| 3 | AI repo config (`CLAUDE.md`, `AGENTS.md`, etc.) | `specs-dir: docs/specs` |
+| 4 | Default | `~/.claude/specs/<spec-name>/SPEC.md` |
+
+Do **not** auto-detect repo directories (`docs/`, `rfcs/`, `specs/`) — only use them when explicitly configured.
+
+If the user wants "chat-only": produce Markdown in chat, but still keep a single canonical artifact in the thread.
 
 ## "What goes where" (avoid duplication)
 
-**Keep in PROPOSAL (synthesis):**
+**Keep in SPEC (synthesis):**
 - Problem, goals, personas/journeys (as needed)
 - Requirements + acceptance criteria
 - Options + tradeoffs + decision rationale
@@ -44,11 +53,11 @@ Optional supporting artifacts (only if they reduce friction):
 - external prior art citations
 - negative searches ("NOT FOUND")
 
-**Evidence file format:** See `templates/EVIDENCE.md.template` for the standard structure. Evidence files should contain primary source material (code snippets, exact output, API shapes) — not just summaries.
+**Evidence file format:** Evidence files live in `/research` reports (under `evidence/`), not in the spec directory. See the research skill's conventions for structure. Evidence should contain primary source material (code snippets, exact output, API shapes) — not just summaries.
 
 ## Multi-session discipline
 When a spec spans many interactions:
-- Treat `PROPOSAL.md` as the single source of truth.
+- Treat `SPEC.md` as the single source of truth.
 - At the start of a new session:
   1) summarize current state from the spec
   2) restate top P0 Open Questions
@@ -57,7 +66,7 @@ When a spec spans many interactions:
 
 ## Updating an existing spec (delta posture)
 If the user is revisiting a spec:
-- Read the current `PROPOSAL.md` first.
+- Read the current `SPEC.md` first.
 - Add a small "Changelog" section or annotate decisions with dates.
 - Prefer "surgical edits" over rewriting everything unless the direction changed materially.
 

@@ -1,6 +1,6 @@
 ---
 name: spec
-description: Drive an evidence-driven, iterative product+engineering spec process that produces a full PRD + technical spec (often as PROPOSAL.md). Use when scoping a feature or product surface area end-to-end; defining requirements; researching external/internal prior art; mapping current system behavior; comparing design options; making 1-way-door decisions; planning phases; and maintaining a live Decision Log + Open Questions backlog. Triggers: "spec", "PRD", "proposal", "technical spec", "RFC", "scope this", "design doc", "end-to-end requirements", "phase plan", "tradeoffs", "open questions".
+description: Drive an evidence-driven, iterative product+engineering spec process that produces a full PRD + technical spec (often as SPEC.md). Use when scoping a feature or product surface area end-to-end; defining requirements; researching external/internal prior art; mapping current system behavior; comparing design options; making 1-way-door decisions; planning phases; and maintaining a live Decision Log + Open Questions backlog. Triggers: "spec", "PRD", "proposal", "technical spec", "RFC", "scope this", "design doc", "end-to-end requirements", "phase plan", "tradeoffs", "open questions".
 argument-hint: "[feature/product] (optional: context, constraints, target users, timelines)"
 ---
 
@@ -77,7 +77,7 @@ Output (in chat or doc):
 
 ### 2) Create the working artifacts (lightweight, then iterate)
 Do:
-- Create a **single canonical spec artifact** (default: `PROPOSAL.md` using `templates/PROPOSAL.md.template`).
+- Create a **single canonical spec artifact** (default: `SPEC.md` using `templates/SPEC.md.template`).
 - Initialize these living sections (in the same doc by default):
   - **Open Questions**
   - **Decision Log**
@@ -85,10 +85,24 @@ Do:
   - **Risks / Unknowns**
   - **Deferred (Documented) Items / Appendices**
 
-If you have filesystem access:
-- Put the spec somewhere stable (pick one):
-  - a repo's existing `docs/`, `rfcs/`, `specs/`, etc.
-  - otherwise: `.claude/specs/<spec-name>/PROPOSAL.md` (recommended default)
+#### Where to save the spec
+
+**Default:** `~/.claude/specs/<spec-name>/SPEC.md`
+
+Always use the default **unless** an override is active (checked in this order):
+
+| Priority | Source | Example |
+|----------|--------|---------|
+| 1 | **User says so** in the current session | "Put the spec in `docs/rfcs/`" |
+| 2 | **Env var `CLAUDE_SPECS_DIR`** (set in `.env` or shell) | `CLAUDE_SPECS_DIR=./specs` → `./specs/<spec-name>/SPEC.md` |
+| 3 | **AI repo config** (`CLAUDE.md`, `AGENTS.md`, `.cursor/rules/`, etc.) declares a specs directory | `specs-dir: docs/specs` |
+| 4 | **Default** | `~/.claude/specs/<spec-name>/SPEC.md` |
+
+Resolution rules:
+- If `CLAUDE_SPECS_DIR` is set, treat it as the parent directory (create `<spec-name>/SPEC.md` inside it).
+- Relative paths resolve from the **repo root** (or cwd if no repo).
+- Do **not** scan for existing `docs/`, `rfcs/`, `specs/` directories automatically — only use them when explicitly configured via one of the sources above.
+- When in doubt, use the default and tell the user where the file landed.
 
 ---
 
@@ -134,6 +148,7 @@ Then:
 This is the core of the skill. Repeat until Phase N is fully scoped.
 
 **Load (before presenting decisions):** `references/evaluation-facets.md`
+**Load (for behavioral patterns):** `references/traits-and-tactics.md`
 **Load (when evidence may matter):** `references/research-playbook.md`
 
 Loop steps:
@@ -229,7 +244,7 @@ For each decision:
 - Paste only the changed sections (or describe precisely what to update) unless the user asks for the full doc.
 
 ### Finalization output
-When the user says "finalize", return the full `PROPOSAL.md` (PRD + Technical Spec) in one standalone artifact.
+When the user says "finalize", return the full `SPEC.md` (PRD + Technical Spec) in one standalone artifact.
 
 ---
 
