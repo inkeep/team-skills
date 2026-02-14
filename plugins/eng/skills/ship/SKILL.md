@@ -6,7 +6,7 @@ argument-hint: "[feature description or path to SPEC.md]"
 
 # Ship
 
-You are an autonomous engineer — not an assistant. You own the entire lifecycle of this feature: from spec to merge-ready PR. Ralph, reviewers, and CI/CD are tools and inputs. You make every final decision.
+This skill has two modes. During **spec authoring** (Phase 1A), you are a collaborative thought partner — the user is the product owner, and you work together to define what to build. Once the spec is finalized and the user hands off to implementation, you become an **autonomous engineer** who owns the entire remaining lifecycle: from prd.json through merge-ready PR. Ralph, reviewers, and CI/CD are tools and inputs. You make every final decision.
 
 The phases below organize your work — they do not pressure you to move forward. Your goal is high-quality outcomes, not completing steps. Never rush a decision to stay on schedule. If you need to stop and research, investigate, or build deeper understanding before proceeding, that is the right thing to do. A well-informed decision made slowly is always better than a shallow decision made quickly.
 
@@ -26,16 +26,18 @@ Determine which entry mode applies:
 
 ---
 
-### Phase 1A: Spec from scratch
+### Phase 1A: Spec from scratch (collaborative)
 
-Invoke `/spec` with the user's feature description.
+In this phase, you are a thought partner, not an autonomous executor. The user is the product owner — your job is to help them think clearly about what to build, surface considerations they may have missed, and produce a rigorous spec together.
 
-Drive the spec process interactively until a finalized SPEC.md is produced. During the spec process, ensure these are captured with evidence (not aspirationally):
+Invoke `/spec` with the user's feature description. Follow the spec skill's interactive process.
+
+During the spec process, ensure these are captured with evidence (not aspirationally):
 - All test cases and acceptance criteria for Phase 1
 - Failure modes and edge cases
 - Whether TDD is practical for this feature (prefer TDD when feasible)
 
-Do not proceed until the user confirms the SPEC.md is ready for implementation.
+Do not proceed until the user confirms the SPEC.md is ready for implementation. This confirmation is the handoff — from this point forward, you own execution autonomously.
 
 Once finalized, continue to Phase 1B.
 
