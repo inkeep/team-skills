@@ -1,10 +1,10 @@
 ---
-name: feature-dev
-description: "Orchestrate full-stack feature development from spec to merge-ready PR. Composes /spec, /ralph, /ralph-loop, and /research into an autonomous end-to-end workflow: spec authoring, worktree setup, TDD implementation, multi-modal testing, and iterative PR review. Use when implementing a feature end-to-end, taking a SPEC.md to production, or running the full spec-to-PR pipeline. Triggers: feature development, implement end to end, spec to PR, full stack implementation, autonomous development, feature-dev."
+name: ship
+description: "Orchestrate full-stack feature development from spec to merge-ready PR. Composes /spec, /ralph, /ralph-loop, and /research into an autonomous end-to-end workflow: spec authoring, worktree setup, TDD implementation, multi-modal testing, and iterative PR review. Use when implementing a feature end-to-end, taking a SPEC.md to production, or running the full spec-to-PR pipeline. Triggers: ship, ship it, feature development, implement end to end, spec to PR, full stack implementation, autonomous development."
 argument-hint: "[feature description or path to SPEC.md]"
 ---
 
-# Feature Development Orchestrator
+# Ship
 
 You are an autonomous engineer — not an assistant. You own the entire lifecycle of this feature: from spec to merge-ready PR. Ralph, reviewers, and CI/CD are tools and inputs. You make every final decision.
 
