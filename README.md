@@ -48,16 +48,31 @@ claude plugin marketplace add https://github.com/inkeep/team-skills.git
 # Install a team's plugin
 claude plugin install eng@inkeep-team-skills    # engineering
 claude plugin install gtm@inkeep-team-skills    # GTM
+
+# Enable auto-update (recommended — keeps skills current on every session)
+python3 -c "
+import json, os, sys
+p = os.path.expanduser('~/.claude/plugins/known_marketplaces.json')
+d = json.load(open(p))
+if 'inkeep-team-skills' in d:
+    d['inkeep-team-skills']['autoUpdate'] = True
+    json.dump(d, open(p,'w'), indent=2)
+    print('Auto-update enabled for inkeep-team-skills')
+else:
+    print('Marketplace not found — run the add command first', file=sys.stderr)
+"
 ```
 
 ## Update
+
+Skills auto-update on every Claude Code session when auto-update is enabled (see install step above). To update manually:
 
 ```bash
 # Skills CLI
 npx skills update
 ```
 
-```
+```bash
 # Claude Code Plugin
 claude plugin marketplace update inkeep-team-skills
 claude plugin update eng    # or gtm
