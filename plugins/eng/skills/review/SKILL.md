@@ -101,7 +101,7 @@ The full assessment protocol is in the reference file. The short version:
 4. **Reply** with specific evidence. Resolve threads once settled.
 5. **Close the loop** using the right GitHub mechanism for each feedback type (inline threads → resolve; review bodies → top-level comment; discussion → reply).
 
-**Do not default to acceptance.** The path of least resistance (just apply every suggestion) produces worse code than thoughtful evaluation. Equally, do not default to rejection — that wastes valid insights.
+**Do not default to acceptance.** The path of least resistance (just apply every suggestion) produces worse code than thoughtful evaluation. Equally, do not default to rejection — that wastes valid insights. **Never resolve a thread by deferring to "future iterations"** — you have no authority to commit to future work. Every suggestion gets a substantive conclusion: accept and implement, or decline with evidence.
 
 #### 4. Implement changes and test
 
@@ -152,10 +152,19 @@ Do not force substantial rework into the review loop's fix-and-push cycle. Large
 
 #### 7. Exit Stage 1
 
-Exit the review loop when you determine there is no more actionable, valid review feedback remaining. This means:
-- [ ] All reviewer feedback threads are resolved (accepted with code changes or declined with reasoning)
+**Do not exit until all review feedback is resolved.** After resolving threads, re-poll to confirm no new feedback appeared:
+
+```bash
+./scripts/fetch-pr-feedback.sh <pr-number> --reviews-only
+```
+
+Exit only when ALL of these are true:
+- [ ] Every reviewer feedback thread is resolved (accepted with code changes, or declined with evidence-based reasoning)
 - [ ] You have pushed your latest changes
-- [ ] No new review comments have appeared on the latest push
+- [ ] You have re-polled after your last push and confirmed no new review comments appeared
+- [ ] No threads were resolved by deferring to "future iterations" — every thread has a substantive conclusion
+
+If new feedback appears after a push, return to step 3 and assess it. Continue looping until the above conditions are met.
 
 If the same feedback keeps recurring after 3 iterations, pause and consult the user.
 
@@ -215,7 +224,7 @@ If CI keeps failing on the same issue after 3 attempts, pause and consult the us
 When both stages are complete, report to the user (or the invoking skill):
 - All reviewer feedback threads resolved (with summary of accepted/declined)
 - CI/CD pipeline status
-- Any items flagged for future work
+- Any items added to the PR description's "Future considerations" section (if any)
 
 ---
 
@@ -229,6 +238,8 @@ When both stages are complete, report to the user (or the invoking skill):
 - Leaving review threads unresolved after making a final decision
 - **Flattening nuance** — forcing binary accept/decline when the honest assessment is "legitimate tradeoff"
 - **Asserting without evidence** — writing confident-sounding replies that don't reflect actual investigation depth
+- **Deferring to "future iterations"** — resolving threads with "we'll do in a future iteration" or similar. You have no authority to commit to future work. Either accept and implement, or decline with evidence.
+- **Exiting with unresolved threads** — leaving the review loop while review feedback threads or pending items remain unaddressed
 - Forcing substantial rework through the fix-and-push cycle instead of escalating
 
 ---

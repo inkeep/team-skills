@@ -1,6 +1,6 @@
 ---
 name: spec
-description: Drive an evidence-driven, iterative product+engineering spec process that produces a full PRD + technical spec (often as SPEC.md). Use when scoping a feature or product surface area end-to-end; defining requirements; researching external/internal prior art; mapping current system behavior; comparing design options; making 1-way-door decisions; planning phases; and maintaining a live Decision Log + Open Questions backlog. Triggers: "spec", "PRD", "proposal", "technical spec", "RFC", "scope this", "design doc", "end-to-end requirements", "phase plan", "tradeoffs", "open questions".
+description: "Drive an evidence-driven, iterative product+engineering spec process that produces a full PRD + technical spec (often as SPEC.md). Use when scoping a feature or product surface area end-to-end; defining requirements; researching external/internal prior art; mapping current system behavior; comparing design options; making 1-way-door decisions; planning phases; and maintaining a live Decision Log + Open Questions backlog. Triggers: spec, PRD, proposal, technical spec, RFC, scope this, design doc, end-to-end requirements, phase plan, tradeoffs, open questions."
 argument-hint: "[feature/product] (optional: context, constraints, target users, timelines)"
 ---
 

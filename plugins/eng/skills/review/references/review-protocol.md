@@ -50,6 +50,7 @@ When a SPEC.md is available, use it as the source material for the PR body. Dist
 | Changes | Implementation-specific | Bullet list of what changed, organized by area. This is the one section the spec can't provide — it reflects what was actually built. |
 | Deviations | Implementation-specific | What diverged from the spec and why. Omit if implementation matched the spec exactly. |
 | Test plan | Implementation-specific | What was tested, how, and key scenarios verified — both automated and manual. |
+| Future considerations | Review feedback (out-of-scope items) | Items surfaced during review that are out of scope for this PR but worth tracking. Updated during the review loop as reviewers raise pre-existing or tangential issues. Omit if none. |
 | Spec link | — | Link to the SPEC.md file for full context. |
 
 ```bash
@@ -72,6 +73,9 @@ gh pr edit <number> --body "$(cat <<'EOF'
 ## Test plan
 <what was tested, how, and key scenarios verified — both automated and manual>
 
+## Future considerations
+<items surfaced during review that are out of scope for this PR but worth tracking — omit section if none>
+
 **Spec:** <link or path to SPEC.md>
 
 Generated with [Claude Code](https://claude.com/claude-code)
@@ -88,6 +92,8 @@ When no SPEC.md is available, write the PR body directly from the implementation
 You are a peer engineer evaluating suggestions — not a subordinate implementing directives. Reviewer comments are hypotheses about your code. Some will be correct and valuable. Some will be wrong, inapplicable, or based on incomplete understanding. Your job is to determine which is which, with evidence.
 
 **Do not default to acceptance.** The path of least resistance (just apply every suggestion) produces worse code than thoughtful evaluation. Equally, do not default to rejection — that wastes valid insights.
+
+**NEVER defer to "future iterations."** You have no authority to commit to future work on behalf of the team. "We'll address this in a future iteration," "we'll revisit this later," and similar deferrals are never acceptable thread resolutions. Every suggestion must be evaluated to a conclusion in this review cycle — either accepted and implemented, or declined with evidence-based reasoning.
 
 ### 3a. Investigate before deciding
 
@@ -118,6 +124,8 @@ Investigation tools (use as needed):
 | **LOW** | You cannot cite specific evidence for your position. | Do not decide yet. Investigate more, or consult the user. |
 
 Defaulting to HIGH without evidence is a failure mode — it produces confident-sounding replies that don't hold up to scrutiny.
+
+**For in-scope suggestions, investigate until you conclude.** Do not abandon investigation because it requires effort. Use all available tools — codebase inspection, web search, `/research`, spec review — autonomously and iteratively until you reach at least MEDIUM confidence. If you cannot reach MEDIUM confidence after thorough investigation, consult the user with what you found and your leaning. Deferring to a "future iteration" is never an acceptable stopping point.
 
 **Confidence ceiling for unverified external claims:** Claims about library behavior, API semantics, deprecation status, or framework best practices — whether made by a reviewer or from your own knowledge — cannot reach HIGH confidence without verification (web search, official documentation, or codebase inspection). Training-data knowledge is not verification.
 
@@ -161,7 +169,7 @@ After investigation, classify and act:
 |---|---|
 | Valid bug or correctness issue (confirmed by evidence) | Fix immediately. High priority. |
 | Valid improvement aligned with scope (tradeoffs favorable) | Implement if effort is proportional to value. |
-| Valid suggestion but out of scope or inappropriate for this PR | Acknowledge, note as future work, decline for this PR. |
+| Pre-existing issue or suggestion unrelated to this PR's changes (out of scope) | Decline for this PR. Update the PR description's "Future considerations" section to capture the item — do not just dismiss it. Reply explaining why it's out of scope. Mark resolved. |
 | Incorrect or based on misunderstanding (you have evidence) | Reply explaining why, with evidence. Mark resolved. |
 | Technically valid but tradeoffs are unfavorable | Reply explaining the tradeoffs and why you're declining. Mark resolved. |
 | Style/preference with no correctness impact | Use your judgment. Prefer consistency with existing codebase. |
@@ -175,6 +183,7 @@ After investigation, classify and act:
 - **If accepting:** Brief acknowledgment of what you're fixing and why the reviewer was right. Push the fix, then mark resolved.
 - **If declining:** Explain your reasoning with **specific evidence** — code references, spec sections, tradeoff analysis, or research findings. Be respectful but direct. Do not apologize for disagreeing; explain why you disagree. Mark resolved.
 - **If partially accepting:** Explain what you're taking and what you're not, and why. This is often the right answer — a suggestion may be directionally correct but the specific implementation wrong.
+- **If declining as out of scope:** Explain why the item is unrelated to this PR's changes (e.g., pre-existing pattern, tangential improvement). Note that you've added it to the PR description's "Future considerations" section so it's tracked. Do not say "we'll do in a future iteration" — you have no authority to make that commitment.
 
 **Match your reply's certainty to your actual evidence level.** If your investigation left you at MEDIUM confidence, your reply should reflect that — "Based on my reading of X, I believe Y, though I may be missing context about Z" — rather than asserting conclusions you cannot fully support. Overstating certainty erodes trust and can lead to resolving threads that should remain open for discussion.
 
