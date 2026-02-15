@@ -42,15 +42,12 @@ npx skills add inkeep/team-skills/plugins/shared -y
 ### Claude Code Plugin
 
 ```bash
-# Add the marketplace (one-time)
-claude plugin marketplace add https://github.com/inkeep/team-skills.git
+# Add the marketplace with auto-update (one-time)
+claude plugin marketplace add https://github.com/inkeep/team-skills.git && node -e "const f=require('os').homedir()+'/.claude/plugins/known_marketplaces.json',d=require(f);d['inkeep-team-skills'].autoUpdate=true;require('fs').writeFileSync(f,JSON.stringify(d,null,2));console.log('Auto-update enabled for inkeep-team-skills')"
 
-# Install a team's plugin
+# Install your team's plugin
 claude plugin install eng@inkeep-team-skills    # engineering
 claude plugin install gtm@inkeep-team-skills    # GTM
-
-# Enable auto-update (recommended — keeps skills current on every session)
-node -e "const f=require('os').homedir()+'/.claude/plugins/known_marketplaces.json';const d=require(f);if(d['inkeep-team-skills']){d['inkeep-team-skills'].autoUpdate=true;require('fs').writeFileSync(f,JSON.stringify(d,null,2));console.log('Auto-update enabled')}else{console.error('Marketplace not found — run the add command first');process.exit(1)}"
 ```
 
 ## Update
