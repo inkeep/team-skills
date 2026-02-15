@@ -177,7 +177,7 @@ Do not proceed to Phase 5 until you have high confidence in the implementation. 
 Invoke `/review` with the PR number, the path to the SPEC.md, and the quality gate commands from Phase 0:
 
 ```
-/review <pr-number> --spec <path/to/SPEC.md> --test-cmd "<from Phase 0>" --typecheck-cmd "<from Phase 0>" --lint-cmd "<from Phase 0>"
+/review <pr-number> --spec <path/to/SPEC.md> --test-cmd "<test-cmd> && <typecheck-cmd> && <lint-cmd>"
 ```
 
 `/review` manages the full review lifecycle autonomously: polling for reviewer feedback, assessing each suggestion with evidence, implementing fixes, resolving threads, and driving CI/CD to green. It operates in two stages — Stage 1 (review feedback loop) completes before Stage 2 (CI/CD resolution).
@@ -271,3 +271,4 @@ These govern your behavior throughout:
 | `references/worktree-setup.md` | Setting up isolated development environment (Phase 2) | Wrong pnpm version, broken lockfile, work bleeds into main directory |
 | `references/testing-strategy.md` | Planning and executing tests (Phase 4) | Gaps in coverage, untested edge cases, false confidence |
 | `references/ralph-iteration-fallback.md` | Ralph-loop unavailable; ship manages iteration directly (Phase 3) | No iteration mechanism; implementation stalls after one ralph invocation |
+
