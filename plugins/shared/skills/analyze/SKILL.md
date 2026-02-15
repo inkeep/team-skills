@@ -145,6 +145,7 @@ Stop expanding when additional context is unlikely to change the analysis.
 - **Codebase understanding** (patterns, conventions, dependencies, blast radius) → invoke `/inspect`. It produces structured understanding faster and more reliably than ad-hoc file reading.
 - **Systematic evidence gathering** (when you discover evidence gaps that need formal investigation) → invoke `/research`.
 - Use judgment — not every code mention needs a full inspection. Invoke when the analysis would materially benefit from structured codebase understanding, not for quick lookups.
+- **Subagent delegation** — subagents do not inherit your loaded skills. When you delegate work to subagents, instruct them to load relevant skills via the Skill tool (e.g., `/analyze` for analytical work, `/inspect` for codebase investigation). The Skill tool is available in general-purpose, Explore, and Plan subagent types.
 
 When context gathering is complete, briefly summarize what you found and what's still unknown before moving to structuring.
 

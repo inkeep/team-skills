@@ -27,7 +27,8 @@ Before making any workflow decisions, detect what capabilities are available. Fo
 | Quality gate commands | Read `package.json` `scripts` field; check for `pnpm`/`npm`/`yarn`; accept user `--test-cmd` / `--typecheck-cmd` / `--lint-cmd` overrides | Use discovered commands; halt if no typecheck AND no test command works |
 | Browser automation | Check if `mcp__claude-in-chrome__*` tools are available | Substitute Bash-based testing; pass `--no-browser` to ralph for criteria adaptation |
 | macOS computer use | Check if `mcp__peekaboo__*` tools are available | Skip OS-level testing; document gap |
-| Ralph-loop plugin | Check if `/ralph-loop` is available as a skill/plugin | Ship manages iteration directly (Phase 3) — **Load:** `references/ralph-iteration-fallback.md` |
+| Claude CLI subprocess | Run: `env -u CLAUDECODE -u CLAUDE_CODE_ENTRYPOINT claude --version` | Use same-session ralph-loop (Path D) or Task subagent iteration (Path B) — see Phase 3 |
+| Ralph-loop plugin | Check if `/ralph-loop` is available as a skill/plugin | Use Task subagent iteration (Path B) — see Phase 3 |
 | /spec skill | Check skill availability | Require SPEC.md as input (no interactive spec authoring) |
 | /inspect skill | Check skill availability | Use direct codebase exploration (Glob, Grep, Read) |
 
@@ -115,19 +116,44 @@ First, detect the current environment:
 
 ### Phase 3: Implementation
 
+#### Step 1: Craft the implementation prompt
+
 Invoke `/ralph` to prepare the implementation (Phase 2: prompt crafting). Provide Ralph with:
 - Path to the SPEC.md and prd.json — the spec path is critical: Ralph forwards it into the implementation prompt so iteration agents read the full spec as their primary reference every iteration. Do not omit it.
 - The codebase context from Phase 1B — the patterns, conventions, and shared abstractions you identified via `/inspect`
 - Quality gate command overrides from Phase 0 (which may differ from pnpm defaults)
 - Browser availability from Phase 0 (if browser tools are unavailable, pass `--no-browser` so ralph adapts criteria)
 
-**If ralph-loop is available** (detected in Phase 0): Invoke `/ralph-loop` with the implementation prompt and appropriate iteration bounds. Ralph handles iteration via its stop hook.
+Ralph produces the **implementation prompt** — the complete instruction set that each iteration agent will execute. Save this prompt to a file (e.g., `.claude/ralph-prompt.md`) in the working directory so it can be passed to subprocess or subagent invocations.
 
-**If ralph-loop is NOT available:** Ship manages iteration directly.
+#### Step 2: Execute the iteration loop
+
+Use the first available path from this degradation chain. Ship manages the iteration loop for Paths A and B; Path D delegates iteration to ralph-loop.
+
+**Path A (primary) — Claude CLI subprocess iteration:**
+Requires: Claude CLI subprocess available (detected in Phase 0).
+
+Each iteration spawns a fully independent Claude Code process. This is the preferred path because it provides both **context isolation** (ship's context is preserved) and **full capabilities** (the subprocess is a complete Claude Code instance that can spawn its own subagents, use MCP servers, and access tools).
+
+**Load:** `references/subprocess-iteration.md`
+
+**Path D (fallback) — Same-session ralph-loop:**
+Requires: `/ralph-loop` available as a skill/plugin (detected in Phase 0). Claude CLI subprocess NOT available.
+
+Invoke `/ralph-loop` with the implementation prompt and appropriate iteration bounds. Ralph handles iteration via its stop hook. This path provides **full capabilities** but **no context isolation** — ralph iterations consume ship's context window.
+
+After ralph-loop completes, **re-ground yourself**: re-read the SPEC.md, prd.json, progress.txt, and your task list. Ralph's iterations may have consumed significant context. Verify you still have a clear understanding of the feature, what was implemented, and what remains before proceeding.
+
+**Path B (last resort) — Task subagent iteration:**
+Requires: Neither Claude CLI subprocess nor ralph-loop available.
+
+Ship spawns each iteration as a Task tool subagent with the implementation prompt as the task description. This provides **context isolation** but **degraded capabilities** — Task subagents cannot spawn sub-subagents, do not inherit filesystem-level skills, and have limited MCP access.
 
 **Load:** `references/ralph-iteration-fallback.md`
 
-After implementation completes (via either path), verify that you are satisfied with the output before proceeding. You are responsible for this code — Ralph's output is your starting point, not your endpoint. If anything does not meet your quality bar, fix it now.
+#### Step 3: Post-implementation review
+
+After implementation completes (via any path), verify that you are satisfied with the output before proceeding. You are responsible for this code — Ralph's output is your starting point, not your endpoint. If anything does not meet your quality bar, fix it now.
 
 ---
 
@@ -270,5 +296,6 @@ These govern your behavior throughout:
 | `/review` skill | Running the push → review → fix → CI/CD loop (Phase 5) | Missed feedback, unresolved threads, mechanical response to reviews, CI/CD failures not investigated |
 | `references/worktree-setup.md` | Setting up isolated development environment (Phase 2) | Wrong pnpm version, broken lockfile, work bleeds into main directory |
 | `references/testing-strategy.md` | Planning and executing tests (Phase 4) | Gaps in coverage, untested edge cases, false confidence |
-| `references/ralph-iteration-fallback.md` | Ralph-loop unavailable; ship manages iteration directly (Phase 3) | No iteration mechanism; implementation stalls after one ralph invocation |
+| `references/subprocess-iteration.md` | Claude CLI subprocess available; ship manages iteration loop (Phase 3, Path A) | Falls back to Path D or B; loses context isolation with full capabilities |
+| `references/ralph-iteration-fallback.md` | Neither subprocess nor ralph-loop available; Task subagent iteration (Phase 3, Path B) | No iteration mechanism; implementation stalls after one ralph invocation |
 
