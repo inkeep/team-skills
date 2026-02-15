@@ -33,6 +33,10 @@ Before making any workflow decisions, detect what capabilities are available. Fo
 
 Record what's available. This state flows through all subsequent phases.
 
+If any capability is unavailable: briefly state which capabilities are missing and what will be skipped or degraded. Keep to 2-3 sentences. Frame as a negotiation checkpoint — the user may be able to fix the issue (e.g., re-authenticate `gh`, start Chrome extension) before work proceeds.
+
+If all capabilities are available: proceed directly to Step 2.
+
 #### Step 2: Detect starting point
 
 Determine which entry mode applies:
@@ -134,7 +138,7 @@ After implementation completes (via either path), verify that you are satisfied 
 Run three tiers of testing:
 
 **Tier 1 — Formal test suite (mandatory):**
-Run the repo's full verification suite — test runner, type checker, linter, and formatter — using the commands defined in the repo's project configuration.
+Run the repo's full verification suite — test runner, type checker, linter, and formatter — using the quality gate commands discovered in Phase 0.
 
 **Tier 2 — You are the QA engineer (mandatory for user-facing changes):**
 You own this feature. Before anyone else sees it, verify it works the way a user would actually experience it — not just that individual code paths are correct. Formal tests verify logic; Tier 2 verifies the *experience*. A feature can pass every unit test and still have a broken layout, a confusing flow, or an interaction that doesn't feel right.
@@ -170,10 +174,10 @@ Do not proceed to Phase 5 until you have high confidence in the implementation. 
 
 **If no PR exists** (GitHub CLI unavailable or PR creation was skipped in Phase 2): Skip this phase entirely. The user reviews locally after Phase 4. Proceed to Phase 6.
 
-Invoke `/review` with the PR number and the path to the SPEC.md:
+Invoke `/review` with the PR number, the path to the SPEC.md, and the quality gate commands from Phase 0:
 
 ```
-/review <pr-number> --spec <path/to/SPEC.md>
+/review <pr-number> --spec <path/to/SPEC.md> --test-cmd "<from Phase 0>" --typecheck-cmd "<from Phase 0>" --lint-cmd "<from Phase 0>"
 ```
 
 `/review` manages the full review lifecycle autonomously: polling for reviewer feedback, assessing each suggestion with evidence, implementing fixes, resolving threads, and driving CI/CD to green. It operates in two stages — Stage 1 (review feedback loop) completes before Stage 2 (CI/CD resolution).
