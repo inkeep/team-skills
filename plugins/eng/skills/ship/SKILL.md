@@ -1,7 +1,7 @@
 ---
 name: ship
 description: "Orchestrate full-stack feature development from spec to merge-ready PR. Composes /spec, /ralph, /review, and /research into an autonomous end-to-end workflow: spec authoring, worktree setup, TDD implementation, multi-modal testing, and iterative PR review. Use when implementing a feature end-to-end, taking a SPEC.md to production, or running the full spec-to-PR pipeline. Triggers: ship, ship it, feature development, implement end to end, spec to PR, full stack implementation, autonomous development."
-argument-hint: "[feature description or path to SPEC.md]"
+argument-hint: "[feature description or path to SPEC.md] [--ralph-docker [compose-file]]"
 ---
 
 # Ship
@@ -27,7 +27,8 @@ Before making any workflow decisions, detect what capabilities are available. Fo
 | Quality gate commands | Read `package.json` `scripts` field; check for `pnpm`/`npm`/`yarn`; accept user `--test-cmd` / `--typecheck-cmd` / `--lint-cmd` overrides | Use discovered commands; halt if no typecheck AND no test command works |
 | Browser automation | Check if `mcp__claude-in-chrome__*` tools are available | Substitute Bash-based testing; pass `--no-browser` to ralph for criteria adaptation |
 | macOS computer use | Check if `mcp__peekaboo__*` tools are available | Skip OS-level testing; document gap |
-| Claude CLI subprocess | Run: `env -u CLAUDECODE -u CLAUDE_CODE_ENTRYPOINT claude --version` | Automated iteration unavailable — ship saves the implementation prompt and gives the user exact instructions for manual iteration. Phases 0-2 and 4-6 still work. See Phase 3. |
+| Claude CLI subprocess | Detected by Ralph during Phase 3 execution | Ralph handles degradation internally — if subprocess unavailable, Ralph provides manual iteration instructions. Ship does not need to detect this. |
+| Docker execution (`--ralph-docker`) | User passes `--ralph-docker` (optionally with compose file path) | Host execution (default). When passed, forwarded to Ralph as `--docker` in Phase 3. Ralph auto-discovers the compose file if no path given. |
 | /spec skill | Check skill availability | Require SPEC.md as input (no interactive spec authoring) |
 | /inspect skill | Check skill availability | Use direct codebase exploration (Glob, Grep, Read) |
 
@@ -115,43 +116,22 @@ First, detect the current environment:
 
 ### Phase 3: Implementation
 
-#### Step 1: Craft the implementation prompt
+#### Step 1: Invoke Ralph
 
-Invoke `/ralph` to prepare the implementation (Phase 2: prompt crafting). Provide Ralph with:
+Invoke `/ralph` to handle the full implementation lifecycle. Provide Ralph with:
 - Path to the SPEC.md and prd.json — the spec path is critical: Ralph forwards it into the implementation prompt so iteration agents read the full spec as their primary reference every iteration. Do not omit it.
 - The codebase context from Phase 1B — the patterns, conventions, and shared abstractions you identified via `/inspect`
 - Quality gate command overrides from Phase 0 (which may differ from pnpm defaults)
 - Browser availability from Phase 0 (if browser tools are unavailable, pass `--no-browser` so ralph adapts criteria)
+- Docker execution from Phase 0 (if `--ralph-docker` was passed, forward to Ralph as `--docker`, including the compose file path if one was provided)
 
-Ralph produces the **implementation prompt** — the complete instruction set that each iteration agent will execute. Save this prompt to a file (e.g., `.claude/ralph-prompt.md`) in the working directory so it can be passed to subprocess or subagent invocations.
+Ralph converts the spec (if needed), crafts the prompt, and executes the iteration loop via `scripts/ralph.sh`. Ralph manages stuck story detection and re-runs internally. If Claude CLI subprocess is unavailable, Ralph provides the user with manual iteration instructions.
 
-#### Step 2: Execute the iteration loop
+Wait for Ralph to complete. If Ralph reports that automated execution is unavailable and hands off to the user, wait for the user to signal completion. When they do, re-read the SPEC.md, prd.json, and progress.txt to re-ground yourself.
 
-**If Claude CLI subprocess is available (Path A):**
+#### Step 2: Post-implementation review
 
-Each iteration spawns a fully independent Claude Code process. This provides both **context isolation** (ship's context is preserved) and **full capabilities** (the subprocess is a complete Claude Code instance that can spawn its own subagents, use MCP servers, and access tools).
-
-**Load:** `references/subprocess-iteration.md`
-
-**If Claude CLI subprocess is NOT available:**
-
-Automated iteration is not possible. Ship has already provided full value by producing the SPEC.md, prd.json, and the implementation prompt — the user runs the iteration loop manually.
-
-Tell the user:
-
-1. The implementation prompt has been saved to `.claude/ralph-prompt.md`
-2. Give them the exact command to run ralph-loop with the prompt:
-   ```
-   /ralph-loop "$(cat .claude/ralph-prompt.md)" --max-iterations <N> --completion-promise "IMPLEMENTATION COMPLETE"
-   ```
-   Where `<N>` is the recommended iteration limit from the tuning table (10-15 for small, 20-30 for medium, 30-50 for large).
-3. Tell them: "Run this in a fresh Claude Code session. When implementation is complete, come back and tell me — I'll continue with testing and review."
-
-Wait for the user to signal that implementation is complete. When they do, re-read the SPEC.md, prd.json, and progress.txt to re-ground yourself, then proceed to Step 3 (post-implementation review).
-
-#### Step 3: Post-implementation review
-
-After implementation completes (via any path), verify that you are satisfied with the output before proceeding. You are responsible for this code — Ralph's output is your starting point, not your endpoint. If anything does not meet your quality bar, fix it now.
+After implementation completes, verify that you are satisfied with the output before proceeding. You are responsible for this code — Ralph's output is your starting point, not your endpoint. If anything does not meet your quality bar, fix it now.
 
 ---
 
@@ -290,9 +270,8 @@ These govern your behavior throughout:
 
 | Path | Use when | Impact if skipped |
 |---|---|---|
-| `/ralph` skill | Implementing the feature via Ralph loop (Phase 3) | Missing prd.json validation, prompt crafting, post-implementation review |
+| `/ralph` skill | Converting spec, crafting prompt, and executing the iteration loop (Phase 3) | Missing prd.json, no implementation prompt, no automated execution |
 | `/review` skill | Running the push → review → fix → CI/CD loop (Phase 5) | Missed feedback, unresolved threads, mechanical response to reviews, CI/CD failures not investigated |
 | `references/worktree-setup.md` | Setting up isolated development environment (Phase 2) | Wrong pnpm version, broken lockfile, work bleeds into main directory |
 | `references/testing-strategy.md` | Planning and executing tests (Phase 4) | Gaps in coverage, untested edge cases, false confidence |
-| `references/subprocess-iteration.md` | Claude CLI subprocess available; ship manages iteration loop (Phase 3) | Automated iteration unavailable; user must run ralph-loop manually |
 

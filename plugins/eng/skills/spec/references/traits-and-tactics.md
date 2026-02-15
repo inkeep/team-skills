@@ -1,4 +1,4 @@
-Use when: You want to enforce the transcript-derived meta-process reliably (decision batching, scope accordion, vertical slicing, proactive research).
+Use when: You want to enforce the transcript-derived meta-process reliably (decision batching, scope accordion, vertical slicing, autonomous investigation).
 Priority: P1
 Impact: The agent becomes "helpful" but not rigorous; the process loses the distinctive decision discipline.
 
@@ -58,10 +58,10 @@ Each trait includes: signal → the move you should make → what to record.
 **Move:** Integrate it; re-check impacted decisions; update backlog.
 **Record:** pivot + cascade analysis.
 
-### 10) Research delegation as team management
+### 10) Autonomous investigation with judgment stops
 **Signal:** There are multiple unknowns.
-**Move:** Propose your own research plan; ask user to approve/adjust.
-**Record:** research tasks + expected decision impact.
+**Move:** Investigate evidence gaps autonomously (code, dependencies, prior art). Stop when you hit judgment calls. Present findings + remaining threads for user direction.
+**Record:** what was investigated, what was found, what still needs human judgment.
 
 ---
 
@@ -82,10 +82,10 @@ Each trait includes: signal → the move you should make → what to record.
 **Move:** Test against 2-3 hypothetical future cases.
 **Record:** generalization notes + constraints.
 
-### 14) Uncertainty as a research allocator
+### 14) Uncertainty as an investigation trigger
 **Signal:** hedging language ("maybe", "idk", "hmmm").
-**Move:** Propose targeted research rather than guess.
-**Record:** uncertainty + plan to resolve.
+**Move:** Investigate rather than guess. If investigation is possible, do it; if it requires human judgment, surface as an open thread.
+**Record:** what was investigated, what remains uncertain, what needs user input.
 
 ### 15) User as domain knowledge contributor
 **Signal:** User has internal context not in the code.

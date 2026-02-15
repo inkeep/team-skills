@@ -8,7 +8,7 @@ Impact: Missing a relevant facet leads to rework; decisions lack rigor; importan
 
 Before any major decision, scan these facets. Not every one applies — but check all to identify which do.
 
-If the decision is non-trivial and you have not checked the relevant facets, propose research before recommending.
+If the decision is non-trivial and you have not checked the relevant facets, investigate them before recommending.
 
 ---
 

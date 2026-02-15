@@ -18,9 +18,9 @@ Before recommending architecture:
 - identify constraints and latent bugs
 - identify reusable patterns
 
-If you cannot verify current state:
-- label uncertainty
-- propose `/research` to confirm
+If you cannot verify current state from the codebase directly:
+- investigate using `/research` or `/inspect` to confirm
+- label what remains uncertain after investigation
 
 ## Internal prior art
 Always search for:
@@ -41,7 +41,9 @@ For any design that relies on a third-party capability:
 - confirm error semantics
 - record alternatives if capability is missing
 
-Use `/research` if needed.
+Investigate directly — use `/research` for deep evidence trails.
+
+When the spec substantively depends on 3P systems, go beyond targeted checks — dispatch Task subagents to investigate capabilities, source code, documentation, and best practices scoped to your scenario. See `references/research-playbook.md` "Third-party dependency investigation."
 
 ## Enforcement architecture
 For any policy/filtering/validation question:

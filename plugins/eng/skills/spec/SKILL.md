@@ -22,9 +22,11 @@ argument-hint: "[feature/product] (optional: context, constraints, target users,
 2. **Treat product and technical as one integrated backlog.**
    - Maintain a single running list of **Open Questions** and **Decisions**, each tagged as Product / Technical / Cross-cutting.
 
-3. **Default to proactive research proposals.**
-   - At every reasonable decision point, propose research angles (external prior art, internal current state, dependency constraints, etc.).
-   - Use `/research` for deep dives when evidence matters.
+3. **Investigate evidence gaps autonomously; stop for judgment gaps.**
+   - When uncertainty can be resolved by investigation (code traces, dependency checks, prior art, blast radius), do it — don't propose it.
+   - Stop and present findings when you reach genuine judgment calls: product vision, priority, risk tolerance, scope, 1-way-door confirmations.
+   - Use `/research` for deep evidence trails; use `/inspect` for codebase understanding. Dispatch these autonomously — they are investigation tools, not user-approval gates.
+   - Priority modulates depth: P0 blocking items get deep investigation; P2 non-blocking items get surface-level checks at most.
 
 4. **Keep the user in the driver seat via batched decisions.**
    - Present decisions as a **numbered batch** that the user can answer in-order.
@@ -121,6 +123,8 @@ Do:
 - Map the **user journey(s)** and "what success looks like" (product).
 - Map the **current system behavior** and constraints end-to-end (technical). As you trace current behavior, persist factual findings to `evidence/` immediately — don't wait for the world model to be complete (see `references/artifact-strategy.md` "Current system behavior discovered").
 - Create a **Consumer Matrix** when there are multiple consumption modes (SDK, UI, API, internal runtime, etc.).
+- **When the design depends on third-party code** (packages, libraries, frameworks, external services): dispatch **Task subagents** to investigate each key 3P dependency — scoped to the spec's scenario and the capabilities under consideration, not a general survey. Include a sanity check: is this the right 3P choice, or is there a better-suited alternative? Persist findings to `evidence/`. See `references/research-playbook.md` "Third-party dependency investigation" for scope and execution guidance.
+- **When the spec touches existing system areas** (current behavior, internal patterns, blast radius): dispatch **Task subagents** that load `/inspect` to build structured codebase understanding — pattern lens for conventions and prior art, tracing lens for end-to-end flows and blast radius, or both. Scope to the spec's areas of interest, not the entire codebase. Each subagent returns a pattern brief or trace brief inline; persist load-bearing findings to `evidence/`. See `references/research-playbook.md` investigation types B, C, and F for what to investigate.
 
 **Load (for technique):**
 - `references/technical-design-playbook.md`
@@ -151,56 +155,53 @@ Do:
   - Confidence: HIGH / MEDIUM / LOW
 
 Then:
-- For each Open Question, identify 1-3 research angles that would help resolve it (these surface in §2 of the output and persist in the "Plan to resolve" column of SPEC.md §11).
-- Propose the next **Decision Batch** (numbered), and a **Research Plan** to unblock it.
+- For each Open Question, identify investigation paths that would help resolve it.
+- **Investigate P0/blocking items autonomously** — run code traces, dependency checks, prior art searches, blast radius analysis. Persist findings to `evidence/` as you go.
+- After investigating, present the first **Decision Batch** (numbered) and **Open Threads** (remaining unknowns with investigation status and action hooks). See Output format §2-§3.
 
 ---
 
-### 5) Run the iterative loop: research → decide → update → cascade
+### 5) Run the iterative loop: investigate → present → decide → cascade
 This is the core of the skill. Repeat until Phase N is fully scoped.
 
 **Load (before presenting decisions):** `references/evaluation-facets.md`
 **Load (for behavioral patterns):** `references/traits-and-tactics.md`
-**Load (when evidence may matter):** `references/research-playbook.md`
+**Load (for investigation approach):** `references/research-playbook.md`
 
 Loop steps:
-1. **Select the next decision batch** (small enough to answer in one user reply).
-2. For each item, draft:
-   - Options (A/B/C)
-   - Practical effect of each option
-   - Your recommendation (if evidence is sufficient)
-   - Your confidence + what would change it
-2b. Before presenting options, verify:
-   - [ ] Current system behavior relevant to this decision: checked?
-   - [ ] How similar systems solve this: checked?
-   - [ ] Dependency capabilities verified from source (not assumed from docs)?
-   If any answer is "no" and the decision is non-trivial, propose research before presenting options.
-3. If evidence is missing, propose research:
-   - External prior art (competitors/OSS)
-   - Internal prior art (existing patterns)
-   - Current behavior trace (code path, runtime/config/UI)
-   - Dependency capability check (API/types/source)
-
-   **When evidence matters, invoke `/research`.** When findings emerge (from research, `/inspect`, codebase traces, etc.), route them to the right place — see `references/artifact-strategy.md` "Where evidence goes." Spec-specific context goes in spec-local `evidence/`; broader findings go to existing or new `/research` reports.
-
-   **Persist factual findings immediately** — don't wait for the user's response. Write evidence to files as soon as findings emerge (new file, append, or surgical edit per the write trigger protocol in `references/artifact-strategy.md`). This is agent discipline, not something to announce to the user.
-3b. When research completes, convert it into **decision inputs** before presenting options:
-   - **What we learned**
-   - **What constraints this creates**
-   - **What options remain viable**
-   - **Recommendation + confidence + what would change it**
-   (Use the format in `references/research-playbook.md`.)
-   Ensure all factual findings have been persisted to evidence files before presenting decision inputs to the user.
-4. After user decisions — cascade and persist:
-   - **Cascade analysis:** Trace what the decision affects — assumptions, requirements, design, phases. Default to full transitive cascade; flag genuinely gray areas to user; treat uncertainty about whether a section is affected as a signal to research more, not to skip it.
+1. **Identify what needs investigation** — extract from the OQ backlog + cascade from prior decisions. Prioritize: P0 blocking items first.
+2. **Investigate autonomously:**
+   - **P0 / blocking:** Deep investigation — dispatch `/research`, `/inspect`, multi-file traces, external prior art searches.
+   - **P1:** Moderate investigation — direct file reads, targeted searches, quick dependency checks.
+   - **P2 non-blocking:** Surface-level only — note the question, don't investigate deeply.
+   - Before drafting options for any non-trivial decision, verify (by investigating, not by proposing):
+     - [ ] Current system behavior relevant to this decision: checked.
+     - [ ] How similar systems solve this: checked.
+     - [ ] Dependency capabilities verified from source (not assumed from docs).
+   - **Persist findings as they emerge** — write to evidence files as soon as factual findings surface (new file, append, or surgical edit per the write trigger protocol in `references/artifact-strategy.md`). Route findings to the right bucket: spec-local `evidence/` for spec-specific context; existing or new `/research` reports for broader findings. This is agent discipline, not something to announce.
+3. **Determine stopping point** — stop investigating when:
+   - Evidence is exhausted (you've investigated everything accessible for the current priority tier).
+   - You hit a **judgment gap** — a question that requires product vision, priority, risk tolerance, or scope decisions from the user.
+   - You hit a **1-way door** requiring explicit user confirmation.
+   - Convert investigation results into **decision inputs** before presenting:
+     - **What we learned**
+     - **What constraints this creates**
+     - **What options remain viable**
+     - **Recommendation + confidence + what would change it**
+     (Use the format in `references/research-playbook.md`.)
+4. **Present findings + decisions + open threads** using the output format (§1-§4 below).
+5. **User responds** — with decisions (§2), "go deeper on N" (§3), or new context.
+6. **Cascade decisions → update artifacts → identify newly unlocked items:**
+   - **Cascade analysis:** Trace what the decision affects — assumptions, requirements, design, phases. Default to full transitive cascade; flag genuinely gray areas to user; treat uncertainty about whether a section is affected as a signal to investigate more, not to skip it.
    - **Persist all confirmed changes** per the write trigger protocol (`references/artifact-strategy.md`):
      - Append to Decision Log (SPEC.md §10)
      - Surgical edit all affected SPEC.md sections (requirements, design, phases, assumptions, risks)
      - If an assumption is refuted, trace and edit all dependent sections
-     - Append new cascading questions to Open Questions (SPEC.md §11), including research angles in the "Plan to resolve" column
+     - Append new cascading questions to Open Questions (SPEC.md §11)
      - Update evidence files if the decision changes factual understanding
    - Re-prioritize the backlog
-5. **Artifact sync checkpoint** (before responding to the user):
+   - **Goto step 1** with newly unlocked items.
+7. **Artifact sync checkpoint** (before responding to the user):
    Verify all changes from this turn have been persisted:
    - [ ] Factual findings from this turn written to evidence files?
    - [ ] SPEC.md sections affected by decisions or findings updated?
@@ -254,35 +255,35 @@ Do:
 ### Interactive iteration output (default per message)
 When you are mid-spec, structure your response like this:
 
-#### 1) Current state (what we believe right now)
-- 3-8 bullets max
+#### §1) Current state (what we believe now)
+- 3-8 bullets max, enriched by autonomous investigation.
 
-#### 2) Open Questions (top P0 only)
-For each OQ:
-- The question (tagged: type, priority, blocking?)
-- Research angles: 1-3 concrete investigations that would build confidence toward an answer — specific enough for the user to say "go research that" (via `/research`, `/inspect`, or inline)
-- Unlocks: what decision or downstream clarity this enables once resolved
-
-#### 3) Decisions needed from the user (numbered batch)
+#### §2) Decisions needed from the user (numbered batch)
 For each decision:
-- Options + practical effect
-- Recommendation (if any)
+- Options + practical effect (grounded in investigation findings)
+- Recommendation (if any) + evidence basis
 - Confidence + what would increase it
 
-#### 4) Proposed research (cross-cutting campaigns, only if it matters)
-- For investigations that span multiple OQs/decisions or merit a standalone `/research` dispatch. (Per-OQ research angles go in §2.)
-- What to research
-- Why it changes the direction
-- Whether to use `/research`
+#### §3) Open threads (remaining unknowns — numbered)
+For each thread:
+- The question (tagged: type, priority, blocking?)
+- **Investigation status:** What the agent already checked + what it found (brief — substance, not mechanics).
+- One of two markers:
+  - **● Needs your input** — requires human judgment (product vision, priority, risk tolerance, scope). The agent can't resolve this with more investigation.
+  - **○ Can investigate further** — the agent stopped (diminishing returns, lower priority, or time cost) but could go deeper if directed. Say "go deeper on N."
+- Unlocks: what decision or downstream clarity this enables once resolved.
 
-#### 5) What evolved
+At the bottom of §3:
+> Reply with decisions (§2) and/or "go deeper on N" for any threads you want investigated further.
+
+#### §4) What evolved
 - 2-5 bullets: what shifted in understanding this turn and why it matters for the spec's direction.
 - Focus on decision-relevant substance, not file operations. Artifacts update silently as agent discipline.
 - Include a brief breadcrumb of what was captured (e.g., "traced the auth flow and updated the spec's current state section") — not a formal file manifest.
 
 ### Finalization output
 When the user says "finalize":
-1. Run a final artifact sync checkpoint (same as Step 5, item 5).
+1. Run a final artifact sync checkpoint (same as Step 5, item 7).
 2. Ensure `meta/_changelog.md` has a session-closing entry with any pending items carried forward.
 3. Return the full `SPEC.md` (PRD + Technical Spec) in one standalone artifact.
 
@@ -295,7 +296,7 @@ When the user says "finalize":
 - Skipping blast-radius analysis (ops, observability, UI impact, migration).
 - Writing a spec that is not executable (no phases, no acceptance criteria, no risks).
 - **Accepting the user's first framing without validation.** The initial problem statement may be incomplete or biased toward one solution. Push for specificity even when the user seems confident.
-- **Miscalibrating research formality.** If you need to grep for a function name, just do it — don't propose a `/research` dispatch. If you need to trace data flow through 10 systems, dispatch a proper research agent — don't try to wing it inline.
+- **Proposing investigation instead of doing it.** If information is accessible (code, dependencies, web, prior art), investigate autonomously — don't stop to ask permission. Match tool to scope: a function name lookup doesn't need `/research`; a multi-system trace does. But in both cases, do it rather than proposing it. Stop only for genuine judgment gaps (product vision, priority, risk tolerance, scope decisions).
 - **Letting the user skip problem framing.** Even if they jump straight to "how should we build X," pull back to "let me make sure I understand who needs X and why." Step 1 is not optional.
 - **Letting insights accumulate only in conversation without persisting to files.** If you learned something factual (code trace, dependency behavior, current state), it belongs in an evidence file now — not "later" or "when we finalize." Conversation context compresses; artifacts survive.
 
@@ -308,7 +309,7 @@ When the user says "finalize":
 We should do Option A. It's standard and should work.
 ```
 
-### Correct (proactive, evidence-driven, decision-ready)
+### Correct (evidence-backed decision after autonomous investigation)
 
 ```txt
 Decision 2 (Cross-cutting, 1-way door): Public API shape for <feature>
@@ -317,30 +318,44 @@ Options:
 A) Single endpoint ... → simplest onboarding, harder to evolve later
 B) Two-step API ... → better DX for multiple consumers, more surface area now
 
-Recommendation: B (moderate confidence)
-- Why: aligns with multi-consumer needs and avoids overloading one call
-- Confidence: MEDIUM (we still need to verify how our SDK patterns handle discovery)
-
-Proposed research (to raise confidence):
-- Run /research to inspect our existing SDK + analogous endpoints
-- Quick external scan of 2-3 comparable products' API shapes
+Recommendation: B (high confidence)
+- Why: aligns with multi-consumer needs; our existing SDK uses the two-step
+  pattern for 3 of 4 analogous endpoints (evidence/sdk-api-patterns.md)
+- External prior art: Stripe and Twilio both use two-step for similar surfaces
+- Confidence: HIGH (verified from source + prior art alignment)
 ```
 
-### Correct (OQ with actionable research angles)
+### Correct (open thread with investigation status)
 
 ```txt
-Q3 (Technical, P0, blocks Phase 1): How does our auth middleware handle
-token refresh during long-running requests?
+3. [Technical, P0, blocks Phase 1] How does our auth middleware handle
+   token refresh during long-running requests?
 
-Research angles:
-- Trace the token refresh path through the auth middleware chain (/inspect)
-- Check if any existing long-running endpoints (e.g., batch export) already
-  handle mid-request token expiry
-- Verify whether the session store supports concurrent refresh
-  (source/types, not docs)
+   Investigation status: Traced the token refresh path through auth
+   middleware (evidence/auth-middleware-flow.md). The refresh is
+   synchronous and blocks the request. No existing endpoint handles
+   mid-request token expiry.
+   ○ Can investigate further: Verify whether the session store supports
+   concurrent refresh (haven't checked source/types yet). Say "go deeper
+   on 3."
 
-Unlocks: Decision on whether we extend the existing refresh mechanism or
-build a new one for streaming endpoints
+   Unlocks: Decision on whether we extend the existing refresh mechanism
+   or build a new one for streaming endpoints.
+```
+
+### Correct (open thread requiring human judgment)
+
+```txt
+5. [Product, P0, blocks Phase 1] Which persona is the primary target
+   for the initial onboarding flow?
+
+   Investigation status: Found 3 distinct entry patterns in analytics
+   (evidence/user-segments.md). Developer-first accounts are 68% of
+   signups but Enterprise accounts drive 85% of revenue.
+   ● Needs your input: This is a product strategy call — data supports
+   either direction. Which segment aligns with this quarter's goals?
+
+   Unlocks: Onboarding UX design, default configuration, and docs tone.
 ```
 
 ---

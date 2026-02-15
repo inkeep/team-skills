@@ -1,19 +1,20 @@
 ---
 name: ralph
-description: "Convert SPEC.md to prd.json and craft the implementation prompt for iterative development. Use when converting specs to prd.json, preparing implementation artifacts, or setting up a Ralph iteration loop. Triggers: ralph, prd.json, convert spec, implementation prompt, prepare for ralph."
+description: "Convert SPEC.md to prd.json, craft the implementation prompt, and execute the iteration loop via subprocess. Use when converting specs to prd.json, preparing implementation artifacts, running the Ralph iteration loop, or implementing features autonomously. Triggers: ralph, prd.json, convert spec, implementation prompt, execute ralph, run implementation."
 argument-hint: "[path to SPEC.md or prd.json]"
 ---
 
 # Ralph
 
-Convert a SPEC.md into implementation-ready artifacts: a structured `prd.json` and a self-contained iteration prompt. Ralph operates in two phases:
+Convert a SPEC.md into implementation-ready artifacts and execute the iteration loop. Ralph operates in three phases:
 
 1. **Convert** — Transform SPEC.md into a structured prd.json
 2. **Prepare** — Validate the prd.json, craft the implementation prompt, save it to a file
+3. **Execute** — Run `scripts/ralph.sh` to iterate through user stories via subprocess
 
-Each phase can be entered independently. If you already have a prd.json, start at Phase 2. If you only need conversion, stop after Phase 1.
+Each phase can be entered independently. If you already have a prd.json, start at Phase 2. If artifacts are ready and you need execution, start at Phase 3. If you only need conversion, stop after Phase 1.
 
-Ralph produces artifacts — it does not execute the iteration loop itself. After Phase 2, pass the artifacts to `/ship` (which manages execution automatically) or run `/ralph-loop` manually (see "What to do next" at the end).
+When composed by `/ship`, Ship invokes Ralph for the full lifecycle and reviews the output afterward. When standalone, Ralph runs end-to-end and reports results directly.
 
 ---
 
@@ -26,6 +27,7 @@ Ralph produces artifacts — it does not execute the iteration loop itself. Afte
 | `--typecheck-cmd` | No | `pnpm typecheck` | Type checker command for quality gates |
 | `--lint-cmd` | No | `pnpm lint` | Linter command for quality gates |
 | `--no-browser` | No | Browser assumed available | Omit "Verify in browser" criteria from UI stories; substitute with Bash-verifiable criteria |
+| `--docker [compose-file]` | No | — | Use Docker for Phase 3 execution. Optionally accepts a path to the compose file (e.g., `--docker .ai-dev/docker-compose.yml`). When passed without a path, discovers the compose file automatically. When omitted entirely, execution runs on the host. |
 
 When composed by `/ship`, these overrides are passed based on Phase 0 context detection. When running standalone, defaults apply.
 
@@ -49,6 +51,7 @@ When only prd.json is provided (no SPEC.md available), `implementationContext` s
 |---|---|
 | SPEC.md exists, no prd.json | Phase 1 (Convert) |
 | prd.json exists, needs validation/prompt | Phase 2 (Prepare) |
+| prd.json + `.claude/ralph-prompt.md` exist, ready to execute | Phase 3 (Execute) |
 | Called with only a conversion request | Phase 1, then stop |
 
 ---
@@ -401,6 +404,18 @@ Compare each user story to its corresponding requirement in the SPEC.md:
 
 Fix discrepancies before starting Ralph — errors here compound through every iteration.
 
+### Validate prd.json schema
+
+If `bun` is available, run the schema validator:
+
+```bash
+bun <path-to-skill>/scripts/validate-prd.ts prd.json
+```
+
+This checks structural integrity: required fields, ID format (US-NNN), sequential priorities, duplicate detection, and "Typecheck passes" criterion presence. Zero external dependencies — runs anywhere bun is installed.
+
+If `bun` is not available, manually verify the prd.json structure matches the schema in Phase 1.
+
 ### Place prd.json
 
 Put `prd.json` in the worktree root or `.claude/` directory where Ralph can find it.
@@ -411,148 +426,186 @@ If on `main` or `master`, warn before proceeding — Ralph should normally run o
 
 ### Craft the implementation prompt
 
-The prompt is what Ralph sees each iteration. It must be self-contained — Ralph has no memory between iterations beyond files and git history.
+**Load:** `templates/ralph-prompt.template.md`
 
-The prompt should include:
+The template contains two complete prompt variants with `{{PLACEHOLDER}}` syntax. Choose ONE variant and fill all placeholders.
 
-- **SPEC.md file-path reference (when spec path is available):** An unconditional, load-bearing instruction to read the SPEC.md file as the FIRST action of every iteration. Use the absolute file path. Do NOT embed spec content in the prompt — the iteration agent reads it via the Read tool each iteration. This ensures exact, deterministic access to the full spec without LLM re-emission.
-- **prd.json reference:** For user story tracking, completion status, and acceptance criteria. When no SPEC.md is available, prd.json's `implementationContext` serves as the sole implementation context — include explicit emphasis in the prompt to pay close attention to it.
-- TDD approach (where practical): write one test, then implement to pass it, repeat.
-  Do NOT write all tests first — one vertical slice at a time.
-- Start with a tracer bullet: one test proving one end-to-end path works before adding breadth
-- Mock at system boundaries only (external APIs, databases, time/randomness) — never mock your own modules or internal collaborators
-- Test names describe WHAT ("user can filter by status"), not HOW ("calls filterHandler")
-- Repo conventions from CLAUDE.md (testing patterns, file locations, formatting)
-- Codebase context: the specific patterns, shared vocabulary, and abstractions in the area being modified (more actionable than generic CLAUDE.md guidance)
-- Quality gates: run typecheck, lint, and test commands before declaring completion. Use the commands from Inputs (defaults: `pnpm typecheck`, `pnpm lint`, `pnpm test --run`) — override with `--typecheck-cmd`, `--lint-cmd`, `--test-cmd` if provided.
+**Choose variant:**
+- **Variant A** — when a SPEC.md path is available (directly provided or from Phase 1)
+- **Variant B** — when only prd.json is available (no SPEC.md)
 
-**Per-iteration workflow to encode in the prompt:**
+**Conditionality lives HERE (in Phase 2 construction), NOT in the iteration prompt.** The iteration agent sees a single, unconditional workflow — never both variants, never conditional "if spec is available" logic.
 
-**Critical — conditionality lives HERE (in Phase 2 construction), NOT in the iteration prompt.** Choose ONE variant below based on available inputs. The iteration agent sees a single, unconditional workflow — never both variants, never conditional "if spec is available" logic.
+**Fill `{{CODEBASE_CONTEXT}}`:** Include the specific patterns, shared vocabulary, and abstractions in the area being modified — more actionable than generic CLAUDE.md guidance. Examples: "The API follows RESTful patterns under /api/tasks/", "Auth uses tenant-scoped middleware in auth.ts", "Data access uses the repository pattern in data-access/". Also include repo conventions from CLAUDE.md (testing patterns, file locations, formatting) that the iteration agent needs.
 
-**Variant A — SPEC.md available** (use when spec path is known):
+**Fill quality gate commands:** Use the commands from Inputs (defaults: `pnpm typecheck`, `pnpm lint`, `pnpm test --run`) — override with `--typecheck-cmd`, `--lint-cmd`, `--test-cmd` if provided.
 
-```
-1. Read SPEC.md at `<absolute-spec-path>`. This is your primary implementation reference — architecture decisions, non-goals (what NOT to build), current system state (file paths, code traces), and design constraints. Focus on: non-goals, current state and integration points, proposed solution design, and settled decisions with rationale.
-2. Read `prd.json` for user stories and their completion status.
-3. Check `progress.txt` for learnings from previous iterations.
-4. Select the highest-priority incomplete story (`passes: false`).
-5. Implement the story (one story per iteration — keep changes focused).
-6. Verify quality: run typecheck, lint, and test commands (from Inputs) — all must pass.
-7. Commit with message format: `[story-id] description`.
-8. Update `prd.json`: set `passes: true` for completed story.
-9. Log progress: append to `progress.txt` with what you implemented, files changed, and learnings.
-10. If stuck on a story, document the blocker in `progress.txt` and move to the next story.
-```
-
-**Variant B — No SPEC.md** (use when only prd.json is available):
-
-```
-1. Read `prd.json` for user stories, their completion status, and `implementationContext` for architecture, constraints, and design decisions. This is your sole implementation reference — pay close attention to every detail in implementationContext.
-2. Check `progress.txt` for learnings from previous iterations.
-3. Select the highest-priority incomplete story (`passes: false`).
-4. Implement the story (one story per iteration — keep changes focused).
-5. Verify quality: run typecheck, lint, and test commands (from Inputs) — all must pass.
-6. Commit with message format: `[story-id] description`.
-7. Update `prd.json`: set `passes: true` for completed story.
-8. Log progress: append to `progress.txt` with what you implemented, files changed, and learnings.
-9. If stuck on a story, document the blocker in `progress.txt` and move to the next story.
-```
-
-Do NOT include both variants in the iteration prompt. Choose one. The iteration agent sees a single, clean workflow with no conditionals.
-
-**Progress log format** (encode in prompt so Ralph follows it):
-
-```
-## Iteration N - [timestamp]
-
-### Story: [story-id] - [title]
-
-**Implementation:**
-- [what you did]
-
-**Files Changed:**
-- [list of files]
-
-**Learnings:**
-- [patterns discovered]
-- [gotchas encountered]
-- [insights for future iterations]
-
----
-```
-
-**Completion signal:**
-
-When ALL user stories have `passes: true`, Ralph should output:
-```
-<promise>IMPLEMENTATION COMPLETE</promise>
-```
-
-Ralph must ONLY output this when the statement is genuinely true. Do not output false promises to escape the loop.
+**Fill `{{SPEC_PATH}}`** (Variant A only): Use a path relative to the working directory (e.g., `.claude/specs/my-feature/SPEC.md`). Relative paths work across execution contexts (host, Docker, worktree). Do NOT use absolute paths — they break when the prompt is executed in a different environment. Do NOT embed spec content in the prompt — the iteration agent reads it via the Read tool each iteration.
 
 ### Save the prompt
 
-Save the crafted implementation prompt to `.claude/ralph-prompt.md` so it can be consumed by `/ship` (subprocess iteration), `/ralph-loop` (manual iteration), or any other execution mechanism.
+Save the crafted implementation prompt to `.claude/ralph-prompt.md`. This file is consumed by Phase 3 (`scripts/ralph.sh`) for automated execution, or by the user for manual iteration (`/ralph-loop`, `claude -p`).
+
+### Copy ralph.sh to execution location
+
+Copy the skill's canonical `scripts/ralph.sh` to `.claude/ralph.sh` in the working directory and make it executable:
 
 ```bash
-# The prompt file is the handoff artifact from Ralph to the execution layer
-.claude/ralph-prompt.md
+cp <path-to-skill>/scripts/ralph.sh .claude/ralph.sh
+chmod +x .claude/ralph.sh
 ```
+
+This places the iteration loop script alongside the implementation prompt (`.claude/ralph-prompt.md`) as a paired execution artifact. The copy enables:
+- **Manual execution** — users can run `.claude/ralph.sh --force` directly without knowing the skill's install path
+- **Docker execution** — containers access `.claude/ralph.sh` via bind mount (see `references/execution.md`)
+
+Phase 3 on host uses the skill's own `scripts/ralph.sh` directly (validate-prd.ts is available next to it). The `.claude/ralph.sh` copy is for Docker, manual, and external execution contexts.
 
 ### Phase 2 checklist
 
 - [ ] prd.json validated against SPEC.md (if available)
+- [ ] prd.json schema validated (via `scripts/validate-prd.ts` if bun available)
 - [ ] Stories correctly scoped, ordered, and with verifiable criteria
-- [ ] Implementation prompt crafted with correct variant (A or B)
-- [ ] Prompt includes spec file-path reference (variant A) or emphasizes implementationContext (variant B)
-- [ ] Quality gate commands included (typecheck, lint, test)
-- [ ] Completion signal (`<promise>IMPLEMENTATION COMPLETE</promise>`) included
+- [ ] Implementation prompt crafted from template with correct variant (A or B)
+- [ ] All `{{PLACEHOLDERS}}` filled (spec path, quality gates, codebase context)
+- [ ] Completion signal present in saved prompt (included in template — verify not accidentally removed)
 - [ ] Prompt saved to `.claude/ralph-prompt.md`
+- [ ] `ralph.sh` copied to `.claude/ralph.sh` and made executable
 
 ---
 
-## What to do next
+## Phase 3: Execute
 
-Ralph's job is done. The artifacts are ready:
-- `prd.json` — structured user stories with acceptance criteria
-- `.claude/ralph-prompt.md` — self-contained iteration prompt
-- SPEC.md — still available as the primary implementation reference (if provided)
+Run the iteration loop via `scripts/ralph.sh`. Each iteration spawns a fresh Claude Code subprocess — full capabilities, zero shared context between iterations.
 
-**To execute the implementation loop**, use one of these approaches:
+**Load:** `references/execution.md`
 
-**Option 1: Via `/ship` (recommended when available)**
-Ship manages the iteration loop automatically using subprocess iteration. Pass the artifacts to Ship and it handles Phase 3 onward.
+### Step 1: Probe for Claude CLI
 
-**Option 2: Via `/ralph-loop` (manual, standalone)**
-Run the iteration loop directly:
-
-```
-/ralph-loop "$(cat .claude/ralph-prompt.md)" --max-iterations <N> --completion-promise "IMPLEMENTATION COMPLETE"
-```
-
-**Tuning iteration limits:**
-
-| Feature complexity | Recommended max-iterations |
-|---|---|
-| Small (1-3 stories) | 10-15 |
-| Medium (4-8 stories) | 20-30 |
-| Large (9+ stories) | 30-50 |
-
-These are safety limits, not targets. Well-sized stories should complete in 1-2 iterations each.
-
-**Option 3: Via `claude -p` (headless subprocess)**
-For CI/CD or automated pipelines:
+Check if automated execution is possible:
 
 ```bash
-env -u CLAUDECODE -u CLAUDE_CODE_ENTRYPOINT claude -p "$(cat .claude/ralph-prompt.md)" \
-  --dangerously-skip-permissions \
-  --max-turns 75 \
-  --output-format json
+env -u CLAUDECODE -u CLAUDE_CODE_ENTRYPOINT claude --version
 ```
 
-**After execution completes:**
-- Check `prd.json` — all stories should have `passes: true`
-- Check `progress.txt` — review learnings and any blockers
-- Read every file created or modified — Ralph's work is your starting point, not your endpoint
-- Run quality gates: typecheck, lint, test
+If this fails, automated execution is not available — skip to the fallback below.
+
+### Step 2: Choose execution context (host vs Docker)
+
+**If `--docker` was NOT passed:** Execute on the host (default). Proceed to Step 3.
+
+**If `--docker` was passed:** Use Docker for execution.
+
+1. **Resolve the compose file.** If a path was provided (e.g., `--docker .ai-dev/docker-compose.yml`), use it. Otherwise, discover it: search the repo for `**/docker-compose.yml` or `**/compose.yml` files whose content defines a `sandbox` service. Use the first match. If none found, error: "No compose file with a sandbox service found in this repo."
+
+2. **Ensure the container is running:**
+   ```bash
+   docker compose -f <compose-file> ps --status running sandbox
+   ```
+   If not running, start it: `docker compose -f <compose-file> up -d`.
+
+3. Proceed — Step 5 uses the Docker invocation variant.
+
+### Step 3: Pre-execution quality gate baseline
+
+Before starting the iteration loop, run the quality gates to establish a baseline:
+
+```bash
+<typecheck-cmd>  # e.g., pnpm typecheck
+<lint-cmd>       # e.g., pnpm lint
+<test-cmd>       # e.g., pnpm test --run
+```
+
+If any gate fails, warn the operator: "Quality gates are failing before Ralph starts. Pre-existing failures will cost Ralph iterations to diagnose. Consider fixing them first."
+
+Log the baseline to `progress.txt` regardless of result:
+
+```
+## Pre-execution baseline - [timestamp]
+- Typecheck: PASS/FAIL
+- Lint: PASS/FAIL
+- Test: PASS/FAIL
+```
+
+Do not block execution — the operator may be running Ralph specifically to fix failures. But the baseline log helps iteration agents distinguish pre-existing failures from regressions they introduced.
+
+### Step 4: Determine parameters
+
+Count the incomplete stories in prd.json and select parameters:
+
+| Feature complexity | --max-iterations | --max-turns |
+|---|---|---|
+| Small (1-3 stories) | 10-15 | 50 |
+| Medium (4-8 stories) | 20-30 | 75 |
+| Large (9+ stories) | 30-50 | 100 |
+
+### Step 5: Invoke ralph.sh
+
+Run in background to avoid the Bash tool's 600-second timeout.
+
+**Host execution (default):**
+
+```
+Bash(command: "<path-to-skill>/scripts/ralph.sh --max-iterations <N> --max-turns <M> --force",
+     run_in_background: true,
+     description: "Ralph execution run 1")
+```
+
+**Docker execution (when `--docker` was passed — compose file resolved in Step 2):**
+
+```
+Bash(command: "docker compose -f <compose-file> exec sandbox .claude/ralph.sh --max-iterations <N> --max-turns <M> --force",
+     run_in_background: true,
+     description: "Ralph Docker execution run 1")
+```
+
+Always pass `--force` — background execution has no TTY for interactive prompts.
+
+Poll for completion using `TaskOutput(block: false)` at intervals. While waiting, do lightweight work (re-read spec, review task list) but do NOT make code changes that could conflict.
+
+### Step 6: Assess results
+
+When ralph.sh completes, read `prd.json` and `progress.txt`:
+
+- **All stories `passes: true`** → execution succeeded. Proceed to Phase 3 checklist.
+- **Some stories incomplete** → check progress.txt for blockers. Apply stuck story handling (see `references/execution.md`), then re-invoke ralph.sh for another run.
+- **ralph.sh exited with error** → read output for details. If transient (network, rate limit), retry once. If persistent, fall back to manual instructions.
+
+### Step 7: Stuck story handling (between runs)
+
+If the same story fails across 2 consecutive ralph.sh runs with the same blocker:
+
+1. **Story too large** → split into smaller stories in prd.json
+2. **Criteria ambiguous** → rewrite criteria to be more specific
+3. **External dependency blocking** → skip the story, set `notes` explaining the blocker
+4. **Wrong implementation approach** → add guidance to `progress.txt` suggesting an alternative
+
+After 3 consecutive failed runs on the same story, stop and consult the user.
+
+Re-invoke ralph.sh after applying remediation. Maximum 3 total ralph.sh runs before escalating to the user.
+
+### Fallback: Claude CLI not available
+
+If the Claude CLI probe in Step 1 failed, automated execution is not possible. Ralph still provides full value through Phases 1-2 — the artifacts are ready.
+
+Tell the user:
+
+1. The implementation artifacts have been saved to `.claude/ralph-prompt.md` and `.claude/ralph.sh`
+2. For manual execution using the iteration loop:
+   ```bash
+   .claude/ralph.sh --max-iterations <N> --max-turns <M> --force
+   ```
+3. Or using `/ralph-loop`:
+   ```
+   /ralph-loop "$(cat .claude/ralph-prompt.md)" --max-iterations <N> --completion-promise "IMPLEMENTATION COMPLETE"
+   ```
+
+### Phase 3 checklist
+
+- [ ] All stories in prd.json have `passes: true` (or stuck stories documented with `notes`)
+- [ ] progress.txt reviewed — no unresolved blockers
+- [ ] Quality gates pass: typecheck, lint, test
+
+**After Phase 3:**
+- If composed by `/ship`: Ship continues with post-implementation review and testing.
+- If standalone: read every file created or modified. Ralph's output is your starting point, not your endpoint. Run quality gates manually.

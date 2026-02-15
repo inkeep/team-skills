@@ -46,24 +46,25 @@ This is designed to support high decision velocity.
 ## Decision velocity calibration
 In your batch:
 - Put "easy/clear" items first (so the user can clear them quickly).
-- Put the "hard/uncertain" items next with more context and explicit research proposals.
+- Put the "hard/uncertain" items next with more context, investigation findings so far, and what further evidence would clarify.
 - Keep batches small enough to answer in one reply (usually 3-8 items).
 
 ## Confidence-weighted presentation (don't pretend all items are equally open)
 For each item, signal:
 - **Ready to decide now:** evidence is strong; recommendation included.
-- **Needs research:** recommendation depends on missing evidence; propose a plan.
+- **Needs more evidence:** the agent investigated but couldn't reach high confidence; present with current findings and what further investigation would clarify (open thread).
 - **Needs user vision:** requires product strategy/positioning choice; ask directly.
 
-## Uncertainty as a research allocator
-Treat any of these as a *signal* to propose research:
+## Uncertainty as an investigation trigger
+Treat any of these as a signal to **investigate**:
 - "I think...", "probably...", "maybe...", "not sure..."
 - user: "hmmm...", "idk...", "help me think..."
 - conflicting constraints or multiple plausible architectures
 
 Your job:
 - do not resolve uncertainty by guessing
-- convert it into a concrete research plan and/or crisp decision options
+- investigate what's accessible (code, dependencies, prior art, web)
+- convert what remains into crisp decision options for the user — only what requires human judgment
 
 ## After every decision: cascade analysis
 Immediately do:

@@ -1,4 +1,4 @@
-Use when: Proposing/structuring research to validate assertions; deciding when to run /research; ensuring product research gets equal rigor.
+Use when: Executing autonomous investigation to validate assertions; deciding when to dispatch /research or /inspect; matching investigation depth to priority; ensuring product research gets equal rigor.
 Priority: P0
 Impact: Decisions are made on vibes; prior art is missed; dependency constraints are discovered too late.
 
@@ -7,12 +7,26 @@ Impact: Decisions are made on vibes; prior art is missed; dependency constraints
 # Research playbook
 
 ## Philosophy
-Research is not a user-triggered add-on. It's the default mechanism for:
-- validating assertions
-- expanding the option space
-- discovering hidden constraints, risks, and opportunities
+Investigation is the agent's default response to evidence gaps. When uncertainty can be resolved by looking at accessible information — code, dependencies, prior art, web — investigate autonomously.
 
-Your job is to propose research **proactively** at every reasonable decision point, while keeping the user in control of what to spend time on.
+The user's role is **judgment**: product vision, priority, risk tolerance, scope decisions. Not approving obvious investigation.
+
+### Autonomy boundary
+
+| Always investigate (evidence gap) | Always stop for (judgment gap) |
+|---|---|
+| Current system behavior traces | Product vision / strategy choices |
+| Dependency capability checks (types/source) | Priority between competing requirements |
+| Internal prior art (codebase patterns) | Risk tolerance decisions |
+| External prior art (web, comparable products) | 1-way door confirmations |
+| Blast radius mapping | Business constraints (timeline, budget, team) |
+| Verifying claims against primary sources | Scope decisions (Phase 1 vs defer) |
+| Negative searches (documenting NOT FOUND) | Persona / consumer prioritization |
+
+**Gray area** (bias toward investigating):
+- Heavy external research (competitor deep-dives) — do it if it directly informs a P0 decision; otherwise surface as an open thread
+- Performance implications — check code patterns, but can't run benchmarks
+- UX patterns — search for patterns, but product context determines the final call
 
 ## When to invoke `/research`
 Use it when you need **evidence-backed** answers (especially for 1-way doors), including:
@@ -36,7 +50,9 @@ Product research should get the same depth discipline:
 
 If the product research needs citations/evidence, it's valid to use `/research` as the execution engine (web/OSS + evidence capture), but keep the outputs framed as product learning.
 
-## Research menus (pick the smallest set that answers the decision)
+## Investigation types (execute autonomously; match scope to priority)
+
+These are the agent's investigation tools. Execute them as part of autonomous investigation — don't propose them as options for the user to approve. Match depth to priority: P0 blocking items get thorough investigation across multiple types; P2 items get a quick check at most.
 
 ### A) External prior art (product + technical)
 - 3-5 comparable products/projects
@@ -50,9 +66,13 @@ If the product research needs citations/evidence, it's valid to use `/research` 
 - What parts are reusable
 - What parts must differ (because constraints changed)
 
+**Execution:** Dispatch `/inspect` subagents with the **pattern lens**. Each subagent receives the target area and what kind of similarity to search for (structural, analogous, conceptual). Returns a pattern brief inline with shared vocabulary and reusable abstractions. The spec agent persists load-bearing findings to `evidence/`.
+
 ### C) Current-state trace (end-to-end reality)
 Trace from entrypoint → runtime → config → storage → UI/UX → ops.
 Goal: discover hidden constraints and latent bugs.
+
+**Execution:** Dispatch `/inspect` subagents with the **tracing lens**. Each subagent receives the entry point and the trace question (what does this connect to, what's the full flow, what crosses boundaries). Returns a trace brief inline with dependencies, cross-boundary transitions, and surface area touched.
 
 ### D) Dependency constraints
 Verify with types/source (not just docs):
@@ -61,13 +81,49 @@ Verify with types/source (not just docs):
 - failure semantics?
 - performance implications?
 
-### E) Risk and blast radius research
+### E) Third-party dependency investigation
+When the spec depends on packages, libraries, frameworks, or external software outside the source repo, investigate thoroughly before making design decisions that rely on them. The goal: build an accurate mental model of what the 3P system actually provides for your scenario — and sanity-check that it's the right choice.
+
+**Scope:** Target the investigation to the spec's scenario and the capabilities under consideration. Not a general survey of the library — focus on dimensions and details relevant to what we're building.
+
+**What to investigate:**
+- **Relevant capabilities:** What does the 3P system offer for our specific use case? Map the surface area that applies — not everything the library does.
+- **Source code analysis:** Read types, interfaces, and implementation for the relevant modules. Verify behavior from source — docs may be incomplete or outdated.
+- **Documentation and community patterns:** What do their docs, guides, issues, and community discuss about scenarios like ours? Look for recommended patterns, known gotchas, and migration/upgrade considerations.
+- **Best practices for our scenario:** How do experienced users approach the kind of problem we're solving with this library? Blog posts, GitHub issues/discussions, official examples, StackOverflow patterns.
+- **Version-specific behavior:** Verify against the version we're using or targeting.
+- **Gaps and limitations:** What doesn't the 3P system support that we might need? Known issues or missing features relevant to our use case.
+- **Sanity check — is this the right choice?** Given what we've learned, is this 3P system the best fit for our scenario? Are there better-suited alternatives we should consider? If the investigation reveals significant gaps or friction, surface this as a decision for the user.
+
+**Execution model:**
+Dispatch as **Task subagents** (one per dependency or dependency cluster) that load the `/research` skill for its methodology, evidence standards, and source code analysis patterns. This gives each subagent research-grade rigor without the overhead of creating standalone reports.
+
+Each subagent should be instructed to:
+1. **Load `/research`** and run its routing gate — check if an existing report on this 3P system already exists in `~/.claude/reports/`.
+2. **If an existing report exists** → use Path C (update/append) to add findings relevant to the spec's scenario. This enriches shared knowledge.
+3. **If no existing report exists** → use Path B (direct answer). Do **not** create a new standalone report. Return full findings in the response.
+4. **In both cases**, return complete findings inline to the spec agent — the spec agent needs the results in-context to inform design decisions.
+
+Each subagent receives:
+- The spec's scenario context (what we're building, what we need from this dependency)
+- Specific questions or capabilities to investigate, scoped to the spec's use case
+- Instructions to search source code, documentation, and web for relevant patterns
+
+The spec agent persists key findings to spec-local `evidence/<dependency-name>.md` files and incorporates them into the world model and design decisions. Findings that were appended to existing reports via Path C live in both places — the report for reuse, the spec evidence for local context.
+
+**When to use this vs. Type D (targeted capability checks):**
+- **Type D:** "Does dependency X support capability Y?" — quick, per-decision verification.
+- **Type E:** "What does dependency X actually offer for our scenario, and is it the right choice?" — thorough, upfront investigation before design decisions.
+
+### F) Risk and blast radius research
 For changes with wide impact:
 - List every system that directly or indirectly depends on the changed area
 - For each: what's the coupling? Tight (shared DB) or loose (API contract)?
 - What's the worst-case failure mode?
 - Can the change be deployed independently or does it require coordination?
 - Identify silent failure modes (things that break without producing errors)
+
+**Execution:** Dispatch `/inspect` subagents with the **tracing lens** focused on blast radius. Each subagent receives the changed area and traces forward/backward to identify direct and transitive dependents, surface area touched, and coupling tightness.
 
 ## How to convert research into decision inputs
 After research completes, translate findings into this format before presenting options:
