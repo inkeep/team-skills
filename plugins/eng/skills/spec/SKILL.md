@@ -49,10 +49,18 @@ argument-hint: "[feature/product] (optional: context, constraints, target users,
 9. **Artifacts are the source of truth.**
    - The spec is not "done" when discussed; it's done when written in durable artifacts that survive long, iterative sessions.
 
+10. **Persist insights as they emerge — silently, continuously, event-driven.**
+    - Evidence (factual findings, traces, observations) → write to evidence files immediately. Facts don't need user input.
+    - Synthesis (interpretations, design choices, implications) → write to SPEC.md after user confirmation. Don't persist premature judgments.
+    - File operations are agent discipline, not user-facing output. The user steers via conversation; artifacts update silently.
+    - See `references/artifact-strategy.md` "Write triggers and cadence" for the full protocol.
+
 ---
 
 ## Default workflow
 **Load (early):** `references/artifact-strategy.md`
+
+**Session routing:** If resuming an existing spec (prior session, user says "let's continue"), follow the multi-session discipline in `references/artifact-strategy.md` — read `SPEC.md`, `evidence/` files, and `meta/_changelog.md` first. Summarize current state, review pending items carried forward, and pick up from the appropriate workflow step. Do not re-run Intake for a spec that already has artifacts.
 
 ### 1) Intake: establish the seed without stalling
 Do:
@@ -84,6 +92,8 @@ Do:
   - **Assumptions**
   - **Risks / Unknowns**
   - **Deferred (Documented) Items / Appendices**
+- Create the `evidence/` directory for spec-local findings (see `references/artifact-strategy.md` "Evidence file conventions").
+- Create `meta/_changelog.md` for append-only process history (see `references/artifact-strategy.md`).
 
 #### Where to save the spec
 
@@ -109,7 +119,7 @@ Resolution rules:
 ### 3) Build the first world model (product + technical, together)
 Do:
 - Map the **user journey(s)** and "what success looks like" (product).
-- Map the **current system behavior** and constraints end-to-end (technical).
+- Map the **current system behavior** and constraints end-to-end (technical). As you trace current behavior, persist factual findings to `evidence/` immediately — don't wait for the world model to be complete (see `references/artifact-strategy.md` "Current system behavior discovered").
 - Create a **Consumer Matrix** when there are multiple consumption modes (SDK, UI, API, internal runtime, etc.).
 
 **Load (for technique):**
@@ -141,6 +151,7 @@ Do:
   - Confidence: HIGH / MEDIUM / LOW
 
 Then:
+- For each Open Question, identify 1-3 research angles that would help resolve it (these surface in §2 of the output and persist in the "Plan to resolve" column of SPEC.md §11).
 - Propose the next **Decision Batch** (numbered), and a **Research Plan** to unblock it.
 
 ---
@@ -171,17 +182,31 @@ Loop steps:
    - Dependency capability check (API/types/source)
 
    **When evidence matters, invoke `/research`.** When findings emerge (from research, `/inspect`, codebase traces, etc.), route them to the right place — see `references/artifact-strategy.md` "Where evidence goes." Spec-specific context goes in spec-local `evidence/`; broader findings go to existing or new `/research` reports.
+
+   **Persist factual findings immediately** — don't wait for the user's response. Write evidence to files as soon as findings emerge (new file, append, or surgical edit per the write trigger protocol in `references/artifact-strategy.md`). This is agent discipline, not something to announce to the user.
 3b. When research completes, convert it into **decision inputs** before presenting options:
    - **What we learned**
    - **What constraints this creates**
    - **What options remain viable**
    - **Recommendation + confidence + what would change it**
    (Use the format in `references/research-playbook.md`.)
-4. After user decisions:
-   - Update the **Decision Log** (include evidence/links where relevant)
-   - Update impacted sections of the spec (PRD + tech parts)
-   - Identify **cascading new questions** created by the decision
+   Ensure all factual findings have been persisted to evidence files before presenting decision inputs to the user.
+4. After user decisions — cascade and persist:
+   - **Cascade analysis:** Trace what the decision affects — assumptions, requirements, design, phases. Default to full transitive cascade; flag genuinely gray areas to user; treat uncertainty about whether a section is affected as a signal to research more, not to skip it.
+   - **Persist all confirmed changes** per the write trigger protocol (`references/artifact-strategy.md`):
+     - Append to Decision Log (SPEC.md §10)
+     - Surgical edit all affected SPEC.md sections (requirements, design, phases, assumptions, risks)
+     - If an assumption is refuted, trace and edit all dependent sections
+     - Append new cascading questions to Open Questions (SPEC.md §11), including research angles in the "Plan to resolve" column
+     - Update evidence files if the decision changes factual understanding
    - Re-prioritize the backlog
+5. **Artifact sync checkpoint** (before responding to the user):
+   Verify all changes from this turn have been persisted:
+   - [ ] Factual findings from this turn written to evidence files?
+   - [ ] SPEC.md sections affected by decisions or findings updated?
+   - [ ] Decision Log, Open Questions, Assumptions tables current?
+   - [ ] `meta/_changelog.md` entry appended for all substantive changes?
+   - [ ] Interpretive insights needing user input routed to §2/§3 of your response (not written to files prematurely)?
 
 ---
 
@@ -204,6 +229,8 @@ Do:
   - biggest risks + mitigations
   - what gets instrumented/measured
 
+After phase decisions are finalized, persist to SPEC.md (phases, Decision Log, deferrals) and log the changes to `meta/_changelog.md`.
+
 ---
 
 ### 7) Quality bar + "are we actually done?"
@@ -217,6 +244,7 @@ Do:
   - Every design decision explains user impact
   - 1-way-door decisions have explicit confirmation + evidence references
 - Ensure deferrals are documented (not just "later" bullets).
+- Verify artifact completeness: `evidence/` files reflect all factual findings from the spec process, `meta/_changelog.md` captures all decisions and changes, and SPEC.md reads as a clean current-state snapshot with no stale sections.
 - Use the Phase completion gate to decide whether the current phase is ready to implement.
 
 ---
@@ -230,7 +258,10 @@ When you are mid-spec, structure your response like this:
 - 3-8 bullets max
 
 #### 2) Open Questions (top P0 only)
-- Numbered list (small)
+For each OQ:
+- The question (tagged: type, priority, blocking?)
+- Research angles: 1-3 concrete investigations that would build confidence toward an answer — specific enough for the user to say "go research that" (via `/research`, `/inspect`, or inline)
+- Unlocks: what decision or downstream clarity this enables once resolved
 
 #### 3) Decisions needed from the user (numbered batch)
 For each decision:
@@ -238,16 +269,22 @@ For each decision:
 - Recommendation (if any)
 - Confidence + what would increase it
 
-#### 4) Proposed research (only if it matters)
+#### 4) Proposed research (cross-cutting campaigns, only if it matters)
+- For investigations that span multiple OQs/decisions or merit a standalone `/research` dispatch. (Per-OQ research angles go in §2.)
 - What to research
-- Why it changes the decision
+- Why it changes the direction
 - Whether to use `/research`
 
-#### 5) Spec updates
-- Paste only the changed sections (or describe precisely what to update) unless the user asks for the full doc.
+#### 5) What evolved
+- 2-5 bullets: what shifted in understanding this turn and why it matters for the spec's direction.
+- Focus on decision-relevant substance, not file operations. Artifacts update silently as agent discipline.
+- Include a brief breadcrumb of what was captured (e.g., "traced the auth flow and updated the spec's current state section") — not a formal file manifest.
 
 ### Finalization output
-When the user says "finalize", return the full `SPEC.md` (PRD + Technical Spec) in one standalone artifact.
+When the user says "finalize":
+1. Run a final artifact sync checkpoint (same as Step 5, item 5).
+2. Ensure `meta/_changelog.md` has a session-closing entry with any pending items carried forward.
+3. Return the full `SPEC.md` (PRD + Technical Spec) in one standalone artifact.
 
 ---
 
@@ -260,6 +297,7 @@ When the user says "finalize", return the full `SPEC.md` (PRD + Technical Spec) 
 - **Accepting the user's first framing without validation.** The initial problem statement may be incomplete or biased toward one solution. Push for specificity even when the user seems confident.
 - **Miscalibrating research formality.** If you need to grep for a function name, just do it — don't propose a `/research` dispatch. If you need to trace data flow through 10 systems, dispatch a proper research agent — don't try to wing it inline.
 - **Letting the user skip problem framing.** Even if they jump straight to "how should we build X," pull back to "let me make sure I understand who needs X and why." Step 1 is not optional.
+- **Letting insights accumulate only in conversation without persisting to files.** If you learned something factual (code trace, dependency behavior, current state), it belongs in an evidence file now — not "later" or "when we finalize." Conversation context compresses; artifacts survive.
 
 ---
 
@@ -286,6 +324,23 @@ Recommendation: B (moderate confidence)
 Proposed research (to raise confidence):
 - Run /research to inspect our existing SDK + analogous endpoints
 - Quick external scan of 2-3 comparable products' API shapes
+```
+
+### Correct (OQ with actionable research angles)
+
+```txt
+Q3 (Technical, P0, blocks Phase 1): How does our auth middleware handle
+token refresh during long-running requests?
+
+Research angles:
+- Trace the token refresh path through the auth middleware chain (/inspect)
+- Check if any existing long-running endpoints (e.g., batch export) already
+  handle mid-request token expiry
+- Verify whether the session store supports concurrent refresh
+  (source/types, not docs)
+
+Unlocks: Decision on whether we extend the existing refresh mechanism or
+build a new one for streaming endpoints
 ```
 
 ---

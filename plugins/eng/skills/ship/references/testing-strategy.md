@@ -6,44 +6,34 @@ Impact: Gaps in coverage, untested edge cases, false confidence in implementatio
 
 # Testing Strategy
 
+## Discover repo conventions first
+
+Before writing or running tests, discover the repo's testing conventions. Sources include:
+- Project configuration files (AGENTS.md, CLAUDE.md, .cursor/rules, or equivalent)
+- Contributor guides (CONTRIBUTING.md, README)
+- Existing test files and their patterns (imports, setup, structure, naming)
+- CI/CD configuration (what tests run, what checks are enforced)
+- Repo-level AI skills or rules related to testing
+
+Identify: the test framework, test runner commands, directory conventions, naming patterns, setup/teardown patterns, and any repo-specific testing utilities or helpers. Follow what exists — do not introduce new conventions unless the repo has none.
+
+---
+
 ## Three tiers
 
 ### Tier 1: Formal test suite (mandatory — always run)
 
-These are automated tests that live in the codebase and run in CI.
+Automated tests that live in the codebase and run in CI.
 
-**Framework:** Vitest
-**Location:** `__tests__/` directories adjacent to the code being tested
-**Naming:** `*.test.ts` or `*.spec.ts`
-**Timeout:** 60 seconds for A2A interaction tests
-
-```bash
-# Run all tests
-pnpm test --run
-
-# Run tests for a specific package
-cd <package> && pnpm test --run
-
-# Run a specific test file
-cd <package> && pnpm test --run <file-path>
-
-# Additional checks
-pnpm typecheck
-pnpm lint
-pnpm format:check
-```
+Run the repo's full verification suite — test runner, type checker, linter, and formatter — using the commands defined in the repo's project configuration.
 
 **What to test (minimum for new code):**
 - Happy path for each new function/endpoint/component
 - Error cases: invalid input, missing data, permission denied
 - Edge cases identified in the SPEC.md
-- Integration points: API calls, database operations, A2A communication
+- Integration points: API calls, database operations, cross-service communication
 
-**TDD approach (when practical):**
-1. Write a failing test that captures the desired behavior
-2. Implement the minimum code to make it pass
-3. Refactor while keeping tests green
-4. Repeat for the next behavior
+**When TDD is practical** (identified in Phase 1A), apply test-driven methodology: write one failing test, implement the minimum code to pass, repeat. Vertical slicing — one test at a time, not all tests first.
 
 **When TDD is NOT practical:**
 - Exploratory work where the API shape is still forming
@@ -82,7 +72,7 @@ Not all tools are available in every environment (e.g., Docker/headless contexts
 4. Test with unexpected input (empty strings, very long strings, special characters)
 5. Test with boundary conditions (first item, last item, zero items, many items)
 6. If the feature has a UI: audit layout and visual correctness, test on different viewport sizes, test keyboard navigation
-7. Try to break it — attempt scenarios the spec didn't anticipate, abuse edge cases, stress-test the flow
+7. Try to break it — attempt scenarios the spec didn't anticipate
 
 **Recording results:**
 Document what you tested and the outcome. If you find a bug during manual testing:
@@ -110,13 +100,13 @@ Before proceeding from Phase 4 to Phase 5, verify:
 - [ ] Every acceptance criterion from SPEC.md Phase 1 has at least one corresponding test
 - [ ] Error paths are tested (not just happy paths)
 - [ ] Tests are deterministic (no flaky tests — if a test is flaky, fix it or remove it)
-- [ ] Tests run in isolation (no shared state between tests, proper `beforeEach` cleanup)
+- [ ] Tests run in isolation (no shared state between tests, proper setup/teardown cleanup)
 - [ ] Test names describe the behavior being verified, not the implementation
 - [ ] Manual testing covered all user-facing paths
 
 ## Common testing mistakes
 
-- Writing tests that test the framework, not the feature (e.g., testing that Vitest mocking works)
+- Writing tests that test the framework, not the feature (e.g., testing that the mocking library works)
 - Tests that pass when the feature is broken (testing implementation details instead of behavior)
 - Skipping error path tests because "it's obvious it works"
 - Not testing with realistic data (using `"test"` instead of realistic input)

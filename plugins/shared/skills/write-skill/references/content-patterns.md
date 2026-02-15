@@ -32,6 +32,13 @@ Example:
 | Risky operation | Require manual confirmation |
 | Many repeated micro-rules | Use a rules/ pattern |
 
+For capabilities or tools with fallbacks, add an "If unavailable" column:
+
+| Capability | Use for | If unavailable |
+|---|---|---|
+| Browser automation | UI testing, visual verification | Substitute with Bash API testing; note the gap |
+| GitHub CLI | PR creation, review loop | Use `gh api` commands directly |
+
 ---
 
 ## 3) Use severity levels when reviewing or enforcing quality
@@ -295,3 +302,52 @@ Note: These evolve with releases. Check current availability via Task tool docum
 ```
 
 **When hedging is NOT needed:** Design patterns, workflow shapes, and principles don't require temporal markers — only enumerations and config specifics do.
+
+---
+
+## 17) Surface operating assumptions explicitly
+
+When a skill depends on external tools, platform capabilities, a specific workflow model, or user intent beyond what's captured as inputs — make those assumptions explicit.
+
+For each assumption, classify it:
+
+| Classification | What to write |
+|---|---|
+| **Hard requirement** | Fail early with a clear message. Document the requirement. |
+| **Adaptable** | Write an adaptation path: substitute an alternative, skip and document the gap, provide a fallback chain, or accept a parameter override. |
+| **Intentional** | State the assumption explicitly as deliberate scope — not everything should degrade. |
+
+**Why this matters:** Implicit assumptions are invisible until the skill runs in a different context (different machine, container, CI, different user intent). Surfacing them during design prevents silent failures and costly retroactive audits.
+
+When applicable, load `references/assumptions-and-adaptability.md` for the full taxonomy (five categories, four adaptation patterns, resolution order).
+
+---
+
+## 18) Messages carry substance, not mechanics
+
+Messages to the conversational counterpart should contain what they need to understand, decide, or act on — not operational details of what the agent did to get there.
+
+**Fragile:**
+> I read auth.ts, then ran grep for "session", then read middleware.ts. I found three security concerns.
+
+**Robust:**
+> Three security concerns in the auth flow: (1) session tokens aren't rotated after privilege escalation, (2) ...
+
+The counterpart cares about *what was found* and *what needs their input*. Tool calls, file reads, and search mechanics are operational noise that wastes attention (if human) or context budget (if agent).
+
+This applies when there IS an engaged counterpart. For async/trigger-based skills with no message channel, or background knowledge skills, this pattern is moot.
+
+---
+
+## 19) Visibility is a design choice
+
+When a skill produces artifacts, the skill author should explicitly decide the visibility level for each artifact type relative to each stakeholder. Without intentional design, artifacts land at whatever visibility level is most convenient for the agent — which may not match what stakeholders need.
+
+For each artifact the skill creates, decide:
+- **Who is this for?** (the invoker right now? a future session of this skill? an auditor?)
+- **Will they know to look for it?** (is the path predictable? is it referenced in messages?)
+- **What visibility level?** High (expected deliverable at a known path), medium (accessible if they look), low (agent-internal working state)
+
+Common failure modes:
+- **Too visible:** invoker sees operational artifacts they don't need (scratch files, intermediate state cluttering their workspace)
+- **Not visible enough:** future sessions can't find evidence they need; auditors can't trace decisions back to their justification

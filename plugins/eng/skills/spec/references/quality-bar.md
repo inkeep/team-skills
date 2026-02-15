@@ -12,6 +12,7 @@ Impact: Specs are not implementable, not testable, or fail to capture user value
 - [ ] Primary personas/consumers identified
 - [ ] At least one end-to-end user journey per primary persona
 - [ ] Requirements are prioritized with acceptance criteria
+- [ ] Acceptance criteria describe observable behavior (not internal mechanisms — see /tdd)
 - [ ] Current state described (how it works today, constraints)
 - [ ] Proposed solution described as a vertical slice (UX → API → data → runtime → ops)
 - [ ] Decision Log exists with rationale, door-type classification, and evidence links

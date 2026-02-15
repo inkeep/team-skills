@@ -95,7 +95,7 @@ Wait approximately 4 minutes, then check for reviewer feedback. Opportunisticall
 
 The full assessment protocol is in the reference file. The short version:
 
-1. **Investigate** before deciding — proportional to stakes (deep for bugs, light for style).
+1. **Investigate** before deciding — proportional to stakes (deep for bugs, light for style). Name your confidence level before proceeding.
 2. **Evaluate** across dimensions: validity, correctness, applicability, relevancy, tradeoffs, side effects, appropriateness.
 3. **Decide** — accept, decline, or partially accept — with evidence-backed reasoning.
 4. **Reply** with specific evidence. Resolve threads once settled.
@@ -120,6 +120,8 @@ Before pushing, evaluate your own changes:
 - **Clarity**: could another engineer understand this without explanation?
 - **Codebase alignment**: does it follow existing patterns and conventions?
 - **Proportionality**: does the fix match the scope of the problem, or did you over-build or under-build?
+
+If you are not confident your fix fully and correctly addresses the reviewer's concern, say so in your reply rather than asserting completeness. "I've addressed this by doing X — please verify this matches your intent" is more useful than implying the matter is settled.
 
 At minimum, run tests after any changes:
 ```bash
@@ -225,6 +227,8 @@ When both stages are complete, report to the user (or the invoking skill):
 - Pushing code without running tests locally first
 - Force-pushing or destructive git operations without user confirmation
 - Leaving review threads unresolved after making a final decision
+- **Flattening nuance** — forcing binary accept/decline when the honest assessment is "legitimate tradeoff"
+- **Asserting without evidence** — writing confident-sounding replies that don't reflect actual investigation depth
 - Forcing substantial rework through the fix-and-push cycle instead of escalating
 
 ---

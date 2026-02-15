@@ -17,6 +17,20 @@ Each phase can be entered independently. If you already have a prd.json, start a
 
 ---
 
+## Inputs
+
+| Input | Required | Default | Description |
+|---|---|---|---|
+| SPEC.md or prd.json path | Yes | — | Source artifact for conversion or implementation |
+| `--test-cmd` | No | `pnpm test --run` | Test runner command for quality gates |
+| `--typecheck-cmd` | No | `pnpm typecheck` | Type checker command for quality gates |
+| `--lint-cmd` | No | `pnpm lint` | Linter command for quality gates |
+| `--no-browser` | No | Browser assumed available | Omit "Verify in browser" criteria from UI stories; substitute with Bash-verifiable criteria |
+
+When composed by `/ship`, these overrides are passed based on Phase 0 context detection. When running standalone, defaults apply.
+
+---
+
 ## Detect starting point
 
 | Condition | Begin at |
@@ -107,6 +121,18 @@ Each criterion must be something Ralph can CHECK, not something vague.
 - "Good UX"
 - "Handles edge cases"
 
+**Implementation-coupled criteria (fragile):**
+- "handleStatusChange calls db.update with the correct enum"
+- "Component renders by calling useTaskList hook"
+- "API handler invokes validateInput before processing"
+
+**Behavioral criteria (resilient):**
+- "Task with changed status is retrievable with the new status"
+- "Task list displays only tasks matching the selected filter"
+- "Invalid status value returns 400 with descriptive error message"
+
+Implementation-coupled criteria produce tests that break on refactor even when behavior is unchanged. Behavioral criteria produce tests that survive internal restructuring. See /tdd.
+
 **Always include as final criterion:**
 ```
 "Typecheck passes"
@@ -117,12 +143,14 @@ For stories with testable logic, also include:
 "Tests pass"
 ```
 
-For stories that change UI, also include:
+For stories that change UI — **if browser automation is available** (no `--no-browser` flag):
 ```
 "Verify in browser using dev-browser skill"
 ```
 
 Frontend stories are NOT complete until visually verified. Ralph will use the dev-browser skill to navigate to the page, interact with the UI, and confirm changes work.
+
+**If browser is NOT available** (`--no-browser`): Omit the browser criterion. Instead, add Bash-verifiable criteria that cover the UI behavior through API responses or rendered output (e.g., "API response includes the updated status badge markup", "Server-rendered HTML contains filter dropdown with options: All, Active, Completed").
 
 ### Conversion rules
 
@@ -327,8 +355,8 @@ Before writing prd.json, verify:
 - [ ] Each story is completable in one iteration (small enough)
 - [ ] Stories are ordered by dependency (schema to backend to UI)
 - [ ] Every story has "Typecheck passes" as criterion
-- [ ] UI stories have "Verify in browser using dev-browser skill" as criterion
-- [ ] Acceptance criteria are verifiable (not vague)
+- [ ] UI stories have "Verify in browser using dev-browser skill" as criterion (if browser available) or Bash-verifiable substitutes (if `--no-browser`)
+- [ ] Acceptance criteria are verifiable and not vague; functional criteria describe observable behavior, not internal mechanisms (see /tdd)
 - [ ] No story depends on a later story
 - [ ] **`implementationContext` extracted** from SPEC.md §8, §9, §10, §6 — concise prose, not a copy-paste
 - [ ] **Failure/recovery paths** from SPEC.md §5 converted into acceptance criteria on relevant stories
@@ -358,7 +386,7 @@ Put `prd.json` in the worktree root or `.claude/` directory where Ralph can find
 
 ### Verify branch safety
 
-Do not run Ralph on `main` or `master`. Verify you are on a feature branch before proceeding.
+If on `main` or `master`, warn before proceeding — Ralph should normally run on a feature branch. If no branching model exists (e.g., container environment with no PR workflow), proceed with caution and ensure commits are isolated.
 
 ### Craft the implementation prompt
 
@@ -367,10 +395,14 @@ The prompt is what Ralph sees each iteration. It must be self-contained — Ralp
 The prompt should include:
 
 - Reference to `prd.json` for requirements and `implementationContext` for spec-level architecture, constraints, and design decisions
-- TDD approach: write tests first, then implementation (where practical)
+- TDD approach (where practical): write one test, then implement to pass it, repeat.
+  Do NOT write all tests first — one vertical slice at a time.
+- Start with a tracer bullet: one test proving one end-to-end path works before adding breadth
+- Mock at system boundaries only (external APIs, databases, time/randomness) — never mock your own modules or internal collaborators
+- Test names describe WHAT ("user can filter by status"), not HOW ("calls filterHandler")
 - Repo conventions from CLAUDE.md (testing patterns, file locations, formatting)
 - Codebase context: the specific patterns, shared vocabulary, and abstractions in the area being modified (more actionable than generic CLAUDE.md guidance)
-- Quality gates: run `pnpm typecheck`, `pnpm lint`, and `pnpm test --run` before declaring completion
+- Quality gates: run typecheck, lint, and test commands before declaring completion. Use the commands from Inputs (defaults: `pnpm typecheck`, `pnpm lint`, `pnpm test --run`) — override with `--typecheck-cmd`, `--lint-cmd`, `--test-cmd` if provided.
 
 **Per-iteration workflow to encode in the prompt:**
 
@@ -378,7 +410,7 @@ The prompt should include:
 2. Check `progress.txt` for learnings from previous iterations
 3. Select the highest-priority incomplete story (`passes: false`)
 4. Implement the story (one story per iteration — keep changes focused)
-5. Verify quality: run typecheck, lint, and tests — all must pass
+5. Verify quality: run typecheck, lint, and test commands (from Inputs) — all must pass
 6. Commit with message format: `[story-id] description`
 7. Update `prd.json`: set `passes: true` for completed story
 8. Log progress: append to `progress.txt` with what you implemented, files changed, and learnings
@@ -470,7 +502,7 @@ After Ralph finishes (or hits the iteration limit), you own the output. Ralph's 
 - [ ] Read every file Ralph created or modified
 - [ ] Each change is understood and intentional
 - [ ] Code matches SPEC.md intent
-- [ ] Tests exist and pass (`pnpm test --run`)
-- [ ] Typecheck passes (`pnpm typecheck`)
-- [ ] Lint passes (`pnpm lint`)
+- [ ] Tests exist and pass (test command from Inputs)
+- [ ] Typecheck passes (typecheck command from Inputs)
+- [ ] Lint passes (lint command from Inputs)
 - [ ] No unexplained or cargo-culted code remains

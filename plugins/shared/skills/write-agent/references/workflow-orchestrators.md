@@ -102,6 +102,11 @@ Sort strategy:
 Counts:
 - Always compute counts per severity.
 
+Certainty preservation:
+- When subagents use certainty markers (CONFIRMED/INFERRED/UNCERTAIN), preserve these in the aggregated output.
+- Severity and certainty are independent dimensions: a CRITICAL + INFERRED finding has different implications than a CRITICAL + CONFIRMED one.
+- Do not flatten certainty when deduping — if two reviewers report the same issue at different confidence levels, surface the higher-confidence assessment with a note.
+
 ### D) Iteration / retry policy
 Define:
 - Max iterations (commonly 2–3)
@@ -133,6 +138,13 @@ Keep artifacts:
 - scannable
 - stable paths
 - referenced explicitly in later phase handoffs
+
+Visibility classification — for each artifact, decide its audience:
+- **Internal** (next phase only): intermediate state consumed by the next subagent; may be overwritten or cleaned up after the workflow completes.
+- **Deliverable** (final consumer): what the user or downstream system asked for; survives the workflow and is surfaced in the orchestrator's final output.
+- **Supporting** (audit/debug): useful if something goes wrong or for process inspection, but not actively surfaced.
+
+Path structure and naming should reflect this. Internal artifacts live in a workflow-specific directory (e.g., `.workflow/feature-dev/`); deliverables land where the consumer expects them.
 
 ### F) Quality gates
 Each phase should have an explicit gate.

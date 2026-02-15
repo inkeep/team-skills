@@ -8,7 +8,7 @@ Impact: Wrong pnpm version breaks lockfile; work bleeds into main directory; CI 
 
 ## Why a worktree
 
-A git worktree creates a separate working directory on its own branch while sharing the same `.git` directory. This keeps feature work isolated from the user's main `~/InkeepDev/agents` directory, where they may be doing other work.
+A git worktree creates a separate working directory on its own branch while sharing the same `.git` directory. This keeps feature work isolated from the user's main working directory, where they may be doing other work.
 
 ## Detect existing environment
 
@@ -24,6 +24,11 @@ git branch --show-current
 - Do NOT create a new worktree. Use the current directory.
 - Verify branch is not `main` or `master`.
 - Skip to step 2 (install dependencies) to ensure the environment is clean.
+
+**If you are in a container** (`/.dockerenv` exists, or container-specific env vars like `CONTAINER=true` are set):
+- Do NOT create a worktree — containers typically lack the multi-directory structure worktrees need.
+- If on `main`/`master`, create a feature branch: `git checkout -b feat/<feature-name>`.
+- Skip to step 2 (install dependencies).
 
 **If you are on `main`/`master`** in the primary repo:
 - Proceed with step 1 to create a fresh worktree.

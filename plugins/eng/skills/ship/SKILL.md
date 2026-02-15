@@ -14,14 +14,33 @@ The phases below organize your work — they do not pressure you to move forward
 
 ## Workflow
 
-### Phase 0: Detect starting point
+### Phase 0: Detect context and starting point
+
+#### Step 1: Detect execution context
+
+Before making any workflow decisions, detect what capabilities are available. For each capability, resolve using: (1) user-specified override → respect unconditionally, (2) default assumption + runtime probe, (3) degradation path if probe fails.
+
+| Capability | Probe | If unavailable |
+|---|---|---|
+| Git worktree support | Check `/.dockerenv` or container env vars; check if already on feature branch | Skip worktree creation in Phase 2 — use current directory |
+| GitHub CLI | `gh auth status` | Skip PR creation (Phase 2) and review invocation (Phase 5) |
+| Quality gate commands | Read `package.json` `scripts` field; check for `pnpm`/`npm`/`yarn`; accept user `--test-cmd` / `--typecheck-cmd` / `--lint-cmd` overrides | Use discovered commands; halt if no typecheck AND no test command works |
+| Browser automation | Check if `mcp__claude-in-chrome__*` tools are available | Substitute Bash-based testing; pass `--no-browser` to ralph for criteria adaptation |
+| macOS computer use | Check if `mcp__peekaboo__*` tools are available | Skip OS-level testing; document gap |
+| Ralph-loop plugin | Check if `/ralph-loop` is available as a skill/plugin | Ship manages iteration directly (Phase 3) — **Load:** `references/ralph-iteration-fallback.md` |
+| /spec skill | Check skill availability | Require SPEC.md as input (no interactive spec authoring) |
+| /inspect skill | Check skill availability | Use direct codebase exploration (Glob, Grep, Read) |
+
+Record what's available. This state flows through all subsequent phases.
+
+#### Step 2: Detect starting point
 
 Determine which entry mode applies:
 
 | Condition | Action |
 |---|---|
 | User provides a path to an existing SPEC.md | Load it. Proceed to Phase 1B. |
-| User provides a feature description (no SPEC.md) | Proceed to Phase 1A. |
+| User provides a feature description (no SPEC.md) | Proceed to Phase 1A. If `/spec` is unavailable, ask the user to provide a SPEC.md. |
 | Ambiguous | Ask: "Do you have an existing SPEC.md, or should we spec this from scratch?" |
 
 ---
@@ -33,7 +52,7 @@ In this phase, you are a thought partner, not an autonomous executor. The user i
 Invoke `/spec` with the user's feature description. Follow the spec skill's interactive process.
 
 During the spec process, ensure these are captured with evidence (not aspirationally):
-- All test cases and acceptance criteria for Phase 1
+- All test cases and acceptance criteria for Phase 1. Criteria should describe observable behavior ("created user is retrievable via API"), not internal mechanisms ("createUser calls db.insert"). See /tdd.
 - Failure modes and edge cases
 - Whether TDD is practical for this feature (prefer TDD when feasible)
 
@@ -71,6 +90,7 @@ First, detect the current environment:
 | Condition | Action |
 |---|---|
 | Already in a worktree or feature branch (e.g., invoked via Conductor or existing worktree) | Skip worktree creation. Verify branch is not `main`/`master`, dependencies are installed, and the build is clean. Proceed to step 3. |
+| In a container (`/.dockerenv` exists or container env detected in Phase 0) | Skip worktree creation — use current directory. Create a feature branch if on `main`/`master`. Proceed to step 2. |
 | In the main repo on `main`/`master` | Create a new worktree (step 1). |
 | Ambiguous | Run `git worktree list` and `git branch --show-current` to determine. |
 
@@ -78,24 +98,32 @@ First, detect the current environment:
    ```
    git worktree add ../<feature-name> -b feat/<feature-name>
    ```
-2. Set up the worktree: install dependencies with the correct pnpm version, run conductor setup if `conductor.json` exists.
-3. Create a draft PR early so CI/CD and reviewers can engage. Use the SPEC.md as the basis for the PR body — distill problem, motivation, and approach from the spec (see `references/worktree-setup.md` step 5 for the template).
+2. Set up the environment: install dependencies with the correct package manager version, run conductor setup if `conductor.json` exists.
+3. **If GitHub CLI is available** (detected in Phase 0): Create a draft PR early so CI/CD and reviewers can engage. Use the SPEC.md as the basis for the PR body — distill problem, motivation, and approach from the spec (see `references/worktree-setup.md` step 5 for the template).
    ```
    gh pr create --draft --title "feat: <feature>" --body "<distilled from SPEC.md>"
    ```
-4. Note the PR URL and number for the review iteration loop.
+   Note the PR URL and number for the review iteration loop.
+
+   **If GitHub CLI is NOT available:** Skip PR creation. Implementation proceeds without PR-based review — the user reviews locally after Phase 4.
 
 ---
 
 ### Phase 3: Implementation
 
-Invoke `/ralph` to implement the feature. Provide Ralph with:
+Invoke `/ralph` to prepare the implementation (Phases 1-2: prd.json conversion, prompt crafting). Provide Ralph with:
 - Path to the SPEC.md and prd.json
 - The codebase context from Phase 1B — the patterns, conventions, and shared abstractions you identified via `/inspect`
+- Quality gate command overrides from Phase 0 (if the repo doesn't use `pnpm`)
+- Browser availability from Phase 0 (if browser tools are unavailable, pass `--no-browser` so ralph adapts criteria)
 
-Ralph handles: prd.json validation against the SPEC.md, implementation prompt crafting, `/ralph-loop` execution with appropriate iteration bounds, and post-implementation review of all created/modified files. See the `/ralph` skill (Phases 2-4) for the full methodology.
+**If ralph-loop is available** (detected in Phase 0): Invoke `/ralph-loop` with the implementation prompt and appropriate iteration bounds. Ralph handles iteration via its stop hook.
 
-After `/ralph` completes, verify that you are satisfied with the output before proceeding. You are responsible for this code — Ralph's output is your starting point, not your endpoint. If anything does not meet your quality bar, fix it now.
+**If ralph-loop is NOT available:** Ship manages iteration directly.
+
+**Load:** `references/ralph-iteration-fallback.md`
+
+After implementation completes (via either path), verify that you are satisfied with the output before proceeding. You are responsible for this code — Ralph's output is your starting point, not your endpoint. If anything does not meet your quality bar, fix it now.
 
 ---
 
@@ -106,12 +134,7 @@ After `/ralph` completes, verify that you are satisfied with the output before p
 Run three tiers of testing:
 
 **Tier 1 — Formal test suite (mandatory):**
-```
-cd <worktree> && pnpm test --run
-pnpm typecheck
-pnpm lint
-pnpm format:check
-```
+Run the repo's full verification suite — test runner, type checker, linter, and formatter — using the commands defined in the repo's project configuration.
 
 **Tier 2 — You are the QA engineer (mandatory for user-facing changes):**
 You own this feature. Before anyone else sees it, verify it works the way a user would actually experience it — not just that individual code paths are correct. Formal tests verify logic; Tier 2 verifies the *experience*. A feature can pass every unit test and still have a broken layout, a confusing flow, or an interaction that doesn't feel right.
@@ -145,6 +168,8 @@ Do not proceed to Phase 5 until you have high confidence in the implementation. 
 
 ### Phase 5: Review iteration loop
 
+**If no PR exists** (GitHub CLI unavailable or PR creation was skipped in Phase 2): Skip this phase entirely. The user reviews locally after Phase 4. Proceed to Phase 6.
+
 Invoke `/review` with the PR number and the path to the SPEC.md:
 
 ```
@@ -171,20 +196,22 @@ Do not proceed to Phase 6 until `/review` reports completion (all threads resolv
 
 Before declaring done, verify:
 
-- [ ] All tests passing (`pnpm test --run`)
-- [ ] Typecheck passing (`pnpm typecheck`)
-- [ ] Lint passing (`pnpm lint`)
-- [ ] Format clean (`pnpm format:check`)
-- [ ] PR description is comprehensive, up-to-date, and derived from SPEC.md (summary, motivation, approach, changes, deviations from spec if any, test plan, link to spec)
-- [ ] Changesets created for published package changes:
-  ```
-  pnpm bump <patch|minor|major> --pkg <package> "<message>"
-  ```
-- [ ] All reviewer feedback threads resolved (accepted or declined with reasoning)
-- [ ] CI/CD pipeline green
+- [ ] All tests passing
+- [ ] Type checking passing
+- [ ] Linting passing
+- [ ] Formatting clean
 - [ ] No `TODO` or `FIXME` comments left from implementation
 
-Report completion status to the user with a summary of what was built, key decisions made, and the PR URL.
+**If a PR exists:**
+- [ ] PR description is comprehensive, up-to-date, and derived from SPEC.md (summary, motivation, approach, changes, deviations from spec if any, test plan, link to spec)
+- [ ] Changelog entries created for published package changes (if applicable)
+- [ ] All reviewer feedback threads resolved (accepted or declined with reasoning)
+- [ ] CI/CD pipeline green
+
+Report completion status to the user with a summary of:
+- What was built and key decisions made
+- PR URL (if a PR was created)
+- What was verified vs. what was skipped due to unavailable capabilities (e.g., "Browser testing skipped — no Chrome automation available")
 
 ---
 
@@ -223,7 +250,7 @@ These govern your behavior throughout:
 - Blindly rejecting reviewer suggestions without investigating them
 - Pushing code without running tests locally first
 - Skipping manual testing for user-facing changes
-- Using `npm`, `yarn`, or `bun` instead of `pnpm`
+- Using a different package manager than what the repo specifies
 - Force-pushing or destructive git operations without user confirmation
 - Treating Ralph's output as final without review
 - Declaring "done" when CI/CD is still failing
@@ -239,3 +266,4 @@ These govern your behavior throughout:
 | `/review` skill | Running the push → review → fix → CI/CD loop (Phase 5) | Missed feedback, unresolved threads, mechanical response to reviews, CI/CD failures not investigated |
 | `references/worktree-setup.md` | Setting up isolated development environment (Phase 2) | Wrong pnpm version, broken lockfile, work bleeds into main directory |
 | `references/testing-strategy.md` | Planning and executing tests (Phase 4) | Gaps in coverage, untested edge cases, false confidence |
+| `references/ralph-iteration-fallback.md` | Ralph-loop unavailable; ship manages iteration directly (Phase 3) | No iteration mechanism; implementation stalls after one ralph invocation |

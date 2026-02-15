@@ -202,6 +202,7 @@ Copy/paste template (optional but recommended):
 - In-scope:
 - Out-of-scope:
 - Constraints (tools/safety/runtime):
+- Operating assumptions (tools, workflow model, platform, user intent):
 - Success criteria (what "done" means):
 - Primary failure modes to prevent:
 - Output format expectations (if any):
@@ -292,6 +293,16 @@ Verify these are present before moving to Step 7.
 ### Step 7: Write SKILL.md body (the "runtime prompt")
 
 **Load:** `references/content-patterns.md`
+
+If the skill depends on external tools, platform features, a specific workflow, or assumes user intent beyond its explicit inputs, also **Load:** `references/assumptions-and-adaptability.md`
+
+If the skill manages persistent state across turns or sessions (e.g., it writes artifacts that evolve, accumulates evidence, or needs to support session resumption), also **Load:** `references/stateful-skill-patterns.md`
+
+For such skills, before writing workflow steps, decide:
+- What does this skill produce? (messages only, or also persistent artifacts?)
+- Who consumes each output? (invoker now? future session of this skill? downstream system?)
+- How long must each output survive? (this turn? this session? across sessions?)
+- How does each output change over time? (overwritten? appended? immutable?)
 
 Use imperative language and a structure that makes the model's job easy.
 
@@ -435,6 +446,8 @@ Priority legend:
 | `references/updating-existing-skills.md` | P0 | "Update" or "refactor" requests for existing skills | Intent drift; accidental semantic changes |
 | `references/testing-and-iteration.md` | P1 | Adding test prompts and iteration guidance | Regressions go unnoticed |
 | `references/security-and-governance.md` | P1 | Skills with scripts, tool access, or high-stakes domains | Security vulnerabilities; unsafe defaults |
+| `references/assumptions-and-adaptability.md` | P1 | Skill depends on external tools, platform capabilities, or specific execution context | Implicit assumptions baked in; silent failures in different contexts |
+| `references/stateful-skill-patterns.md` | P1 | Skills that manage persistent state across turns or sessions (spec, research, feature dev) | No guidance for artifact lifecycle, session resumption, evidence/synthesis separation |
 | `templates/SKILL.minimal.template.md` | P0 | Starting a new single-file skill | Slow start; inconsistent structure |
 | `templates/SKILL.guidelines.template.md` | P1 | Skills that are primarily guidance/rules | Missing quality bar or examples |
 | `templates/SKILL.fork-task.template.md` | P1 | Skills that run as isolated subagents (`context: fork`) | Incomplete task prompt; empty output |

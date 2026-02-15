@@ -109,6 +109,18 @@ Investigation tools (use as needed):
 
 **Litmus test for investigation depth:** Could you explain your reasoning to a senior engineer and defend it with evidence? If not, you have not investigated enough. An assessment backed by "I think" or "it seems" has not met the standard. An assessment backed by "I read the code path and confirmed X" or "I checked the spec and this contradicts section Y" has.
 
+**Name your confidence before deciding.** Before moving from investigation to evaluation, identify where you stand:
+
+| Confidence | What it means | What to do |
+|---|---|---|
+| **HIGH** | You can point to specific evidence — code lines, spec sections, test results, documentation — that confirms your assessment. | Proceed to evaluate and decide. |
+| **MEDIUM** | Your assessment is plausible but depends on unverified assumptions, or a reasonable alternative interpretation exists. | Investigate further if stakes warrant it. If you proceed, flag the uncertainty in your reply. |
+| **LOW** | You cannot cite specific evidence for your position. | Do not decide yet. Investigate more, or consult the user. |
+
+Defaulting to HIGH without evidence is a failure mode — it produces confident-sounding replies that don't hold up to scrutiny.
+
+**Confidence ceiling for unverified external claims:** Claims about library behavior, API semantics, deprecation status, or framework best practices — whether made by a reviewer or from your own knowledge — cannot reach HIGH confidence without verification (web search, official documentation, or codebase inspection). Training-data knowledge is not verification.
+
 ### 3b. Evaluate across multiple dimensions
 
 For each suggestion, assess:
@@ -156,11 +168,15 @@ After investigation, classify and act:
 | Suggestion contradicts the spec or design intent | Reply referencing the spec. Consult user if ambiguous. |
 | Uncertain after investigation | Consult the user. Present what you found and your leaning. |
 
+**Do not flatten nuance.** Some suggestions involve genuine tradeoffs with no clear winner. When the honest assessment is "this is a legitimate tradeoff and reasonable engineers could disagree," say that — with your reasoning for the current approach. Forcing every suggestion into binary accept/decline discards information that helps reviewers understand your thinking.
+
 ### 3d. Reply with evidence
 
 - **If accepting:** Brief acknowledgment of what you're fixing and why the reviewer was right. Push the fix, then mark resolved.
 - **If declining:** Explain your reasoning with **specific evidence** — code references, spec sections, tradeoff analysis, or research findings. Be respectful but direct. Do not apologize for disagreeing; explain why you disagree. Mark resolved.
 - **If partially accepting:** Explain what you're taking and what you're not, and why. This is often the right answer — a suggestion may be directionally correct but the specific implementation wrong.
+
+**Match your reply's certainty to your actual evidence level.** If your investigation left you at MEDIUM confidence, your reply should reflect that — "Based on my reading of X, I believe Y, though I may be missing context about Z" — rather than asserting conclusions you cannot fully support. Overstating certainty erodes trust and can lead to resolving threads that should remain open for discussion.
 
 ### 3e. Close the loop (response mechanics by feedback type)
 
