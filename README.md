@@ -26,20 +26,17 @@ Each team plugin (`eng`, `gtm`) is a proper Claude Code plugin with its own `.cl
 
 ## Install
 
-### Skills CLI (cross-agent)
+Two install methods. Choose based on your setup:
 
-Works with Claude Code, Cursor, Cline, Codex, and other supported agents:
+| | Claude Code Plugin (recommended) | Skills CLI |
+|---|---|---|
+| **Auto-update** | Yes — skills update every session | No — manual `npx skills update` |
+| **Agent support** | Claude Code only | Claude Code, Cursor, Cline, Codex, etc. |
+| **Best for** | Claude Code-only users who want zero-maintenance updates | Multi-agent users (e.g., Cursor + Claude Code) |
 
-```bash
-# Install a team's skills
-npx skills add inkeep/team-skills/plugins/eng -y    # engineering
-npx skills add inkeep/team-skills/plugins/gtm -y    # GTM
+### Option A: Claude Code Plugin (recommended)
 
-# Or install all shared skills
-npx skills add inkeep/team-skills/plugins/shared -y
-```
-
-### Claude Code Plugin
+Auto-updates on every session. Skills stay current without manual intervention.
 
 ```bash
 # Add the marketplace with auto-update (one-time)
@@ -50,19 +47,27 @@ claude plugin install eng@inkeep-team-skills    # engineering
 claude plugin install gtm@inkeep-team-skills    # GTM
 ```
 
-## Update
+### Option B: Skills CLI (cross-agent)
 
-Skills auto-update on every Claude Code session when auto-update is enabled (see install step above). To update manually:
+Works with any agent that supports the [Agent Skills](https://agentskills.io) standard. Updates are manual.
 
 ```bash
-# Skills CLI
-npx skills update
+# Install a team's skills
+npx skills add inkeep/team-skills/plugins/eng -y    # engineering
+npx skills add inkeep/team-skills/plugins/gtm -y    # GTM
+
+# Or install shared skills only
+npx skills add inkeep/team-skills/plugins/shared -y
 ```
 
+## Update
+
+**Plugin users:** Skills auto-update on every Claude Code session — no action needed.
+
+**Skills CLI users:** Run manually when you want the latest:
+
 ```bash
-# Claude Code Plugin
-claude plugin marketplace update inkeep-team-skills
-claude plugin update eng    # or gtm
+npx skills update
 ```
 
 ## `/research` + `/write-skill`
