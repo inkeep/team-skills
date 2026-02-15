@@ -1,0 +1,50 @@
+name: Bump plugin versions on merge
+
+on:
+  push:
+    branches: [main]
+    paths-ignore:
+      - '.github/**'
+
+jobs:
+  bump:
+    runs-on: ubuntu-latest
+    # Skip if the last commit was from this workflow (prevent infinite loop)
+    if: "!contains(github.event.head_commit.message, '[version-bump]')"
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Bump patch version in all plugin manifests
+        run: |
+          # Read current version from the eng plugin.json (source of truth)
+          CURRENT=$(jq -r '.version' plugins/eng/.claude-plugin/plugin.json)
+          echo "Current version: $CURRENT"
+
+          # Bump patch: 1.0.0 -> 1.0.1, 1.0.9 -> 1.0.10, etc.
+          IFS='.' read -r MAJOR MINOR PATCH <<< "$CURRENT"
+          NEW="$MAJOR.$MINOR.$((PATCH + 1))"
+          echo "New version: $NEW"
+
+          # Update all plugin.json files
+          for f in plugins/*/.claude-plugin/plugin.json; do
+            jq --arg v "$NEW" '.version = $v' "$f" > "$f.tmp" && mv "$f.tmp" "$f"
+          done
+
+          # Update marketplace.json - bump version for each plugin entry
+          jq --arg v "$NEW" '.plugins[].version = $v' .claude-plugin/marketplace.json > .claude-plugin/marketplace.json.tmp \
+            && mv .claude-plugin/marketplace.json.tmp .claude-plugin/marketplace.json
+
+          echo "version=$NEW" >> "$GITHUB_OUTPUT"
+
+      - name: Commit and push
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add -A
+          git diff --cached --quiet && echo "No changes" && exit 0
+          git commit -m "chore: bump plugin versions [version-bump]"
+          git push
