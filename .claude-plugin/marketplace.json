@@ -9,24 +9,30 @@
     {
       "name": "eng",
       "description": "Skills for the Inkeep engineering team",
-      "version": "1.0.0",
-      "author": { "name": "Inkeep" },
+      "version": "1.1.0",
+      "author": {
+        "name": "Inkeep"
+      },
       "source": "./plugins/eng",
       "category": "development"
     },
     {
       "name": "gtm",
       "description": "Skills for the Inkeep GTM team",
-      "version": "1.0.0",
-      "author": { "name": "Inkeep" },
+      "version": "1.1.0",
+      "author": {
+        "name": "Inkeep"
+      },
       "source": "./plugins/gtm",
       "category": "productivity"
     },
     {
       "name": "shared",
       "description": "Shared skills across all Inkeep teams",
-      "version": "1.0.0",
-      "author": { "name": "Inkeep" },
+      "version": "1.1.0",
+      "author": {
+        "name": "Inkeep"
+      },
       "source": "./plugins/shared",
       "category": "productivity"
     }

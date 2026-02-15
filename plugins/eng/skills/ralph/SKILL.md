@@ -21,13 +21,27 @@ Each phase can be entered independently. If you already have a prd.json, start a
 
 | Input | Required | Default | Description |
 |---|---|---|---|
-| SPEC.md or prd.json path | Yes | — | Source artifact for conversion or implementation |
+| SPEC.md or prd.json path | Yes | — | Source artifact. When SPEC.md: used for Phase 1 conversion AND forwarded as iteration reference in Phase 2/3 (see Spec path forwarding). When prd.json: start at Phase 2 directly. |
 | `--test-cmd` | No | `pnpm test --run` | Test runner command for quality gates |
 | `--typecheck-cmd` | No | `pnpm typecheck` | Type checker command for quality gates |
 | `--lint-cmd` | No | `pnpm lint` | Linter command for quality gates |
 | `--no-browser` | No | Browser assumed available | Omit "Verify in browser" criteria from UI stories; substitute with Bash-verifiable criteria |
 
 When composed by `/ship`, these overrides are passed based on Phase 0 context detection. When running standalone, defaults apply.
+
+### Spec path forwarding
+
+When a SPEC.md is provided (directly or by the invoker), the path persists beyond Phase 1 conversion. In Phase 2, Ralph embeds a file-path reference in the implementation prompt so that iteration agents read the full SPEC.md as the first action of every iteration.
+
+This is mandatory when a spec path is available. The spec contains critical implementation context that prd.json's `implementationContext` cannot fully capture:
+- **Non-goals** (what NOT to build) — completely absent from prd.json
+- **Current state code traces** (file paths, line numbers, existing patterns) — compressed to prose in implementationContext
+- **Decision rationale** — reduced to conclusions only
+- **Risks and failure modes** — only partially captured in acceptance criteria
+
+The spec content is NOT embedded in the prompt. The prompt contains only a file path. The iteration agent reads the file via the Read tool — deterministic, exact, zero LLM output tokens for spec content.
+
+When only prd.json is provided (no SPEC.md available), `implementationContext` serves as the sole implementation context source. See Phase 1's implementationContext guidance for how to calibrate depth.
 
 ---
 
@@ -174,7 +188,16 @@ Extract from these SPEC.md sections:
 | §10 Decision log | Settled decisions (especially 1-way doors) with brief rationale | Prevents the implementer from revisiting or contradicting decisions made during the spec process |
 | §8 Current state | How the system works today, key integration points, known gaps | The implementer needs to know what exists to integrate with it correctly |
 
-**What to write:** A concise prose summary (3-8 sentences). Not a copy-paste of the spec sections — a distillation of what the implementer needs to hold in mind while working on every story.
+**What to write:** A concise prose summary. Not a copy-paste of the spec sections — a distillation of what the implementer needs to hold in mind while working on every story.
+
+**Calibrate depth based on spec availability:**
+
+| Spec available during implementation? | implementationContext role | Recommended depth |
+|---|---|---|
+| **Yes** — spec path forwarded to Phase 2 (default when composed by `/ship` or when user provides both) | Quick orientation summary. The full SPEC.md provides deep context — iteration agents read it as step 1. | 3-5 sentences — architecture overview and key constraints only |
+| **No** — prd.json is the sole artifact (user invokes Ralph with prd.json only, or spec is unavailable) | Primary and sole implementation context source. Must stand on its own. | 5-10 sentences — include architecture, non-goals, current state integration points, key decisions with rationale, and critical constraints |
+
+When in doubt about whether the spec will be available, write the longer form — it's never wrong to include more context, but the shorter form risks leaving the iteration agent under-informed.
 
 **Good example:**
 > "The feature adds a `status` column to the tasks table with an enum type. The API uses the existing RESTful pattern in `/api/tasks/`. Auth is handled by the existing tenant-scoped middleware — do not add new auth logic. The current task list fetches via `getTasksByProject()` in the data-access layer; the new filter must use the same query pattern. Decision D3: we chose server-side filtering over client-side because the dataset can exceed 10k rows."
@@ -394,7 +417,8 @@ The prompt is what Ralph sees each iteration. It must be self-contained — Ralp
 
 The prompt should include:
 
-- Reference to `prd.json` for requirements and `implementationContext` for spec-level architecture, constraints, and design decisions
+- **SPEC.md file-path reference (when spec path is available):** An unconditional, load-bearing instruction to read the SPEC.md file as the FIRST action of every iteration. Use the absolute file path. Do NOT embed spec content in the prompt — the iteration agent reads it via the Read tool each iteration. This ensures exact, deterministic access to the full spec without LLM re-emission.
+- **prd.json reference:** For user story tracking, completion status, and acceptance criteria. When no SPEC.md is available, prd.json's `implementationContext` serves as the sole implementation context — include explicit emphasis in the prompt to pay close attention to it.
 - TDD approach (where practical): write one test, then implement to pass it, repeat.
   Do NOT write all tests first — one vertical slice at a time.
 - Start with a tracer bullet: one test proving one end-to-end path works before adding breadth
@@ -406,15 +430,38 @@ The prompt should include:
 
 **Per-iteration workflow to encode in the prompt:**
 
-1. Read `prd.json` for user stories and their completion status
-2. Check `progress.txt` for learnings from previous iterations
-3. Select the highest-priority incomplete story (`passes: false`)
-4. Implement the story (one story per iteration — keep changes focused)
-5. Verify quality: run typecheck, lint, and test commands (from Inputs) — all must pass
-6. Commit with message format: `[story-id] description`
-7. Update `prd.json`: set `passes: true` for completed story
-8. Log progress: append to `progress.txt` with what you implemented, files changed, and learnings
-9. If stuck on a story, document the blocker in `progress.txt` and move to the next story
+**Critical — conditionality lives HERE (in Phase 2 construction), NOT in the iteration prompt.** Choose ONE variant below based on available inputs. The iteration agent sees a single, unconditional workflow — never both variants, never conditional "if spec is available" logic.
+
+**Variant A — SPEC.md available** (use when spec path is known):
+
+```
+1. Read SPEC.md at `<absolute-spec-path>`. This is your primary implementation reference — architecture decisions, non-goals (what NOT to build), current system state (file paths, code traces), and design constraints. Focus on: non-goals, current state and integration points, proposed solution design, and settled decisions with rationale.
+2. Read `prd.json` for user stories and their completion status.
+3. Check `progress.txt` for learnings from previous iterations.
+4. Select the highest-priority incomplete story (`passes: false`).
+5. Implement the story (one story per iteration — keep changes focused).
+6. Verify quality: run typecheck, lint, and test commands (from Inputs) — all must pass.
+7. Commit with message format: `[story-id] description`.
+8. Update `prd.json`: set `passes: true` for completed story.
+9. Log progress: append to `progress.txt` with what you implemented, files changed, and learnings.
+10. If stuck on a story, document the blocker in `progress.txt` and move to the next story.
+```
+
+**Variant B — No SPEC.md** (use when only prd.json is available):
+
+```
+1. Read `prd.json` for user stories, their completion status, and `implementationContext` for architecture, constraints, and design decisions. This is your sole implementation reference — pay close attention to every detail in implementationContext.
+2. Check `progress.txt` for learnings from previous iterations.
+3. Select the highest-priority incomplete story (`passes: false`).
+4. Implement the story (one story per iteration — keep changes focused).
+5. Verify quality: run typecheck, lint, and test commands (from Inputs) — all must pass.
+6. Commit with message format: `[story-id] description`.
+7. Update `prd.json`: set `passes: true` for completed story.
+8. Log progress: append to `progress.txt` with what you implemented, files changed, and learnings.
+9. If stuck on a story, document the blocker in `progress.txt` and move to the next story.
+```
+
+Do NOT include both variants in the iteration prompt. Choose one. The iteration agent sees a single, clean workflow with no conditionals.
 
 **Progress log format** (encode in prompt so Ralph follows it):
 

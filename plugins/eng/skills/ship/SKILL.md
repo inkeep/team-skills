@@ -115,10 +115,10 @@ First, detect the current environment:
 
 ### Phase 3: Implementation
 
-Invoke `/ralph` to prepare the implementation (Phases 1-2: prd.json conversion, prompt crafting). Provide Ralph with:
-- Path to the SPEC.md and prd.json
+Invoke `/ralph` to prepare the implementation (Phase 2: prompt crafting). Provide Ralph with:
+- Path to the SPEC.md and prd.json — the spec path is critical: Ralph forwards it into the implementation prompt so iteration agents read the full spec as their primary reference every iteration. Do not omit it.
 - The codebase context from Phase 1B — the patterns, conventions, and shared abstractions you identified via `/inspect`
-- Quality gate command overrides from Phase 0 (if the repo doesn't use `pnpm`)
+- Quality gate command overrides from Phase 0 (which may differ from pnpm defaults)
 - Browser availability from Phase 0 (if browser tools are unavailable, pass `--no-browser` so ralph adapts criteria)
 
 **If ralph-loop is available** (detected in Phase 0): Invoke `/ralph-loop` with the implementation prompt and appropriate iteration bounds. Ralph handles iteration via its stop hook.
