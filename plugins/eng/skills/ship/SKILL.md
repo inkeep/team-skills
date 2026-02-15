@@ -27,8 +27,7 @@ Before making any workflow decisions, detect what capabilities are available. Fo
 | Quality gate commands | Read `package.json` `scripts` field; check for `pnpm`/`npm`/`yarn`; accept user `--test-cmd` / `--typecheck-cmd` / `--lint-cmd` overrides | Use discovered commands; halt if no typecheck AND no test command works |
 | Browser automation | Check if `mcp__claude-in-chrome__*` tools are available | Substitute Bash-based testing; pass `--no-browser` to ralph for criteria adaptation |
 | macOS computer use | Check if `mcp__peekaboo__*` tools are available | Skip OS-level testing; document gap |
-| Claude CLI subprocess | Run: `env -u CLAUDECODE -u CLAUDE_CODE_ENTRYPOINT claude --version` | Use same-session ralph-loop (Path D) or Task subagent iteration (Path B) — see Phase 3 |
-| Ralph-loop plugin | Check if `/ralph-loop` is available as a skill/plugin | Use Task subagent iteration (Path B) — see Phase 3 |
+| Claude CLI subprocess | Run: `env -u CLAUDECODE -u CLAUDE_CODE_ENTRYPOINT claude --version` | Automated iteration unavailable — ship saves the implementation prompt and gives the user exact instructions for manual iteration. Phases 0-2 and 4-6 still work. See Phase 3. |
 | /spec skill | Check skill availability | Require SPEC.md as input (no interactive spec authoring) |
 | /inspect skill | Check skill availability | Use direct codebase exploration (Glob, Grep, Read) |
 
@@ -128,28 +127,27 @@ Ralph produces the **implementation prompt** — the complete instruction set th
 
 #### Step 2: Execute the iteration loop
 
-Use the first available path from this degradation chain. Ship manages the iteration loop for Paths A and B; Path D delegates iteration to ralph-loop.
+**If Claude CLI subprocess is available (Path A):**
 
-**Path A (primary) — Claude CLI subprocess iteration:**
-Requires: Claude CLI subprocess available (detected in Phase 0).
-
-Each iteration spawns a fully independent Claude Code process. This is the preferred path because it provides both **context isolation** (ship's context is preserved) and **full capabilities** (the subprocess is a complete Claude Code instance that can spawn its own subagents, use MCP servers, and access tools).
+Each iteration spawns a fully independent Claude Code process. This provides both **context isolation** (ship's context is preserved) and **full capabilities** (the subprocess is a complete Claude Code instance that can spawn its own subagents, use MCP servers, and access tools).
 
 **Load:** `references/subprocess-iteration.md`
 
-**Path D (fallback) — Same-session ralph-loop:**
-Requires: `/ralph-loop` available as a skill/plugin (detected in Phase 0). Claude CLI subprocess NOT available.
+**If Claude CLI subprocess is NOT available:**
 
-Invoke `/ralph-loop` with the implementation prompt and appropriate iteration bounds. Ralph handles iteration via its stop hook. This path provides **full capabilities** but **no context isolation** — ralph iterations consume ship's context window.
+Automated iteration is not possible. Ship has already provided full value by producing the SPEC.md, prd.json, and the implementation prompt — the user runs the iteration loop manually.
 
-After ralph-loop completes, **re-ground yourself**: re-read the SPEC.md, prd.json, progress.txt, and your task list. Ralph's iterations may have consumed significant context. Verify you still have a clear understanding of the feature, what was implemented, and what remains before proceeding.
+Tell the user:
 
-**Path B (last resort) — Task subagent iteration:**
-Requires: Neither Claude CLI subprocess nor ralph-loop available.
+1. The implementation prompt has been saved to `.claude/ralph-prompt.md`
+2. Give them the exact command to run ralph-loop with the prompt:
+   ```
+   /ralph-loop "$(cat .claude/ralph-prompt.md)" --max-iterations <N> --completion-promise "IMPLEMENTATION COMPLETE"
+   ```
+   Where `<N>` is the recommended iteration limit from the tuning table (10-15 for small, 20-30 for medium, 30-50 for large).
+3. Tell them: "Run this in a fresh Claude Code session. When implementation is complete, come back and tell me — I'll continue with testing and review."
 
-Ship spawns each iteration as a Task tool subagent with the implementation prompt as the task description. This provides **context isolation** but **degraded capabilities** — Task subagents cannot spawn sub-subagents, do not inherit filesystem-level skills, and have limited MCP access.
-
-**Load:** `references/ralph-iteration-fallback.md`
+Wait for the user to signal that implementation is complete. When they do, re-read the SPEC.md, prd.json, and progress.txt to re-ground yourself, then proceed to Step 3 (post-implementation review).
 
 #### Step 3: Post-implementation review
 
@@ -296,6 +294,5 @@ These govern your behavior throughout:
 | `/review` skill | Running the push → review → fix → CI/CD loop (Phase 5) | Missed feedback, unresolved threads, mechanical response to reviews, CI/CD failures not investigated |
 | `references/worktree-setup.md` | Setting up isolated development environment (Phase 2) | Wrong pnpm version, broken lockfile, work bleeds into main directory |
 | `references/testing-strategy.md` | Planning and executing tests (Phase 4) | Gaps in coverage, untested edge cases, false confidence |
-| `references/subprocess-iteration.md` | Claude CLI subprocess available; ship manages iteration loop (Phase 3, Path A) | Falls back to Path D or B; loses context isolation with full capabilities |
-| `references/ralph-iteration-fallback.md` | Neither subprocess nor ralph-loop available; Task subagent iteration (Phase 3, Path B) | No iteration mechanism; implementation stalls after one ralph invocation |
+| `references/subprocess-iteration.md` | Claude CLI subprocess available; ship manages iteration loop (Phase 3) | Automated iteration unavailable; user must run ralph-loop manually |
 

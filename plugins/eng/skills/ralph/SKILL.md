@@ -1,19 +1,19 @@
 ---
 name: ralph
-description: "Autonomous implementation methodology: convert SPEC.md to prd.json, prepare the environment, run the Ralph loop for iterative development, and review outputs. Use when implementing features via Ralph, converting specs to prd.json, or running the autonomous implementation loop. Triggers: ralph, implement with ralph, prd.json, ralph loop, autonomous implementation, run ralph, convert spec."
+description: "Convert SPEC.md to prd.json and craft the implementation prompt for iterative development. Use when converting specs to prd.json, preparing implementation artifacts, or setting up a Ralph iteration loop. Triggers: ralph, prd.json, convert spec, implementation prompt, prepare for ralph."
 argument-hint: "[path to SPEC.md or prd.json]"
 ---
 
 # Ralph
 
-Full autonomous implementation methodology for taking a SPEC.md through iterative development to completion. Ralph operates in four phases:
+Convert a SPEC.md into implementation-ready artifacts: a structured `prd.json` and a self-contained iteration prompt. Ralph operates in two phases:
 
 1. **Convert** — Transform SPEC.md into a structured prd.json
-2. **Prepare** — Validate the prd.json, craft the implementation prompt
-3. **Run** — Execute the Ralph loop for iterative development
-4. **Review** — Inspect every file Ralph produced, fix what doesn't meet the bar
+2. **Prepare** — Validate the prd.json, craft the implementation prompt, save it to a file
 
 Each phase can be entered independently. If you already have a prd.json, start at Phase 2. If you only need conversion, stop after Phase 1.
+
+Ralph produces artifacts — it does not execute the iteration loop itself. After Phase 2, pass the artifacts to `/ship` (which manages execution automatically) or run `/ralph-loop` manually (see "What to do next" at the end).
 
 ---
 
@@ -21,7 +21,7 @@ Each phase can be entered independently. If you already have a prd.json, start a
 
 | Input | Required | Default | Description |
 |---|---|---|---|
-| SPEC.md or prd.json path | Yes | — | Source artifact. When SPEC.md: used for Phase 1 conversion AND forwarded as iteration reference in Phase 2/3 (see Spec path forwarding). When prd.json: start at Phase 2 directly. |
+| SPEC.md or prd.json path | Yes | — | Source artifact. When SPEC.md: used for Phase 1 conversion AND forwarded as iteration reference in Phase 2 (see Spec path forwarding). When prd.json: start at Phase 2 directly. |
 | `--test-cmd` | No | `pnpm test --run` | Test runner command for quality gates |
 | `--typecheck-cmd` | No | `pnpm typecheck` | Type checker command for quality gates |
 | `--lint-cmd` | No | `pnpm lint` | Linter command for quality gates |
@@ -31,15 +31,13 @@ When composed by `/ship`, these overrides are passed based on Phase 0 context de
 
 ### Spec path forwarding
 
-When a SPEC.md is provided (directly or by the invoker), the path persists beyond Phase 1 conversion. In Phase 2, Ralph embeds a file-path reference in the implementation prompt so that iteration agents read the full SPEC.md as the first action of every iteration.
+When a SPEC.md is provided (directly or by the invoker), the path persists beyond Phase 1 conversion. In Phase 2, Ralph embeds a file-path reference in the implementation prompt so that iteration agents read the full SPEC.md as the first action of every iteration. The spec content is NOT embedded in the prompt — the prompt contains only the file path.
 
 This is mandatory when a spec path is available. The spec contains critical implementation context that prd.json's `implementationContext` cannot fully capture:
 - **Non-goals** (what NOT to build) — completely absent from prd.json
 - **Current state code traces** (file paths, line numbers, existing patterns) — compressed to prose in implementationContext
 - **Decision rationale** — reduced to conclusions only
 - **Risks and failure modes** — only partially captured in acceptance criteria
-
-The spec content is NOT embedded in the prompt. The prompt contains only a file path. The iteration agent reads the file via the Read tool — deterministic, exact, zero LLM output tokens for spec content.
 
 When only prd.json is provided (no SPEC.md available), `implementationContext` serves as the sole implementation context source. See Phase 1's implementationContext guidance for how to calibrate depth.
 
@@ -50,7 +48,7 @@ When only prd.json is provided (no SPEC.md available), `implementationContext` s
 | Condition | Begin at |
 |---|---|
 | SPEC.md exists, no prd.json | Phase 1 (Convert) |
-| prd.json exists, implementation needed | Phase 2 (Prepare) |
+| prd.json exists, needs validation/prompt | Phase 2 (Prepare) |
 | Called with only a conversion request | Phase 1, then stop |
 
 ---
@@ -389,7 +387,7 @@ Before writing prd.json, verify:
 
 ## Phase 2: Prepare
 
-Before starting the Ralph loop, validate the prd.json and set up for execution.
+Validate the prd.json, craft the implementation prompt, and save it to a file for execution.
 
 ### Validate prd.json against SPEC.md
 
@@ -493,14 +491,44 @@ When ALL user stories have `passes: true`, Ralph should output:
 
 Ralph must ONLY output this when the statement is genuinely true. Do not output false promises to escape the loop.
 
+### Save the prompt
+
+Save the crafted implementation prompt to `.claude/ralph-prompt.md` so it can be consumed by `/ship` (subprocess iteration), `/ralph-loop` (manual iteration), or any other execution mechanism.
+
+```bash
+# The prompt file is the handoff artifact from Ralph to the execution layer
+.claude/ralph-prompt.md
+```
+
+### Phase 2 checklist
+
+- [ ] prd.json validated against SPEC.md (if available)
+- [ ] Stories correctly scoped, ordered, and with verifiable criteria
+- [ ] Implementation prompt crafted with correct variant (A or B)
+- [ ] Prompt includes spec file-path reference (variant A) or emphasizes implementationContext (variant B)
+- [ ] Quality gate commands included (typecheck, lint, test)
+- [ ] Completion signal (`<promise>IMPLEMENTATION COMPLETE</promise>`) included
+- [ ] Prompt saved to `.claude/ralph-prompt.md`
+
 ---
 
-## Phase 3: Run
+## What to do next
 
-Invoke `/ralph-loop` with appropriate bounds:
+Ralph's job is done. The artifacts are ready:
+- `prd.json` — structured user stories with acceptance criteria
+- `.claude/ralph-prompt.md` — self-contained iteration prompt
+- SPEC.md — still available as the primary implementation reference (if provided)
+
+**To execute the implementation loop**, use one of these approaches:
+
+**Option 1: Via `/ship` (recommended when available)**
+Ship manages the iteration loop automatically using subprocess iteration. Pass the artifacts to Ship and it handles Phase 3 onward.
+
+**Option 2: Via `/ralph-loop` (manual, standalone)**
+Run the iteration loop directly:
 
 ```
-/ralph-loop "<implementation prompt>" --max-iterations 30 --completion-promise "IMPLEMENTATION COMPLETE"
+/ralph-loop "$(cat .claude/ralph-prompt.md)" --max-iterations <N> --completion-promise "IMPLEMENTATION COMPLETE"
 ```
 
 **Tuning iteration limits:**
@@ -511,45 +539,20 @@ Invoke `/ralph-loop` with appropriate bounds:
 | Medium (4-8 stories) | 20-30 |
 | Large (9+ stories) | 30-50 |
 
-These are safety limits, not targets. Ralph should finish well before the limit if stories are right-sized.
+These are safety limits, not targets. Well-sized stories should complete in 1-2 iterations each.
 
-**Monitoring progress:**
+**Option 3: Via `claude -p` (headless subprocess)**
+For CI/CD or automated pipelines:
 
-While Ralph runs, you can check iteration count:
 ```bash
-grep '^iteration:' .claude/ralph-loop.local.md
+env -u CLAUDECODE -u CLAUDE_CODE_ENTRYPOINT claude -p "$(cat .claude/ralph-prompt.md)" \
+  --dangerously-skip-permissions \
+  --max-turns 75 \
+  --output-format json
 ```
 
-If Ralph hits the iteration limit without completing, investigate:
-- Check `progress.txt` for blockers
-- Check `prd.json` for stories that remain `passes: false`
-- Consider whether stuck stories need to be split further or rewritten
-
----
-
-## Phase 4: Review
-
-After Ralph finishes (or hits the iteration limit), you own the output. Ralph's work is your starting point, not your endpoint.
-
-**Read every file Ralph created or modified.** For each change:
-- Understand what it does and why it does it that way
-- Verify it matches the SPEC.md intent
-- If you cannot explain a piece of code, do not accept it — rewrite it or investigate until you understand it
-
-**Fix anything that does not meet your quality bar:**
-- Correctness: does it actually work as specified?
-- Clarity: could another engineer understand this without explanation?
-- Codebase alignment: does it follow existing patterns and conventions?
-- Proportionality: does the complexity of the solution match the actual requirements, or did Ralph over-build for hypothetical concerns? Conversely, did Ralph cut corners on validated requirements to keep things simple?
-
-**Ensure tests exist and pass.** If Ralph skipped tests for any story, write them yourself. Every acceptance criterion should have at least one corresponding test.
-
-### Phase 4 checklist
-
-- [ ] Read every file Ralph created or modified
-- [ ] Each change is understood and intentional
-- [ ] Code matches SPEC.md intent
-- [ ] Tests exist and pass (test command from Inputs)
-- [ ] Typecheck passes (typecheck command from Inputs)
-- [ ] Lint passes (lint command from Inputs)
-- [ ] No unexplained or cargo-culted code remains
+**After execution completes:**
+- Check `prd.json` — all stories should have `passes: true`
+- Check `progress.txt` — review learnings and any blockers
+- Read every file created or modified — Ralph's work is your starting point, not your endpoint
+- Run quality gates: typecheck, lint, test

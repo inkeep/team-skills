@@ -66,17 +66,6 @@ rm pnpm-lock.yaml
 npx pnpm@10.10.0 install
 ```
 
-### 2b. Docker Compose isolation (if applicable)
-
-If the project uses Docker Compose services (databases, queues, etc.), set `COMPOSE_PROJECT_NAME` to the feature name to avoid container naming collisions with the main repo or other worktrees:
-
-```bash
-export COMPOSE_PROJECT_NAME=<feature-name>
-docker compose up -d
-```
-
-This ensures each worktree gets its own set of containers, volumes, and networks. Without this, multiple worktrees will fight over the same container names and ports. (This pattern is borrowed from [Conductor](https://www.conductor.build/), which injects `CONDUCTOR_WORKSPACE_NAME` for the same purpose.)
-
 ### 3. Run conductor setup (if applicable)
 
 If `conductor.json` exists in the repo root:

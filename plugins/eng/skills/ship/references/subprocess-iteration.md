@@ -91,8 +91,8 @@ While waiting, ship can perform lightweight tasks (re-read the spec, review task
 | Error | Cause | Action |
 |---|---|---|
 | "Claude Code cannot be launched inside another Claude Code session" | `CLAUDECODE` or `CLAUDE_CODE_ENTRYPOINT` env vars not unset | Add `env -u CLAUDECODE -u CLAUDE_CODE_ENTRYPOINT` prefix |
-| Command not found: `claude` | Claude CLI not on PATH | Fall back to Path D or Path B |
-| Subprocess exits with non-zero status | Iteration agent hit an error | Read stderr/output for details. If transient (network, rate limit), retry once. If persistent, fall back to Path D. |
+| Command not found: `claude` | Claude CLI not on PATH | Automated iteration not possible — save prompt to `.claude/ralph-prompt.md` and give the user manual iteration instructions (see Phase 3 Step 2 in SKILL.md) |
+| Subprocess exits with non-zero status | Iteration agent hit an error | Read stderr/output for details. If transient (network, rate limit), retry once. If persistent, save prompt and give the user manual iteration instructions. |
 | JSON parse error on output | Subprocess produced non-JSON output | Retry with `--output-format json`. If persistent, read raw output as text. |
 | Subprocess runs beyond expected time | Complex iteration, large codebase | Increase `--max-turns`. If consistently slow, consider splitting stories in prd.json. |
 
