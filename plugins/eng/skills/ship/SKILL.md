@@ -14,6 +14,19 @@ The phases below organize your work — they do not pressure you to move forward
 
 ## Workflow
 
+### Phase transitions
+
+Before moving from any phase to the next:
+
+1. Verify all open questions for the current phase are resolved.
+2. Confirm you have high confidence in the current phase's outputs.
+3. **In collaborative phases** (where the user is actively providing input): explicitly ask whether they are ready to move on. Do not proceed until they confirm.
+4. **In autonomous phases**: use your judgment — but pause and consult the user if anything is uncertain or if the phase produced results that differ from what the spec anticipated.
+
+Maintain a task list covering all phases. Create it at the start of implementation (Phase 1B) and update it as you complete work, discover new tasks, or change plans. Check it before and after each phase transition to verify you are on track and nothing was missed.
+
+---
+
 ### Phase 0: Detect context and starting point
 
 #### Step 1: Detect execution context
@@ -48,6 +61,20 @@ Determine which entry mode applies:
 | User provides a feature description (no SPEC.md) | Proceed to Phase 1A. If `/spec` is unavailable, ask the user to provide a SPEC.md. |
 | Ambiguous | Ask: "Do you have an existing SPEC.md, or should we spec this from scratch?" |
 
+#### Step 3: Calibrate workflow to scope
+
+Assess the task and determine the appropriate depth for each phase. **Every phase is always executed** — scope calibration determines rigor within each phase, not whether a phase runs. The only legitimate reason to skip a phase is a missing capability detected in Step 1 (e.g., no GitHub CLI → no PR → no `/review`).
+
+| Task scope | Spec depth (Phase 1) | Implementation depth (Phase 3) | Testing depth (Phase 4) | Review depth (Phase 5) |
+|---|---|---|---|---|
+| **Feature** (new capability, multi-file, user-facing) | Full `/spec` → SPEC.md → prd.json | Full `/ralph` iteration loop | All three tiers | Full `/review` loop |
+| **Enhancement** (extending existing feature, moderate scope) | SPEC.md with problem + acceptance criteria + test cases; `/spec` optional | `/ralph` or direct implementation (judgment call) | Tier 1 full + Tier 2 if user-facing | Full `/review` loop |
+| **Bug fix / config change / infra** (small scope, targeted change) | SPEC.md with problem statement + what "fixed" looks like + acceptance criteria | Direct implementation (skip `/ralph` tool, not Phase 3) | Tier 1 full; Tier 2 if change affects user-facing behavior | `/review` loop |
+
+A SPEC.md is always produced — conversational findings alone do not survive context loss. All phases are always visited — even for a one-line fix, you still write the spec, confirm with the user, implement, test, review, and verify the completion checklist.
+
+Present your scope assessment and adapted phase depths to the user. Do not begin implementation until they confirm the plan.
+
 ---
 
 ### Phase 1A: Spec from scratch (collaborative)
@@ -62,6 +89,8 @@ During the spec process, ensure these are captured with evidence (not aspiration
 - Whether TDD is practical for this feature (prefer TDD when feasible)
 
 Do not proceed until the user confirms the SPEC.md is ready for implementation. This confirmation is the handoff — from this point forward, you own execution autonomously.
+
+**If scope calibration indicated a lighter spec process** (enhancement or bug fix): produce the SPEC.md directly instead of invoking `/spec`. The SPEC.md must still capture: problem statement, what "done" looks like (acceptance criteria), and what you will test.
 
 Once finalized, continue to Phase 1B.
 
@@ -118,6 +147,8 @@ First, detect the current environment:
 
 #### Step 1: Invoke Ralph
 
+**If scope calibration indicated direct implementation** (bug fix / config change / small enhancement): implement directly instead of invoking `/ralph`. Phase 3 still applies in full — particularly Step 2 (post-implementation review).
+
 Invoke `/ralph` to handle the full implementation lifecycle. Provide Ralph with:
 - Path to the SPEC.md and prd.json — the spec path is critical: Ralph forwards it into the implementation prompt so iteration agents read the full spec as their primary reference every iteration. Do not omit it.
 - The codebase context from Phase 1B — the patterns, conventions, and shared abstractions you identified via `/inspect`
@@ -146,6 +177,8 @@ Run the repo's full verification suite — test runner, type checker, linter, an
 
 **Tier 2 — You are the QA engineer (mandatory for user-facing changes):**
 You own this feature. Before anyone else sees it, verify it works the way a user would actually experience it — not just that individual code paths are correct. Formal tests verify logic; Tier 2 verifies the *experience*. A feature can pass every unit test and still have a broken layout, a confusing flow, or an interaction that doesn't feel right.
+
+Before executing, derive a concrete test plan. Read the SPEC.md and identify scenarios that require manual verification — but only those that genuinely cannot be captured by formal tests or CI/CD. For each candidate, first ask: "Could this be a test?" If the answer is yes with easy-to-medium effort given the repo's testing infrastructure, write the test (Tier 1) instead. The QA checklist is strictly for scenarios that resist automation: visual correctness, end-to-end UX flows, subjective usability judgment, integration reality, and similar. If a PR exists, append a `## QA Checklist` section to the PR body — each item must include a justification for why it's not a formal test (see `references/testing-strategy.md` for the template and update protocol). Execute each scenario, updating the PR checklist as you go — check off passing items, annotate failures with details.
 
 Use whichever tools are available to test the feature end-to-end as a user would:
 - **Bash** (always available) — API calls, CLI verification, data validation, `curl`-based endpoint testing
@@ -196,7 +229,24 @@ Invoke `/review` with the PR number, the path to the SPEC.md, and the quality ga
 | New stories with clear acceptance criteria (additive) | Add to prd.json and run another `/ralph` iteration, then re-invoke `/review`. |
 | Architectural rework that `/review` flagged as disproportionate | Evaluate via the calibration principle (ownership principle #4). If warranted, implement and re-invoke `/review`. If not, instruct `/review` to decline with reasoning. |
 
-Do not proceed to Phase 6 until `/review` reports completion (all threads resolved, CI/CD green or documented).
+Do not proceed past this point until `/review` reports completion (all threads resolved, CI/CD green or documented).
+
+**Second-pass review (for complex or important PRs):**
+
+After the first `/review` pass completes, assess whether the PR warrants a second full review. Trigger a second pass when any of these apply:
+- The PR touches auth, permissions, data mutations, or security-sensitive code
+- The implementation involved significant architectural decisions or trade-offs
+- Multiple files were changed across different subsystems
+- The first review round surfaced substantive issues (not just nits)
+
+To trigger the second pass, leave a PR comment:
+```
+@claude --full-review
+```
+
+Then continue the iteration loop: poll for the new review feedback, assess each item with evidence, implement fixes or decline with reasoning, and resolve all threads — the same process as the first pass. Do not proceed to Phase 6 until this second pass is also fully resolved.
+
+For straightforward PRs (single-file config changes, simple bug fixes, cosmetic updates), skip the second pass and proceed directly to Phase 6.
 
 ---
 
@@ -245,7 +295,7 @@ These govern your behavior throughout:
    Under-indexing looks like: skipping investigation for unfamiliar code paths, assuming the first approach is correct without checking alternatives, declaring confidence without evidence.
 5. **Flag, don't hide.** If something seems off — a design smell, a testing gap, a reviewer suggestion that contradicts the spec — surface it explicitly. If the issue is significant, pause and consult the user.
 6. **Prefer formal tests.** Manual testing is for scenarios that genuinely resist automation. Every "I tested this manually" should prompt the question: "Could this be a test instead?"
-7. **Track your work.** Maintain a task list throughout. Update it as you complete items, discover new work, or change plans.
+7. **Track your work.** Maintain a task list throughout. Update it as you complete items, discover new work, or change plans. Check it at each phase transition — it is your primary mechanism for staying on track across phases.
 8. **Autonomous but not reckless.** Operate autonomously for routine engineering work. Pause and consult the user for: scope changes, architectural pivots, ambiguous requirements, or anything that feels like a product decision.
 
 ---
@@ -253,6 +303,7 @@ These govern your behavior throughout:
 ## Anti-patterns
 
 - **Rushing through phases to "make progress."** Moving to the next step without confidence in the current one. Completing a checklist item without understanding why it matters. Implementing before understanding. The phases are a guide, not a treadmill.
+- **Silently skipping phases.** Deciding "this is small, I'll skip phases" is never acceptable. Every phase always runs — scope calibration (Phase 0, Step 3) determines depth, not whether a phase executes. Even a one-line config fix goes through spec → implement → test → review → completion.
 - **Shallow investigation.** Making decisions based on surface-level understanding. Accepting or rejecting a suggestion without reading the relevant code. Assuming a pattern is correct because it looks familiar.
 - Blindly accepting all reviewer suggestions without evaluating them
 - Blindly rejecting reviewer suggestions without investigating them
