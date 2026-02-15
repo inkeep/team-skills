@@ -50,17 +50,7 @@ claude plugin install eng@inkeep-team-skills    # engineering
 claude plugin install gtm@inkeep-team-skills    # GTM
 
 # Enable auto-update (recommended — keeps skills current on every session)
-python3 -c "
-import json, os, sys
-p = os.path.expanduser('~/.claude/plugins/known_marketplaces.json')
-d = json.load(open(p))
-if 'inkeep-team-skills' in d:
-    d['inkeep-team-skills']['autoUpdate'] = True
-    json.dump(d, open(p,'w'), indent=2)
-    print('Auto-update enabled for inkeep-team-skills')
-else:
-    print('Marketplace not found — run the add command first', file=sys.stderr)
-"
+node -e "const f=require('os').homedir()+'/.claude/plugins/known_marketplaces.json';const d=require(f);if(d['inkeep-team-skills']){d['inkeep-team-skills'].autoUpdate=true;require('fs').writeFileSync(f,JSON.stringify(d,null,2));console.log('Auto-update enabled')}else{console.error('Marketplace not found — run the add command first');process.exit(1)}"
 ```
 
 ## Update
