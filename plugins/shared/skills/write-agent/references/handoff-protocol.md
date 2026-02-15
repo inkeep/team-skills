@@ -73,6 +73,15 @@ Best when:
 Instruction for the parent:
 - "Continue the previous subagent work and now do X. Keep the same output contract."
 
+### Narrative reframing
+
+When including prior context in a handoff (e.g., findings from a previous phase), reframe first-person statements to third-person. If you paste "I analyzed the auth flow and found a race condition," the receiving subagent may believe *it* performed the analysis and skip re-verification. Instead: "The previous analysis found a race condition in the auth flow."
+
+This matters most when:
+- Passing conversation history or prior return packets into a new subagent
+- The subagent might need to independently verify the claim
+- The prior work was done by a different agent with different tool access
+
 ### Pattern 3: Chain subagents via the parent
 Best when:
 - you need different expertise phases (review → implement → validate).
@@ -84,3 +93,8 @@ Approach:
 
 Avoid:
 - Copying entire transcripts between subagents (wastes tokens).
+
+Preserve fidelity:
+- Each hop through an LLM degrades information — specific details (file paths, line numbers, exact error messages) erode when summarized, and errors compound across hops.
+- For high-severity findings, pass original evidence (file:line, exact excerpt) into the next handoff, not just your summary of it.
+- When the chain is 3+ phases, consider whether early-phase artifacts should be referenced directly by late phases rather than relayed through intermediate summaries.

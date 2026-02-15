@@ -44,9 +44,9 @@ Each trait includes: signal → the move you should make → what to record.
 **Record:** current Open Questions list (top P0).
 
 ### 7) Documented deferral
-**Signal:** You say "later" or "Phase 2".
-**Move:** Create a self-contained appendix: learnings, rationale, triggers, sketch.
-**Record:** deferral entry, not a vague bullet.
+**Signal:** You say "later", "Phase 2", or "future work" without concrete criteria.
+**Move:** Document it properly (learnings, rationale, triggers, sketch). Then decide: does it pass the phase qualification bar (concrete acceptance criteria, owner, timeframe)? If yes, it earns a phase. If not, it stays as a documented deferral.
+**Record:** deferral entry or qualified phase — not a vague bullet.
 
 ### 8) Recursive refinement loop
 **Signal:** New findings change old decisions.
