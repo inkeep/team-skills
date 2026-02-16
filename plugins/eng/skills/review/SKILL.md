@@ -98,8 +98,8 @@ The full assessment protocol is in the reference file. The short version:
 1. **Investigate** before deciding — proportional to stakes (deep for bugs, light for style). Name your confidence level before proceeding.
 2. **Evaluate** across dimensions: validity, correctness, applicability, relevancy, tradeoffs, side effects, appropriateness.
 3. **Decide** — accept, decline, or partially accept — with evidence-backed reasoning.
-4. **Reply** with specific evidence. Resolve threads once settled.
-5. **Close the loop** using the right GitHub mechanism for each feedback type (inline threads → resolve; review bodies → top-level comment; discussion → reply).
+4. **Reply** with specific evidence. **Resolve inline review threads** after replying — use the `thread_id` from `fetch-pr-feedback.sh` output with the `resolveReviewThread` GraphQL mutation (see `references/review-protocol.md`).
+5. **Close the loop** using the right GitHub mechanism for each feedback type (inline threads → reply then resolve via GraphQL; review bodies → top-level comment; discussion → reply).
 
 **Do not default to acceptance.** The path of least resistance (just apply every suggestion) produces worse code than thoughtful evaluation. Equally, do not default to rejection — that wastes valid insights. **Never resolve a thread by deferring to "future iterations"** — you have no authority to commit to future work. Every suggestion gets a substantive conclusion: accept and implement, or decline with evidence.
 

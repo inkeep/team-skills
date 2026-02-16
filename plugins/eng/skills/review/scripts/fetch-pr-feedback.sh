@@ -145,7 +145,61 @@ fetch_inline_comments() {
   '
 }
 
-# --- Section 3: Issue-level comments ---
+# --- Section 3: Review threads (GraphQL — includes thread node IDs for resolution) ---
+fetch_review_threads() {
+  echo "## Review Threads"
+  echo ""
+
+  local query='query($owner:String!,$repo:String!,$pr:Int!){repository(owner:$owner,name:$repo){pullRequest(number:$pr){reviewThreads(first:100){nodes{id isResolved isOutdated path line comments(first:1){nodes{body author{login}}}}}}}}'
+
+  local result
+  result=$(gh api graphql \
+    -f query="$query" \
+    -f owner="$OWNER" \
+    -f repo="$REPO_NAME" \
+    -F pr="$PR_NUMBER" \
+    2>/dev/null || echo "")
+
+  if [[ -z "$result" ]]; then
+    echo "_Could not fetch review threads via GraphQL._"
+    echo ""
+    return
+  fi
+
+  local threads
+  threads=$(echo "$result" | jq '.data.repository.pullRequest.reviewThreads.nodes // []')
+
+  local total unresolved_count
+  total=$(echo "$threads" | jq 'length')
+  unresolved_count=$(echo "$threads" | jq '[.[] | select(.isResolved == false)] | length')
+
+  if [[ "$total" -eq 0 ]]; then
+    echo "_No review threads._"
+    echo ""
+    return
+  fi
+
+  echo "**${unresolved_count} unresolved** of ${total} total thread(s)"
+  echo ""
+
+  # Show unresolved threads with their node IDs (needed for resolveReviewThread mutation)
+  echo "$threads" | jq -r '
+    [.[] | select(.isResolved == false)] | .[] |
+    "- **\(.path):\(.line // "?")** by \(.comments.nodes[0].author.login // "unknown") — thread_id: `\(.id)`" +
+    (if .isOutdated then " _(outdated)_" else "" end) +
+    "\n  > \(.comments.nodes[0].body | split("\n")[0] | if length > 120 then .[:120] + "..." else . end)\n"
+  '
+
+  # Note resolved threads
+  local resolved_count
+  resolved_count=$(echo "$threads" | jq '[.[] | select(.isResolved == true)] | length')
+  if [[ "$resolved_count" -gt 0 ]]; then
+    echo "_${resolved_count} resolved thread(s) not shown._"
+    echo ""
+  fi
+}
+
+# --- Section 4: Issue-level comments ---
 fetch_issue_comments() {
   echo "## PR Discussion Comments"
   echo ""
@@ -168,7 +222,7 @@ fetch_issue_comments() {
   echo "$comments" | jq -r '.[] | "### \(.user.login) (\(.created_at))\n\(.body)\n\n---\n"'
 }
 
-# --- Section 4: CI/CD checks ---
+# --- Section 5: CI/CD checks ---
 fetch_checks() {
   echo "## CI/CD Status"
   echo ""
@@ -210,10 +264,12 @@ if [[ "$CHECKS_ONLY" == "true" ]]; then
 elif [[ "$REVIEWS_ONLY" == "true" ]]; then
   fetch_reviews
   fetch_inline_comments
+  fetch_review_threads
   fetch_issue_comments
 else
   fetch_reviews
   fetch_inline_comments
+  fetch_review_threads
   fetch_issue_comments
   fetch_checks
 fi

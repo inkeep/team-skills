@@ -21,20 +21,25 @@ This skill provides two scripts for reliable GitHub data retrieval. Always prefe
 | `scripts/fetch-pr-feedback.sh` | Fetch reviews, inline comments, discussion comments, CI/CD status | `./scripts/fetch-pr-feedback.sh <pr> [--reviews-only] [--checks-only] [--since ISO]` |
 | `scripts/investigate-ci-failures.sh` | Investigate failures: logs, failing steps, main comparison | `./scripts/investigate-ci-failures.sh <pr> [--compare-main] [--log-lines N]` |
 
-For responding to feedback (not scripted — content varies each time):
+For responding to feedback and resolving threads:
 
+**Inline review threads** (reply, then resolve):
 ```bash
-# Reply to an inline review comment thread
+# Step 1: Reply to the thread
 gh api --method POST repos/{owner}/{repo}/pulls/{pr_number}/comments/{comment_id}/replies -f body="<reply>"
 
-# Resolve an inline review comment thread (after replying)
+# Step 2: Resolve the thread (thread_id from fetch-pr-feedback.sh "Review Threads" section)
 gh api graphql -f query='mutation($id:ID!){resolveReviewThread(input:{threadId:$id}){thread{isResolved}}}' -f id="<thread_node_id>"
+```
 
-# Post a top-level PR comment (for responding to review body or general discussion)
+Only inline review threads (code line comments) support resolution. Review bodies and PR discussion comments have no resolve mechanism — your reply serves as the closure.
+
+**Top-level PR comment** (for review body responses or general discussion):
+```bash
 gh pr comment <pr_number> --body "<reply>"
 ```
 
-To get thread node IDs for resolving, use the GraphQL API or extract them from the output of `fetch-pr-feedback.sh`.
+Thread node IDs (`thread_id`) are included in the "Review Threads" section of `fetch-pr-feedback.sh` output. Use the `thread_id` value directly in the `resolveReviewThread` mutation above.
 
 ---
 
