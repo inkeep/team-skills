@@ -24,7 +24,7 @@ Before moving from any phase to the next:
 4. **In autonomous phases**: use your judgment — but pause and consult the user if anything is uncertain or if the phase produced results that differ from what the spec anticipated.
 
 Maintain a task list covering all phases. Create it at the start of implementation (Phase 1B) and update it as you complete work, discover new tasks, or change plans. Check it before and after each phase transition to verify you are on track and nothing was missed.
-5. Update `.claude/ship-state.json`: set `currentPhase` to the new phase, append the completed phase to `completedPhases`, refresh `lastUpdated`. When Phase 7 completes, set `currentPhase` to `"completed"`. Per-phase additions:
+5. Update `.claude/ship-state.json` (created in Phase 2 — does not exist before then): set `currentPhase` to the new phase, append the completed phase to `completedPhases`, refresh `lastUpdated`. When Phase 7 completes, set `currentPhase` to `"completed"`. Per-phase additions:
    - **Phase 2 → 3:** Set `branch` to the feature branch name, `worktreePath` to the worktree directory (or `null` if working in-place), and `prNumber` to the PR number (or `null` if no PR).
    - **Any phase:** When the user requests a change not in the original spec — ad-hoc tasks, improvements, tweaks, or user-approved scope expansions from review feedback — append to `amendments` before acting: `{ "description": "<brief what>", "status": "pending" }`. Set `status` to `"done"` when completed. This log survives compaction and tells a resumed agent what post-spec work was requested.
 
@@ -125,26 +125,6 @@ Then convert to `prd.json` using `/ralph`.
 
 Create a task list for yourself covering all remaining phases. Update it as you progress.
 
-Write `.claude/ship-state.json` with the initial workflow state so hooks can recover context after compaction:
-
-```json
-{
-  "currentPhase": "Phase 1B",
-  "featureName": "<derived from spec or user input>",
-  "specPath": "<path to SPEC.md>",
-  "prdPath": "prd.json",
-  "branch": null,
-  "worktreePath": null,
-  "prNumber": null,
-  "qualityGates": { "test": "<cmd>", "typecheck": "<cmd>", "lint": "<cmd>" },
-  "completedPhases": ["Phase 0"],
-  "capabilities": { "gh": <bool>, "browser": <bool>, "peekaboo": <bool>, "docker": <bool> },
-  "scopeCalibration": "<feature|enhancement|bugfix>",
-  "amendments": [],
-  "lastUpdated": "<ISO 8601 timestamp>"
-}
-```
-
 ---
 
 ### Phase 2: Environment setup
@@ -172,6 +152,28 @@ First, detect the current environment:
    Note the PR URL and number for the review iteration loop.
 
    **If GitHub CLI is NOT available:** Skip PR creation. Implementation proceeds without PR-based review — the user reviews locally after Phase 4.
+
+4. Write `.claude/ship-state.json` in the working directory (worktree, container, or current directory) so hooks can recover context after compaction:
+
+   ```json
+   {
+     "currentPhase": "Phase 2",
+     "featureName": "<derived from spec or user input>",
+     "specPath": "<path to SPEC.md>",
+     "prdPath": "prd.json",
+     "branch": "<feature branch name>",
+     "worktreePath": "<worktree path or null if working in-place>",
+     "prNumber": <PR number or null>,
+     "qualityGates": { "test": "<cmd>", "typecheck": "<cmd>", "lint": "<cmd>" },
+     "completedPhases": ["Phase 0", "Phase 1A", "Phase 1B"],
+     "capabilities": { "gh": <bool>, "browser": <bool>, "peekaboo": <bool>, "docker": <bool> },
+     "scopeCalibration": "<feature|enhancement|bugfix>",
+     "amendments": [],
+     "lastUpdated": "<ISO 8601 timestamp>"
+   }
+   ```
+
+   The state file must live in the working environment — never in the main repo directory. This ensures hooks find it via `CLAUDE_PROJECT_DIR` and it does not pollute the main checkout.
 
 ---
 
