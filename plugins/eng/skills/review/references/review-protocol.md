@@ -14,12 +14,12 @@ This reference file contains the detailed protocols for the `/review` skill. The
 
 This skill provides two scripts for reliable GitHub data retrieval. Always prefer these over manual `gh` commands — they handle pagination, formatting, and common pitfalls (like `gh pr view --comments` missing inline review comments).
 
-**Path resolution:** Script paths (`./scripts/...`) are relative to this skill's base directory, not the current working directory. When invoking from a worktree or other directory, use the full path to the skill's `scripts/` folder. If the scripts are not found (e.g., in a Docker or isolated environment where the skill directory is not mounted), fall back to the equivalent `gh api` commands documented inline.
+**Path resolution:** Script paths are relative to this skill's base directory (shown in the skill header when loaded), **not** your current working directory. Resolve the full path before invoking — e.g., `<skill-base>/scripts/fetch-pr-feedback.sh`. If the scripts are not found (e.g., in a Docker or isolated environment where the skill directory is not mounted), fall back to the equivalent `gh api` commands documented inline.
 
 | Script | Purpose | Usage |
 |---|---|---|
-| `scripts/fetch-pr-feedback.sh` | Fetch reviews, inline comments, discussion comments, CI/CD status | `./scripts/fetch-pr-feedback.sh <pr> [--reviews-only] [--checks-only] [--since ISO]` |
-| `scripts/investigate-ci-failures.sh` | Investigate failures: logs, failing steps, main comparison | `./scripts/investigate-ci-failures.sh <pr> [--compare-main] [--log-lines N]` |
+| `scripts/fetch-pr-feedback.sh` | Fetch reviews, inline comments, discussion comments, CI/CD status | `<skill-base>/scripts/fetch-pr-feedback.sh <pr> [--reviews-only] [--checks-only] [--since ISO]` |
+| `scripts/investigate-ci-failures.sh` | Investigate failures: logs, failing steps, main comparison | `<skill-base>/scripts/investigate-ci-failures.sh <pr> [--compare-main] [--log-lines N]` |
 
 For responding to feedback and resolving threads:
 

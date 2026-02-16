@@ -44,13 +44,15 @@ If no PR exists for the current branch, stop and tell the user — this skill re
 
 Then determine what's already in flight before taking action:
 
+**Script path resolution:** All `scripts/` paths below are relative to this skill's base directory (shown in the skill header when loaded), **not** your current working directory. Resolve the full path before invoking. For example, if the skill base is `~/.claude/plugins/cache/.../skills/review`, then `scripts/fetch-pr-feedback.sh` means `~/.claude/plugins/cache/.../skills/review/scripts/fetch-pr-feedback.sh`. If the scripts are not found, fall back to the equivalent `gh api` commands in `references/review-protocol.md`.
+
 ```bash
 # Check for unpushed local changes
 git status
 git log origin/HEAD..HEAD --oneline
 
-# Check for existing review feedback
-./scripts/fetch-pr-feedback.sh <pr-number>
+# Check for existing review feedback (use full path to skill's scripts/ dir)
+<skill-base>/scripts/fetch-pr-feedback.sh <pr-number>
 ```
 
 | Starting state | Action |
@@ -71,13 +73,13 @@ Wait approximately 8 minutes, then check for reviewer feedback. Opportunisticall
 
 ```bash
 # Primary: fetch all review feedback (reviews, inline comments, discussion)
-./scripts/fetch-pr-feedback.sh <pr-number> --reviews-only
+<skill-base>/scripts/fetch-pr-feedback.sh <pr-number> --reviews-only
 
 # Secondary (opportunistic): check CI/CD status
-./scripts/fetch-pr-feedback.sh <pr-number> --checks-only
+<skill-base>/scripts/fetch-pr-feedback.sh <pr-number> --checks-only
 
 # Or fetch everything at once:
-./scripts/fetch-pr-feedback.sh <pr-number>
+<skill-base>/scripts/fetch-pr-feedback.sh <pr-number>
 ```
 
 **Decision logic:**
@@ -155,7 +157,7 @@ Do not force substantial rework into the review loop's fix-and-push cycle. Large
 **Do not exit until all review feedback is resolved.** After resolving threads, re-poll to confirm no new feedback appeared:
 
 ```bash
-./scripts/fetch-pr-feedback.sh <pr-number> --reviews-only
+<skill-base>/scripts/fetch-pr-feedback.sh <pr-number> --reviews-only
 ```
 
 Exit only when ALL of these are true:
@@ -179,7 +181,7 @@ After the review loop is finalized, shift focus to monitoring and resolving CI/C
 #### 1. Monitor pipeline
 
 ```bash
-./scripts/fetch-pr-feedback.sh <pr-number> --checks-only
+<skill-base>/scripts/fetch-pr-feedback.sh <pr-number> --checks-only
 ```
 
 #### 2. Process failures as they appear
@@ -188,7 +190,7 @@ Do NOT wait for the entire pipeline to finish. As soon as any check in a given r
 
 ```bash
 # Get failure details with logs and main branch comparison
-./scripts/investigate-ci-failures.sh <pr-number> --compare-main
+<skill-base>/scripts/investigate-ci-failures.sh <pr-number> --compare-main
 ```
 
 For each failing check, **classify**:
