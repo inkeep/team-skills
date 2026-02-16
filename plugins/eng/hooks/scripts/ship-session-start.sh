@@ -67,6 +67,21 @@ if [[ ${#QG_PARTS[@]} -gt 0 ]]; then
   QG_STR=$(IFS=" && "; echo "${QG_PARTS[*]}")
 fi
 
+# Check CI status for active PR (silent on green/pending/error)
+CI_WARNING=""
+if [[ -n "$PR_NUMBER" && "$PR_NUMBER" != "null" ]] && command -v gh &>/dev/null; then
+  GH_DIR="${WORKTREE}"
+  [[ -z "$GH_DIR" || "$GH_DIR" == "null" ]] && GH_DIR="$PROJECT_DIR"
+  CI_OUTPUT=$(cd "$GH_DIR" 2>/dev/null && gh pr checks "$PR_NUMBER" 2>/dev/null) || CI_OUTPUT=""
+  if [[ -n "$CI_OUTPUT" ]]; then
+    FAIL_COUNT=$(echo "$CI_OUTPUT" | grep -c "fail" || true)
+    if [[ "$FAIL_COUNT" -gt 0 ]]; then
+      FAILING_NAMES=$(echo "$CI_OUTPUT" | grep "fail" | awk '{print $1}' | paste -sd, -)
+      CI_WARNING="CI FAILING on PR #${PR_NUMBER}: ${FAIL_COUNT} check(s) failed [${FAILING_NAMES}] — investigate and fix before proceeding"
+    fi
+  fi
+fi
+
 # Build context lines
 CTX="SHIP WORKFLOW RECOVERY"
 CTX+="\nFeature: \"${FEATURE_NAME}\" | Phase: ${CURRENT_PHASE}"
@@ -79,6 +94,7 @@ CTX+="\nFeature: \"${FEATURE_NAME}\" | Phase: ${CURRENT_PHASE}"
 [[ -n "$QG_STR" ]] && CTX+="\nQuality gates: ${QG_STR}"
 [[ -n "$COMPLETED" ]] && CTX+="\nCompleted: ${COMPLETED}"
 [[ "$PENDING_AMENDMENTS" -gt 0 ]] && CTX+="\nAmendments: ${PENDING_AMENDMENTS} pending — check ship-state.json amendments array"
+[[ -n "$CI_WARNING" ]] && CTX+="\n${CI_WARNING}"
 CTX+="\n\nRe-read the SPEC.md and check your task list, then resume from the current phase. Do not restart completed phases."
 
 # Inject recovery context
