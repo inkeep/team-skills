@@ -24,6 +24,9 @@ Before moving from any phase to the next:
 4. **In autonomous phases**: use your judgment — but pause and consult the user if anything is uncertain or if the phase produced results that differ from what the spec anticipated.
 
 Maintain a task list covering all phases. Create it at the start of implementation (Phase 1B) and update it as you complete work, discover new tasks, or change plans. Check it before and after each phase transition to verify you are on track and nothing was missed.
+5. Update `.claude/ship-state.json`: set `currentPhase` to the new phase, append the completed phase to `completedPhases`, refresh `lastUpdated`. When Phase 6 completes, set `currentPhase` to `"completed"`. Per-phase additions:
+   - **Phase 2 → 3:** Set `branch` to the feature branch name, `worktreePath` to the worktree directory (or `null` if working in-place), and `prNumber` to the PR number (or `null` if no PR).
+   - **Any phase:** When the user requests a change not in the original spec — ad-hoc tasks, improvements, tweaks, or user-approved scope expansions from review feedback — append to `amendments` before acting: `{ "description": "<brief what>", "status": "pending" }`. Set `status` to `"done"` when completed. This log survives compaction and tells a resumed agent what post-spec work was requested.
 
 ---
 
@@ -60,6 +63,15 @@ Determine which entry mode applies:
 | User provides a path to an existing SPEC.md | Load it. Proceed to Phase 1B. |
 | User provides a feature description (no SPEC.md) | Proceed to Phase 1A. If `/spec` is unavailable, ask the user to provide a SPEC.md. |
 | Ambiguous | Ask: "Do you have an existing SPEC.md, or should we spec this from scratch?" |
+
+#### Recovery from previous session
+
+Before proceeding, check if `.claude/ship-state.json` exists. If found:
+
+1. Read it and present the recovered state to the user: feature name, current phase, completed phases, and any pending amendments.
+2. Ask: "A previous `/ship` session for **[feature]** was interrupted at **[phase]**. Resume from there, or start fresh?"
+3. If resuming: load the state (spec path, PR number, branch, worktree path, quality gates, capabilities, amendments) and skip to the recorded phase. Re-read the SPEC.md and any artifacts referenced in the state file. Check the amendments array for pending items — these are post-spec changes the user requested that may still need work.
+4. If starting fresh: delete the state file and proceed normally.
 
 #### Step 3: Calibrate workflow to scope
 
@@ -112,6 +124,26 @@ Before proceeding, verify that you genuinely understand the feature — not just
 Then convert to `prd.json` using `/ralph`.
 
 Create a task list for yourself covering all remaining phases. Update it as you progress.
+
+Write `.claude/ship-state.json` with the initial workflow state so hooks can recover context after compaction:
+
+```json
+{
+  "currentPhase": "Phase 1B",
+  "featureName": "<derived from spec or user input>",
+  "specPath": "<path to SPEC.md>",
+  "prdPath": "prd.json",
+  "branch": null,
+  "worktreePath": null,
+  "prNumber": null,
+  "qualityGates": { "test": "<cmd>", "typecheck": "<cmd>", "lint": "<cmd>" },
+  "completedPhases": ["Phase 0"],
+  "capabilities": { "gh": <bool>, "browser": <bool>, "peekaboo": <bool>, "docker": <bool> },
+  "scopeCalibration": "<feature|enhancement|bugfix>",
+  "amendments": [],
+  "lastUpdated": "<ISO 8601 timestamp>"
+}
+```
 
 ---
 
