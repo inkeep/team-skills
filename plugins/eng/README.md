@@ -75,8 +75,9 @@ Add eng-only skills by creating a folder in `plugins/eng/skills/`.
  ├── Phase 2: Environment setup (worktree or container branch)
  ├── Phase 3: /ralph Phases 2-4 (implementation via /ralph-loop or ship-managed iteration)
  ├── Phase 4: Testing (Tier 1 formal + Tier 2 QA + Tier 3 edge cases)
- ├── Phase 5: /review (PR feedback loop + CI/CD resolution)
- └── Phase 6: Completion
+ ├── Phase 5: Documentation (product + internal surface areas)
+ ├── Phase 6: /review (PR feedback loop + CI/CD resolution)
+ └── Phase 7: Completion
 ```
 
 Each composed skill also works standalone — you can invoke `/spec`, `/ralph`, `/review`, `/inspect`, or `/research` independently without going through `/ship`.
@@ -108,3 +109,47 @@ Skills work across three execution environments. `/ship` detects the context in 
 | Analyze a decision, situation, or trade-off in depth | `/analyze` |
 | Create or update a skill | `/write-skill` |
 | Create or update a subagent definition | `/write-agent` |
+
+---
+
+## Appendix: Claude in Chrome setup
+
+Browser automation tools (`mcp__claude-in-chrome__*`) let Claude Code interact with Chrome — navigate pages, fill forms, read content, execute JS, record GIFs, and more.
+
+### 1. Install the extension
+
+Install **"Claude"** by Anthropic from the [Chrome Web Store](https://chromewebstore.google.com/detail/claude/fcoeoabgfenejglbffodgkkbkcdhcgfn). Supported browsers: Chrome and Edge only.
+
+Sign into the extension with the **same claude.ai account** your Claude Code CLI uses. (Check your CLI account with `claude config get oauthAccount` — the `emailAddress` field must match.)
+
+### 2. Link to Claude Code
+
+```bash
+claude /chrome
+```
+
+This installs a native messaging host so Chrome can communicate with Claude Code. **Restart Chrome after first-time setup** so it picks up the new host manifest.
+
+To link within an existing session, type `/chrome` at the prompt.
+
+### 3. Enable by default
+
+So browser tools load on every session without needing `--chrome`:
+
+```bash
+claude /chrome
+# Select "Enabled by default"
+```
+
+This sets `claudeInChromeDefaultEnabled: true` in `~/.claude.json`.
+
+Alternatively, launch a single session with browser tools via `claude --chrome`.
+
+### Troubleshooting
+
+| Symptom | Fix |
+|---|---|
+| "No Chrome extension connected" | Run `/chrome` to re-link. If that fails, toggle the extension off/on at `chrome://extensions`, then retry. |
+| Extension connects to Claude Desktop instead of Code | Both apps register the same extension ID. Quit the one you're not using. ([#20943](https://github.com/anthropics/claude-code/issues/20943)) |
+| Connection drops mid-session | Chrome service workers go idle. Run `/chrome` and select reconnect. |
+| Stale native host after CLI update | Verify `~/.claude/chrome/chrome-native-host` points to the current binary: `cat ~/.claude/chrome/chrome-native-host` |

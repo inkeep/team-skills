@@ -24,7 +24,7 @@ Before moving from any phase to the next:
 4. **In autonomous phases**: use your judgment — but pause and consult the user if anything is uncertain or if the phase produced results that differ from what the spec anticipated.
 
 Maintain a task list covering all phases. Create it at the start of implementation (Phase 1B) and update it as you complete work, discover new tasks, or change plans. Check it before and after each phase transition to verify you are on track and nothing was missed.
-5. Update `.claude/ship-state.json`: set `currentPhase` to the new phase, append the completed phase to `completedPhases`, refresh `lastUpdated`. When Phase 6 completes, set `currentPhase` to `"completed"`. Per-phase additions:
+5. Update `.claude/ship-state.json`: set `currentPhase` to the new phase, append the completed phase to `completedPhases`, refresh `lastUpdated`. When Phase 7 completes, set `currentPhase` to `"completed"`. Per-phase additions:
    - **Phase 2 → 3:** Set `branch` to the feature branch name, `worktreePath` to the worktree directory (or `null` if working in-place), and `prNumber` to the PR number (or `null` if no PR).
    - **Any phase:** When the user requests a change not in the original spec — ad-hoc tasks, improvements, tweaks, or user-approved scope expansions from review feedback — append to `amendments` before acting: `{ "description": "<brief what>", "status": "pending" }`. Set `status` to `"done"` when completed. This log survives compaction and tells a resumed agent what post-spec work was requested.
 
@@ -39,7 +39,7 @@ Before making any workflow decisions, detect what capabilities are available. Fo
 | Capability | Probe | If unavailable |
 |---|---|---|
 | Git worktree support | Check `/.dockerenv` or container env vars; check if already on feature branch | Skip worktree creation in Phase 2 — use current directory |
-| GitHub CLI | `gh auth status` | Skip PR creation (Phase 2) and review invocation (Phase 5) |
+| GitHub CLI | `gh auth status` | Skip PR creation (Phase 2) and review invocation (Phase 6) |
 | Quality gate commands | Read `package.json` `scripts` field; check for `pnpm`/`npm`/`yarn`; accept user `--test-cmd` / `--typecheck-cmd` / `--lint-cmd` overrides | Use discovered commands; halt if no typecheck AND no test command works |
 | Browser automation | Check if `mcp__claude-in-chrome__*` tools are available | Substitute Bash-based testing; pass `--no-browser` to ralph for criteria adaptation |
 | macOS computer use | Check if `mcp__peekaboo__*` tools are available | Skip OS-level testing; document gap |
@@ -77,11 +77,11 @@ Before proceeding, check if `.claude/ship-state.json` exists. If found:
 
 Assess the task and determine the appropriate depth for each phase. **Every phase is always executed** — scope calibration determines rigor within each phase, not whether a phase runs. The only legitimate reason to skip a phase is a missing capability detected in Step 1 (e.g., no GitHub CLI → no PR → no `/review`).
 
-| Task scope | Spec depth (Phase 1) | Implementation depth (Phase 3) | Testing depth (Phase 4) | Review depth (Phase 5) |
-|---|---|---|---|---|
-| **Feature** (new capability, multi-file, user-facing) | Full `/spec` → SPEC.md → prd.json | Full `/ralph` iteration loop | All three tiers | Full `/review` loop |
-| **Enhancement** (extending existing feature, moderate scope) | SPEC.md with problem + acceptance criteria + test cases; `/spec` optional | `/ralph` or direct implementation (judgment call) | Tier 1 full + Tier 2 if user-facing | Full `/review` loop |
-| **Bug fix / config change / infra** (small scope, targeted change) | SPEC.md with problem statement + what "fixed" looks like + acceptance criteria | Direct implementation (skip `/ralph` tool, not Phase 3) | Tier 1 full; Tier 2 if change affects user-facing behavior | `/review` loop |
+| Task scope | Spec depth (Phase 1) | Implementation depth (Phase 3) | Testing depth (Phase 4) | Docs depth (Phase 5) | Review depth (Phase 6) |
+|---|---|---|---|---|---|
+| **Feature** (new capability, multi-file, user-facing) | Full `/spec` → SPEC.md → prd.json | Full `/ralph` iteration loop | All three tiers | Full docs pass — product + internal | Full `/review` loop |
+| **Enhancement** (extending existing feature, moderate scope) | SPEC.md with problem + acceptance criteria + test cases; `/spec` optional | `/ralph` or direct implementation (judgment call) | Tier 1 full + Tier 2 if user-facing | Update existing docs if affected | Full `/review` loop |
+| **Bug fix / config change / infra** (small scope, targeted change) | SPEC.md with problem statement + what "fixed" looks like + acceptance criteria | Direct implementation (skip `/ralph` tool, not Phase 3) | Tier 1 full; Tier 2 if change affects user-facing behavior | Update docs only if behavior changed | `/review` loop |
 
 A SPEC.md is always produced — conversational findings alone do not survive context loss. All phases are always visited — even for a one-line fix, you still write the spec, confirm with the user, implement, test, review, and verify the completion checklist.
 
@@ -243,9 +243,56 @@ Under-testing looks like: skipping error-path tests because "it's obvious," decl
 
 ---
 
-### Phase 5: Review iteration loop
+### Phase 5: Documentation
 
-**If no PR exists** (GitHub CLI unavailable or PR creation was skipped in Phase 2): Skip this phase entirely. The user reviews locally after Phase 4. Proceed to Phase 6.
+Write or update documentation for any product surface areas and internal surface areas touched by the implementation. Documentation should be current *before* the PR enters review — reviewers need to see docs alongside code.
+
+#### Step 1: Identify documentation scope
+
+Survey what was built and determine what needs documentation:
+
+| Surface area | When to document | Examples |
+|---|---|---|
+| **Product-facing** (user docs, API reference, guides) | Always, for features and enhancements that change user-visible behavior | New endpoints, changed config options, new UI flows, altered CLI commands |
+| **Internal** (architecture docs, runbooks, inline code docs) | When the implementation introduces or modifies patterns other engineers need to understand | New services, changed data models, new abstractions, non-obvious design decisions |
+| **Changelog / migration** | When the change affects consumers who need to take action | Breaking changes, deprecations, required config updates |
+
+Use the SPEC.md as your primary source for what to document. Cross-reference with the actual implementation — if anything diverged from the spec, the docs reflect what was built, not what was planned.
+
+#### Step 2: Load documentation skills
+
+Check which documentation-related skills are available and load them:
+
+- `/write-docs` — preferred for product documentation (docs site content)
+- Any other content or documentation writing skills listed in your available skills
+
+If no documentation skills are available, write docs directly using the project's existing documentation conventions. Inspect the docs directory structure (if one exists) to match format, style, and organization patterns.
+
+#### Step 3: Write documentation
+
+For each surface area identified in Step 1:
+
+1. **Check existing docs.** Search for existing documentation that covers the affected area. Update in place when possible — prefer editing existing pages over creating new ones.
+2. **Write or update.** Use the loaded documentation skill if available. If writing directly, match the project's existing documentation style and conventions.
+3. **Verify accuracy.** Cross-reference every claim in the docs against the actual implementation. Do not document aspirational behavior — document what the code does now.
+
+#### Step 4: Commit docs with implementation
+
+Docs ship with the code. Include documentation changes in the same PR — do not defer docs to a follow-up PR.
+
+#### Docs maintenance rule
+
+Documentation must stay current through all subsequent phases:
+
+- **After Phase 6 (Review):** If reviewer feedback leads to code changes, evaluate whether those changes affect any docs written in this phase. Update docs before pushing the fix.
+- **After user-requested amendments:** If the user requests changes after Phase 5, update affected docs alongside the code changes.
+- **Phase 7 (Completion) checkpoint:** Verify docs still accurately reflect the final implementation.
+
+---
+
+### Phase 6: Review iteration loop
+
+**If no PR exists** (GitHub CLI unavailable or PR creation was skipped in Phase 2): Skip this phase entirely. The user reviews locally after Phase 5. Proceed to Phase 7.
 
 **Mark the PR as ready for review** before invoking `/review`. The PR was created as draft in Phase 2; now that implementation and testing are complete, make it visible to reviewers:
 
@@ -275,7 +322,7 @@ Invoke `/review` with the PR number, the path to the SPEC.md, and the quality ga
 
 Do not proceed past this point until `/review` reports completion (all threads resolved, CI/CD green or documented).
 
-**Re-trigger rule:** Any new commits pushed to the PR after a `/review` cycle completes — whether from escalated feedback, user-requested changes, additional implementation, or fixes discovered during Phase 6 verification — require re-invoking `/review`. The review loop is complete only when the most recent push has been through a review cycle with all threads resolved.
+**Re-trigger rule:** Any new commits pushed to the PR after a `/review` cycle completes — whether from escalated feedback, user-requested changes, additional implementation, or fixes discovered during Phase 7 verification — require re-invoking `/review`. The review loop is complete only when the most recent push has been through a review cycle with all threads resolved.
 
 **Second-pass review (for complex or important PRs):**
 
@@ -290,13 +337,13 @@ To trigger the second pass, leave a PR comment:
 @claude --full-review
 ```
 
-Then continue the iteration loop: poll for the new review feedback, assess each item with evidence, implement fixes or decline with reasoning, and resolve all threads — the same process as the first pass. Do not proceed to Phase 6 until this second pass is also fully resolved.
+Then continue the iteration loop: poll for the new review feedback, assess each item with evidence, implement fixes or decline with reasoning, and resolve all threads — the same process as the first pass. Do not proceed to Phase 7 until this second pass is also fully resolved.
 
-For straightforward PRs (single-file config changes, simple bug fixes, cosmetic updates), skip the second pass and proceed directly to Phase 6.
+For straightforward PRs (single-file config changes, simple bug fixes, cosmetic updates), skip the second pass and proceed directly to Phase 7.
 
 ---
 
-### Phase 6: Completion
+### Phase 7: Completion
 
 Before declaring done, verify:
 
@@ -305,6 +352,7 @@ Before declaring done, verify:
 - [ ] Linting passing
 - [ ] Formatting clean
 - [ ] No `TODO` or `FIXME` comments left from implementation
+- [ ] Documentation is up-to-date and accurately reflects the final implementation (Phase 5 docs maintenance rule)
 
 **If a PR exists:**
 - [ ] PR description is comprehensive, up-to-date, and derived from SPEC.md (summary, motivation, approach, changes, deviations from spec if any, test plan, link to spec)
@@ -370,7 +418,8 @@ These govern your behavior throughout:
 | Path | Use when | Impact if skipped |
 |---|---|---|
 | `/ralph` skill | Converting spec, crafting prompt, and executing the iteration loop (Phase 3) | Missing prd.json, no implementation prompt, no automated execution |
-| `/review` skill | Running the push → review → fix → CI/CD loop (Phase 5) | Missed feedback, unresolved threads, mechanical response to reviews, CI/CD failures not investigated |
+| `/write-docs` skill | Writing or updating product documentation (Phase 5) | Docs not written, wrong format, mismatched with project conventions |
+| `/review` skill | Running the push → review → fix → CI/CD loop (Phase 6) | Missed feedback, unresolved threads, mechanical response to reviews, CI/CD failures not investigated |
 | `references/worktree-setup.md` | Setting up isolated development environment (Phase 2) | Wrong pnpm version, broken lockfile, work bleeds into main directory |
 | `references/testing-strategy.md` | Planning and executing tests (Phase 4) | Gaps in coverage, untested edge cases, false confidence |
 
