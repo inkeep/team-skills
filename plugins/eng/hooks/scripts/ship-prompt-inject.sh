@@ -60,19 +60,32 @@ if [[ ${#QG_PARTS[@]} -gt 0 ]]; then
   QG_STR=$(IFS=" && "; echo "${QG_PARTS[*]}")
 fi
 
-# Check CI status for active PR (silent on green/pending/error)
-CI_WARNING=""
+# Check PR state and CI status (silent on error/green/pending)
+PR_WARNING=""
 if [[ -n "$PR_NUMBER" && "$PR_NUMBER" != "null" ]] && command -v gh &>/dev/null; then
   GH_DIR="${WORKTREE}"
   [[ -z "$GH_DIR" || "$GH_DIR" == "null" ]] && GH_DIR="$PROJECT_DIR"
-  CI_OUTPUT=$(cd "$GH_DIR" 2>/dev/null && gh pr checks "$PR_NUMBER" 2>/dev/null) || CI_OUTPUT=""
-  if [[ -n "$CI_OUTPUT" ]]; then
-    FAIL_COUNT=$(echo "$CI_OUTPUT" | grep -c "fail" || true)
-    if [[ "$FAIL_COUNT" -gt 0 ]]; then
-      FAILING_NAMES=$(echo "$CI_OUTPUT" | grep "fail" | awk '{print $1}' | paste -sd, -)
-      CI_WARNING="CI FAILING on PR #${PR_NUMBER}: ${FAIL_COUNT} check(s) failed [${FAILING_NAMES}] — investigate and fix before proceeding"
-    fi
-  fi
+  PR_STATE=$(cd "$GH_DIR" 2>/dev/null && gh pr view "$PR_NUMBER" --json state -q '.state' 2>/dev/null) || PR_STATE=""
+
+  case "$PR_STATE" in
+    MERGED)
+      PR_WARNING="PR #${PR_NUMBER} has been merged — update ship-state.json currentPhase to completed if not already done"
+      ;;
+    CLOSED)
+      PR_WARNING="PR #${PR_NUMBER} is closed (not merged) — check if this is intentional"
+      ;;
+    OPEN)
+      CI_OUTPUT=$(cd "$GH_DIR" 2>/dev/null && gh pr checks "$PR_NUMBER" 2>/dev/null) || CI_OUTPUT=""
+      if [[ -n "$CI_OUTPUT" ]]; then
+        FAIL_COUNT=$(echo "$CI_OUTPUT" | grep -c "fail" || true)
+        if [[ "$FAIL_COUNT" -gt 0 ]]; then
+          FAILING_NAMES=$(echo "$CI_OUTPUT" | grep "fail" | awk '{print $1}' | paste -sd, -)
+          PR_WARNING="CI FAILING on PR #${PR_NUMBER}: ${FAIL_COUNT} check(s) failed [${FAILING_NAMES}] — investigate and fix before proceeding"
+        fi
+      fi
+      ;;
+    # Empty/unknown (gh failed, PR doesn't exist, network down) → skip silently
+  esac
 fi
 
 # Build context lines
@@ -87,7 +100,7 @@ CTX+="\nFeature: \"${FEATURE_NAME}\" | Phase: ${CURRENT_PHASE}"
 [[ -n "$QG_STR" ]] && CTX+="\nQuality gates: ${QG_STR}"
 [[ -n "$COMPLETED" ]] && CTX+="\nCompleted: ${COMPLETED}"
 [[ "$PENDING_AMENDMENTS" -gt 0 ]] && CTX+="\nAmendments: ${PENDING_AMENDMENTS} pending — check ship-state.json amendments array"
-[[ -n "$CI_WARNING" ]] && CTX+="\n${CI_WARNING}"
+[[ -n "$PR_WARNING" ]] && CTX+="\n${PR_WARNING}"
 CTX+="\n\nIf resuming a /ship workflow, re-read the SPEC.md and check your task list before proceeding. Do not restart completed phases."
 
 # Inject context
