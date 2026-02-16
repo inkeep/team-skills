@@ -74,15 +74,15 @@ Run these commands — ALL must pass:
 - Lint: `{{LINT_CMD}}`
 - Test: `{{TEST_CMD}}`
 
-Do NOT commit or set `passes: true` if any gate fails. Fix failures first. If you cannot fix them, treat the story as stuck (step 9).
+Do NOT set `passes: true` or commit if any gate fails. Fix failures first. If you cannot fix them, treat the story as stuck (step 9).
 
-### 6. Commit
+### 6. Update prd.json
 
-Commit with message format: `[story-id] description`
+Set `passes: true` for the completed story. Do this before committing so progress is captured even if context runs out before the commit step.
 
-### 7. Update prd.json
+### 7. Commit
 
-Set `passes: true` for the completed story.
+Commit all changes including prd.json with message format: `[story-id] description`
 
 ### 8. Log progress
 
@@ -170,15 +170,15 @@ Run these commands — ALL must pass:
 - Lint: `{{LINT_CMD}}`
 - Test: `{{TEST_CMD}}`
 
-Do NOT commit or set `passes: true` if any gate fails. Fix failures first. If you cannot fix them, treat the story as stuck (step 8).
+Do NOT set `passes: true` or commit if any gate fails. Fix failures first. If you cannot fix them, treat the story as stuck (step 8).
 
-### 5. Commit
+### 5. Update prd.json
 
-Commit with message format: `[story-id] description`
+Set `passes: true` for the completed story. Do this before committing so progress is captured even if context runs out before the commit step.
 
-### 6. Update prd.json
+### 6. Commit
 
-Set `passes: true` for the completed story.
+Commit all changes including prd.json with message format: `[story-id] description`
 
 ### 7. Log progress
 

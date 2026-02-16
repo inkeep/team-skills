@@ -211,6 +211,14 @@ Do not proceed to Phase 5 until you have high confidence in the implementation. 
 
 **If no PR exists** (GitHub CLI unavailable or PR creation was skipped in Phase 2): Skip this phase entirely. The user reviews locally after Phase 4. Proceed to Phase 6.
 
+**Mark the PR as ready for review** before invoking `/review`. The PR was created as draft in Phase 2; now that implementation and testing are complete, make it visible to reviewers:
+
+```
+gh pr ready <pr-number>
+```
+
+**Do not self-review the PR.** Your job in this phase is to invoke `/review` and iterate on *external* reviewer feedback — not to generate review feedback yourself. Do not run pr-review agents or subagents to review the code.
+
 Invoke `/review` with the PR number, the path to the SPEC.md, and the quality gate commands from Phase 0:
 
 ```
