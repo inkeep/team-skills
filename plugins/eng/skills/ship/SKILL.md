@@ -203,7 +203,11 @@ Over-testing looks like: writing integration tests for every trivial getter, man
 
 Under-testing looks like: skipping error-path tests because "it's obvious," declaring confidence from unit tests alone when the feature has user-facing surfaces, not testing the interaction between new code and existing code.
 
-Do not proceed to Phase 5 until you have high confidence in the implementation. High confidence means: you have personally verified the critical code paths work (not just that tests pass), you understand the edge cases and how they are handled, and you could explain the implementation to another engineer. Tests passing is necessary but not sufficient.
+**Phase 4 exit gate — verify before proceeding to Phase 5:**
+
+- [ ] Tier 1 green: test suite, typecheck, lint all pass
+- [ ] Tier 2 executed (if scope calibration requires it): QA checklist in PR body is fully resolved — every item checked, fixed, or explicitly skipped with documented reason. "Not applicable" requires justification tied to scope calibration.
+- [ ] You can explain the implementation to another engineer: what was tested, what edge cases exist, how they are handled
 
 ---
 
@@ -238,6 +242,8 @@ Invoke `/review` with the PR number, the path to the SPEC.md, and the quality ga
 | Architectural rework that `/review` flagged as disproportionate | Evaluate via the calibration principle (ownership principle #5). If warranted, implement and re-invoke `/review`. If not, instruct `/review` to decline with reasoning. |
 
 Do not proceed past this point until `/review` reports completion (all threads resolved, CI/CD green or documented).
+
+**Re-trigger rule:** Any new commits pushed to the PR after a `/review` cycle completes — whether from escalated feedback, user-requested changes, additional implementation, or fixes discovered during Phase 6 verification — require re-invoking `/review`. The review loop is complete only when the most recent push has been through a review cycle with all threads resolved.
 
 **Second-pass review (for complex or important PRs):**
 
