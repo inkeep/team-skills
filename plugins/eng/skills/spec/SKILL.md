@@ -234,7 +234,64 @@ After phase decisions are finalized, persist to SPEC.md (phases, Decision Log, d
 
 ---
 
-### 7) Quality bar + "are we actually done?"
+### 7) Technical accuracy verification (opt-in, after content is stable)
+
+**Trigger:** All P0 open questions are resolved, phase planning is done, and no pending decisions remain. The spec's content is stable — further changes would be corrections, not new design.
+
+When you reach this point, proactively offer:
+> "All open questions and design decisions are resolved. Before we sign off, would you like me to do a thorough accuracy check — verifying every technical assertion in the spec against the current codebase and dependency state?"
+
+If the user declines, skip to Step 8 (Quality bar).
+
+If the user accepts:
+
+#### Step 1: Refresh the codebase
+Run `git pull origin main` (or the relevant base branch) so you are verifying against the latest code, not the state from when the spec process started.
+
+#### Step 2: Extract assertions
+Scan the SPEC.md for every technical claim that maps to verifiable reality. Focus on load-bearing claims — not every word, but anything the design relies on:
+- Claims about current system behavior ("the auth middleware does X", "requests flow through Y")
+- Claims about dependency capabilities ("library Y supports Z", "the SDK exposes method W")
+- Claims about API shapes, types, interfaces, or configuration options
+- Claims about codebase patterns ("we use pattern X in similar areas", "existing endpoints follow convention Y")
+- Claims about third-party behavior, limitations, or version-specific details
+
+#### Step 3: Dispatch parallel verification
+Categorize assertions and dispatch subagents in parallel:
+
+| Track | Tool | Scope |
+|---|---|---|
+| Own codebase (behavior, patterns, blast radius) | `/inspect` subagents | Verify each assertion against current code. Each subagent gets the specific claim + relevant file paths or areas. |
+| Third-party dependencies (capabilities, types, behavior) | `/research` subagents | Verify against current source/types/docs for each dependency, scoped to the spec's scenario. |
+| External claims (prior art, ecosystem conventions) | `/research` subagents or web search | Spot-check factual claims about external systems or ecosystem patterns. |
+
+#### Step 4: Present findings (do not auto-correct)
+This step is purely analytical. Report findings to the user — do not edit the spec.
+
+For each verified assertion, classify:
+- **CONFIRMED** — verified from primary source. No action needed.
+- **CONTRADICTED** — evidence shows the spec is wrong. Detail what the spec says vs. what is actually true.
+- **STALE** — was true when written but the codebase or dependency has changed since. Detail the drift.
+- **UNVERIFIABLE** — cannot confirm or deny from accessible sources. Note what was checked.
+
+Present the summary in two tiers:
+
+**Tier 1 — Design-affecting issues:** Any contradiction or staleness that could change a product decision, invalidate a requirement, affect phasing, or alter the recommended architecture. These are not just fact corrections — they may reopen design questions. Present each as a candidate Open Question or Decision using the existing spec format (type, priority, blocking, what it affects).
+
+**Tier 2 — Factual corrections:** Contradictions or staleness that are localized — the fix is updating a detail in the spec without affecting any design decisions. List each with the current (wrong) claim and the correct information.
+
+Also note the UNVERIFIABLE assertions so the user is aware of remaining uncertainty.
+
+#### Step 5: User decides next steps
+Ask the user how to proceed:
+
+- **Tier 1 items** (design-affecting): If the user confirms any as genuine issues, add them to the spec's Open Questions or Decision Log and **return to Step 5 (iterative loop)** to work through them using the normal investigate → present → decide → cascade process. The spec process continues until these are resolved.
+- **Tier 2 items** (factual corrections): If the user approves, apply the corrections as surgical edits to SPEC.md and log them to `meta/_changelog.md`.
+- **No issues found**: Proceed to Step 8 (Quality bar).
+
+---
+
+### 8) Quality bar + "are we actually done?"
 **Load:** `references/quality-bar.md`
 
 Do:
