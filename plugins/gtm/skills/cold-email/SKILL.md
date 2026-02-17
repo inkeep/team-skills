@@ -559,6 +559,118 @@ When user requests follow-up emails, follow this arc:
 
 ---
 
+## Proven 4-Email Sequence (Converted to Demo)
+
+This exact sequence sent to the Head of Global Support at SnapLogic resulted in a demo call. Use this as a template.
+
+### Sequence Strategy
+
+| Email | Job | Angle | CTA Style |
+|-------|-----|-------|-----------|
+| 1 | Research + Value | Company-specific problem + full Inkeep solution | Strong: "12-min compare" |
+| 2 | Pain amplification | Why repeat questions persist (knowledge trapped) | Soft question: "Does that sound familiar?" |
+| 3 | Solution angle 1 | Agent speed + assist-first adoption path | Medium: "if exploring this year" |
+| 4 | Solution angle 2 | Reactive → proactive + unified platform | Soft: "if relevant now or later" |
+
+### Key Success Factors
+
+1. **Deep company research in Email 1**: Referenced "800+ Snaps", "Groundplexes", "Ultra Tasks"
+2. **Progressive story arc**: Knowledge trapped → Agent speed → Proactive support
+3. **Each email has ONE job**: No repetition of the same pitch
+4. **Decreasing CTA intensity**: Strong → question → soft → softer
+5. **All under 80 words**: Respects exec time
+6. **No meta-language**: Opens directly with the new angle
+
+### Email 1: Research + Full Value Prop
+
+```
+Hi [First Name],
+
+With [company-specific data: products, integrations, scale], Support sees a long tail of [specific issue types].
+
+Fix is usually in a prior case or doc, but agents still search, then pull [specific data sources], and the KB update comes later.
+
+Inkeep delivers cited customer answers, drafts agent replies with linked sources, and turns solved cases into docs, with real-time [product-specific] lookups and actions.
+
+Open to a 12-min compare?
+
+Best,
+[Your Name]
+```
+
+### Email 2: Pain Amplification (Engagement Question)
+
+```
+Hi [First Name],
+
+One reason repeat questions do not go away is that support knowledge gets trapped.
+
+Answers live in closed tickets, macros, or internal notes instead of the help center, so the same issues keep resurfacing.
+
+Does that sound familiar at all?
+
+Best,
+[Your Name]
+```
+
+**Why this works**: The question "Does that sound familiar at all?" invites engagement without requiring commitment. It's a pattern interrupt that feels conversational, not salesy.
+
+### Email 3: Agent Assist Angle
+
+```
+Hi [First Name],
+
+Once teams start fixing their knowledge flow, the next bottleneck is agent speed.
+
+Inkeep integrates with tools like [their ticketing system] to analyze incoming tickets and surface relevant answers from docs and past tickets while agents are responding.
+
+Teams often use this first as agent assist before moving to automated replies.
+
+Open to a short conversation if this is something you are exploring this year.
+
+Best,
+[Your Name]
+```
+
+**Why this works**: Shows a progressive adoption path (assist first, then automate). Reduces perceived risk. Names their actual tool (Zendesk, Salesforce, etc.).
+
+### Email 4: Proactive Support Angle
+
+```
+Hi [First Name],
+
+The last step many teams take is shifting from reactive to proactive support.
+
+With Inkeep, teams can automatically respond to common questions and proactively surface answers in docs or product flows before users submit tickets.
+
+All of this runs on the same AI agent foundation, so teams do not need separate tools for each workflow.
+
+If this is relevant now or later, happy to connect.
+
+Best,
+[Your Name]
+```
+
+**Why this works**: Introduces the full vision (proactive) while emphasizing "same foundation" (no tool sprawl). The softest CTA leaves the door open without pressure.
+
+### Adapting This Sequence
+
+When customizing for a new prospect:
+
+**Email 1 customizations:**
+- Replace product data (800+ Snaps → their equivalent)
+- Replace issue types (connector auth → their common escalations)
+- Replace data sources (run logs, task status → their monitoring tools)
+
+**Email 3 customizations:**
+- Replace ticketing system (Zendesk → Salesforce, ServiceNow, etc.)
+- Keep the "assist first, then automate" framing
+
+**Email 4:**
+- Usually works as-is since it's about the broader vision
+
+---
+
 ## CTA Patterns by Level
 
 | Level | CTA Approach |
