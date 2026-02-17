@@ -11,38 +11,45 @@ Generate high-quality cold emails tailored to specific B2B personas, using evide
 ## Workflow
 
 1. **Parse the request**
-  :Identify the target persona (see Persona Quick Reference below)
-  :Extract company context (name, industry, size, any signals like funding, hiring, product launches)
-  :Determine email type: first-touch or follow-up (default: first-touch)
+   - Identify the target persona (see Persona Quick Reference below)
+   - Extract company context (name, industry, size, any signals like funding, hiring, product launches)
+   - Determine email type: first-touch or follow-up (default: first-touch)
 
-2. **Load persona-specific guidance**
-  :Read `references/personas.md` for the matching persona archetype
-  :Note their pain points, buying behavior, and anti-patterns
+2. **Research the company first** (CRITICAL for CS/CX leaders)
+   - Use web search to find the company's core products and platform names
+   - Identify what their CS/support teams actually manage day-to-day
+   - Look for product-specific terminology (e.g., "HealthRules Payer", "RingEX", "Qualtrics XM")
+   - Find recent news, integrations, or platform updates
+   - This research powers the subject line and hook
 
-3. **Match product capability to persona pain**
-  :Read `references/product-intel.md` for Inkeep product context
-  :Identify which product pillar (Ask AI, Copilots, Workflows, Build Your Own) solves their problem
-  :Select relevant proof point (e.g., "48% ticket reduction" for support, "18% activation" for product)
-  :Never lead with product features — lead with outcome, then connect to capability
+3. **Load persona-specific guidance**
+   - Read `references/personas.md` for the matching persona archetype
+   - Note their pain points, buying behavior, and anti-patterns
 
-4. **Select content CTA** (optional but recommended)
-  :Read `references/blog-mapping.md` to find relevant articles for this persona
-  :Match buying stage: Awareness (cold), Consideration (exploring), Decision (evaluating)
-  :For multi-step sequences: Select 2 articles with different angles for emails 2 and 3
+4. **Match product capability to persona pain**
+   - Read `references/product-intel.md` for Inkeep product context
+   - Identify which product pillar (Ask AI, Copilots, Workflows, Build Your Own) solves their problem
+   - Select relevant proof point (e.g., "48% ticket reduction" for support, "18% activation" for product)
+   - Never lead with product features, lead with outcome, then connect to capability
 
-5. **Add social proof** (when relevant)
-  :Read `references/customer-proof.md` to find industry-matched customers
-  :Use 1-2 customer names that match prospect by industry and size
+5. **Select content CTA** (optional but recommended)
+   - Read `references/blog-mapping.md` to find relevant articles for this persona
+   - Match buying stage: Awareness (cold), Consideration (exploring), Decision (evaluating)
+   - For multi-step sequences: Select 2 articles with different angles for emails 2 and 3
 
-6. **Draft the email**
-  :Follow the Email Structure below
-  :Apply persona-specific messaging angle
-  :Weave in product benefit naturally (not as a pitch)
-  :Keep it short (under 80 words for first-touch, under 150 for follow-ups)
+6. **Add social proof** (when relevant)
+   - Read `references/customer-proof.md` to find industry-matched customers
+   - Use 1-2 customer names that match prospect by industry and size
 
-7. **Output the email**
-  :Provide subject line + body
-  :If multiple variants requested, provide 2-3 options
+7. **Draft the email**
+   - Follow the Email Structure below
+   - Apply persona-specific messaging angle
+   - Weave in product benefit naturally (not as a pitch)
+   - Keep it short (under 100 words for first-touch, under 150 for follow-ups)
+
+8. **Output the email**
+   - Provide subject line + body
+   - If multiple variants requested, provide 2-3 options
 
 ---
 
@@ -91,15 +98,79 @@ Subject: [2-3 words, internal-camo style, no punctuation]
 ```
 
 **Characteristics:**
-- Under 80 words total (guideline, not hard rule)
+- Under 100 words total (guideline, not hard rule)
 - 3rd-5th grade reading level
 - Plain text, no links in first-touch email
 - 2-3 paragraphs, 1 sentence each
 - Start with "you/your" not "I/we"
 - Specific numbers, named companies, exact timelines
 - Use hyphens only for compound words (edge-case, Tier-1, 50-80%). Never use dashes to connect separate thoughts or clauses.
+- Never use em dashes. Use commas or periods instead.
 
 **Note:** Follow-up emails (2 and 3) should include blog article links as CTAs. See Follow-Up Email Progression below.
+
+---
+
+## VP/Head of Customer Success Email Structure (Proven Pattern)
+
+For CS leaders (VP CS, Head of CS, SVP CS, Chief Customer Officer), use this research-first structure that has been tested across 30+ companies:
+
+### Subject Line Formula
+```
+[Company Product Name] QBR prep
+```
+
+Examples:
+- `Qualtrics XM QBR prep`
+- `Mural rollout QBR prep`
+- `RingEX and RingCX QBR prep`
+- `LeanIX onboarding, faster first value`
+- `Vanta Trust Center QBR prep`
+
+The subject line MUST reference their specific product/platform. Generic subjects like "faster QBR prep" or "CS efficiency" fail.
+
+### Email Structure for CS Leaders
+
+```
+Hi [First Name],
+
+[1-2 sentences: Company-specific CS challenge with loss framing. Reference their actual products/platform and the manual work involved.]
+
+We build a CSM AI Agent that connects to the systems you already use (CRM, support, call notes, product usage) and can answer in seconds:
+• "Which accounts are trending at risk, and why?"
+• "What should we cover in the next QBR for <customer>?"
+• "Generate a renewal or QBR summary with outcomes, adoption, and open risks."
+
+Open to a quick 15-minute chat next week?
+
+Best,
+[Your Name]
+[Company]
+```
+
+### Hook Patterns for CS Leaders
+
+**Good hooks** (product-specific, loss framing):
+- "With [Company] supporting [customer type] across [Product A] and [Product B], I imagine your team spends a lot of time pulling context together before QBRs and renewals."
+- "For [product type] customers, the renewal story is usually scattered across [signal 1], [signal 2], and [signal 3]."
+- "Turning [platform] activity, [metric], and [data source] into an exec-ready renewal story still takes hours of manual stitching."
+
+**Bad hooks** (generic, title-focused):
+- "I saw you lead Customer Success at [Company]." (Wastes characters on their title)
+- "Your team probably spends time on manual work." (Not specific to their product)
+- "I noticed you're hiring CSMs." (Generic trigger)
+
+### Bullet Customization
+
+Customize the three bullets based on company research:
+
+| Company Type | Risk Signals | Health Snapshot | QBR Content |
+|--------------|--------------|-----------------|-------------|
+| **Observability/IT** | coverage gaps, noisy alerts, stalled workflows | deployment health, topology gaps, integrations | outcomes, adoption, open risks |
+| **Security/Compliance** | coverage gaps, rising vulns, unresolved incidents | risk posture, remediation status | MDR outcomes, risk trendline |
+| **Healthcare/Payer** | implementation delays, stakeholder changes | project health, system performance | outcomes delivered, open action items |
+| **Data/Analytics** | low activation, stale metadata, failing integrations | data trust health, lineage gaps | adoption trends, coverage |
+| **Payments/Fintech** | program performance, fraud/dispute signals | issuer processing health | program outcomes, compliance |
 
 ---
 
@@ -163,6 +234,9 @@ When user requests follow-up emails, follow this arc:
 - Over 125 words on first touch
 - Meta-language that signals templated outreach ("Different angle:", "One stat that stood out:", "Bumping this", "Circling back", "Following up on my last email", "Here's another way to think about it:")
 - Sales-speak that reveals you're analyzing across prospects ("One pattern we see:", "What we're hearing from teams like yours", "A trend we've noticed")
+- Em dashes anywhere in the email (use commas or periods instead)
+- Opening with their title ("I saw you lead Customer Success at..." wastes characters and doesn't catch attention)
+- Generic subject lines that apply to any company ("faster QBR prep" instead of "Qualtrics XM QBR prep")
 
 **Template smell checklist:**
 - Starts with "I/My/We/Our"
@@ -171,7 +245,9 @@ When user requests follow-up emails, follow this arc:
 - Has generic social proof ("leading companies")
 - Asks for meeting before establishing value
 - Reads above 8th grade level
-- Uses dashes to connect thoughts ("this:that") instead of commas or periods
+- Uses dashes or em dashes to connect thoughts instead of commas or periods
+- Subject line could apply to any company (not product-specific)
+- Opens with recipient's job title
 
 ---
 
@@ -198,6 +274,69 @@ Saw your talk at [Conference] on developer onboarding friction.
 Most DevRel teams spend 50%+ on content creation but struggle to prove impact on activation. The gap is usually between "docs exist" and "developers find answers."
 
 Solana scaled developer support without adding headcount. Happy to share their approach if useful.
+
+---
+
+### Good (Head of CS at Qualtrics)
+
+**Subject:** Qualtrics XM QBR prep
+
+Hi Charlie,
+
+Your team is accountable for proving ROI and driving usage and adoption across large XM deployments, which usually means a lot of manual work to prep exec readouts from utilization, surveys, users, support history, and open action items.
+
+We build a CSM AI Agent that connects to the systems you already use (CRM, support, call notes, product usage) and can answer in seconds:
+• "Which enterprise accounts are trending at risk, and why?"
+• "What should we cover in the next XM QBR for <customer> based on adoption and outcomes?"
+• "Generate a renewal brief with results, usage trends, and open issues."
+
+Open to a quick 15-minute chat next week?
+
+Best,
+Matt Plotkin
+Inkeep
+
+---
+
+### Good (Head of CS at Meltwater)
+
+**Subject:** social listening QBR prep
+
+Hi Ana,
+
+With teams using Meltwater for media intelligence plus social listening and reporting, your CSMs spend a lot of time pulling the full account picture together before QBRs, renewals, and escalations.
+
+We build a CSM AI Agent that connects to the systems you already use (CRM, support, call notes, product usage) and can answer in seconds:
+• "Which accounts are trending at risk, and why?"
+• "What should we cover in the next QBR for <customer> based on usage and outcomes?"
+• "Generate a renewal or QBR summary with results, adoption, and open issues."
+
+Open to a quick 15-minute chat next week?
+
+Best,
+Matt Plotkin
+Inkeep
+
+---
+
+### Good (VP of CS at Arctic Wolf)
+
+**Subject:** Concierge Security QBR prep
+
+Hi Kyle,
+
+With Arctic Wolf's Concierge Security Team, customers get 24x7 monitoring plus ongoing risk posture reviews and remediation guidance. Turning that MDR plus Managed Risk work into a clean exec story for QBRs and renewals still takes a lot of manual stitching.
+
+We build a CSM AI Agent that connects to the systems you already use (CRM, ticketing, call notes, platform telemetry) and can answer in seconds:
+• "Which accounts look renewal risk, and why (coverage gaps, open risks, recent incidents)?"
+• "For <customer>, what's the current risk posture and what remediation is blocked?"
+• "Draft an exec-ready QBR/renewal brief with MDR outcomes, Managed Risk trendline, open items, and next-quarter plan."
+
+Open to a quick 15-minute chat next week?
+
+Best,
+Matt Plotkin
+Inkeep
 
 ---
 
@@ -231,6 +370,22 @@ Best regards,
 
 ---
 
+### Avoid (Generic CS Email)
+
+**Subject:** faster QBR prep
+
+Hi Kyle,
+
+I saw you lead Customer Success at Arctic Wolf. Your team probably spends a lot of time on manual prep work before renewals and QBRs.
+
+We help CS teams automate their workflows and save time.
+
+Would you be open to a quick chat?
+
+*Problems: Generic subject line (could apply to any company), opens with their title (wastes characters), no product-specific language, no specific pain points, no social proof, vague value prop.*
+
+---
+
 ## Output Format
 
 When generating an email, output:
@@ -247,6 +402,74 @@ When generating an email, output:
 If generating multiple variants, label them Variant A, B, C.
 
 If generating a follow-up sequence, label by email number and type.
+
+---
+
+---
+
+## CSM AI Agent Demo Transcript Guidelines
+
+When writing demo transcripts or marketing content showing the CSM AI Agent in action, follow these guidelines:
+
+### Tool Access Messaging
+
+**Bad (too robotic):**
+```
+Searching CRM... Searching Totango...
+```
+
+**Better (demo-friendly):**
+```
+Checking account health across Totango and your CRM...
+```
+
+**Best (enterprise copilot vibe):**
+```
+Reviewing customer health signals from Totango and CRM data...
+```
+
+### Example Demo Transcript
+
+```
+CSM: "Which of my accounts are at risk?"
+
+Inkeep (CSM Copilot): Reviewing customer health signals from Totango and account data in your CRM...
+
+Three accounts currently have health scores below 30:
+• Acme Inc
+• Example.io
+• RocketLabs
+
+CSM: "Add a reminder on my calendar to reach out to our main point of contact tomorrow."
+
+Inkeep (CSM Copilot): Locating the primary champion in your CRM and syncing with Google Calendar...
+
+A reminder has been scheduled for tomorrow at 2:00 PM, with a draft outreach email and the relevant contact details included.
+
+CSM: "What renewals do I have coming up?"
+
+Inkeep (CSM Copilot): Checking upcoming renewal dates in your CRM...
+
+You have renewals coming up with:
+• Stackforge
+• Acme LLC
+• Umbrella Co.
+
+CSM: "Could you create QBR materials for the upcoming renewal?"
+
+Inkeep (CSM Copilot): Gathering historical context from CRM records, Gong conversations, Totango health data, and product analytics, and assembling materials in Notion...
+
+I've generated a QBR document you can use for the renewal discussion, including key outcomes, usage trends, risks, and recommendations.
+```
+
+### Demo Transcript Principles
+
+- Show which tools are being accessed (signals real integrations)
+- Collapse multiple steps into one readable action
+- Sound proactive, not just reactive
+- Add lightweight follow-ups ("Want next steps?") like real copilots
+- Use clear business language ("primary champion", "risk factors", "expansion")
+- Output feels exec-ready
 
 ---
 
