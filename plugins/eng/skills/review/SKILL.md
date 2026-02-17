@@ -69,7 +69,7 @@ git log origin/HEAD..HEAD --oneline
 
 #### 2. Poll for review feedback
 
-Wait approximately 8 minutes, then check for reviewer feedback. Opportunistically check CI/CD at the same time:
+Wait approximately 6 minutes, then check for reviewer feedback. Opportunistically check CI/CD at the same time:
 
 ```bash
 # Primary: fetch all review feedback (reviews, inline comments, discussion)
@@ -89,7 +89,7 @@ Wait approximately 8 minutes, then check for reviewer feedback. Opportunisticall
 | Review feedback ready, CI/CD not done | Proceed to assess review feedback immediately. Do NOT wait for CI/CD. |
 | Review feedback ready, CI/CD also ready | Assess both. Handle review feedback first, then CI/CD failures. |
 | No review feedback, CI/CD has failures | Assess and fix CI/CD failures while waiting for review. |
-| Neither ready | Wait another 8 minutes and check again. After 3 checks with no results, proceed with other work and check back later. |
+| Neither ready | Wait another 3 minutes and check again. After 3 checks with no results, proceed with other work and check back later. |
 
 #### 3. Assess reviewer feedback
 
