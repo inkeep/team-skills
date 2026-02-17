@@ -395,6 +395,137 @@ Best,
 
 ---
 
+## Customer Success Leader Renewal Emails (Bespoke CSM AI Agents)
+
+For CS leaders (VP CS, Head of CS, SVP CS, CCO) focused on renewals and QBRs, use this "bespoke CSM AI Agent" template.
+
+### Key Differences from Support Leader Emails
+
+- Focus on **renewals, QBRs, and proving customer value**
+- Emphasize **"bespoke CSM AI Agents tailored to your playbooks"**
+- Connect to **CRM, ticketing, call notes, and product telemetry**
+- Three bullets: **risk identification, health snapshot, exec-ready QBR/renewal brief**
+
+### Email Structure
+
+```
+Hi [First Name],
+
+[1-2 sentences: Company AI/product initiatives and what it means for CS. Research their specific products and positioning.]
+
+Inkeep builds bespoke CSM AI Agents tailored to your playbooks. They connect to your CRM, ticketing, call notes, and product telemetry to:
+• Identify accounts trending at risk and why ([company-specific risk signals])
+• Snapshot current health with recommended next steps
+• Draft an exec-ready QBR or renewal brief tied to outcomes ([company-specific outcomes])
+
+Open to a quick 15-minute chat next week?
+
+[Your Name]
+```
+
+### Subject Line Patterns
+
+**Formula options:**
+- `[Company] renewals: [outcome metric], auto-summarized`
+- `Before renewals: auto-brief on [outcome] + [outcome]`
+- `[Company] CS: renewal risk + value story in 1 brief`
+- `CS agent for [Company] renewals`
+
+**Good examples:**
+- `Smartly renewals: ROAS + creative velocity, auto-summarized`
+- `BMC renewals: MTTR + automation wins, auto-briefed`
+- `Before renewals: auto-brief on patch + exposure outcomes` (Tanium)
+- `Nooks ROI brief: connects, meetings, pipeline`
+- `Atlan: instant account intel for renewals`
+- `Aqua renewals: measurable runtime impact, faster`
+
+**Bad (too generic):**
+- `QBR-ready renewal brief for CSMs`
+- `CS agent for renewals`
+
+### Risk Signals by Industry
+
+| Industry | Risk Signals |
+|----------|--------------|
+| **Security/DSPM** | coverage gaps, rising vulns, unresolved incidents, stakeholder churn, slow remediation |
+| **Data/Observability** | adoption stalls, low marketplace engagement, data gaps, alert fatigue, slow time-to-resolution |
+| **IT Ops/AEM** | MTTR rising, automation adoption stalls, noisy events, patch backlog, recurring incidents |
+| **Sales Tech** | usage drop, connect rate slide, spam/number-quality issues, rollout stalls |
+| **Data Governance** | adoption stalls, access bottlenecks, open support themes, low marketplace engagement |
+| **Marketing Tech** | spend drop, pipeline impact, tracking/integration issues, stalled adoption |
+
+### Outcomes by Industry
+
+| Industry | Outcomes to Reference |
+|----------|----------------------|
+| **Security/DSPM** | risk reduction, faster remediation, tool consolidation, exposures reduced, DDoS readiness |
+| **Data/Observability** | data downtime avoided, faster root cause, reliability outcomes, fewer disruptions |
+| **IT Ops/AEM** | MTTR reduction, higher availability, automation coverage, faster troubleshooting |
+| **Sales Tech** | meetings and pipeline impact, connects, ROI, conversion rates |
+| **Data Governance** | trusted data, governed AI, cycle time reduction, fewer manual handoffs |
+| **Marketing Tech** | ROAS, creative velocity, performance optimization |
+
+### Examples
+
+**SVP, Customer Success Organization at NETSCOUT**
+
+**Subject:** nGenius + Arbor renewals: exec-ready account brief
+
+Hi Tracy,
+
+NETSCOUT's Visibility Without Borders platform unifies performance, security, and availability, and your VaaS offering sets a high bar for proving outcomes like faster troubleshooting and fewer disruptions.
+
+For CS, the hard part is turning scattered signals (deployment coverage, incident trends, support themes, stakeholder changes) into a clear renewal story before an account goes quiet.
+
+Inkeep builds bespoke CSM AI Agents tailored to your playbooks. They connect to your CRM, ticketing, call notes, and product signals to:
+• Identify accounts trending at risk and why
+• Generate a current health snapshot plus recommended next steps
+• Draft an exec-ready QBR or renewal brief tied to outcomes (availability, MTTR, DDoS readiness)
+
+Open to a quick 15-minute chat next week?
+
+Matt
+
+---
+
+**VP of Customer Success at Varonis**
+
+**Subject:** Varonis renewals: auto-brief on exposures reduced + response outcomes
+
+Hi Linor,
+
+Varonis is leaning hard into automated DSPM that goes beyond visibility to remediate risk, plus MDDR for 24/7 data-centric response. For CS, the challenge is packaging scattered signals (exposures reduced, policy enforcement, detections, adoption gaps) into a crisp renewal story before an account drifts.
+
+Inkeep builds bespoke CSM AI Agents tailored to your playbooks. They connect to your CRM, support, and Varonis telemetry to:
+• Identify accounts trending at risk and why
+• Snapshot health with recommended next steps
+• Draft an exec-ready QBR or renewal brief tied to risk reduction outcomes
+
+Open to a quick 15-minute chat next week?
+
+Matt
+
+---
+
+**Global Head of Customer Success at Monte Carlo**
+
+**Subject:** Renewal brief: data downtime avoided + ROI (auto-drafted)
+
+Hi Pamela,
+
+Monte Carlo is pushing end-to-end data + AI observability, including agents that speed up monitoring and troubleshooting. For CS, that usually means proving impact (less data downtime, faster root cause, broader coverage) before exec reviews and renewals.
+
+Inkeep builds bespoke CSM AI Agents tailored to your playbooks. They connect to your CRM, support, call notes, and Monte Carlo usage and alert signals to:
+• Flag renewals trending at risk and why (coverage gaps, alert fatigue, slow time-to-resolution, stakeholder churn)
+• Generate a current health snapshot plus recommended next steps
+• Draft an exec-ready QBR or renewal brief tied to reliability outcomes
+
+Open to a quick 15-minute chat next week?
+
+Matt
+
+---
+
 ## Follow-Up Email Progression
 
 When user requests follow-up emails, follow this arc:
