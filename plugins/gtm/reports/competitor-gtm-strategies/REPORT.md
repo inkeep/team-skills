@@ -12,6 +12,10 @@ This report analyzes the go-to-market motions, marketing strategies, sales tacti
 
 | Company | Primary GTM Motion | Key Growth Lever | Time to $10M ARR |
 |---------|-------------------|------------------|------------------|
+| **Sierra** | High-touch enterprise + founder credibility | Bret Taylor network + outcomes-based pricing | 7 quarters to $100M |
+| **Decagon** | Enterprise sales + technical depth | Bake-off wins + transparency/control focus | ~18 months to $35M |
+| **AptEdge** | Founder-market fit + enterprise partnerships | AppDynamics pedigree + technical support niche | Early stage |
+| **Gumloop** | PLG + extreme capital efficiency | No-code AI automation + YC network | Early stage ($M+ ARR) |
 | **Intercom** | Content marketing + founder-led sales | Blog-driven acquisition (93 posts by Des Traynor) | ~3 years |
 | **Ada** | Enterprise sales + product-led growth | Embedded research (worked as support agents) | ~4 years |
 | **Glean** | Enterprise sales + founder credibility | Google pedigree + AI timing | 3 years to $100M |
@@ -22,6 +26,476 @@ This report analyzes the go-to-market motions, marketing strategies, sales tacti
 | **LangChain** | Open source + developer ecosystem | First-mover in LLM tooling | <2 years |
 | **Zendesk** | Customer relationship + no sales team | Direct founder calls to every trial | 7 years (to IPO) |
 | **Rasa** | Open source + enterprise pivot | Developer adoption then enterprise upsell | ~5 years |
+
+---
+
+## Category 0: Founder-Credibility-Led Enterprise (Fastest Growth)
+
+### Sierra
+
+**Source**: [Sequoia Training Data](https://sequoiacap.com/podcast/training-data-bret-taylor/), [Acquired Podcast](https://www.acquired.fm/episodes/how-is-ai-different-than-other-technology-waves-with-bret-taylor-and-clay-bavor), [Lenny's Podcast](https://www.lennysnewsletter.com/p/he-saved-openai-bret-taylor), [Sierra Blog](https://sierra.ai/blog/100m-arr), [Sacra](https://sacra.com/c/sierra/), [Stratechery Interview](https://stratechery.com/2025/an-interview-with-sierra-founder-and-ceo-bret-taylor-about-ai-agents-and-tech-history-lessons/)
+
+**Founders**: Bret Taylor (ex-Salesforce Co-CEO, co-creator of Google Maps, OpenAI Chairman) + Clay Bavor (ex-Google VP, led Gmail, Drive, VR)
+
+**Stage**: $0 → $100M ARR (7 quarters — one of fastest enterprise software companies ever)
+
+| Milestone | Timeline | Key Metric |
+|-----------|----------|------------|
+| **Launch** | February 2024 | Stealth to public |
+| **$26M ARR** | End of 2024 | ~10 months |
+| **$100M ARR** | November 2025 | 7 quarters |
+| **$150M ARR** | January 2026 | First $50M quarter |
+| **Valuation** | $10B | $635M total funding |
+
+#### The Sierra GTM Playbook
+
+**1. Founder Credibility as Distribution**
+
+| Founder | Credibility Asset | GTM Impact |
+|---------|------------------|------------|
+| **Bret Taylor** | Co-CEO Salesforce, CTO Facebook, co-created Google Maps, OpenAI Chairman | Instant enterprise trust |
+| **Clay Bavor** | 20 years at Google, led Gmail/Drive/VR | Technical credibility |
+| **Network** | Many early customers had Bret's phone number | Direct founder-to-CXO sales |
+
+**Key Quote**: "I learned from Marc Benioff to make one successful customer into two, two into 10, and 10 into 100."
+
+---
+
+**2. Enterprise-First, High-Touch Model**
+
+| Tactic | Details | Evidence |
+|--------|---------|----------|
+| **Build FOR customers, not WITH** | Sierra builds custom AI agents for each enterprise | Opposite of self-serve |
+| **Strategic partner positioning** | "Partner, not vendor of plug-and-play solutions" | Multi-year agreements |
+| **C-suite relationships** | Direct founder access to early adopters | "Many customers have Bret's phone number" |
+| **Fast deployment** | One healthcare company went live in 7 weeks | High-touch = fast results |
+
+**Customer Profile**:
+- 50% of customers have revenue >$1B
+- 25% of customers have revenue >$10B
+- Fortune 500 and legacy enterprises, not startups
+
+---
+
+**3. Outcomes-Based Pricing (Revolutionary)**
+
+| Model | How It Works | Why It Matters |
+|-------|-------------|----------------|
+| **Pay per resolution** | Customer pays pre-negotiated rate when AI resolves issue | Aligns cost with value |
+| **Escalation is free** | If AI escalates to human, no charge | De-risks adoption |
+| **Hybrid approach** | Volume-based for routine, outcomes-based for complex | Flexibility for enterprise |
+
+**Key Quote**: "When the AI agent resolves the issue autonomously, there's a pre-negotiated rate. If they escalate to a person, it's free."
+
+**Competitive Advantage**: Legacy vendors (Zendesk, Salesforce, Intercom) retrofitting AI onto seat-based models. Sierra's outcomes-based approach creates alignment competitors can't match.
+
+---
+
+**4. Voice-First Strategy**
+
+| Channel | Status | Impact |
+|---------|--------|--------|
+| **Voice agents** | Surpassed text as primary channel by Sept 2025 | Addresses 80% of CX interactions |
+| **Hundreds of millions of calls** | Processed by Sept 2025 | Scale validation |
+| **Expansion driver** | Voice expansion drives customer growth | New revenue stream |
+
+---
+
+**5. Market Positioning: "Jobs to Be Done" vs "AI Tourism"**
+
+Sierra differentiates between:
+- **AI Tourism**: Technology-first experiments that don't drive business outcomes
+- **Jobs to Be Done**: Business-outcome focused deployments with measurable impact
+
+**Result**: Focus on complex use cases (mortgage origination, real estate search, subscription management) where AI agents deliver measurable ROI.
+
+---
+
+#### Key Customers
+
+| Category | Companies | Significance |
+|----------|-----------|--------------|
+| **Fintech** | SoFi, Ramp, Brex, Rocket Mortgage | 70% of fintech value chain |
+| **Retail** | Wayfair, Gap | 95% of Black Friday shoppers |
+| **Healthcare** | Cigna, Sutter Health | 50% of US families |
+| **Media** | SiriusXM, DIRECTV, Tubi | 90% of media ecosystem |
+| **Consumer** | ADT, Sonos, WeightWatchers, Rivian | Legacy + internet-era mix |
+
+---
+
+#### Funding & Valuation
+
+| Round | Amount | Valuation | Lead |
+|-------|--------|-----------|------|
+| Seed/A | $110M | $1B | Sequoia, Benchmark |
+| Series B | $175M | $4.5B | Greenoaks |
+| Series C | $350M | $10B | Greenoaks |
+| **Total** | **$635M** | **$10B** | — |
+
+---
+
+#### Key Insights for Inkeep
+
+1. **Founder credibility accelerates enterprise sales** — Bret's network and reputation enabled direct C-suite access from day one
+
+2. **High-touch beats self-serve for enterprise** — Building custom solutions for each customer created stickiness and higher ACVs
+
+3. **Outcomes-based pricing aligns incentives** — "Pay per resolution, escalation is free" de-risks enterprise adoption
+
+4. **Voice is the next frontier** — 80% of CX still happens via phone; voice agents are expansion opportunity
+
+5. **Target $1B+ revenue companies** — 50% of Sierra customers exceed $1B revenue; enterprise-first from start
+
+**Warning for Inkeep**: Sierra's model requires significant founder credibility and implementation resources. Not directly replicable without similar network/team.
+
+---
+
+### Decagon
+
+**Source**: [Sacra](https://sacra.com/c/decagon/), [Contrary Research](https://research.contrary.com/company/decagon), [VentureBeat](https://venturebeat.com/ai/decagon-emerges-from-stealth-to-provide-human-like-ai-agents-transforming-customer-support-for-enterprises/), [SF Examiner](https://www.sfexaminer.com/news/technology/decagon-ceo-jesse-zhang-bets-ai-replaces-customer-support/article_c8b46fec-eb3a-4f6c-b638-fa1044572a92.html)
+
+**Founders**: Jesse Zhang (ex-Lowkey, acquired by Niantic) + Ashwin Sreenivas (ex-Helia, acquired by Scale AI)
+
+**Stage**: $0 → $35M ARR (~18 months)
+
+| Milestone | Timeline | Key Metric |
+|-----------|----------|------------|
+| **Founded** | August 2023 | Met at a16z founder retreat |
+| **7-figure ARR** | June 2024 | With only 2 people |
+| **$10M ARR** | End of 2024 | ~16 months |
+| **$35M ARR** | October 2025 | 250% growth in 10 months |
+| **Valuation** | $4.5B | $350M+ total funding |
+
+#### The Decagon GTM Playbook
+
+**1. Problem Discovery Through Customer Research**
+
+| Phase | Tactic | Result |
+|-------|--------|--------|
+| **Pre-build** | Surveyed dozens of startups on pain points | Identified customer support as deep enterprise pain |
+| **Insight** | 75% of consumers said chatbots "can't handle complex questions" | Validated gap in market |
+| **Positioning** | "Tooling, visibility, explainability, and control" | Differentiated from black-box competitors |
+
+**Key Quote**: "Our whole product is built around giving people tooling, visibility, explainability, and control over the agents."
+
+---
+
+**2. Bake-Off Winning Strategy**
+
+| Tactic | Details | Evidence |
+|--------|---------|----------|
+| **Head-to-head trials** | Compete directly against incumbents | "During bake-offs, Decagon came out as winner each time" |
+| **Technical customization** | Aggressive engineering support for prospects | Close deals with custom integrations |
+| **Transparency** | Show exactly how agents make decisions | Enterprise trust vs black-box competitors |
+
+**Customer Wins via Bake-offs**:
+- Notion
+- Rippling
+- Duolingo
+- Eventbrite
+- Chime
+
+---
+
+**3. Enterprise-First Target Customer**
+
+| Customer Type | Examples | Results |
+|---------------|----------|---------|
+| **F100 enterprises** | Avis Budget Group, Deutsche Telekom, Mercado Libre | 100+ new customers in 2025 |
+| **High-growth tech** | Notion, Duolingo, Rippling, Affirm, Chime | 70-90% autonomous resolution |
+| **Vertical spread** | Airlines, banking, telecom, retail, fintech | Broad enterprise validation |
+
+**Customer Outcomes**:
+- Chime: 70% chat/voice resolution
+- Duolingo: 80% deflection rate
+- ClassPass: 95% cost reduction
+- Curology: 5% → 80% autonomous resolution (65% cost reduction)
+- Substack: 90%+ questions resolved without humans
+
+---
+
+**4. Lean Team, High Efficiency**
+
+| Stage | Team Size | ARR | Efficiency |
+|-------|-----------|-----|------------|
+| **June 2024** | 2 people | 7-figures | Extreme capital efficiency |
+| **October 2025** | 55 people | $35M | 13 in sales/GTM |
+| **Current** | Growing | $35M+ | 4x customer base in 1 year |
+
+**Key Insight**: Reached 7-figure ARR with just 2 people — founder-led sales at extreme efficiency.
+
+---
+
+**5. Pricing Model**
+
+| Model | How It Works | When Used |
+|-------|-------------|-----------|
+| **Per-conversation** | Fixed rate per inquiry, volume discounts | Most common (predictable scaling) |
+| **Per-resolution** | Higher rate, charged only on full resolution | Performance-aligned option |
+
+**Similar to Sierra** but Decagon emphasizes per-conversation for predictability vs Sierra's outcomes-focus.
+
+---
+
+**6. Product Differentiation**
+
+| Feature | Description | Enterprise Value |
+|---------|-------------|------------------|
+| **Agent Operating Procedures (AOPs)** | Natural language workflow definition | Non-technical staff can adjust agents |
+| **QA Interface** | Transparent decision-making visibility | Enterprise control requirements |
+| **Admin Dashboard** | Themed insights across interactions | Voice of customer analytics |
+| **Watchtower** | Continuous quality monitoring | Enterprise reliability |
+
+**vs Competitors**:
+- More transparent than Ada/Intercom
+- More enterprise-focused than Zendesk AI
+- More controllable than Sierra's high-touch model
+
+---
+
+#### Key Customers
+
+| Category | Companies | Significance |
+|----------|-----------|--------------|
+| **Fintech** | Chime, Affirm, Bilt | High-volume, high-stakes support |
+| **Consumer Tech** | Duolingo, Notion, Substack | Tech-forward early adopters |
+| **Enterprise** | Avis Budget, Deutsche Telekom, Mercado Libre | F100 validation |
+| **HR/Operations** | Rippling | Complex multi-product support |
+
+---
+
+#### Funding & Valuation
+
+| Round | Date | Amount | Valuation | Lead |
+|-------|------|--------|-----------|------|
+| Seed | 2023 | $5M | — | a16z |
+| Series A | July 2024 | $30M | — | Accel |
+| Series B | Oct 2024 | $65M | $650M | Bain Capital Ventures |
+| Series C | June 2025 | $131M | $1.5B | Accel, a16z Growth |
+| Series D | Jan 2026 | $250M | $4.5B | Coatue, Index Ventures |
+| **Total** | — | **$350M+** | **$4.5B** | — |
+
+---
+
+#### Competitive Positioning vs Sierra
+
+| Dimension | Decagon | Sierra |
+|-----------|---------|--------|
+| **Target** | Tech-forward enterprises | Legacy + enterprise ($1B+ revenue) |
+| **Approach** | Self-serve platform + customization | Full high-touch build-for-you |
+| **Pricing** | Per-conversation (predictable) | Per-resolution (outcomes) |
+| **Voice** | Launched Feb 2025 (ElevenLabs) | Primary channel by Sept 2025 |
+| **Team** | 55 people, lean | Larger implementation org |
+| **GTM** | Bake-off wins, technical depth | Founder network, C-suite access |
+
+---
+
+#### Key Insights for Inkeep
+
+1. **Bake-off strategy wins deals** — Decagon explicitly competes head-to-head and wins through technical superiority
+
+2. **Transparency = enterprise trust** — "Tooling, visibility, explainability, control" differentiates from black-box AI
+
+3. **Lean team efficiency** — 7-figure ARR with 2 people proves founder-led sales scales
+
+4. **Per-conversation pricing** — More predictable than outcomes-based, easier enterprise adoption
+
+5. **Technical customization closes deals** — Engineering support for prospects converts to customers
+
+6. **Voice is emerging battleground** — Both Decagon and Sierra investing heavily in voice agents
+
+**Relevance for Inkeep**: Decagon's transparency and control positioning aligns well with technical B2B buyers. Their bake-off strategy is replicable — prove technical superiority through direct comparison.
+
+---
+
+### AptEdge
+
+**Source**: [Stage 2 Capital](https://www.stage2.capital/blog/why-we-led-aptedges-11m-seed-round), [BusinessWire](https://www.businesswire.com/news/home/20230614401861/en/AptEdge-Closes-Seed-Round-of-$11M-led-by-Stage-2-Capital-Unusual-Ventures-and-National-Grid-Partners-to-Transform-Customer-Support-Help-Challenges), [Tracxn](https://tracxn.com/d/companies/aptedge/__y9BmPC69SS8ZrrXabhipbr8ybw23zsSqC4ZEvTZbyF0)
+
+**Founders**: Aakrit Prasad (CEO, ex-AppDynamics) + Anthony Kilman (CTO, ex-AppDynamics)
+
+**Stage**: Early stage — $12.9M total funding
+
+| Milestone | Timeline | Key Metric |
+|-----------|----------|------------|
+| **Founded** | 2020 | Post-AppDynamics ($4B exit to Cisco) |
+| **Seed Round** | June 2023 | $11M (Stage 2 Capital, Unusual Ventures) |
+| **Total Funding** | Current | $12.9M |
+
+#### The AptEdge GTM Playbook
+
+**1. Founder-Market Fit from Enterprise Experience**
+
+| Asset | Description | GTM Impact |
+|-------|-------------|------------|
+| **AppDynamics pedigree** | Built and sold to Cisco for $4B | Instant enterprise credibility |
+| **Walked in customers' shoes** | Founders experienced support pain firsthand | Deep problem understanding |
+| **Technical support focus** | Narrow niche: B2B software technical support | Differentiated positioning |
+
+**Key Insight**: Unlike consumer-focused AI support tools, AptEdge specifically targets the technical customer service desk — complex, engineering-intensive support scenarios.
+
+---
+
+**2. Answer Engine Positioning**
+
+| Feature | Description | Enterprise Value |
+|---------|-------------|------------------|
+| **AnswerGPT** | First Answer Engine for technical support | Not chatbot — knowledge synthesis |
+| **75% time reduction** | Reduces time-to-answer for agents | Direct productivity metric |
+| **40% resolution improvement** | Faster ticket resolution | CSAT and retention impact |
+| **Knowledge graph** | Connects siloed enterprise knowledge | Works across systems |
+
+**Differentiation**: Positions as "Answer Engine" not chatbot — focuses on augmenting agents rather than replacing them.
+
+---
+
+**3. Enterprise Partnership Strategy**
+
+| Partner | Type | Significance |
+|---------|------|--------------|
+| **Cisco** | Customer + acquirer network | AppDynamics relationship |
+| **National Grid Partners** | Strategic investor | Enterprise energy vertical |
+| **Stage 2 Capital** | Lead investor | GTM-focused fund |
+
+**GTM Motion**: Leverage AppDynamics enterprise relationships to land initial customers. Cisco as lighthouse customer validates technical support use case.
+
+---
+
+**4. Technical Support Niche Focus**
+
+| Segment | Why It Matters | Competition |
+|---------|---------------|-------------|
+| **B2B software support** | High complexity, technical queries | Underserved by generic AI |
+| **Tier 2/3 support** | Where agents need deep knowledge | Not simple FAQ deflection |
+| **Engineering-adjacent** | Requires technical understanding | Beyond consumer chatbots |
+
+---
+
+#### Key Insights for Inkeep
+
+1. **Niche focus wins** — AptEdge targets technical support specifically, not all customer service
+
+2. **Founder credibility from exits** — $4B AppDynamics exit creates instant enterprise trust
+
+3. **Agent augmentation vs replacement** — "Answer Engine" positioning avoids threatening support teams
+
+4. **Enterprise partnerships early** — Strategic investors (National Grid Partners) bring customers
+
+5. **Technical depth matters** — B2B software support requires different capabilities than consumer AI
+
+**Relevance for Inkeep**: AptEdge validates the technical support niche. Their focus on agent augmentation (not replacement) and B2B software specificity creates a positioning template for technical-first AI tools.
+
+---
+
+### Gumloop
+
+**Source**: [TechCrunch](https://techcrunch.com/2025/01/10/gumloop-founded-in-a-bedroom-in-vancouver-lets-users-automate-tasks-with-drag-and-drop-modules/), [PitchBook](https://pitchbook.com/news/articles/gumloop-1b-startup-ai-10-employees), [Y Combinator](https://www.ycombinator.com/companies/gumloop), [Tracxn](https://tracxn.com/d/companies/gumloop/__W_Rm13RIiWZmGWc9RlDuZvnjwkOXHj37wKA4HLWV4oY)
+
+**Founders**: Max Brodeur-Urbas + Rahul Behal (met at McGill, YC W24)
+
+**Stage**: Early stage — $24.5M total funding, "several million" ARR
+
+| Milestone | Timeline | Key Metric |
+|-----------|----------|------------|
+| **Founded** | April 2023 | Bedroom in Vancouver (originally "AgentHub") |
+| **YC W24** | 2024 | Y Combinator batch |
+| **Series A** | January 2025 | $17M (Nexus Venture Partners, First Round) |
+| **Total Funding** | Current | $24.5M |
+| **Team Size** | Current | 9 employees |
+
+#### The Gumloop GTM Playbook
+
+**1. Extreme Capital Efficiency**
+
+| Metric | Value | Significance |
+|--------|-------|--------------|
+| **Team size** | 9 people | One of smallest teams at this funding |
+| **Revenue** | "Several million/year" | High revenue per employee |
+| **Goal** | $1B company with 10 people | Explicit efficiency target |
+| **Burn** | Seed + Series A "untouched" | Money still in bank |
+
+**Key Quote**: "Our plan is to be a 10-person, billion-dollar company."
+
+---
+
+**2. PLG + No-Code Positioning**
+
+| Feature | Description | GTM Impact |
+|---------|-------------|------------|
+| **Drag-and-drop modules** | Visual workflow builder | Non-technical adoption |
+| **130+ integrations** | Connects to existing tools | Reduces friction |
+| **AI-native workflows** | Built for LLM-powered automation | Modern positioning |
+| **Self-serve onboarding** | No sales touch required | PLG motion |
+
+**Origin Story**: Started solving a simple problem for non-technical people in a Discord server — validated demand before building.
+
+---
+
+**3. Enterprise Customer Adoption**
+
+| Customer | Use Case | Significance |
+|----------|----------|--------------|
+| **Instacart** | Operations automation | Tech unicorn validation |
+| **Rippling** | HR/operations workflows | Enterprise HR tech |
+| **Webflow** | Marketing automation | Design/marketing tool |
+| **Samsara** | IoT operations | Industrial tech |
+| **Shopify** | E-commerce automation | SMB + enterprise |
+| **Databricks** | Data workflows | Enterprise data |
+
+**Pattern**: Tech-forward companies using Gumloop for internal operations — not customer-facing support.
+
+---
+
+**4. YC Network Leverage**
+
+| Asset | Details | GTM Impact |
+|-------|---------|------------|
+| **YC W24 batch** | Access to YC network | Early customer pipeline |
+| **YC as investor** | Participated in Series A | Ongoing support |
+| **Angel investors** | Instacart co-founder, Databricks co-founder | Customer introductions |
+
+**Key Insight**: Angel investors from Instacart and Databricks directly led to those companies becoming customers.
+
+---
+
+**5. Product-Led Viral Growth**
+
+| Tactic | Description | Evidence |
+|--------|-------------|----------|
+| **Free tier** | Self-serve exploration | Thousands of users |
+| **Template library** | Pre-built workflows | Reduces time to value |
+| **Community sharing** | Users share automations | Organic discovery |
+| **SOC 2 + GDPR** | Enterprise compliance | Removes adoption blockers |
+
+---
+
+#### Funding & Investors
+
+| Round | Date | Amount | Lead |
+|-------|------|--------|------|
+| Seed | 2024 | $7.5M | Y Combinator |
+| Series A | Jan 2025 | $17M | Nexus Venture Partners |
+| **Total** | — | **$24.5M** | — |
+
+**Notable Angels**: Max Mullen (Instacart co-founder), Reynold Xin (Databricks co-founder)
+
+---
+
+#### Key Insights for Inkeep
+
+1. **Extreme efficiency as positioning** — "10-person, billion-dollar company" creates narrative
+
+2. **Solve simple problems first** — Started with Discord community, not enterprise
+
+3. **Angel investors = customers** — Strategic angels directly became enterprise customers
+
+4. **PLG for operations tools** — Self-serve works for internal automation use cases
+
+5. **YC network as distribution** — YC batch + YC investors accelerate early customer acquisition
+
+6. **Compliance as unlock** — SOC 2 + GDPR removes enterprise adoption friction
+
+**Relevance for Inkeep**: Gumloop's extreme efficiency narrative and angel-to-customer strategy offers a replicable playbook. Their no-code approach targets different users (operations teams vs developers) but their GTM efficiency is instructive.
 
 ---
 

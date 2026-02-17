@@ -2,6 +2,103 @@
 
 ## Primary Source Quotes
 
+### Sierra - Bret Taylor & Clay Bavor
+
+**Source**: [Sequoia Training Data](https://sequoiacap.com/podcast/training-data-bret-taylor/), [Acquired Podcast](https://www.acquired.fm/episodes/how-is-ai-different-than-other-technology-waves-with-bret-taylor-and-clay-bavor), [Lenny's Podcast](https://www.lennysnewsletter.com/p/he-saved-openai-bret-taylor)
+
+> "I learned from Marc Benioff to make one successful customer into two, two into 10, and 10 into 100." - Bret Taylor
+
+> "When the AI agent resolves the issue autonomously, there's a pre-negotiated rate. If they escalate to a person, it's free." - Bret Taylor on outcomes-based pricing
+
+> "The closer you get to solving a problem for a company, the more successful your business will be." - Bret Taylor
+
+> "Many of Sierra's early adopters have Bret's phone number." - On founder-led enterprise sales
+
+**Source**: [Sierra Blog - $100M ARR](https://sierra.ai/blog/100m-arr), [Sacra](https://sacra.com/c/sierra/)
+
+> "One of the fastest-growing enterprise software companies in history." - On $100M ARR in 7 quarters
+
+> "50% of customers have revenue exceeding $1 billion. 25% exceed $10 billion."
+
+> "More than 95% of U.S. Black Friday shoppers use customer services on Sierra."
+
+**Metrics**:
+- $150M ARR (January 2026)
+- $100M ARR in 7 quarters (fastest enterprise ever)
+- $10B valuation, $635M raised
+- Voice surpassed text as primary channel by Sept 2025
+- Customers: SoFi, Ramp, Brex, ADT, Cigna, SiriusXM, Rivian
+
+---
+
+### Decagon - Jesse Zhang & Ashwin Sreenivas
+
+**Source**: [Contrary Research](https://research.contrary.com/company/decagon), [Sacra](https://sacra.com/c/decagon/), [VentureBeat](https://venturebeat.com/ai/decagon-emerges-from-stealth-to-provide-human-like-ai-agents-transforming-customer-support-for-enterprises/)
+
+> "Our whole product is built around giving people tooling, visibility, explainability, and control over the agents." - Jesse Zhang
+
+> "During bake-offs against competitors, Decagon's AI-powered chatbot came out as a winner each time." - Jesse Zhang
+
+> "Enterprise customers felt deep pain with their customer support. Incumbent chatbots resolved only simple queries, with nearly 75% of consumers reporting they 'aren't able to handle complex questions.'" - On problem discovery
+
+> "Reached 7-figure ARR with just 2 people." - On founder-led sales efficiency
+
+**Source**: [SF Examiner](https://www.sfexaminer.com/news/technology/decagon-ceo-jesse-zhang-bets-ai-replaces-customer-support/)
+
+> "Before co-founding Decagon, CEO Zhang sold his first venture, Lowkey... The six years he spent struggling to build that consumer business taught Zhang the importance of improving user experience by paying attention to user input."
+
+**Metrics**:
+- $35M ARR (October 2025), up from $10M (end 2024)
+- 250% growth in 10 months
+- $4.5B valuation, $350M+ raised
+- 55 employees (13 in sales/GTM)
+- Customers: Notion, Duolingo, Rippling, Chime, Affirm, Eventbrite
+- Results: Chime 70% resolution, Duolingo 80% deflection, ClassPass 95% cost reduction
+
+---
+
+### AptEdge - Aakrit Prasad & Anthony Kilman
+
+**Source**: [Stage 2 Capital](https://www.stage2.capital/blog/why-we-led-aptedges-11m-seed-round), [BusinessWire](https://www.businesswire.com/news/home/20230614401861/en/AptEdge-Closes-Seed-Round-of-$11M-led-by-Stage-2-Capital-Unusual-Ventures-and-National-Grid-Partners-to-Transform-Customer-Support-Help-Challenges)
+
+> "AptEdge has built the first Answer Engine for the technical customer service desk, reducing the time to answer for customer service agents by 75%."
+
+> "Prasad (CEO) and Kilman (CTO) founded AptEdge in 2020 after a successful exit of AppDynamics to Cisco for $4B." - On founder-market fit
+
+> "AptEdge is helping businesses worldwide improve their customer service operations by leveraging the power of Generative AI."
+
+**Metrics**:
+- $12.9M total funding
+- $11M seed round (Stage 2 Capital, Unusual Ventures, National Grid Partners)
+- 75% reduction in time-to-answer
+- 40% improvement in resolution time
+- Focus: B2B software technical support
+
+---
+
+### Gumloop - Max Brodeur-Urbas & Rahul Behal
+
+**Source**: [TechCrunch](https://techcrunch.com/2025/01/10/gumloop-founded-in-a-bedroom-in-vancouver-lets-users-automate-tasks-with-drag-and-drop-modules/), [PitchBook](https://pitchbook.com/news/articles/gumloop-1b-startup-ai-10-employees)
+
+> "Our plan is to be a 10-person, billion-dollar company." - Max Brodeur-Urbas
+
+> "Gumloop's revenue is up to 'several million a year,' and Brodeur-Urbas said the startup has received inbound offers from VCs for Series B capital while its seed and Series A money is all still in the bank, untouched."
+
+> "Teams at Instacart and Rippling are using Gumloop for various use cases. Today, thousands of users rely on Gumloop as a core tool for their business." - Max Brodeur-Urbas
+
+> "Started in a bedroom in Vancouver, initially trying to solve a simple problem for a group of nontechnical people in a Discord server."
+
+**Metrics**:
+- $24.5M total funding ($17M Series A led by Nexus Venture Partners)
+- 9 employees
+- "Several million" ARR
+- 130+ integrations
+- Customers: Instacart, Rippling, Webflow, Samsara, Shopify, Databricks
+- SOC 2 and GDPR compliant
+- Angels: Max Mullen (Instacart co-founder), Reynold Xin (Databricks co-founder)
+
+---
+
 ### Intercom - Des Traynor & Eoghan McCabe
 
 **Source**: [Lenny's Podcast](https://www.lennysnewsletter.com/p/how-intercom-rose-from-the-ashes-eoghan-mccabe)
