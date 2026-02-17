@@ -174,6 +174,227 @@ Customize the three bullets based on company research:
 
 ---
 
+## Senior Support Leader Email Structure (VP/SVP/EVP)
+
+For senior support leaders at large technical B2B companies, use this executive micro email format (~80 words, peer-to-peer tone).
+
+### Key Principles
+
+- **Under ~80 words** (executive micro emails)
+- **Peer-to-peer tone**, not salesy or marketing copy
+- **Plain, credible language**, avoid buzzwords
+- **Focus on leverage, capacity, and knowledge reuse**, not features
+- **Assume they already have good tooling** and possibly an AI assistant
+- **Personalize based on real company context**
+
+### The Three Inkeep Surfaces (Must Connect All Three)
+
+Always connect all three surfaces to the problem in one sentence:
+
+1. **Customer-facing AI assistant** with source-cited answers
+2. **Agent Copilot** that analyzes requests and drafts replies with linked sources
+3. **Content writer** that turns resolved tickets into KB/docs updates
+
+Example one-liner:
+> "Inkeep gives you one shared knowledge layer that powers a cited customer AI assistant, an agent Copilot inside case workflows, and automatic capture of resolved cases into docs."
+
+### Two Problem Framing Angles
+
+**Angle A: "Answers exist but aren't surfaced"**
+Use when the company has strong docs/KB/community but cases still open:
+> "A lot of support questions are already documented, but the right answer isn't surfaced in the moment, so cases still open and agents re-search."
+
+**Angle B: "Resolution stays in the case"**
+Use when the issue is knowledge not propagating after resolution:
+> "When a complex case closes, the resolution often stays in the case thread, while agents, customers, and AI tools keep using older guidance."
+
+Choose based on company context. Angle A works better for companies with mature self-serve (KB, community, docs). Angle B works better for companies where escalations are the bottleneck.
+
+### Email Structure for Senior Support Leaders
+
+```
+Hi [First Name],
+
+[1-2 sentences: Company-specific hook with real data (integrations count, endpoints, products). State the Support problem concretely.]
+
+[1 sentence: The Inkeep solution connecting all three surfaces to the problem.]
+
+Open to a [10-15] min compare?
+
+Best,
+[Your Name]
+[Company]
+```
+
+### Subject Line Patterns (Company-Specific Required)
+
+**Good (tailored to company):**
+- `Snowflake Copilot: keeping answers current`
+- `Support leverage across 650+ integrations` (New Relic)
+- `Clean Room setup: Snowflake + BigQuery` (LiveRamp)
+- `SKAN + OneLink edge cases` (AppsFlyer)
+- `When Qlik + Talend case learnings don't travel`
+
+**Bad (generic, applies to any company):**
+- `Docs exist. Finding them is the work`
+- `When edge-case answers don't stick`
+- `faster QBR prep`
+
+### Company Research Hooks
+
+Find 2-4 specific hooks from public sources:
+
+| Hook Type | Examples |
+|-----------|----------|
+| **Ecosystem scale** | "650+ integrations", "10,000+ partners", "270k news sources" |
+| **Deployment models** | "AWS, Azure, and GCP", "cloud + on-prem", "hybrid data estates" |
+| **Key workflows** | "SKAN + OneLink setup", "Clean Room connections", "RampID identity resolution" |
+| **Their AI assistant** | "Snowflake Copilot", "Alteryx Copilot", "Qlik Answers", "Breeze" |
+| **KB/community presence** | "MyAlteryx portal", "Knowledge Center", "large Community" |
+| **Compliance/security** | "SOC 2 Type II", "HIPAA-ready", "ransomware resilience" |
+| **Global footprint** | "140+ countries", "50,000+ endpoints", "follow-the-sun" |
+
+### Examples (Senior Support Leaders)
+
+**VP, Customer Support & CX Operations at Alteryx**
+
+**Subject:** Keeping Copilot answers current
+
+Hi [First Name],
+
+You already run MyAlteryx for cases, the Knowledge Center, and a large Community. When a hard issue is solved, the final resolution can stay in the case thread, while agents, customers, and Alteryx Copilot keep pulling older guidance.
+
+Inkeep closes that gap by syncing resolved cases into an always-current knowledge layer that powers cited customer answers and an agent Copilot inside your tools.
+
+Open to a 12-min compare?
+
+Best,
+Matthew
+
+---
+
+**GVP, Global Technical Support at New Relic**
+
+**Subject:** Support leverage across 650+ integrations
+
+Hi [First Name],
+
+With 650+ integrations and first-class OpenTelemetry, Global Tech Support ends up debugging ingest, attribute mapping, and NRQL edge cases daily. When a tricky case is resolved, the steps often stay in the ticket, while customers and New Relic AI keep pulling older docs.
+
+Inkeep gives you one shared knowledge layer: a cited customer AI assistant, an in-workflow Copilot for agents, and automatic capture of resolved cases into the KB.
+
+Open to 12 min?
+
+Best,
+Matthew
+
+---
+
+**Head of Technical Support, NA & Latam at AppsFlyer**
+
+**Subject:** Support across 10,000+ partners
+
+Hi [First Name],
+
+AppsFlyer supports 10,000+ integrated partners plus SKAN and OneLink setup, so NA and Latam teams field a lot of "we followed the doc, still stuck" questions.
+
+Often the answer already exists across docs and past cases, but it is not surfaced fast enough, and real gaps take time to close.
+
+Inkeep surfaces source-cited answers in customer chat and an in-workflow agent Copilot, then drafts KB updates when something is truly new.
+
+Open to a quick compare?
+
+Best,
+Matthew
+
+---
+
+## T2/T3 Technical Support Emails
+
+For technical support leaders dealing with escalations, use the "context hunt" angle.
+
+### The T2/T3 Problem
+
+The slow part of T2/T3 is NOT debugging. It's gathering context BEFORE debugging starts:
+- Environment/version
+- Configs
+- Logs and traces
+- Similar past cases
+- Customer account state
+
+This is the "6-system scavenger hunt" across: Datadog/Splunk, Jira, Slack, Confluence, CRM, product admin tools.
+
+### T2/T3 Email Structure
+
+```
+Hi [First Name],
+
+[1 sentence: Company-specific T2/T3 challenge with concrete systems/workflows.]
+
+[1 sentence: The context gathering problem, stated plainly.]
+
+Inkeep gathers that context, suggests the reply with linked sources, and turns new learnings into updated docs, so the next engineer or customer does not have to re-collect it.
+
+Open to a [10-12] min compare?
+
+Best,
+[Your Name]
+```
+
+### T2/T3 Follow-Up Sequence
+
+**Email 2 (bump):**
+```
+Hi [First Name],
+
+Quick bump.
+
+On T2/T3, the slow part is often gathering context before debugging even starts: env/version, configs, logs, traces, and similar past cases.
+
+Inkeep gathers that context, suggests the reply with linked sources, and turns new learnings into updated docs, so the next engineer or customer does not have to re-collect it.
+
+Open to a quick 10-12 min compare?
+
+Best,
+[Your Name]
+```
+
+**Email 3 (measurement angle):**
+```
+Hi [First Name],
+
+How do you measure the "context gathering" step today?
+
+One simple metric is time from ticket opened to the first helpful reply that includes the key facts and next steps, not just "we're looking."
+
+Inkeep reduces that time by pulling the facts from your systems and drafting the response with sources.
+
+Worth a short chat?
+
+Best,
+[Your Name]
+```
+
+**Email 4 (breakup):**
+```
+Hi [First Name],
+
+Last note from me.
+
+If your engineers already get env details, logs, and past-case matches pulled into every escalation automatically, I'll bow out.
+
+If not, that context work repeats on every T2/T3 ticket.
+
+Inkeep gathers the context, suggests the reply with linked sources, and turns new learnings into updated docs, so the same question is easier next time.
+
+Who owns this workflow?
+
+Best,
+[Your Name]
+```
+
+---
+
 ## Follow-Up Email Progression
 
 When user requests follow-up emails, follow this arc:
@@ -248,6 +469,21 @@ When user requests follow-up emails, follow this arc:
 - Uses dashes or em dashes to connect thoughts instead of commas or periods
 - Subject line could apply to any company (not product-specific)
 - Opens with recipient's job title
+
+**Clarity anti-patterns (vague phrases to avoid):**
+
+| Vague Phrase | Problem | Clearer Version |
+|--------------|---------|-----------------|
+| "reusable guidance" | Guidance for who? What type? | "answers that agents, customers, and AI all pull from" |
+| "the fix lives in the ticket" | Abstract, forces reader to translate | "the resolution stays in the case thread" or "the steps stay in ticket notes" |
+| "decision path" | Jargon | "troubleshooting steps" or "resolution logic" |
+| "cost-to-serve repeats" | Abstract business-speak | "the same senior triage repeats across regions" |
+| "so it sticks" | Unclear what "it" is | "so the same question is easier next time" |
+| "that" without clear referent | Forces reader to guess | Name the thing explicitly |
+| "so your team starts on the real problem" | What is the real problem? | "so your team can start debugging instead of hunting for context" |
+| "the thinking work" | Too abstract | "the same investigation" or "the same troubleshooting" |
+
+**Self-check:** If a sentence uses "that", "it", or "this" without a clear referent in the same sentence, rewrite it.
 
 ---
 
