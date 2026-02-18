@@ -27,6 +27,31 @@ function hasFlag(name: string): boolean {
   return process.argv.includes(`--${name}`);
 }
 
+/**
+ * Load and execute a pre-script before masking/screenshot.
+ * The pre-script is a JS module that exports an async function receiving { page, url, route }.
+ * Use for interaction that must happen before capture: dismiss popups, click tabs, scroll, fill forms, etc.
+ */
+async function runPreScript(
+  scriptPath: string,
+  page: import('playwright').Page,
+  url: string,
+  route: string
+): Promise<void> {
+  const resolvedPath = path.resolve(scriptPath);
+  if (!fs.existsSync(resolvedPath)) {
+    throw new Error(`Pre-script not found: ${resolvedPath}`);
+  }
+  console.log(`  Running pre-script: ${resolvedPath}`);
+  // Use dynamic import (works with both CJS module.exports and ESM export default)
+  const preScript = await import(resolvedPath);
+  const fn = typeof preScript.default === 'function' ? preScript.default : preScript;
+  if (typeof fn !== 'function') {
+    throw new Error(`Pre-script must export a default function (got ${typeof fn}): ${resolvedPath}`);
+  }
+  await fn({ page, url, route });
+}
+
 const MASKING_CSS = `
   input[type="password"] {
     -webkit-text-security: disc !important;
@@ -96,6 +121,7 @@ async function capture() {
   const waitMs = Number.parseInt(getArg('wait') || '2000', 10);
   const fullPage = hasFlag('full-page');
   const authCookie = getArg('auth-cookie');
+  const preScriptPath = getArg('pre-script');
 
   if (!baseUrl || !routesStr) {
     console.error(
@@ -109,6 +135,7 @@ async function capture() {
     console.error('  --wait <ms>              Wait after page load (default: 2000)');
     console.error('  --full-page              Capture full page screenshot');
     console.error('  --auth-cookie <value>    Set session cookie for auth');
+    console.error('  --pre-script <path>      JS/TS file to run on page before capture (for interaction)');
     console.error('\nServer mode:');
     console.error('  --serve                  Start a reusable Playwright server');
     console.error('  --port <number>          Server port (default: 3001)');
@@ -171,6 +198,12 @@ async function capture() {
       }
 
       await page.waitForTimeout(waitMs);
+
+      // Run pre-script for interaction (dismiss popups, click tabs, scroll, etc.)
+      if (preScriptPath) {
+        await runPreScript(preScriptPath, page, url, route);
+        await page.waitForTimeout(500);
+      }
 
       await page.addStyleTag({ content: fullMaskingCss });
       await page.evaluate(MASKING_JS);

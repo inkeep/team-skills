@@ -33,6 +33,8 @@ Record what's available. If browser or desktop tools are missing, say so upfront
 
 **Probe aggressively.** Don't stop at "browser automation is available." Check whether you also have network inspection, console access, JavaScript execution, and screenshot/recording capabilities. Each expands your testing surface area. The more tools you have, the more you should use.
 
+**Cross-skill integration:** When browser automation is available, `Load /playwright skill` for structured testing primitives. The playwright skill provides helpers for console monitoring, network capture, accessibility audits, video recording, performance metrics, browser state inspection, and network simulation — all designed for use during QA flows. These helpers turn "check the console for errors" into reliable, automatable verification with structured output. Reference `/playwright` SKILL.md for the full helper table and usage patterns.
+
 **Get the system running.** Check `AGENTS.md`, `CLAUDE.md`, or similar repo configuration files for build, run, and setup instructions. If the software can be started locally, start it — you cannot test user-facing behavior against a system that isn't running. If the system depends on external services, databases, or environment variables, check what's available and what you can reach. Document anything you cannot start.
 
 ### Step 2: Gather context — what are you testing?
@@ -121,10 +123,18 @@ Work through each scenario. Use the strongest tool available for each.
 - Record a GIF of multi-step flows when it helps demonstrate the result.
 
 **With browser inspection (use alongside browser automation — not instead of):**
-- **Console monitoring:** Check the browser console for errors and warnings during every UI interaction. A page that looks correct but throws JS errors is not correct. Filter for errors/exceptions after each major action.
-- **Network request verification:** Monitor network requests during UI flows. Verify: correct endpoints are called, response status codes are expected (no silent 4xx/5xx), request/response payloads match what the feature requires. Flag unexpected requests or missing requests.
-- **In-page assertions:** Execute JavaScript in the page to verify DOM state, computed styles, data attributes, or application state that isn't visible on screen. Use this when visual inspection alone can't confirm correctness (e.g., "is this element actually hidden via CSS, or just scrolled off-screen?").
+- **Console monitoring (non-negotiable — do this on every flow):** Start capture BEFORE navigating (`startConsoleCapture`), then check for errors after each major action (`getConsoleErrors`). A page that looks correct but throws JS errors is not correct. Filter logs for specific patterns (`getConsoleLogs` with string/RegExp/function filter) when diagnosing issues.
+- **Network request verification:** Start capture BEFORE navigating (`startNetworkCapture` with URL filter like `'/api/'`). After the flow, check for failed requests (`getFailedRequests` — catches 4xx, 5xx, and connection failures). Verify: correct endpoints called, status codes expected, no silent failures. For specific API calls, use `waitForApiResponse` to assert status and inspect response body/JSON.
+- **Browser state verification:** After mutations, verify state was persisted correctly. Check `getLocalStorage`, `getSessionStorage`, `getCookies` to confirm the UI action actually wrote expected data. Use `clearAllStorage` between test scenarios for clean-state testing.
+- **In-page assertions:** Execute JavaScript in the page to verify DOM state, computed styles, data attributes, or application state that isn't visible on screen. Use `getElementBounds` for layout verification (visibility, viewport presence, computed styles). Use this when visual inspection alone can't confirm correctness (e.g., "is this element actually hidden via CSS, or just scrolled off-screen?").
 - **Rendered text verification:** Extract page text to verify content rendering — especially dynamic content, interpolated values, and conditional text.
+
+**With browser-based quality signals (when /playwright primitives are available):**
+- **Accessibility audit:** Run `runAccessibilityAudit` on each major page/view. Report WCAG violations by impact level (critical > serious > moderate). Test keyboard focus order with `checkFocusOrder` — verify tab navigation follows logical reading order, especially on new or changed UI.
+- **Performance baseline:** After page load, capture `capturePerformanceMetrics` to check for obvious regressions — TTFB, FCP, LCP, CLS. You're not doing formal perf testing; you're catching "this page takes 8 seconds to load" or "layout shifts when the hero image loads."
+- **Video recording:** For complex multi-step flows, record with `createVideoContext`. Attach recordings to QA results as evidence. Especially useful for flows that involve timing, animations, or state transitions that are hard to capture in a screenshot.
+- **Responsive verification:** Run `captureResponsiveScreenshots` to sweep standard breakpoints (mobile/tablet/desktop/wide). Compare screenshots for layout breakage, clipping, or missing elements across viewports.
+- **Degraded conditions:** Test with `simulateSlowNetwork` (e.g., 500ms latency) and `blockResources` (block images/fonts) to verify graceful degradation. Test `simulateOffline` if the feature has offline handling. This catches "works on fast connections, breaks on slow ones."
 
 **With macOS desktop automation:**
 - Test OS-level interactions when relevant — file dialogs, clipboard, multi-app workflows.

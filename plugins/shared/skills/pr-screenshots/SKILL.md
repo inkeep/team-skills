@@ -4,7 +4,7 @@ description: "Capture, annotate, and include screenshots in pull requests for UI
 license: MIT
 metadata:
   author: "inkeep"
-  version: "1.0"
+  version: "1.1"
 ---
 
 # PR Screenshots
@@ -31,11 +31,16 @@ After installing Playwright, download browser binaries: `npx playwright install 
 
 ## Workflow
 
+Most screenshots require browser interaction before capture — dismissing popups, logging in, clicking tabs, scrolling to a section, or navigating through a flow. The default workflow accounts for this.
+
 1. **Identify affected pages** from the PR diff
-2. **Capture screenshots** — run `scripts/capture.ts`
-3. **Validate no sensitive data** — run `scripts/validate-sensitive.ts`
-4. **Annotate** — run `scripts/annotate.ts` (labels, borders, side-by-side)
-5. **Upload & embed** — update PR body with images
+2. **Plan interaction** — Load `/playwright` skill. For each route, determine what interaction is needed before the screenshot (dismiss cookie banners, click tabs, scroll, login, etc.). Write a pre-script to `/tmp/pw-pre-<name>.js`
+3. **Capture screenshots** — run `scripts/capture.ts` with `--pre-script`
+4. **Validate no sensitive data** — run `scripts/validate-sensitive.ts`
+5. **Annotate** — run `scripts/annotate.ts` (labels, borders, side-by-side)
+6. **Upload & embed** — update PR body with images
+
+**Simple captures (no interaction needed):** For static pages where goto + wait is sufficient, skip step 2 and omit `--pre-script`. Everything else stays the same.
 
 ---
 
@@ -45,7 +50,69 @@ Analyze the PR diff to determine which UI routes are impacted. Map changed compo
 
 ---
 
-## Step 2: Capture Screenshots
+## Step 2: Plan Interaction (Pre-Scripts)
+
+Load `/playwright` skill for writing pre-scripts. A pre-script is a JS file that receives the Playwright `page` object and runs interaction before masking + screenshot.
+
+### Pre-script contract
+
+The file must export an async function that receives `{ page, url, route }`:
+
+```javascript
+// /tmp/pw-pre-dashboard.js
+module.exports = async function({ page, url, route }) {
+  // Dismiss cookie banner
+  await page.click('button:has-text("Accept")').catch(() => {});
+
+  // Click the "Analytics" tab
+  await page.click('[data-tab="analytics"]');
+  await page.waitForTimeout(500);
+};
+```
+
+### Common pre-script patterns
+
+**Dismiss popups / modals:**
+```javascript
+module.exports = async function({ page }) {
+  // Cookie banner
+  await page.click('button:has-text("Accept all")').catch(() => {});
+  // Marketing popup
+  await page.click('[data-testid="close-modal"]').catch(() => {});
+};
+```
+
+**Navigate through a login flow:**
+```javascript
+module.exports = async function({ page }) {
+  await page.fill('input[name="email"]', 'test@example.com');
+  await page.fill('input[name="password"]', 'password123');
+  await page.click('button[type="submit"]');
+  await page.waitForURL('**/dashboard');
+};
+```
+
+**Scroll to a specific section:**
+```javascript
+module.exports = async function({ page }) {
+  await page.locator('#pricing-section').scrollIntoViewIfNeeded();
+  await page.waitForTimeout(300);
+};
+```
+
+**Expand collapsed content:**
+```javascript
+module.exports = async function({ page }) {
+  await page.click('button:has-text("Show more")');
+  await page.waitForSelector('.expanded-content', { state: 'visible' });
+};
+```
+
+**One pre-script per route** — if routes need different interaction, write separate scripts and run capture once per route. If all routes share the same interaction (e.g., dismiss the same cookie banner), one script covers all.
+
+---
+
+## Step 3: Capture Screenshots
 
 ### Environment setup
 
@@ -58,23 +125,24 @@ Analyze the PR diff to determine which UI routes are impacted. Map changed compo
 ### Capture command
 
 ```bash
-# Local dev
+# With pre-script (default for most captures)
 npx tsx scripts/capture.ts \
   --base-url http://localhost:3000 \
   --routes "/dashboard,/settings" \
+  --pre-script /tmp/pw-pre-dashboard.js \
   --output-dir ./pr-screenshots
 
-# Preview deployment
+# Simple capture (no interaction needed)
+npx tsx scripts/capture.ts \
+  --base-url http://localhost:3000 \
+  --routes "/landing,/about" \
+  --output-dir ./pr-screenshots
+
+# Preview deployment with pre-script
 npx tsx scripts/capture.ts \
   --base-url https://your-preview-url.example.com \
-  --routes "/dashboard,/settings" \
-  --output-dir ./pr-screenshots
-
-# With Playwright server (reuses browser across captures)
-npx tsx scripts/capture.ts \
-  --connect ws://localhost:3001 \
-  --base-url http://localhost:3000 \
-  --routes "/dashboard,/settings" \
+  --routes "/dashboard" \
+  --pre-script /tmp/pw-pre-dismiss-popups.js \
   --output-dir ./pr-screenshots
 ```
 
@@ -84,6 +152,7 @@ npx tsx scripts/capture.ts \
 |---|---|---|
 | `--base-url <url>` | *required* | Target URL (local dev or preview) |
 | `--routes <paths>` | *required* | Comma-separated route paths |
+| `--pre-script <path>` | — | JS file to run on page before capture (for interaction) |
 | `--output-dir <dir>` | `./pr-screenshots` | Where to save PNGs and DOM text |
 | `--viewport <WxH>` | `1280x800` | Browser viewport size |
 | `--connect <ws-url>` | — | Connect to existing Playwright server |
@@ -103,12 +172,12 @@ npx tsx scripts/capture.ts --serve --port 3001
 # Terminal 2+: connect and capture
 npx tsx scripts/capture.ts \
   --connect ws://localhost:3001 --base-url http://localhost:3000 \
-  --routes "/..." --output-dir ./pr-screenshots
+  --routes "/..." --pre-script /tmp/pw-pre-script.js --output-dir ./pr-screenshots
 ```
 
 ---
 
-## Step 3: Validate Sensitive Data
+## Step 4: Validate Sensitive Data
 
 **Always run before uploading to GitHub.**
 
@@ -138,7 +207,7 @@ Add more with `--mask-selectors "selector1,selector2"`.
 
 ---
 
-## Step 4: Annotate Images
+## Step 5: Annotate Images
 
 ```bash
 # Add "Before" label with red border
@@ -156,7 +225,7 @@ npx tsx scripts/annotate.ts \
 
 ---
 
-## Step 5: Upload & Embed in PR
+## Step 6: Upload & Embed in PR
 
 ### Upload images to GitHub
 
