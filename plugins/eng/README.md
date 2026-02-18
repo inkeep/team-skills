@@ -9,7 +9,7 @@ Two install methods. Choose based on your setup:
 | | Claude Code Plugin (recommended) | Skills CLI |
 |---|---|---|
 | **Auto-update** | Yes — skills update every session | No — manual `npx skills update` |
-| **Agent support** | Claude Code only | Claude Code, Cursor, Cline, Codex, etc. |
+| **For...** | Claude Code only | Claude Code, Cursor, Cline, Codex, etc. |
 | **Best for** | Claude Code-only users who want zero-maintenance updates | Multi-agent users (e.g., Cursor + Claude Code) |
 
 ### Option A: Claude Code Plugin (recommended)
@@ -24,7 +24,7 @@ claude plugin marketplace add https://github.com/inkeep/team-skills.git && node 
 claude plugin install eng@inkeep-team-skills
 ```
 
-### Option B: Skills CLI (cross-agent)
+### Option B: Skills CLI (any agent)
 
 Works with any agent that supports the [Agent Skills](https://agentskills.io) standard. Updates are manual.
 
@@ -42,22 +42,55 @@ npx skills update
 
 ## Skill inventory
 
-Skills are on-demand procedural knowledge that Claude loads when relevant. They are not always-on (that's CLAUDE.md/AGENTS.md) and not deterministic actions (that's tools/MCP). Think of them as "how an experienced engineer would approach X" — portable across repos and contexts.
+Skills are on-demand procedural knowledge that Claude loads when relevant. 
+
+### E2E Feature Development
+
+From Claude Code, run:
+
+```bash
+\ship <feature description, bug, or improvement>
+```
 
 | Skill | Invocation | Purpose |
 |---|---|---|
-| `/ship` | User or model | End-to-end feature development orchestrator: spec through merge-ready PR |
-| `/spec` | User or model | Interactive spec authoring (PRD + technical design) |
-| `/implement` | User or model | Autonomous implementation methodology: SPEC.md to working code via iterative loop |
-| `/qa-test` | User or model | Manual QA — verify features end-to-end as a user would, using browser, macOS, bash, APIs |
-| `/docs` | User or model | Documentation for engineering changes — product-facing and internal surface areas, with repo convention discovery |
-| `/review` | User or model | PR review iteration: poll feedback, assess, fix, resolve threads, drive CI green |
-| `/inspect` | User or model | Codebase inspection — discover patterns, trace flows, map blast radius |
-| `/research` | User or model | Technical research with optional persistent reports |
-| `tdd` | Model-only | Background knowledge for behavior-focused testing (auto-loaded; key principles distilled inline in spec, ship, and implement) |
+| `/ship` | User | End-to-end orchestrator: takes you from spec through merge-ready PR. |
+
+`ship` is the entry point for **end-to-end feature development**. It works with you to `spec` out a feature by investigating the codebase and asking you questions. **Speccing is the most important part**. It takes that spec and implements it end to end, including automated testing, PR review, and more.
+
+### Composed by /ship
+
+Ship is an orchestrator that leverages these other skills:
+
+| Skill | Phase | What it does |
+|---|---|---|
+| `/spec` | 1 | Define what to build — requirements and technical design |
+| `/implement` | 2 | Write the code from the spec |
+| `/qa-test` | 3 | Automate "manual" testing of feature (e.g. Browser automation) |
+| `/pull-request` | After 3 | Write the PR description |
+| `/docs` | 4 | Write docs for the changes |
+| `/review` | 5 | Address review comments and get CI green |
+
+Each can be used **standalone** as well:
+
+### General Purpose
+
+These are generally useful skills for investigating things and aiding in **decision making**.
+
+| Skill | Invocation | Purpose |
+|---|---|---|
+| `/research` | User or model | Deep technical research across web + OSS code bases |
+| `/discover` | User or model | Understand all the product knobs and code paths that XYZ feature touches. |
+| `/inspect` | User or model | Similar to discover but focused on codebase inspection. |
+| `/analyze` | User or model | Deeply compare pros and cons of a given decision. |
+
+### Standalone / supporting
+
+| Skill | Invocation | Purpose |
+|---|---|---|
 | `/write-skill` | User or model | Author or update Claude Code skills (SKILL.md + supporting files) |
 | `/write-agent` | User or model | Design Claude Code agents and agent prompts (.claude/agents/*.md) |
-| `/analyze` | User or model | Deep, iterative, evidence-based analysis of situations, decisions, and trade-offs |
+| `/tdd` | Model-only | Background knowledge for behavior-focused testing (auto-loaded; key principles distilled inline in spec, ship, and implement) |
 
 **Shared:** `research`, `write-skill`, `write-agent`
 
@@ -67,12 +100,17 @@ Add eng-only skills by creating a folder in `plugins/eng/skills/`.
 
 ## How the skills relate
 
-`/ship` is the top-level orchestrator. It composes the other skills into an end-to-end workflow:
+`/ship` is the top-level orchestrator.
+
+Flow it goes in:
 
 ```
 /ship
  ├── Phase 0: Detect context (capabilities, execution environment)
  ├── Phase 1: /spec ─── spec authoring, validation, and state activation (collaborative)
+ │
+ ├── ─── AUTOMATION STARTS ───
+ │
  ├── Phase 2: /inspect + /implement (codebase understanding, implementation)
  ├── Create draft PR (stub body)
  ├── Phase 3: /qa-test (manual QA verification)
@@ -81,8 +119,6 @@ Add eng-only skills by creating a folder in `plugins/eng/skills/`.
  ├── Phase 5: /review (PR feedback loop + CI/CD resolution)
  └── Phase 6: Completion
 ```
-
-Each composed skill also works standalone — you can load `/spec`, `/implement`, `/qa-test`, `/docs`, `/review`, `/inspect`, or `/research` independently without going through `/ship`.
 
 ---
 
@@ -99,31 +135,12 @@ tmp/
 
 ## Execution contexts
 
-Skills work across three execution environments. `/ship` detects the context in Phase 0 and passes capability information to composed skills. Standalone skills use sensible defaults and degrade gracefully.
+Skills work across two execution environments. `/ship` detects the context in Phase 0 and sets the context for the run.
 
 | Context | What's available | What degrades |
 |---|---|---|
-| **Direct on host** | Everything — git, gh CLI, browser, macOS tools, claude CLI | Nothing (full capability) |
 | **Git worktree** | Same as host, isolated directory | Nothing (full capability) |
 | **Docker container** | Git, filesystem — but no gh CLI, no browser, no macOS tools | PR creation/review skipped, browser testing substituted with Bash |
-
----
-
-## When to use which skill
-
-| You want to... | Use |
-|---|---|
-| Build a feature end-to-end from idea to PR | `/ship` |
-| Write a spec (PRD + tech design) | `/spec` |
-| Convert a spec to spec.json and implement iteratively | `/implement` |
-| Manually QA a feature with available tools (browser, bash, macOS) | `/qa-test` |
-| Write or update documentation for engineering changes | `/docs` |
-| Iterate on PR review feedback and get CI green | `/review` |
-| Understand patterns or trace code flow before acting | `/inspect` |
-| Investigate a technology, compare approaches, gather evidence | `/research` |
-| Analyze a decision, situation, or trade-off in depth | `/analyze` |
-| Create or update a skill | `/write-skill` |
-| Create or update a subagent definition | `/write-agent` |
 
 ---
 
@@ -149,7 +166,7 @@ claude plugin install typescript-lsp@claude-plugins-official
 
 ---
 
-## Appendix: Claude in Chrome setup
+## Recommended: Claude in Chrome setup
 
 Browser automation tools (`mcp__claude-in-chrome__*`) let Claude Code interact with Chrome — navigate pages, fill forms, read content, execute JS, record GIFs, and more.
 

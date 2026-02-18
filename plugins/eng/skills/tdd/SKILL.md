@@ -7,7 +7,6 @@ description: |
   during implementation, review feedback, or standalone test authoring.
   Triggers: writing tests, test design, mocking strategy, test quality,
   behavior testing, integration testing, test-first, red-green-refactor.
-user-invocable: false
 ---
 
 # Test-Driven Development Methodology
