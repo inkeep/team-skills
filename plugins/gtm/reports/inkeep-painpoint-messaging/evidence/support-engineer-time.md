@@ -1,8 +1,14 @@
 # Pain Point 2: Support Engineers Don't Get to Spend Time on Tough Problems
 
+## CEO Framing (Nick Mishra)
+
+> *"In B2B SaaS companies, support is part of the product. B2B SaaS companies gravitate towards Enterprise sales motions, so providing a great customer experience and keeping individual customers happy is often a basic expectation of any of their Enterprise customers. Similarly, for product-led companies, support and a great user experience is imperative to promoting word of mouth and organic growth. Because of these dynamics, B2B SaaS companies invest heavily and see as a requirement to deliver timely, accurate, top-notch support. Delivering this support often relies on highly specialized talent including dedicated support engineers or engineering members of their product team. These engineers have to become always-up-to-date product experts (which has a ramp up period and is hard to hire for), but also need to spend significant amount of time performing **workflows** to help gather all the right context to resolve a problem. This often includes gathering additional context from the user, looking up customer information in downstream systems like error logs, CRMs, 1st party product-specific data sources or APIs, cross-referencing information with engineering and product backlogs, etc. All of these systems are often varied, and the workflows that stem from them are often custom to the company and how it operates. AI Support solutions today often **don't** cover anything beyond product knowledge chat Q&A, and even there, often don't handle the varied knowledge sources of a technical B2B SaaS company (knowledge base, docs, github, internal KBs like confluence, marketing site, etc.). The result: technical B2B SaaS companies struggle to adopt AI in a meaningful way beyond chat Q&A; keeping time-to-resolution stats high and support and product engineering teams swamped with the more manual and tedious parts of support."*
+
+---
+
 ## Problem Statement
 
-Support engineers and technical support teams are trapped in repetitive, low-value work instead of solving the complex problems that utilize their expertise and drive customer retention. Context gathering, tool switching, and answering repeat questions consume the majority of their time.
+In technical B2B SaaS, support is part of the product. Support engineers must be always-up-to-date product experts AND spend significant time on context-gathering workflows: gathering info from users, looking up error logs, CRMs, 1st-party product APIs, cross-referencing with engineering backlogs. These systems are varied and workflows are company-specific. AI solutions today only cover basic chat Q&A and don't handle varied knowledge sources (docs, GitHub, Confluence, marketing site). Result: technical B2B companies struggle to adopt AI beyond chat Q&A, keeping time-to-resolution high and teams swamped with manual work.
 
 ---
 

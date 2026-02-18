@@ -1,8 +1,14 @@
 # Pain Point 1: Fragmented AI Solutions
 
+## CEO Framing (Nick Mishra)
+
+> *"Technical B2B SaaS companies are aiming to adopt AI to accelerate and improve every step of the customer journey. To do so, they are adopting a mix of AI solutions to cover different company-specific workflows and use cases covering everything from product onboarding, support engineering, success, and content teams. The problem: system of record platforms like support platforms often have siloed "closed garden" AI functionality that just doesn't work that well or doesn't connect or interface with a company's knowledge sources, customer data, 1st party product APIs and apps, or the other 3rd party SaaS solutions that the customer may use. Companies find themselves purchasing piece-meal solutions from specialized vendors (often startups) that solve narrow scenarios (e.g. "support chatbot") or workflows ("turn support tickets into documentation updates"). These solutions don't talk to each other, are configured and behave differently, or just don't quite work well in the specific requirements, data sources, workflows, or use cases unique to a company (and every company has a unique combination of these). Any limitation turns into a feature request to 1 vendor which may or may not get prioritized, and you're bottlenecked by that vendor's ability to ship features or make their solution extensible (which is often not a priority). This piecemeal approach poses significant burden on vendor procurement, security and governance, and actual adoption across every CX-related function of the company."*
+
+---
+
 ## Problem Statement
 
-Organizations are struggling with siloed AI tools, closed vendor gardens, and piecemeal solutions that don't integrate. This creates operational friction, security vulnerabilities, and prevents achieving the full potential of AI investments.
+Technical B2B SaaS companies are adopting piecemeal AI solutions across product onboarding, support engineering, success, and content teams. These solutions don't integrate with each other, company knowledge sources, customer data, 1st-party product APIs, or 3rd-party SaaS tools. Closed-garden platforms don't connect to external systems. Companies are bottlenecked by vendor roadmaps and face significant burden on procurement, security, governance, and cross-functional adoption.
 
 ---
 

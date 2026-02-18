@@ -21,7 +21,10 @@ Both pain points are validated by market evidence and competitive responses. The
 
 ### Pain Point 1: Fragmented AI Solutions
 
-**Core Problem:** Organizations have 106+ SaaS apps on average, with 15-25 AI tools that don't integrate. 95% of IT leaders cite integration as the primary AI adoption barrier. Closed vendor ecosystems (Zendesk, Intercom, Salesforce) force companies to choose between best-of-breed functionality and unified operations.
+> *"Technical B2B SaaS companies are aiming to adopt AI to accelerate and improve every step of the customer journey. To do so, they are adopting a mix of AI solutions to cover different company-specific workflows and use cases covering everything from product onboarding, support engineering, success, and content teams. The problem: system of record platforms like support platforms often have siloed "closed garden" AI functionality that just doesn't work that well or doesn't connect or interface with a company's knowledge sources, customer data, 1st party product APIs and apps, or the other 3rd party SaaS solutions that the customer may use. Companies find themselves purchasing piece-meal solutions from specialized vendors (often startups) that solve narrow scenarios (e.g. "support chatbot") or workflows ("turn support tickets into documentation updates"). These solutions don't talk to each other, are configured and behave differently, or just don't quite work well in the specific requirements, data sources, workflows, or use cases unique to a company (and every company has a unique combination of these). Any limitation turns into a feature request to 1 vendor which may or may not get prioritized, and you're bottlenecked by that vendor's ability to ship features or make their solution extensible (which is often not a priority). This piecemeal approach poses significant burden on vendor procurement, security and governance, and actual adoption across every CX-related function of the company."*
+> — Nick Mishra, CEO
+
+**Core Problem Summary:** Technical B2B SaaS companies are adopting piecemeal AI solutions that don't integrate with each other, their knowledge sources, customer data, or 1st-party APIs. Closed-garden platforms (Zendesk, Intercom, Salesforce) don't connect to external systems. Specialized point solutions solve narrow scenarios but create vendor sprawl, security burden, and adoption friction across CX functions.
 
 **Key Statistics:**
 - 106 SaaS apps average per enterprise (Zylo)
@@ -29,11 +32,14 @@ Both pain points are validated by market evidence and competitive responses. The
 - 81% of CX leaders want single-system consolidation (Zendesk)
 - 42% higher security incidents with 10+ AI tools (IBM)
 
-**Inkeep Answer:** One platform that works with ANY help desk, pulls from ANY knowledge source, and provides multi-agent orchestration vs single-agent ceiling.
+**Inkeep Answer:** One platform that works with ANY help desk, pulls from ANY knowledge source, connects to 1st-party product APIs, and provides multi-agent orchestration vs single-agent ceiling. Extensible by design so companies aren't bottlenecked by vendor roadmaps.
 
-### Pain Point 2: Support Engineers Don't Spend Time on Tough Problems
+### Pain Point 2: Support Engineers Don't Get to Spend Time on Tough Problems
 
-**Core Problem:** Support engineers spend 49% of time on repetitive questions and 50% of their day switching between tools. Only 20-30% AI deflection in technical B2B (vs 50-70% in consumer). 82% of support employees are at risk of burnout.
+> *"In B2B SaaS companies, support is part of the product. B2B SaaS companies gravitate towards Enterprise sales motions, so providing a great customer experience and keeping individual customers happy is often a basic expectation of any of their Enterprise customers. Similarly, for product-led companies, support and a great user experience is imperative to promoting word of mouth and organic growth. Because of these dynamics, B2B SaaS companies invest heavily and see as a requirement to deliver timely, accurate, top-notch support. Delivering this support often relies on highly specialized talent including dedicated support engineers or engineering members of their product team. These engineers have to become always-up-to-date product experts (which has a ramp up period and is hard to hire for), but also need to spend significant amount of time performing **workflows** to help gather all the right context to resolve a problem. This often includes gathering additional context from the user, looking up customer information in downstream systems like error logs, CRMs, 1st party product-specific data sources or APIs, cross-referencing information with engineering and product backlogs, etc. All of these systems are often varied, and the workflows that stem from them are often custom to the company and how it operates. AI Support solutions today often **don't** cover anything beyond product knowledge chat Q&A, and even there, often don't handle the varied knowledge sources of a technical B2B SaaS company (knowledge base, docs, github, internal KBs like confluence, marketing site, etc.). The result: technical B2B SaaS companies struggle to adopt AI in a meaningful way beyond chat Q&A; keeping time-to-resolution stats high and support and product engineering teams swamped with the more manual and tedious parts of support."*
+> — Nick Mishra, CEO
+
+**Core Problem Summary:** Support engineers in technical B2B SaaS spend significant time on context-gathering workflows (error logs, CRMs, product APIs, backlogs) rather than solving complex problems. AI solutions today only cover basic chat Q&A and don't handle varied knowledge sources (docs, GitHub, Confluence, etc.) or company-specific workflows. Result: high time-to-resolution and teams swamped with manual, tedious work.
 
 **Key Statistics:**
 - 49% of time answering repetitive questions (Zendesk)
@@ -41,7 +47,7 @@ Both pain points are validated by market evidence and competitive responses. The
 - 20-30% deflection in technical B2B vs 50-70% consumer (Industry benchmark)
 - 82% of support employees at burnout risk (Gallup)
 
-**Inkeep Answer:** 48-80% ticket deflection that actually works for technical docs, copilot inside existing tools, confidence-scored responses.
+**Inkeep Answer:** AI that goes beyond chat Q&A to handle context-gathering workflows, connects to varied knowledge sources (docs, GitHub, Confluence, product APIs), and works inside existing tools. 48-80% ticket deflection that actually works for technical B2B.
 
 ---
 

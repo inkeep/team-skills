@@ -3,6 +3,7 @@ title: "B2B Cold Email: Copywriting & Sales Effectiveness Playbook (2025+)"
 description: "Actionable, evidence-backed playbook for writing cold outbound email that generates replies and meetings in B2B SaaS"
 createdAt: "2026-02-06"
 updatedAt: "2026-02-08"
+
 subjects:
   - Gong/30MPC (85M emails)
   - Lavender AI (~200M+ emails)
