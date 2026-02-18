@@ -1,4 +1,4 @@
-Use when: Phase 2 — crafting the implementation prompt for `.claude/ralph-prompt.md`
+Use when: Phase 2 — crafting the implementation prompt for `tmp/ship/implement-prompt.md`
 Priority: P0
 Impact: Without this template, the iteration prompt must be reconstructed from memory — risk of missing critical sections (completion signal, TDD guidance, progress format, stuck handling)
 
@@ -6,7 +6,7 @@ Impact: Without this template, the iteration prompt must be reconstructed from m
 
 # Implementation Prompt Template
 
-This file contains two complete prompt variants for Ralph's iteration agents. The Phase 2 agent selects **ONE** variant, fills all `{{PLACEHOLDERS}}`, and saves the result to `.claude/ralph-prompt.md`.
+This file contains two complete prompt variants for the iteration agents. The Phase 2 agent selects **ONE** variant, fills all `{{PLACEHOLDERS}}`, and saves the result to `tmp/ship/implement-prompt.md`.
 
 **Do NOT include both variants in the saved prompt.** The iteration agent sees a single, unconditional workflow — never both variants, never conditional "if spec is available" logic.
 
@@ -28,7 +28,7 @@ Use when a spec path is known. Copy everything from the horizontal rule below th
 
 ---
 
-You are implementing a feature based on a SPEC.md and prd.json. Follow this workflow exactly each iteration.
+You are implementing a feature based on a SPEC.md and spec.json. Follow this workflow exactly each iteration.
 
 ### 1. Read the SPEC
 
@@ -44,9 +44,9 @@ Focus on:
 
 ### 2. Check status
 
-Read `prd.json` for user stories and their completion status.
+Read `tmp/ship/spec.json` for user stories and their completion status.
 
-Read `progress.txt` for learnings from previous iterations.
+Read `tmp/ship/progress.txt` for learnings from previous iterations.
 
 ### 3. Select story
 
@@ -55,6 +55,8 @@ Select the highest-priority incomplete story (`passes: false`).
 ### 4. Implement
 
 Implement the story. **One story per iteration** — keep changes focused.
+
+**Before writing tests:** Discover the repo's testing conventions — check project config (CLAUDE.md, AGENTS.md), repo-level skills, existing test files, and CI config. Follow what exists; incorporate the principles below as contextually relevant.
 
 **TDD approach** (where practical):
 - Write one test, then implement to pass it, repeat
@@ -76,17 +78,19 @@ Run these commands — ALL must pass:
 
 Do NOT set `passes: true` or commit if any gate fails. Fix failures first. If you cannot fix them, treat the story as stuck (step 9).
 
-### 6. Update prd.json
+### 6. Update spec.json
 
-Set `passes: true` for the completed story. Do this before committing so progress is captured even if context runs out before the commit step.
+Set `passes: true` for the completed story in `tmp/ship/spec.json`. Do this before committing so progress is captured even if context runs out before the commit step.
 
 ### 7. Commit
 
-Commit all changes including prd.json with message format: `[story-id] description`
+Commit implementation changes only (source code, tests, configs) with message format: `[story-id] description`
+
+Do NOT commit files in `tmp/` — they are gitignored execution state.
 
 ### 8. Log progress
 
-Append to `progress.txt` using this format:
+Append to `tmp/ship/progress.txt` using this format:
 
 ```
 ## Iteration N - [timestamp]
@@ -110,8 +114,8 @@ Append to `progress.txt` using this format:
 ### 9. If stuck
 
 If stuck on a story:
-1. Set `notes` on that story in `prd.json` with the blocker description
-2. Log the blocker to `progress.txt`
+1. Set `notes` on that story in `tmp/ship/spec.json` with the blocker description
+2. Log the blocker to `tmp/ship/progress.txt`
 3. Move to the next story
 
 ### 10. Completion check
@@ -132,17 +136,17 @@ Output this ONLY when the statement is genuinely true. Do not output false promi
 
 ## Variant B — No SPEC.md
 
-Use when only prd.json is available. The `implementationContext` field is the sole implementation reference. Copy everything from the horizontal rule below through "End of Variant B", fill all placeholders, and save.
+Use when only spec.json is available. The `implementationContext` field is the sole implementation reference. Copy everything from the horizontal rule below through "End of Variant B", fill all placeholders, and save.
 
 ---
 
-You are implementing a feature based on prd.json. Follow this workflow exactly each iteration.
+You are implementing a feature based on spec.json. Follow this workflow exactly each iteration.
 
 ### 1. Check status
 
-Read `prd.json` for user stories, their completion status, and the `implementationContext` field. This is your sole implementation reference — pay close attention to every detail in implementationContext: architecture, constraints, design decisions, integration points, and non-goals.
+Read `tmp/ship/spec.json` for user stories, their completion status, and the `implementationContext` field. This is your sole implementation reference — pay close attention to every detail in implementationContext: architecture, constraints, design decisions, integration points, and non-goals.
 
-Read `progress.txt` for learnings from previous iterations.
+Read `tmp/ship/progress.txt` for learnings from previous iterations.
 
 ### 2. Select story
 
@@ -151,6 +155,8 @@ Select the highest-priority incomplete story (`passes: false`).
 ### 3. Implement
 
 Implement the story. **One story per iteration** — keep changes focused.
+
+**Before writing tests:** Discover the repo's testing conventions — check project config (CLAUDE.md, AGENTS.md), repo-level skills, existing test files, and CI config. Follow what exists; incorporate the principles below as contextually relevant.
 
 **TDD approach** (where practical):
 - Write one test, then implement to pass it, repeat
@@ -172,17 +178,19 @@ Run these commands — ALL must pass:
 
 Do NOT set `passes: true` or commit if any gate fails. Fix failures first. If you cannot fix them, treat the story as stuck (step 8).
 
-### 5. Update prd.json
+### 5. Update spec.json
 
-Set `passes: true` for the completed story. Do this before committing so progress is captured even if context runs out before the commit step.
+Set `passes: true` for the completed story in `tmp/ship/spec.json`. Do this before committing so progress is captured even if context runs out before the commit step.
 
 ### 6. Commit
 
-Commit all changes including prd.json with message format: `[story-id] description`
+Commit implementation changes only (source code, tests, configs) with message format: `[story-id] description`
+
+Do NOT commit files in `tmp/` — they are gitignored execution state.
 
 ### 7. Log progress
 
-Append to `progress.txt` using this format:
+Append to `tmp/ship/progress.txt` using this format:
 
 ```
 ## Iteration N - [timestamp]
@@ -206,8 +214,8 @@ Append to `progress.txt` using this format:
 ### 8. If stuck
 
 If stuck on a story:
-1. Set `notes` on that story in `prd.json` with the blocker description
-2. Log the blocker to `progress.txt`
+1. Set `notes` on that story in `tmp/ship/spec.json` with the blocker description
+2. Log the blocker to `tmp/ship/progress.txt`
 3. Move to the next story
 
 ### 9. Completion check

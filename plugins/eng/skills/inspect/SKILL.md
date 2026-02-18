@@ -1,8 +1,6 @@
 ---
 name: inspect
-description: |
-  Codebase inspection — build a structured understanding of an area of the codebase before acting on it. Two complementary lenses: (1) Pattern inspection — discover conventions, shared abstractions, and the "grain" of an area. (2) System tracing — follow call chains, map transitive dependencies, identify blast radius and surface area touched. Use when you need to understand patterns before implementing, trace code flow before speccing, map blast radius before changing core primitives, or find similar patterns elsewhere. Subsumes find-similar.
-  Triggers: "inspect", "what patterns exist here", "how does this area do X", "before implementing", "check conventions", "find existing patterns", "codebase inspection", "what abstractions exist", "find similar", "trace the flow", "what connects to this", "blast radius", "what would break", "dependency tree", "map the surfaces", "what does this touch".
+description: "Codebase inspection — build a structured understanding of an area of the codebase before acting on it. Two complementary lenses: (1) Pattern inspection — discover conventions, shared abstractions, and the \"grain\" of an area. (2) System tracing — follow call chains, map transitive dependencies, identify blast radius and surface area touched. Use when you need to understand patterns before implementing, trace code flow before speccing, map blast radius before changing core primitives, or find similar patterns elsewhere. Subsumes find-similar. Triggers: inspect, what patterns exist here, how does this area do X, before implementing, check conventions, find existing patterns, codebase inspection, what abstractions exist, find similar, trace the flow, what connects to this, blast radius, what would break, dependency tree, what does this touch."
 argument-hint: "[area to investigate] (optional: purpose — speccing|implementing|reviewing|testing|tracing)"
 ---
 
@@ -58,7 +56,7 @@ If purpose is not stated, infer from context:
 
 ### 2. Search (progressive depth)
 
-Start narrow. Expand only when needed. Stop when patterns emerge.
+Start narrow. Expand only when needed. Stop when patterns emerge. For "find similar" queries, also see the **Similarity types** section below for classification and search strategy guidance.
 
 #### Level 1 — Direct search
 

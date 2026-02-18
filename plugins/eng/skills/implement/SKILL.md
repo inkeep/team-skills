@@ -1,20 +1,20 @@
 ---
-name: ralph
-description: "Convert SPEC.md to prd.json, craft the implementation prompt, and execute the iteration loop via subprocess. Use when converting specs to prd.json, preparing implementation artifacts, running the Ralph iteration loop, or implementing features autonomously. Triggers: ralph, prd.json, convert spec, implementation prompt, execute ralph, run implementation."
-argument-hint: "[path to SPEC.md or prd.json]"
+name: implement
+description: "Convert SPEC.md to spec.json, craft the implementation prompt, and execute the iteration loop via subprocess. Use when converting specs to spec.json, preparing implementation artifacts, running the iteration loop, or implementing features autonomously. Triggers: implement, spec.json, convert spec, implementation prompt, execute implementation, run implementation."
+argument-hint: "[path to SPEC.md or spec.json]"
 ---
 
-# Ralph
+# Implement
 
-Convert a SPEC.md into implementation-ready artifacts and execute the iteration loop. Ralph operates in three phases:
+Convert a SPEC.md into implementation-ready artifacts and execute the iteration loop. This skill operates in three phases:
 
-1. **Convert** — Transform SPEC.md into a structured prd.json
-2. **Prepare** — Validate the prd.json, craft the implementation prompt, save it to a file
-3. **Execute** — Run `scripts/ralph.sh` to iterate through user stories via subprocess
+1. **Convert** — Transform SPEC.md into a structured spec.json
+2. **Prepare** — Validate the spec.json, craft the implementation prompt, save it to a file
+3. **Execute** — Run `scripts/implement.sh` to iterate through user stories via subprocess
 
-Each phase can be entered independently. If you already have a prd.json, start at Phase 2. If artifacts are ready and you need execution, start at Phase 3. If you only need conversion, stop after Phase 1.
+Each phase can be entered independently. If you already have a spec.json, start at Phase 2. If artifacts are ready and you need execution, start at Phase 3. If you only need conversion, stop after Phase 1.
 
-When composed by `/ship`, Ship invokes Ralph for the full lifecycle and reviews the output afterward. When standalone, Ralph runs end-to-end and reports results directly.
+When composed by `/ship`, Ship invokes `/implement` for the full lifecycle and reviews the output afterward. When standalone, `/implement` runs end-to-end and reports results directly.
 
 ---
 
@@ -22,7 +22,7 @@ When composed by `/ship`, Ship invokes Ralph for the full lifecycle and reviews 
 
 | Input | Required | Default | Description |
 |---|---|---|---|
-| SPEC.md or prd.json path | Yes | — | Source artifact. When SPEC.md: used for Phase 1 conversion AND forwarded as iteration reference in Phase 2 (see Spec path forwarding). When prd.json: start at Phase 2 directly. |
+| SPEC.md or spec.json path | Yes | — | Source artifact. When SPEC.md: used for Phase 1 conversion AND forwarded as iteration reference in Phase 2 (see Spec path forwarding). When spec.json: start at Phase 2 directly. |
 | `--test-cmd` | No | `pnpm test --run` | Test runner command for quality gates |
 | `--typecheck-cmd` | No | `pnpm typecheck` | Type checker command for quality gates |
 | `--lint-cmd` | No | `pnpm lint` | Linter command for quality gates |
@@ -33,15 +33,15 @@ When composed by `/ship`, these overrides are passed based on Phase 0 context de
 
 ### Spec path forwarding
 
-When a SPEC.md is provided (directly or by the invoker), the path persists beyond Phase 1 conversion. In Phase 2, Ralph embeds a file-path reference in the implementation prompt so that iteration agents read the full SPEC.md as the first action of every iteration. The spec content is NOT embedded in the prompt — the prompt contains only the file path.
+When a SPEC.md is provided (directly or by the invoker), the path persists beyond Phase 1 conversion. In Phase 2, the skill embeds a file-path reference in the implementation prompt so that iteration agents read the full SPEC.md as the first action of every iteration. The spec content is NOT embedded in the prompt — the prompt contains only the file path.
 
-This is mandatory when a spec path is available. The spec contains critical implementation context that prd.json's `implementationContext` cannot fully capture:
-- **Non-goals** (what NOT to build) — completely absent from prd.json
+This is mandatory when a spec path is available. The spec contains critical implementation context that spec.json's `implementationContext` cannot fully capture:
+- **Non-goals** (what NOT to build) — completely absent from spec.json
 - **Current state code traces** (file paths, line numbers, existing patterns) — compressed to prose in implementationContext
 - **Decision rationale** — reduced to conclusions only
 - **Risks and failure modes** — only partially captured in acceptance criteria
 
-When only prd.json is provided (no SPEC.md available), `implementationContext` serves as the sole implementation context source. See Phase 1's implementationContext guidance for how to calibrate depth.
+When only spec.json is provided (no SPEC.md available), `implementationContext` serves as the sole implementation context source. See Phase 1's implementationContext guidance for how to calibrate depth.
 
 ---
 
@@ -49,23 +49,23 @@ When only prd.json is provided (no SPEC.md available), `implementationContext` s
 
 | Condition | Begin at |
 |---|---|
-| SPEC.md exists, no prd.json | Phase 1 (Convert) |
-| prd.json exists, needs validation/prompt | Phase 2 (Prepare) |
-| prd.json + `.claude/ralph-prompt.md` exist, ready to execute | Phase 3 (Execute) |
+| SPEC.md exists, no spec.json | Phase 1 (Convert) |
+| spec.json exists, needs validation/prompt | Phase 2 (Prepare) |
+| spec.json + `tmp/ship/implement-prompt.md` exist, ready to execute | Phase 3 (Execute) |
 | Called with only a conversion request | Phase 1, then stop |
 
 ---
 
-## Phase 1: Convert (SPEC.md to prd.json)
+## Phase 1: Convert (SPEC.md to spec.json)
 
-Take a SPEC.md and convert it to `prd.json` in the working directory.
+Take a SPEC.md and convert it to `tmp/ship/spec.json`. Create `tmp/ship/` if it doesn't exist (`mkdir -p tmp/ship`).
 
 ### Output format
 
 ```json
 {
   "project": "[Project Name]",
-  "branchName": "ralph/[feature-name-kebab-case]",
+  "branchName": "implement/[feature-name-kebab-case]",
   "description": "[Feature description from SPEC.md title/intro]",
   "implementationContext": "[Concise prose summary of architecture, constraints, key decisions, and current state from the SPEC.md — everything the implementer needs to know that doesn't fit in individual stories]",
   "userStories": [
@@ -88,9 +88,9 @@ Take a SPEC.md and convert it to `prd.json` in the working directory.
 
 ### Story size: the number one rule
 
-**Each story must be completable in ONE Ralph iteration (one context window).**
+**Each story must be completable in ONE iteration (one context window).**
 
-Ralph receives the same prompt each iteration with no memory of previous work — only files and git history persist. If a story is too big, the LLM runs out of context before finishing and produces broken code.
+Each iteration receives the same prompt with no memory of previous work — only files and git history persist. If a story is too big, the LLM runs out of context before finishing and produces broken code.
 
 **Right-sized stories:**
 - Add a database column and migration
@@ -121,7 +121,7 @@ Stories execute in priority order. Earlier stories must not depend on later ones
 
 ### Acceptance criteria: must be verifiable
 
-Each criterion must be something Ralph can CHECK, not something vague.
+Each criterion must be something the iteration agent can CHECK, not something vague.
 
 **Good criteria (verifiable):**
 - "Add `status` column to tasks table with default 'pending'"
@@ -163,7 +163,7 @@ For stories that change UI — **if browser automation is available** (no `--no-
 "Verify in browser using dev-browser skill"
 ```
 
-Frontend stories are NOT complete until visually verified. Ralph will use the dev-browser skill to navigate to the page, interact with the UI, and confirm changes work.
+Frontend stories are NOT complete until visually verified. The iteration agent will use the dev-browser skill to navigate to the page, interact with the UI, and confirm changes work.
 
 **If browser is NOT available** (`--no-browser`): Omit the browser criterion. Instead, add Bash-verifiable criteria that cover the UI behavior through API responses or rendered output (e.g., "API response includes the updated status badge markup", "Server-rendered HTML contains filter dropdown with options: All, Active, Completed").
 
@@ -173,7 +173,7 @@ Frontend stories are NOT complete until visually verified. Ralph will use the de
 2. **IDs**: Sequential (US-001, US-002, etc.)
 3. **Priority**: Based on dependency order, then document order
 4. **All stories**: `passes: false` and empty `notes`
-5. **branchName**: Derive from feature name, kebab-case, prefixed with `ralph/`
+5. **branchName**: Derive from feature name, kebab-case, prefixed with `implement/`
 6. **Always add**: "Typecheck passes" to every story's acceptance criteria
 
 ### Extracting implementation context from the SPEC.md
@@ -196,7 +196,7 @@ Extract from these SPEC.md sections:
 | Spec available during implementation? | implementationContext role | Recommended depth |
 |---|---|---|
 | **Yes** — spec path forwarded to Phase 2 (default when composed by `/ship` or when user provides both) | Quick orientation summary. The full SPEC.md provides deep context — iteration agents read it as step 1. | 3-5 sentences — architecture overview and key constraints only |
-| **No** — prd.json is the sole artifact (user invokes Ralph with prd.json only, or spec is unavailable) | Primary and sole implementation context source. Must stand on its own. | 5-10 sentences — include architecture, non-goals, current state integration points, key decisions with rationale, and critical constraints |
+| **No** — spec.json is the sole artifact (user invokes `/implement` with spec.json only, or spec is unavailable) | Primary and sole implementation context source. Must stand on its own. | 5-10 sentences — include architecture, non-goals, current state integration points, key decisions with rationale, and critical constraints |
 
 When in doubt about whether the spec will be available, write the longer form — it's never wrong to include more context, but the shorter form risks leaving the iteration agent under-informed.
 
@@ -290,11 +290,11 @@ Add ability to mark tasks with different statuses.
 - UI uses TaskCard component in components/tasks/
 ```
 
-**Output prd.json:**
+**Output spec.json:**
 ```json
 {
   "project": "TaskApp",
-  "branchName": "ralph/task-status",
+  "branchName": "implement/task-status",
   "description": "Task Status Feature - Track task progress with status indicators",
   "implementationContext": "Tasks are stored in a tasks table accessed via getTasksByProject() in the data-access layer. The API follows RESTful patterns under /api/tasks/. Auth uses existing tenant-scoped middleware. The status field should be an enum column with a database-level constraint. UI components use the existing TaskCard component in components/tasks/.",
   "userStories": [
@@ -362,20 +362,20 @@ Add ability to mark tasks with different statuses.
 
 ### Archiving previous runs
 
-**Before writing a new prd.json, check if there is an existing one from a different feature:**
+**Before writing a new spec.json, check if there is an existing one from a different feature:**
 
-1. Read the current `prd.json` if it exists
+1. Read the current `tmp/ship/spec.json` if it exists
 2. Check if `branchName` differs from the new feature's branch name
-3. If different AND `progress.txt` has content beyond the header:
-   - Create archive folder: `archive/YYYY-MM-DD-feature-name/`
-   - Copy current `prd.json` and `progress.txt` to archive
-   - Reset `progress.txt` with fresh header
+3. If different AND `tmp/ship/progress.txt` has content beyond the header:
+   - Create archive folder: `tmp/ship/archive/YYYY-MM-DD-feature-name/`
+   - Copy current `tmp/ship/spec.json` and `tmp/ship/progress.txt` to archive
+   - Reset `tmp/ship/progress.txt` with fresh header
 
 ### Phase 1 checklist
 
-Before writing prd.json, verify:
+Before writing spec.json, verify:
 
-- [ ] **Previous run archived** (if prd.json exists with different branchName, archive it first)
+- [ ] **Previous run archived** (if `tmp/ship/spec.json` exists with different branchName, archive it first)
 - [ ] Each story is completable in one iteration (small enough)
 - [ ] Stories are ordered by dependency (schema to backend to UI)
 - [ ] Every story has "Typecheck passes" as criterion
@@ -390,49 +390,49 @@ Before writing prd.json, verify:
 
 ## Phase 2: Prepare
 
-Validate the prd.json, craft the implementation prompt, and save it to a file for execution.
+Validate the spec.json, craft the implementation prompt, and save it to a file for execution.
 
-### Validate prd.json against SPEC.md
+### Validate spec.json against SPEC.md
 
 Compare each user story to its corresponding requirement in the SPEC.md:
 
 - [ ] Stories are correctly scoped (each completable in one iteration)
 - [ ] Stories are properly ordered (dependencies first)
 - [ ] Acceptance criteria are specific and verifiable
-- [ ] No requirements from the SPEC.md are missing from prd.json
+- [ ] No requirements from the SPEC.md are missing from spec.json
 - [ ] No stories exceed what the SPEC.md calls for
 
-Fix discrepancies before starting Ralph — errors here compound through every iteration.
+Fix discrepancies before starting execution — errors here compound through every iteration.
 
-### Validate prd.json schema
+### Validate spec.json schema
 
 If `bun` is available, run the schema validator:
 
 ```bash
-bun <path-to-skill>/scripts/validate-prd.ts prd.json
+bun <path-to-skill>/scripts/validate-spec.ts tmp/ship/spec.json
 ```
 
 This checks structural integrity: required fields, ID format (US-NNN), sequential priorities, duplicate detection, and "Typecheck passes" criterion presence. Zero external dependencies — runs anywhere bun is installed.
 
-If `bun` is not available, manually verify the prd.json structure matches the schema in Phase 1.
+If `bun` is not available, manually verify the spec.json structure matches the schema in Phase 1.
 
-### Place prd.json
+### Place spec.json
 
-Put `prd.json` in the worktree root or `.claude/` directory where Ralph can find it.
+Put spec.json at `tmp/ship/spec.json`. Create `tmp/ship/` if it doesn't exist (`mkdir -p tmp/ship`).
 
 ### Verify branch safety
 
-If on `main` or `master`, warn before proceeding — Ralph should normally run on a feature branch. If no branching model exists (e.g., container environment with no PR workflow), proceed with caution and ensure commits are isolated.
+If on `main` or `master`, warn before proceeding — the implement skill should normally run on a feature branch. If no branching model exists (e.g., container environment with no PR workflow), proceed with caution and ensure commits are isolated.
 
 ### Craft the implementation prompt
 
-**Load:** `templates/ralph-prompt.template.md`
+**Load:** `templates/implement-prompt.template.md`
 
 The template contains two complete prompt variants with `{{PLACEHOLDER}}` syntax. Choose ONE variant and fill all placeholders.
 
 **Choose variant:**
 - **Variant A** — when a SPEC.md path is available (directly provided or from Phase 1)
-- **Variant B** — when only prd.json is available (no SPEC.md)
+- **Variant B** — when only spec.json is available (no SPEC.md)
 
 **Conditionality lives HERE (in Phase 2 construction), NOT in the iteration prompt.** The iteration agent sees a single, unconditional workflow — never both variants, never conditional "if spec is available" logic.
 
@@ -444,43 +444,62 @@ The template contains two complete prompt variants with `{{PLACEHOLDER}}` syntax
 
 ### Save the prompt
 
-Save the crafted implementation prompt to `.claude/ralph-prompt.md`. This file is consumed by Phase 3 (`scripts/ralph.sh`) for automated execution, or by the user for manual iteration (`/ralph-loop`, `claude -p`).
+Save the crafted implementation prompt to `tmp/ship/implement-prompt.md`. This file is consumed by Phase 3 (`scripts/implement.sh`) for automated execution, or by the user for manual iteration (`claude -p`).
 
-### Copy ralph.sh to execution location
+### Copy implement.sh to execution location
 
-Copy the skill's canonical `scripts/ralph.sh` to `.claude/ralph.sh` in the working directory and make it executable:
+Copy the skill's canonical `scripts/implement.sh` to `tmp/ship/implement.sh` in the working directory and make it executable:
 
 ```bash
-cp <path-to-skill>/scripts/ralph.sh .claude/ralph.sh
-chmod +x .claude/ralph.sh
+cp <path-to-skill>/scripts/implement.sh tmp/ship/implement.sh
+chmod +x tmp/ship/implement.sh
 ```
 
-This places the iteration loop script alongside the implementation prompt (`.claude/ralph-prompt.md`) as a paired execution artifact. The copy enables:
-- **Manual execution** — users can run `.claude/ralph.sh --force` directly without knowing the skill's install path
-- **Docker execution** — containers access `.claude/ralph.sh` via bind mount (see `references/execution.md`)
+This places the iteration loop script alongside the implementation prompt (`tmp/ship/implement-prompt.md`) as a paired execution artifact. The copy enables:
+- **Manual execution** — users can run `tmp/ship/implement.sh --force` directly without knowing the skill's install path
+- **Docker execution** — containers access `tmp/ship/implement.sh` via bind mount (see `references/execution.md`)
 
-Phase 3 on host uses the skill's own `scripts/ralph.sh` directly (validate-prd.ts is available next to it). The `.claude/ralph.sh` copy is for Docker, manual, and external execution contexts.
+Phase 3 on host uses the skill's own `scripts/implement.sh` directly (validate-spec.ts is available next to it). The `tmp/ship/implement.sh` copy is for Docker, manual, and external execution contexts.
 
 ### Phase 2 checklist
 
-- [ ] prd.json validated against SPEC.md (if available)
-- [ ] prd.json schema validated (via `scripts/validate-prd.ts` if bun available)
+- [ ] spec.json validated against SPEC.md (if available)
+- [ ] spec.json schema validated (via `scripts/validate-spec.ts` if bun available)
 - [ ] Stories correctly scoped, ordered, and with verifiable criteria
 - [ ] Implementation prompt crafted from template with correct variant (A or B)
 - [ ] All `{{PLACEHOLDERS}}` filled (spec path, quality gates, codebase context)
 - [ ] Completion signal present in saved prompt (included in template — verify not accidentally removed)
-- [ ] Prompt saved to `.claude/ralph-prompt.md`
-- [ ] `ralph.sh` copied to `.claude/ralph.sh` and made executable
+- [ ] Prompt saved to `tmp/ship/implement-prompt.md`
+- [ ] `implement.sh` copied to `tmp/ship/implement.sh` and made executable
 
 ---
 
 ## Phase 3: Execute
 
-Run the iteration loop via `scripts/ralph.sh`. Each iteration spawns a fresh Claude Code subprocess — full capabilities, zero shared context between iterations.
+Run the iteration loop via `scripts/implement.sh`. Each iteration spawns a fresh Claude Code subprocess — full capabilities, zero shared context between iterations.
 
 **Load:** `references/execution.md`
 
-### Step 1: Probe for Claude CLI
+### Step 1: Ensure dependencies and build environment
+
+Before starting iterations, ensure the working directory has a functioning development environment. Iteration agents need deps installed and the build working to run quality gates.
+
+1. **Detect the package manager** from `package.json` `packageManager` field (e.g., `pnpm@10.10.0`). If a specific version is pinned, use `npx <pm>@<version> install` to avoid lockfile mismatches.
+2. **Install dependencies** if `node_modules/` is missing or stale:
+   ```bash
+   # Example for pnpm-pinned repos:
+   npx pnpm@<version> install
+   ```
+3. **Run conductor setup** if `conductor.json` exists in the repo root.
+4. **Verify the build is clean:**
+   ```bash
+   <typecheck-cmd>  # e.g., pnpm typecheck
+   ```
+   If typecheck fails, this is a pre-existing issue — log it but do not block. The iteration loop may fix it.
+
+This step is idempotent — if deps are already installed and the build is clean, it completes instantly. Skip entirely if running inside Docker (`--docker`), where the container image provides the environment.
+
+### Step 2: Probe for Claude CLI
 
 Check if automated execution is possible:
 
@@ -490,9 +509,9 @@ env -u CLAUDECODE -u CLAUDE_CODE_ENTRYPOINT claude --version
 
 If this fails, automated execution is not available — skip to the fallback below.
 
-### Step 2: Choose execution context (host vs Docker)
+### Step 3: Choose execution context (host vs Docker)
 
-**If `--docker` was NOT passed:** Execute on the host (default). Proceed to Step 3.
+**If `--docker` was NOT passed:** Execute on the host (default). Proceed to Step 4.
 
 **If `--docker` was passed:** Use Docker for execution.
 
@@ -504,9 +523,9 @@ If this fails, automated execution is not available — skip to the fallback bel
    ```
    If not running, start it: `docker compose -f <compose-file> up -d`.
 
-3. Proceed — Step 5 uses the Docker invocation variant.
+3. Proceed — Step 6 uses the Docker invocation variant.
 
-### Step 3: Pre-execution quality gate baseline
+### Step 4: Pre-execution quality gate baseline
 
 Before starting the iteration loop, run the quality gates to establish a baseline:
 
@@ -516,9 +535,9 @@ Before starting the iteration loop, run the quality gates to establish a baselin
 <test-cmd>       # e.g., pnpm test --run
 ```
 
-If any gate fails, warn the operator: "Quality gates are failing before Ralph starts. Pre-existing failures will cost Ralph iterations to diagnose. Consider fixing them first."
+If any gate fails, warn the operator: "Quality gates are failing before implementation starts. Pre-existing failures will cost iterations to diagnose. Consider fixing them first."
 
-Log the baseline to `progress.txt` regardless of result:
+Log the baseline to `tmp/ship/progress.txt` regardless of result:
 
 ```
 ## Pre-execution baseline - [timestamp]
@@ -527,11 +546,11 @@ Log the baseline to `progress.txt` regardless of result:
 - Test: PASS/FAIL
 ```
 
-Do not block execution — the operator may be running Ralph specifically to fix failures. But the baseline log helps iteration agents distinguish pre-existing failures from regressions they introduced.
+Do not block execution — the operator may be running `/implement` specifically to fix failures. But the baseline log helps iteration agents distinguish pre-existing failures from regressions they introduced.
 
-### Step 4: Determine parameters
+### Step 5: Determine parameters
 
-Count the incomplete stories in prd.json and select parameters:
+Count the incomplete stories in spec.json and select parameters:
 
 | Feature complexity | --max-iterations | --max-turns |
 |---|---|---|
@@ -539,73 +558,69 @@ Count the incomplete stories in prd.json and select parameters:
 | Medium (4-8 stories) | 20-30 | 75 |
 | Large (9+ stories) | 30-50 | 100 |
 
-### Step 5: Invoke ralph.sh
+### Step 6: Invoke implement.sh
 
 Run in background to avoid the Bash tool's 600-second timeout.
 
 **Host execution (default):**
 
 ```
-Bash(command: "<path-to-skill>/scripts/ralph.sh --max-iterations <N> --max-turns <M> --force",
+Bash(command: "<path-to-skill>/scripts/implement.sh --max-iterations <N> --max-turns <M> --force",
      run_in_background: true,
-     description: "Ralph execution run 1")
+     description: "Implement execution run 1")
 ```
 
-**Docker execution (when `--docker` was passed — compose file resolved in Step 2):**
+**Docker execution (when `--docker` was passed — compose file resolved in Step 3):**
 
 ```
-Bash(command: "docker compose -f <compose-file> exec sandbox .claude/ralph.sh --max-iterations <N> --max-turns <M> --force",
+Bash(command: "docker compose -f <compose-file> exec sandbox tmp/ship/implement.sh --max-iterations <N> --max-turns <M> --force",
      run_in_background: true,
-     description: "Ralph Docker execution run 1")
+     description: "Implement Docker execution run 1")
 ```
 
 Always pass `--force` — background execution has no TTY for interactive prompts.
 
 Poll for completion using `TaskOutput(block: false)` at intervals. While waiting, do lightweight work (re-read spec, review task list) but do NOT make code changes that could conflict.
 
-### Step 6: Assess results
+### Step 7: Assess results
 
-When ralph.sh completes, read `prd.json` and `progress.txt`:
+When implement.sh completes, read `tmp/ship/spec.json` and `tmp/ship/progress.txt`:
 
 - **All stories `passes: true`** → execution succeeded. Proceed to Phase 3 checklist.
-- **Some stories incomplete** → check progress.txt for blockers. Apply stuck story handling (see `references/execution.md`), then re-invoke ralph.sh for another run.
-- **ralph.sh exited with error** → read output for details. If transient (network, rate limit), retry once. If persistent, fall back to manual instructions.
+- **Some stories incomplete** → check `tmp/ship/progress.txt` for blockers. Apply stuck story handling (see `references/execution.md`), then re-invoke implement.sh for another run.
+- **implement.sh exited with error** → read output for details. If transient (network, rate limit), retry once. If persistent, fall back to manual instructions.
 
-### Step 7: Stuck story handling (between runs)
+### Step 8: Stuck story handling (between runs)
 
-If the same story fails across 2 consecutive ralph.sh runs with the same blocker:
+If the same story fails across 2 consecutive implement.sh runs with the same blocker:
 
-1. **Story too large** → split into smaller stories in prd.json
+1. **Story too large** → split into smaller stories in spec.json
 2. **Criteria ambiguous** → rewrite criteria to be more specific
 3. **External dependency blocking** → skip the story, set `notes` explaining the blocker
-4. **Wrong implementation approach** → add guidance to `progress.txt` suggesting an alternative
+4. **Wrong implementation approach** → add guidance to `tmp/ship/progress.txt` suggesting an alternative
 
 After 3 consecutive failed runs on the same story, stop and consult the user.
 
-Re-invoke ralph.sh after applying remediation. Maximum 3 total ralph.sh runs before escalating to the user.
+Re-invoke implement.sh after applying remediation. Maximum 3 total implement.sh runs before escalating to the user.
 
 ### Fallback: Claude CLI not available
 
-If the Claude CLI probe in Step 1 failed, automated execution is not possible. Ralph still provides full value through Phases 1-2 — the artifacts are ready.
+If the Claude CLI probe in Step 1 failed, automated execution is not possible. `/implement` still provides full value through Phases 1-2 — the artifacts are ready.
 
 Tell the user:
 
-1. The implementation artifacts have been saved to `.claude/ralph-prompt.md` and `.claude/ralph.sh`
+1. The implementation artifacts have been saved to `tmp/ship/implement-prompt.md` and `tmp/ship/implement.sh`
 2. For manual execution using the iteration loop:
    ```bash
-   .claude/ralph.sh --max-iterations <N> --max-turns <M> --force
-   ```
-3. Or using `/ralph-loop`:
-   ```
-   /ralph-loop "$(cat .claude/ralph-prompt.md)" --max-iterations <N> --completion-promise "IMPLEMENTATION COMPLETE"
+   tmp/ship/implement.sh --max-iterations <N> --max-turns <M> --force
    ```
 
 ### Phase 3 checklist
 
-- [ ] All stories in prd.json have `passes: true` (or stuck stories documented with `notes`)
-- [ ] progress.txt reviewed — no unresolved blockers
+- [ ] All stories in `tmp/ship/spec.json` have `passes: true` (or stuck stories documented with `notes`)
+- [ ] `tmp/ship/progress.txt` reviewed — no unresolved blockers
 - [ ] Quality gates pass: typecheck, lint, test
 
 **After Phase 3:**
 - If composed by `/ship`: Ship continues with post-implementation review and testing.
-- If standalone: read every file created or modified. Ralph's output is your starting point, not your endpoint. Run quality gates manually.
+- If standalone: read every file created or modified. The implementation output is your starting point, not your endpoint. Run quality gates manually.

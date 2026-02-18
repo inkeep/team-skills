@@ -34,6 +34,29 @@ Then explicitly say:
 - what we reuse
 - what we intentionally diverge from
 
+## Internal surface-area map
+Map which internal subsystems this feature touches. This is the internal counterpart to the product surface-area impact map.
+
+**First:** Check for existing repo-level surface area catalogs (e.g., an `internal-surface-areas` skill in `.agents/skills/`). If one exists, load it as the baseline and identify which internal surfaces this feature touches — including transitive dependencies via the catalog's dependency graph or impact matrix. Fill gaps only for areas the catalog doesn't cover.
+
+**If no catalog exists**, enumerate from investigation:
+- build & package graph
+- CI/CD pipelines
+- test infrastructure
+- database schemas & data access layer
+- authentication & authorization infrastructure
+- shared runtime types & validation
+- observability infrastructure
+- runtime engine / core processing
+- deployment artifacts
+- environment & configuration
+
+For each surface touched:
+- what changes
+- coupling tightness (shared DB, API contract, event bus, etc.)
+- blast radius (direct + transitive dependents)
+- failure mode if this surface breaks
+
 ## Dependency capability checks
 For any design that relies on a third-party capability:
 - verify via types/source (not marketing docs)

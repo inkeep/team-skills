@@ -48,11 +48,13 @@ Skills are on-demand procedural knowledge that Claude loads when relevant. They 
 |---|---|---|
 | `/ship` | User or model | End-to-end feature development orchestrator: spec through merge-ready PR |
 | `/spec` | User or model | Interactive spec authoring (PRD + technical design) |
-| `/ralph` | User or model | Autonomous implementation methodology: SPEC.md to working code via iterative loop |
+| `/implement` | User or model | Autonomous implementation methodology: SPEC.md to working code via iterative loop |
+| `/qa-test` | User or model | Manual QA — verify features end-to-end as a user would, using browser, macOS, bash, APIs |
+| `/docs` | User or model | Documentation for engineering changes — product-facing and internal surface areas, with repo convention discovery |
 | `/review` | User or model | PR review iteration: poll feedback, assess, fix, resolve threads, drive CI green |
 | `/inspect` | User or model | Codebase inspection — discover patterns, trace flows, map blast radius |
 | `/research` | User or model | Technical research with optional persistent reports |
-| `tdd` | Model-only | Background knowledge for behavior-focused testing (auto-loaded; key principles distilled inline in spec, ship, and ralph) |
+| `tdd` | Model-only | Background knowledge for behavior-focused testing (auto-loaded; key principles distilled inline in spec, ship, and implement) |
 | `/write-skill` | User or model | Author or update Claude Code skills (SKILL.md + supporting files) |
 | `/write-agent` | User or model | Design Claude Code agents and agent prompts (.claude/agents/*.md) |
 | `/analyze` | User or model | Deep, iterative, evidence-based analysis of situations, decisions, and trade-offs |
@@ -70,17 +72,28 @@ Add eng-only skills by creating a folder in `plugins/eng/skills/`.
 ```
 /ship
  ├── Phase 0: Detect context (capabilities, execution environment)
- ├── Phase 1A: /spec ─── interactive spec authoring with the user
- ├── Phase 1B: Validate spec, /inspect the codebase, /ralph Phase 1 (convert to prd.json)
- ├── Phase 2: Environment setup (worktree or container branch)
- ├── Phase 3: /ralph Phases 2-4 (implementation via /ralph-loop or ship-managed iteration)
- ├── Phase 4: Testing (Tier 1 formal + Tier 2 QA + Tier 3 edge cases)
- ├── Phase 5: Documentation (product + internal surface areas)
- ├── Phase 6: /review (PR feedback loop + CI/CD resolution)
- └── Phase 7: Completion
+ ├── Phase 1: /spec ─── spec authoring, validation, and state activation (collaborative)
+ ├── Phase 2: /inspect + /implement (codebase understanding, implementation)
+ ├── Create draft PR (stub body)
+ ├── Phase 3: /qa-test (manual QA verification)
+ ├── Write PR body (/pull-request)
+ ├── Phase 4: /docs (product + internal documentation surface areas)
+ ├── Phase 5: /review (PR feedback loop + CI/CD resolution)
+ └── Phase 6: Completion
 ```
 
-Each composed skill also works standalone — you can invoke `/spec`, `/ralph`, `/review`, `/inspect`, or `/research` independently without going through `/ship`.
+Each composed skill also works standalone — you can load `/spec`, `/implement`, `/qa-test`, `/docs`, `/review`, `/inspect`, or `/research` independently without going through `/ship`.
+
+---
+
+## Gitignore requirement
+
+`/ship` and `/implement` write execution state to `tmp/ship/` in the working directory (loop control, workflow state, spec.json, progress.txt, implementation prompt). These are transient files — not part of the deliverable. Add `tmp/` to your repo's `.gitignore`:
+
+```
+# Ship/Implement execution state
+tmp/
+```
 
 ---
 
@@ -90,9 +103,9 @@ Skills work across three execution environments. `/ship` detects the context in 
 
 | Context | What's available | What degrades |
 |---|---|---|
-| **Direct on host** | Everything — git, gh CLI, browser, macOS tools, ralph-loop | Nothing (full capability) |
+| **Direct on host** | Everything — git, gh CLI, browser, macOS tools, claude CLI | Nothing (full capability) |
 | **Git worktree** | Same as host, isolated directory | Nothing (full capability) |
-| **Docker container** | Git, filesystem — but no gh CLI, no browser, no macOS tools, possibly no ralph-loop | PR creation/review skipped, browser testing substituted with Bash, ship manages iteration if ralph-loop unavailable |
+| **Docker container** | Git, filesystem — but no gh CLI, no browser, no macOS tools | PR creation/review skipped, browser testing substituted with Bash |
 
 ---
 
@@ -102,13 +115,37 @@ Skills work across three execution environments. `/ship` detects the context in 
 |---|---|
 | Build a feature end-to-end from idea to PR | `/ship` |
 | Write a spec (PRD + tech design) | `/spec` |
-| Convert a spec to prd.json and implement iteratively | `/ralph` |
+| Convert a spec to spec.json and implement iteratively | `/implement` |
+| Manually QA a feature with available tools (browser, bash, macOS) | `/qa-test` |
+| Write or update documentation for engineering changes | `/docs` |
 | Iterate on PR review feedback and get CI green | `/review` |
 | Understand patterns or trace code flow before acting | `/inspect` |
 | Investigate a technology, compare approaches, gather evidence | `/research` |
 | Analyze a decision, situation, or trade-off in depth | `/analyze` |
 | Create or update a skill | `/write-skill` |
 | Create or update a subagent definition | `/write-agent` |
+
+---
+
+## Recommended companion plugins
+
+These plugins from `claude-plugins-official` complement the eng skills. Install them once — they auto-update with the marketplace.
+
+### TypeScript LSP
+
+Gives Claude Code go-to-definition, find-references, and type-error checking for TypeScript/JavaScript files. Significantly improves code navigation and catch-before-run error detection.
+
+**Prerequisites:**
+
+```bash
+npm install -g typescript-language-server typescript
+```
+
+**Install:**
+
+```bash
+claude plugin install typescript-lsp@claude-plugins-official
+```
 
 ---
 

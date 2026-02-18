@@ -1,4 +1,4 @@
-Use when: Assessing reviewer feedback (Stage 1, step 3); writing PR body from SPEC.md; delegating to subagents
+Use when: Assessing reviewer feedback (Stage 1, step 3); delegating to subagents
 Priority: P0
 Impact: Mechanical/uncritical response to reviews; missed nuance in feedback assessment; unresolved threads
 
@@ -43,52 +43,9 @@ Thread node IDs (`thread_id`) are included in the "Review Threads" section of `f
 
 ---
 
-## PR body from SPEC.md
+## PR body
 
-When a SPEC.md is available, use it as the source material for the PR body. Distill it — don't copy the entire spec. The PR body should be a high-resolution summary that gives reviewers full context without requiring them to read the spec end-to-end. Link to the full SPEC.md for anyone who wants complete context.
-
-| PR section | Source | What to write |
-|---|---|---|
-| Summary | SPEC.md §1 (Problem statement) | 1-3 sentences: what this PR does and why. |
-| Motivation | SPEC.md §1-§2 (Problem + Goals) | What problem this solves, why now, who benefits. |
-| Approach | SPEC.md §9 (Proposed solution) + §10 (Decision log) | Key design decisions and why they were chosen over alternatives. Include decisions made *during implementation* that aren't in the spec. |
-| Changes | Implementation-specific | Bullet list of what changed, organized by area. This is the one section the spec can't provide — it reflects what was actually built. |
-| Deviations | Implementation-specific | What diverged from the spec and why. Omit if implementation matched the spec exactly. |
-| Test plan | Implementation-specific | What was tested, how, and key scenarios verified — both automated and manual. |
-| Future considerations | Review feedback (out-of-scope items) | Items surfaced during review that are out of scope for this PR but worth tracking. Updated during the review loop as reviewers raise pre-existing or tangential issues. Omit if none. |
-| Spec link | — | Link to the SPEC.md file for full context. |
-
-```bash
-gh pr edit <number> --body "$(cat <<'EOF'
-## Summary
-<distill from SPEC.md §1 — what this PR does and why>
-
-## Motivation
-<distill from SPEC.md §1-§2 — what problem, why now, who benefits>
-
-## Approach
-<distill from SPEC.md §9 + §10 — key design decisions and rationale, including any decisions made during implementation>
-
-## Changes
-<bullet list of what actually changed, organized by area>
-
-## Deviations from spec
-<what diverged from the SPEC.md during implementation and why — omit if none>
-
-## Test plan
-<what was tested, how, and key scenarios verified — both automated and manual>
-
-## Future considerations
-<items surfaced during review that are out of scope for this PR but worth tracking — omit section if none>
-
-**Spec:** <link or path to SPEC.md>
-
-Generated with [Claude Code](https://claude.com/claude-code)
-EOF
-)"
-```
-
-When no SPEC.md is available, write the PR body directly from the implementation context. The same sections apply — Summary, Motivation, Approach, Changes, Test plan — but you derive them from the code and commit history rather than a spec document.
+Load `/pull-request` skill for all PR body work — it owns the template, section guidance, and principles (self-contained, stateless). When the PR body needs updating during the review loop (e.g., after implementing review feedback), re-load `/pull-request` with the PR number to rewrite it.
 
 ---
 
@@ -109,13 +66,14 @@ For each suggestion, build enough context to make a **high-confidence judgment**
 | Pointing to a potential bug or correctness issue | **Deep.** Read the code path end-to-end. Trace the data flow. Check edge cases. Verify the claim is actually true in this context. |
 | Proposing an alternative pattern or approach | **Medium.** Check how the codebase handles similar cases. Consider why the current approach was chosen. Evaluate tradeoffs. |
 | Flagging a style/naming/convention issue | **Light.** Quick check of adjacent code for existing conventions. |
-| Making a claim you're uncertain about | **Research.** Use web search, `/research`, or codebase inspection to gather evidence. Do not guess. |
+| Making a claim you're uncertain about | **Research.** Use web search, load `/research` skill, or use codebase inspection to gather evidence. Do not guess. |
 
 Investigation tools (use as needed):
-- **Codebase inspection:** Read adjacent files, grep for patterns, trace call chains. Understand what the reviewer may not have seen.
+- **Codebase inspection:** Read adjacent files, grep for patterns, trace call chains. Understand what the reviewer may not have seen. Load `/inspect` skill for structured understanding — pattern discovery or end-to-end flow tracing.
 - **Spec/intent check:** If a SPEC.md was provided, re-read the relevant sections. Does the suggestion align with or contradict the design intent?
 - **Web search:** For claims about library behavior, API semantics, best practices, or security considerations.
-- **`/research`:** For complex questions requiring deep investigation (e.g., "is this pattern actually safer?" or "how do other systems handle this?").
+- **`/research`:** For complex questions requiring deep investigation (e.g., "is this pattern actually safer?" or "how do other systems handle this?"). Load `/research` skill for research-grade evidence trails.
+- **`/analyze`:** For non-trivial suggestions involving genuine tradeoffs, architectural alternatives, or multi-dimensional evaluation where there is no clear right answer. Load `/analyze` skill for structured reasoning before deciding.
 - **Product context:** Consider how the change affects users, other consumers, and downstream systems. A technically valid suggestion may be wrong for the product.
 
 **Litmus test for investigation depth:** Could you explain your reasoning to a senior engineer and defend it with evidence? If not, you have not investigated enough. An assessment backed by "I think" or "it seems" has not met the standard. An assessment backed by "I read the code path and confirmed X" or "I checked the spec and this contradicts section Y" has.
@@ -150,7 +108,7 @@ For each suggestion, assess:
 
 You do not need to evaluate every dimension for every comment. Use judgment — a simple naming suggestion doesn't need a tradeoff analysis. A suggested architectural change does.
 
-**For non-trivial suggestions** (architectural changes, alternative approaches, scope questions), deepen the evaluation with these additional dimensions:
+**For non-trivial suggestions** (architectural changes, alternative approaches, scope questions), deepen the evaluation with these additional dimensions. When the suggestion involves genuine tradeoffs with no clear winner, load `/analyze` skill to produce structured reasoning — feed it the suggestion, the current approach, and the dimensions below. Use the analysis output to inform your decision, not replace it.
 
 | Dimension | What to weigh |
 |---|---|

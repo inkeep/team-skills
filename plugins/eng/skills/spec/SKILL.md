@@ -99,41 +99,49 @@ Do:
 
 #### Where to save the spec
 
-**Default:** `~/.claude/specs/<spec-name>/SPEC.md`
+**Default:** `<repo-root>/specs/<spec-name>/SPEC.md`
 
 Always use the default **unless** an override is active (checked in this order):
 
 | Priority | Source | Example |
 |----------|--------|---------|
 | 1 | **User says so** in the current session | "Put the spec in `docs/rfcs/`" |
-| 2 | **Env var `CLAUDE_SPECS_DIR`** (set in `.env` or shell) | `CLAUDE_SPECS_DIR=./specs` → `./specs/<spec-name>/SPEC.md` |
-| 3 | **AI repo config** (`CLAUDE.md`, `AGENTS.md`, `.cursor/rules/`, etc.) declares a specs directory | `specs-dir: docs/specs` |
-| 4 | **Default** | `~/.claude/specs/<spec-name>/SPEC.md` |
+| 2 | **Env var `CLAUDE_SPECS_DIR`** (set in `.env` or shell) | `CLAUDE_SPECS_DIR=./my-specs` → `./my-specs/<spec-name>/SPEC.md` |
+| 3 | **AI repo config** (`CLAUDE.md`, `AGENTS.md`, `.cursor/rules/`, etc.) declares a specs directory | `specs-dir: .ai-dev/specs` |
+| 4 | **Default (in a repo)** | `<repo-root>/specs/<spec-name>/SPEC.md` |
+| 5 | **Default (no repo)** | `~/.claude/specs/<spec-name>/SPEC.md` |
 
 Resolution rules:
 - If `CLAUDE_SPECS_DIR` is set, treat it as the parent directory (create `<spec-name>/SPEC.md` inside it).
 - Relative paths resolve from the **repo root** (or cwd if no repo).
-- Do **not** scan for existing `docs/`, `rfcs/`, `specs/` directories automatically — only use them when explicitly configured via one of the sources above.
+- When inside a git repo, specs default to the repo-local `specs/` directory. When **not** inside a git repo, fall back to `~/.claude/specs/`.
+- Do **not** scan for existing `docs/`, `rfcs/` directories automatically — only use them when explicitly configured via one of the sources above.
 - When in doubt, use the default and tell the user where the file landed.
 
 ---
 
 ### 3) Build the first world model (product + technical, together)
 Do:
+- **Build product and internal surface-area maps.** Dispatch a `general-purpose` Task subagent that loads `/discover` skill with the feature topic (consumer: `/spec`). Use the World Model Brief as the foundation for the product and internal surface-area maps. Fill gaps with original investigation using the playbook references below. If `/discover` is unavailable, build the maps inline — see `references/product-discovery-playbook.md` "Product surface-area impact" and `references/technical-design-playbook.md` "Internal surface-area map."
 - Map the **user journey(s)** and "what success looks like" (product).
 - Map the **current system behavior** and constraints end-to-end (technical). As you trace current behavior, persist factual findings to `evidence/` immediately — don't wait for the world model to be complete (see `references/artifact-strategy.md` "Current system behavior discovered").
 - Create a **Consumer Matrix** when there are multiple consumption modes (SDK, UI, API, internal runtime, etc.).
-- **When the design depends on third-party code** (packages, libraries, frameworks, external services): dispatch **Task subagents** to investigate each key 3P dependency — scoped to the spec's scenario and the capabilities under consideration, not a general survey. Include a sanity check: is this the right 3P choice, or is there a better-suited alternative? Persist findings to `evidence/`. See `references/research-playbook.md` "Third-party dependency investigation" for scope and execution guidance.
-- **When the spec touches existing system areas** (current behavior, internal patterns, blast radius): dispatch **Task subagents** that load `/inspect` to build structured codebase understanding — pattern lens for conventions and prior art, tracing lens for end-to-end flows and blast radius, or both. Scope to the spec's areas of interest, not the entire codebase. Each subagent returns a pattern brief or trace brief inline; persist load-bearing findings to `evidence/`. See `references/research-playbook.md` investigation types B, C, and F for what to investigate.
+- **When the design depends on third-party code** (packages, libraries, frameworks, external services): dispatch `general-purpose` Task subagents to investigate each key 3P dependency — scoped to the spec's scenario and the capabilities under consideration, not a general survey. Include a sanity check: is this the right 3P choice, or is there a better-suited alternative? Persist findings to `evidence/`. See `references/research-playbook.md` "Third-party dependency investigation" for scope and execution guidance.
+- **When the spec touches existing system areas** (current behavior, internal patterns, blast radius): dispatch `general-purpose` Task subagents that load `/inspect` skill to build structured codebase understanding — pattern lens for conventions and prior art, tracing lens for end-to-end flows and blast radius, or both. Scope to the spec's areas of interest, not the entire codebase. Each subagent returns a pattern brief or trace brief inline; persist load-bearing findings to `evidence/`. See `references/research-playbook.md` investigation types B, C, and F for what to investigate.
+
+**Subagent dispatch:** When a Task subagent needs a skill, use the `general-purpose` type (it has the Skill tool). Start the subagent's prompt with `Before doing anything, load /skill-name skill`, then provide context and the task.
 
 **Load (for technique):**
 - `references/technical-design-playbook.md`
+- `references/product-discovery-playbook.md`
 - `templates/CONSUMER_MATRIX.md.template`
 - `templates/USER_JOURNEYS.md.template`
 
 Output:
 - A draft "current state" narrative (what exists today)
 - A draft "target state" narrative (what should exist)
+- A **product surface-area map** (which customer-facing surfaces this feature touches)
+- An **internal surface-area map** (which internal subsystems this feature touches)
 - A list of key constraints (internal + external)
 
 ---
@@ -171,7 +179,7 @@ This is the core of the skill. Repeat until Phase N is fully scoped.
 Loop steps:
 1. **Identify what needs investigation** — extract from the OQ backlog + cascade from prior decisions. Prioritize: P0 blocking items first.
 2. **Investigate autonomously:**
-   - **P0 / blocking:** Deep investigation — dispatch `/research`, `/inspect`, multi-file traces, external prior art searches.
+   - **P0 / blocking:** Deep investigation — dispatch `general-purpose` Task subagents that load `/research` skill or `/inspect` skill, multi-file traces, external prior art searches.
    - **P1:** Moderate investigation — direct file reads, targeted searches, quick dependency checks.
    - **P2 non-blocking:** Surface-level only — note the question, don't investigate deeply.
    - Before drafting options for any non-trivial decision, verify (by investigating, not by proposing):
@@ -261,9 +269,9 @@ Categorize assertions and dispatch subagents in parallel:
 
 | Track | Tool | Scope |
 |---|---|---|
-| Own codebase (behavior, patterns, blast radius) | `/inspect` subagents | Verify each assertion against current code. Each subagent gets the specific claim + relevant file paths or areas. |
-| Third-party dependencies (capabilities, types, behavior) | `/research` subagents | Verify against current source/types/docs for each dependency, scoped to the spec's scenario. |
-| External claims (prior art, ecosystem conventions) | `/research` subagents or web search | Spot-check factual claims about external systems or ecosystem patterns. |
+| Own codebase (behavior, patterns, blast radius) | `general-purpose` Task subagents that load `/inspect` skill | Verify each assertion against current code. Each subagent gets the specific claim + relevant file paths or areas. |
+| Third-party dependencies (capabilities, types, behavior) | `general-purpose` Task subagents that load `/research` skill | Verify against current source/types/docs for each dependency, scoped to the spec's scenario. |
+| External claims (prior art, ecosystem conventions) | `general-purpose` Task subagents that load `/research` skill, or web search | Spot-check factual claims about external systems or ecosystem patterns. |
 
 #### Step 4: Present findings (do not auto-correct)
 This step is purely analytical. Report findings to the user — do not edit the spec.

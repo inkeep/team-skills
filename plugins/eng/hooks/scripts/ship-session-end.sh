@@ -13,7 +13,7 @@ INPUT=$(cat)
 PROJECT_DIR="${CLAUDE_PROJECT_DIR:-$(echo "$INPUT" | jq -r '.cwd')}"
 SESSION_ID=$(echo "$INPUT" | jq -r '.session_id')
 
-STATE_FILE="${PROJECT_DIR}/.claude/ship-state.json"
+STATE_FILE="${PROJECT_DIR}/tmp/ship/state.json"
 
 # Guard: no state file = no-op
 if [[ ! -f "$STATE_FILE" ]]; then
@@ -27,7 +27,7 @@ CURRENT_PHASE=$(jq -r '.currentPhase // ""' "$STATE_FILE")
 # Only clean up if workflow completed
 if [[ "$CURRENT_PHASE" == "completed" ]]; then
   rm -f "$STATE_FILE"
-  rm -f "${PROJECT_DIR}/.claude/ship-state.backup-"*.json
+  rm -f "${PROJECT_DIR}/tmp/ship/state.backup-"*.json
 fi
 
 # Always clean up injection marker

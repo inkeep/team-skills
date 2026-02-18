@@ -1,12 +1,12 @@
 #!/usr/bin/env bun
 
-// prd.json schema validator — zero dependencies.
-// Usage: bun validate-prd.ts <path-to-prd.json>
+// spec.json schema validator — zero dependencies.
+// Usage: bun validate-spec.ts <path-to-spec.json>
 // Exit 0: valid | Exit 1: invalid or error
 //
 // Used in two places:
-// 1. Ralph Phase 2 — validate prd.json before crafting the prompt
-// 2. ralph.sh — validate prd.json integrity after each iteration
+// 1. Phase 2 — validate spec.json before crafting the prompt
+// 2. implement.sh — validate spec.json integrity after each iteration
 
 import { readFileSync } from 'fs';
 
@@ -22,7 +22,7 @@ interface UserStory {
   notes: string;
 }
 
-interface Prd {
+interface SpecJson {
   project: string;
   branchName: string;
   description: string;
@@ -98,11 +98,11 @@ function validateStory(raw: unknown, index: number): string[] {
   return errors;
 }
 
-function validateSchema(json: unknown): { prd: Prd | null; errors: string[] } {
+function validateSchema(json: unknown): { spec: SpecJson | null; errors: string[] } {
   const errors: string[] = [];
 
   if (typeof json !== 'object' || json === null || Array.isArray(json)) {
-    return { prd: null, errors: ['Root: must be a JSON object'] };
+    return { spec: null, errors: ['Root: must be a JSON object'] };
   }
 
   const obj = json as Record<string, unknown>;
@@ -124,17 +124,17 @@ function validateSchema(json: unknown): { prd: Prd | null; errors: string[] } {
     }
   }
 
-  if (errors.length > 0) return { prd: null, errors };
-  return { prd: json as unknown as Prd, errors: [] };
+  if (errors.length > 0) return { spec: null, errors };
+  return { spec: json as unknown as SpecJson, errors: [] };
 }
 
 // --- Semantic checks (beyond structural schema) ---
 
-function semanticChecks(prd: Prd): string[] {
+function semanticChecks(spec: SpecJson): string[] {
   const errors: string[] = [];
 
-  const ids = prd.userStories.map((s) => s.id);
-  const priorities = prd.userStories.map((s) => s.priority).sort((a, b) => a - b);
+  const ids = spec.userStories.map((s) => s.id);
+  const priorities = spec.userStories.map((s) => s.priority).sort((a, b) => a - b);
 
   // Duplicate IDs
   const idSet = new Set(ids);
@@ -163,7 +163,7 @@ function semanticChecks(prd: Prd): string[] {
   }
 
   // Every story should have "Typecheck passes" criterion
-  for (const story of prd.userStories) {
+  for (const story of spec.userStories) {
     const hasTypecheck = story.acceptanceCriteria.some((c) =>
       c.toLowerCase().includes('typecheck pass'),
     );
@@ -179,7 +179,7 @@ function semanticChecks(prd: Prd): string[] {
 
 const filePath = process.argv[2];
 if (!filePath) {
-  console.error('Usage: validate-prd.ts <path-to-prd.json>');
+  console.error('Usage: validate-spec.ts <path-to-spec.json>');
   process.exit(1);
 }
 
@@ -194,7 +194,7 @@ try {
     process.exit(1);
   }
 
-  const { prd, errors: schemaErrors } = validateSchema(json);
+  const { spec, errors: schemaErrors } = validateSchema(json);
 
   if (schemaErrors.length > 0) {
     console.error('Schema validation failed:');
@@ -204,7 +204,7 @@ try {
     process.exit(1);
   }
 
-  const semanticErrors = semanticChecks(prd!);
+  const semanticErrors = semanticChecks(spec!);
   if (semanticErrors.length > 0) {
     console.error('Semantic validation failed:');
     for (const err of semanticErrors) {
@@ -214,9 +214,9 @@ try {
   }
 
   // Status summary on success
-  const total = prd!.userStories.length;
-  const passing = prd!.userStories.filter((s) => s.passes).length;
-  console.log(`prd.json valid. Stories: ${passing}/${total} passing.`);
+  const total = spec!.userStories.length;
+  const passing = spec!.userStories.filter((s) => s.passes).length;
+  console.log(`spec.json valid. Stories: ${passing}/${total} passing.`);
   process.exit(0);
 } catch (e: unknown) {
   const message = e instanceof Error ? e.message : String(e);

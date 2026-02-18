@@ -28,7 +28,7 @@ The user's role is **judgment**: product vision, priority, risk tolerance, scope
 - Performance implications — check code patterns, but can't run benchmarks
 - UX patterns — search for patterns, but product context determines the final call
 
-## When to invoke `/research`
+## When to load `/research` skill
 Use it when you need **evidence-backed** answers (especially for 1-way doors), including:
 - Internal current-state traces (end-to-end code path)
 - Internal prior art (existing patterns in the codebase)
@@ -66,13 +66,13 @@ These are the agent's investigation tools. Execute them as part of autonomous in
 - What parts are reusable
 - What parts must differ (because constraints changed)
 
-**Execution:** Dispatch `/inspect` subagents with the **pattern lens**. Each subagent receives the target area and what kind of similarity to search for (structural, analogous, conceptual). Returns a pattern brief inline with shared vocabulary and reusable abstractions. The spec agent persists load-bearing findings to `evidence/`.
+**Execution:** Dispatch `general-purpose` Task subagents that load `/inspect` skill with the **pattern lens**. Each subagent receives the target area and what kind of similarity to search for (structural, analogous, conceptual). Returns a pattern brief inline with shared vocabulary and reusable abstractions. The spec agent persists load-bearing findings to `evidence/`.
 
 ### C) Current-state trace (end-to-end reality)
 Trace from entrypoint → runtime → config → storage → UI/UX → ops.
 Goal: discover hidden constraints and latent bugs.
 
-**Execution:** Dispatch `/inspect` subagents with the **tracing lens**. Each subagent receives the entry point and the trace question (what does this connect to, what's the full flow, what crosses boundaries). Returns a trace brief inline with dependencies, cross-boundary transitions, and surface area touched.
+**Execution:** Dispatch `general-purpose` Task subagents that load `/inspect` skill with the **tracing lens**. Each subagent receives the entry point and the trace question (what does this connect to, what's the full flow, what crosses boundaries). Returns a trace brief inline with dependencies, cross-boundary transitions, and surface area touched.
 
 ### D) Dependency constraints
 Verify with types/source (not just docs):
@@ -99,7 +99,7 @@ When the spec depends on packages, libraries, frameworks, or external software o
 Dispatch as **Task subagents** (one per dependency or dependency cluster) that load the `/research` skill for its methodology, evidence standards, and source code analysis patterns. This gives each subagent research-grade rigor without the overhead of creating standalone reports.
 
 Each subagent should be instructed to:
-1. **Load `/research`** and run its routing gate — check if an existing report on this 3P system already exists in `~/.claude/reports/`.
+1. **Load `/research` skill** and run its routing gate — check if an existing report on this 3P system already exists in `~/.claude/reports/`.
 2. **If an existing report exists** → use Path C (update/append) to add findings relevant to the spec's scenario. This enriches shared knowledge.
 3. **If no existing report exists** → use Path B (direct answer). Do **not** create a new standalone report. Return full findings in the response.
 4. **In both cases**, return complete findings inline to the spec agent — the spec agent needs the results in-context to inform design decisions.
@@ -123,7 +123,26 @@ For changes with wide impact:
 - Can the change be deployed independently or does it require coordination?
 - Identify silent failure modes (things that break without producing errors)
 
-**Execution:** Dispatch `/inspect` subagents with the **tracing lens** focused on blast radius. Each subagent receives the changed area and traces forward/backward to identify direct and transitive dependents, surface area touched, and coupling tightness.
+**Execution:** Dispatch `general-purpose` Task subagents that load `/inspect` skill with the **tracing lens** focused on blast radius. Each subagent receives the changed area and traces forward/backward to identify direct and transitive dependents, surface area touched, and coupling tightness.
+
+### G) Repo-level structured knowledge
+Before original investigation, check whether the repo provides pre-built domain knowledge — surface area catalogs, system maps, dependency graphs — as skills or structured documents.
+
+**Discovery protocol:**
+1. Scan `.agents/skills/`, `.claude/agents/`, and similar directories for skill files (SKILL.md or *.md with frontmatter).
+2. Read frontmatter descriptions. Look for skills that provide:
+   - **Product surface-area catalogs** — customer-facing surfaces (UIs, APIs, SDKs, CLIs, docs, config formats)
+   - **Internal surface-area catalogs** — infrastructure, shared code, CI/CD, database, auth, runtime, observability
+   - **Dependency graphs** or **impact matrices** — what breaks when X changes
+   - **Domain glossaries** or **system architecture maps**
+3. Load relevant skills as context for the world model. They replace from-scratch enumeration for the areas they cover.
+4. Identify gaps — surfaces or system areas the repo skills don't cover — and flag those for original investigation (types B, C, E, F).
+
+**What to persist:** Reference the repo skills in evidence files (e.g., "Product surfaces grounded from `.agents/skills/product-surface-areas`; gaps identified: [list]"). Do not duplicate the catalog content — point to it.
+
+**When no repo-level knowledge exists:** Fall back entirely to original investigation. The world model still needs both product and internal surface-area maps — build them from `/inspect` traces, product research, and the enumeration guidance in the product discovery and technical design playbooks.
+
+---
 
 ## How to convert research into decision inputs
 After research completes, translate findings into this format before presenting options:

@@ -1,22 +1,22 @@
 #!/bin/bash
 set -e
 
-# Ralph Iteration Loop
-# Spawns independent Claude Code processes to implement user stories from prd.json.
+# Implement Iteration Loop
+# Spawns independent Claude Code processes to implement user stories from spec.json.
 # Each iteration is a fresh process with no memory — state persists via files and git.
 
 # --- Defaults ---
 MAX_ITERATIONS=10
 MAX_TURNS=75
-PROMPT_FILE=".claude/ralph-prompt.md"
-PRD_FILE="prd.json"
-PROGRESS_FILE="progress.txt"
+PROMPT_FILE="tmp/ship/implement-prompt.md"
+SPEC_FILE="tmp/ship/spec.json"
+PROGRESS_FILE="tmp/ship/progress.txt"
 FORCE=false
 PROTECTED_BRANCHES="main master"
 
 # --- Script paths ---
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-VALIDATE_SCRIPT="$SCRIPT_DIR/validate-prd.ts"
+VALIDATE_SCRIPT="$SCRIPT_DIR/validate-spec.ts"
 
 # --- Colors ---
 RED='\033[0;31m'
@@ -27,15 +27,15 @@ NC='\033[0m'
 
 # --- Usage ---
 usage() {
-    echo "Usage: ralph.sh [OPTIONS]"
+    echo "Usage: implement.sh [OPTIONS]"
     echo ""
     echo "Options:"
     echo "  --max-iterations N   Max iteration loops (default: 10)"
     echo "  --max-turns N        Max agentic turns per iteration (default: 75)"
-    echo "  --prompt FILE        Prompt file path (default: .claude/ralph-prompt.md)"
-    echo "  --prd FILE           PRD file path (default: prd.json)"
+    echo "  --prompt FILE        Prompt file path (default: tmp/ship/implement-prompt.md)"
+    echo "  --spec FILE          Spec JSON file path (default: tmp/ship/spec.json)"
     echo "  --force              Skip uncommitted changes prompt"
-    echo "  --create-branch, -b  Create/checkout branch from prd.json branchName"
+    echo "  --create-branch, -b  Create/checkout branch from spec.json branchName"
     echo "  -h, --help           Show this help"
     exit 0
 }
@@ -47,7 +47,7 @@ while [[ $# -gt 0 ]]; do
         --max-iterations) MAX_ITERATIONS="$2"; shift 2 ;;
         --max-turns) MAX_TURNS="$2"; shift 2 ;;
         --prompt) PROMPT_FILE="$2"; shift 2 ;;
-        --prd) PRD_FILE="$2"; shift 2 ;;
+        --spec) SPEC_FILE="$2"; shift 2 ;;
         --force) FORCE=true; shift ;;
         --create-branch|-b) CREATE_BRANCH=true; shift ;;
         -h|--help) usage ;;
@@ -56,7 +56,7 @@ while [[ $# -gt 0 ]]; do
 done
 
 echo -e "${BLUE}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
-echo -e "${BLUE}  Ralph Iteration Loop${NC}"
+echo -e "${BLUE}  Implement Iteration Loop${NC}"
 echo -e "${BLUE}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
 
 # --- Get current branch ---
@@ -68,44 +68,44 @@ for protected in $PROTECTED_BRANCHES; do
         echo -e "${RED}Error: Cannot run on '$CURRENT_BRANCH' branch.${NC}"
         echo ""
         echo "Options:"
-        echo "  1. Create branch from prd.json: ralph.sh --create-branch"
+        echo "  1. Create branch from spec.json: implement.sh --create-branch"
         echo "  2. Create branch manually:      git checkout -b feat/my-feature"
         exit 1
     fi
 done
 
-# --- Create branch from PRD ---
+# --- Create branch from spec.json ---
 if [[ "$CREATE_BRANCH" == true ]]; then
-    if [[ ! -f "$PRD_FILE" ]]; then
-        echo -e "${RED}Error: $PRD_FILE not found. Cannot create branch.${NC}"
+    if [[ ! -f "$SPEC_FILE" ]]; then
+        echo -e "${RED}Error: $SPEC_FILE not found. Cannot create branch.${NC}"
         exit 1
     fi
 
     if command -v jq &> /dev/null; then
-        PRD_BRANCH=$(jq -r '.branchName // empty' "$PRD_FILE")
+        SPEC_BRANCH=$(jq -r '.branchName // empty' "$SPEC_FILE")
     else
-        PRD_BRANCH=$(grep -o '"branchName"[[:space:]]*:[[:space:]]*"[^"]*"' "$PRD_FILE" | sed 's/.*: *"\([^"]*\)"/\1/')
+        SPEC_BRANCH=$(grep -o '"branchName"[[:space:]]*:[[:space:]]*"[^"]*"' "$SPEC_FILE" | sed 's/.*: *"\([^"]*\)"/\1/')
     fi
 
-    if [[ -z "$PRD_BRANCH" ]]; then
-        echo -e "${RED}Error: No 'branchName' field in $PRD_FILE${NC}"
+    if [[ -z "$SPEC_BRANCH" ]]; then
+        echo -e "${RED}Error: No 'branchName' field in $SPEC_FILE${NC}"
         exit 1
     fi
 
-    echo -e "${YELLOW}Creating branch: $PRD_BRANCH${NC}"
-    if git show-ref --verify --quiet "refs/heads/$PRD_BRANCH"; then
-        git checkout "$PRD_BRANCH"
+    echo -e "${YELLOW}Creating branch: $SPEC_BRANCH${NC}"
+    if git show-ref --verify --quiet "refs/heads/$SPEC_BRANCH"; then
+        git checkout "$SPEC_BRANCH"
     else
-        git checkout -b "$PRD_BRANCH"
+        git checkout -b "$SPEC_BRANCH"
     fi
-    CURRENT_BRANCH="$PRD_BRANCH"
+    CURRENT_BRANCH="$SPEC_BRANCH"
 
     # Warn if progress.txt references a different branch (stale from a previous feature).
     if [[ -f "$PROGRESS_FILE" ]]; then
         PROGRESS_BRANCH=$(head -1 "$PROGRESS_FILE" | sed -n 's/^# Progress Log - //p')
         if [[ -n "$PROGRESS_BRANCH" && "$PROGRESS_BRANCH" != "$CURRENT_BRANCH" ]]; then
             echo -e "${YELLOW}Warning: $PROGRESS_FILE references branch '$PROGRESS_BRANCH' (current: '$CURRENT_BRANCH').${NC}"
-            echo -e "${YELLOW}Consider archiving it before continuing. Use /ralph Phase 1 for full archiving.${NC}"
+            echo -e "${YELLOW}Consider archiving it before continuing. Use /implement Phase 1 for full archiving.${NC}"
         fi
     fi
 fi
@@ -114,19 +114,19 @@ echo -e "${YELLOW}Branch:${NC}          $CURRENT_BRANCH"
 echo -e "${YELLOW}Max iterations:${NC}  $MAX_ITERATIONS"
 echo -e "${YELLOW}Max turns:${NC}       $MAX_TURNS"
 echo -e "${YELLOW}Prompt:${NC}          $PROMPT_FILE"
-echo -e "${YELLOW}PRD:${NC}             $PRD_FILE"
+echo -e "${YELLOW}Spec JSON:${NC}       $SPEC_FILE"
 echo ""
 
 # --- Check required files ---
 if [[ ! -f "$PROMPT_FILE" ]]; then
     echo -e "${RED}Error: Prompt file not found: $PROMPT_FILE${NC}"
-    echo "Run /ralph to generate the implementation prompt first."
+    echo "Run /implement to generate the implementation prompt first."
     exit 1
 fi
 
-if [[ ! -f "$PRD_FILE" ]]; then
-    echo -e "${RED}Error: PRD file not found: $PRD_FILE${NC}"
-    echo "Run /ralph to generate prd.json first."
+if [[ ! -f "$SPEC_FILE" ]]; then
+    echo -e "${RED}Error: Spec JSON file not found: $SPEC_FILE${NC}"
+    echo "Run /implement to generate spec.json first."
     exit 1
 fi
 
@@ -136,7 +136,7 @@ if ! git diff-index --quiet HEAD -- 2>/dev/null; then
         echo -e "${YELLOW}Warning: Uncommitted changes detected (continuing with --force)${NC}"
     else
         echo -e "${YELLOW}Warning: You have uncommitted changes.${NC}"
-        echo "Ralph commits its own changes. Consider committing or stashing first."
+        echo "The implement loop commits its own changes. Consider committing or stashing first."
         echo "Use --force to skip this check."
         echo ""
         read -p "Continue anyway? (y/N) " -n 1 -r
@@ -187,20 +187,20 @@ for ((i=1; i<=MAX_ITERATIONS; i++)); do
     TOTAL_STORIES=0
     PASSING_STORIES=0
     if command -v jq &> /dev/null; then
-        TOTAL_STORIES=$(jq '.userStories | length' "$PRD_FILE" 2>/dev/null || echo "0")
-        PASSING_STORIES=$(jq '[.userStories[] | select(.passes == true)] | length' "$PRD_FILE" 2>/dev/null || echo "0")
+        TOTAL_STORIES=$(jq '.userStories | length' "$SPEC_FILE" 2>/dev/null || echo "0")
+        PASSING_STORIES=$(jq '[.userStories[] | select(.passes == true)] | length' "$SPEC_FILE" 2>/dev/null || echo "0")
     else
-        TOTAL_STORIES=$(grep -c '"id"' "$PRD_FILE" 2>/dev/null || echo "0")
-        PASSING_STORIES=$(grep -c '"passes"[[:space:]]*:[[:space:]]*true' "$PRD_FILE" 2>/dev/null || echo "0")
+        TOTAL_STORIES=$(grep -c '"id"' "$SPEC_FILE" 2>/dev/null || echo "0")
+        PASSING_STORIES=$(grep -c '"passes"[[:space:]]*:[[:space:]]*true' "$SPEC_FILE" 2>/dev/null || echo "0")
     fi
     echo ""
     echo -e "${GREEN}Iteration $i complete. Stories: $PASSING_STORIES/$TOTAL_STORIES passing.${NC}"
 
-    # --- Optional: validate prd.json integrity after iteration ---
+    # --- Optional: validate spec.json integrity after iteration ---
     if command -v bun &> /dev/null && [[ -f "$VALIDATE_SCRIPT" ]]; then
-        if ! bun "$VALIDATE_SCRIPT" "$PRD_FILE" >/dev/null; then
-            echo -e "${YELLOW}Warning: prd.json validation issue detected after iteration $i.${NC}"
-            echo "prd.json validation warning after iteration $i" >> "$PROGRESS_FILE"
+        if ! bun "$VALIDATE_SCRIPT" "$SPEC_FILE" >/dev/null; then
+            echo -e "${YELLOW}Warning: spec.json validation issue detected after iteration $i.${NC}"
+            echo "spec.json validation warning after iteration $i" >> "$PROGRESS_FILE"
             echo "" >> "$PROGRESS_FILE"
         fi
     fi
@@ -208,13 +208,13 @@ for ((i=1; i<=MAX_ITERATIONS; i++)); do
     # Check for completion signal.
     # The iteration agent outputs <promise>IMPLEMENTATION COMPLETE</promise> when all stories pass.
     if grep -q "IMPLEMENTATION COMPLETE" "$OUTPUT_FILE"; then
-        # Verify prd.json actually has all stories complete.
+        # Verify spec.json actually has all stories complete.
         # Prevents premature exit from false completion signals.
         INCOMPLETE=0
         if command -v jq &> /dev/null; then
-            INCOMPLETE=$(jq '[.userStories[] | select(.passes == false)] | length' "$PRD_FILE" 2>/dev/null || echo "0")
+            INCOMPLETE=$(jq '[.userStories[] | select(.passes == false)] | length' "$SPEC_FILE" 2>/dev/null || echo "0")
         else
-            INCOMPLETE=$(grep -c '"passes"[[:space:]]*:[[:space:]]*false' "$PRD_FILE" 2>/dev/null || echo "0")
+            INCOMPLETE=$(grep -c '"passes"[[:space:]]*:[[:space:]]*false' "$SPEC_FILE" 2>/dev/null || echo "0")
         fi
 
         if [[ "$INCOMPLETE" -gt 0 ]]; then
@@ -256,5 +256,5 @@ echo -e "${YELLOW}━━━━━━━━━━━━━━━━━━━━�
 echo -e "${YELLOW}  Max iterations reached ($MAX_ITERATIONS).${NC}"
 echo -e "${YELLOW}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
 echo ""
-echo "Check prd.json for incomplete stories and progress.txt for blockers."
+echo "Check tmp/ship/spec.json for incomplete stories and tmp/ship/progress.txt for blockers."
 exit 1

@@ -105,4 +105,4 @@ Each trait includes: signal → the move you should make → what to record.
 ---
 
 ## Evaluation facets (apply to major decisions)
-**Load:** `references/evaluation-facets.md` for the full set with "what to check" guidance.
+**See also:** `references/evaluation-facets.md` for the full set with "what to check" guidance.

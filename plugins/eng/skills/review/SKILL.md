@@ -33,6 +33,14 @@ Reviewer feedback is the primary signal. CI/CD is secondary and opportunistic du
 
 #### 1. Resolve PR and assess starting state
 
+Verify `gh` CLI is available and authenticated:
+
+```bash
+gh auth status
+```
+
+If this fails, stop and tell the user — this skill requires the GitHub CLI.
+
 If a PR number was not provided, detect it from the current branch:
 
 ```bash
@@ -61,11 +69,9 @@ git log origin/HEAD..HEAD --oneline
 | Already pushed, review feedback waiting | Skip push. Proceed directly to step 3 (assess feedback). |
 | Already pushed, no feedback yet | Proceed to step 2 (poll). |
 
-**When pushing:** update the PR description if the implementation has changed materially — if the description no longer reflects what the code actually does, update the relevant sections. Not every small fix requires a PR body edit.
+**When pushing:** update the PR body if the implementation has changed materially. Load `/pull-request` skill to rewrite the PR body — it is a stateless snapshot of the PR's scope relative to origin/main, not a history of its evolution. Not every small fix requires a PR body edit.
 
-**If a SPEC.md is available**, use it as the source material for the PR body. Distill it — don't copy the entire spec. Link to the full SPEC.md for anyone who wants complete context.
-
-**Load (for PR body template and spec-to-PR mapping):** `references/review-protocol.md` (section: "PR body from SPEC.md")
+**Load:** `references/review-protocol.md` (section: "PR body")
 
 #### 2. Poll for review feedback
 
@@ -134,6 +140,8 @@ pnpm lint
 ```
 
 If changes affect user-facing behavior, also verify the experience manually (API calls, browser testing, etc.) as appropriate.
+
+If your changes affect documented behavior — whether product-facing (user docs, API reference, guides) or internal (architecture docs, READMEs, runbooks) — update the relevant documentation files (`.md`, `.mdx`, etc.) alongside the code fix. Docs should stay accurate through the review loop, not deferred to later.
 
 #### 5. Push and repeat
 
@@ -221,12 +229,28 @@ If CI keeps failing on the same issue after 3 attempts, pause and consult the us
 
 ---
 
+### Second-pass review (optional)
+
+After Stage 1 + Stage 2 complete, assess whether the PR warrants a second full review. Trigger a second pass when any of these apply:
+- The PR touches auth, permissions, data mutations, or security-sensitive code
+- The implementation involved significant architectural decisions or trade-offs
+- Multiple files were changed across different subsystems
+- The first review round surfaced substantive issues (not just nits)
+
+To trigger the second pass, leave a PR comment requesting a full review, then loop back to Stage 1 Step 2 (poll for feedback). The same assessment and resolution process applies.
+
+For straightforward PRs (single-file config changes, simple bug fixes, cosmetic updates), skip the second pass.
+
+---
+
 ## Completion
 
-When both stages are complete, report to the user (or the invoking skill):
+When both stages are complete (and second-pass review if triggered), report to the user (or the invoking skill):
 - All reviewer feedback threads resolved (with summary of accepted/declined)
 - CI/CD pipeline status
 - Any items added to the PR description's "Future considerations" section (if any)
+
+**Re-invocation guidance for callers:** If new commits are pushed to the PR after this skill reports completion — from any source (caller fixes, user-requested changes, subsequent workflow phases) — the review cycle should be re-invoked. The review loop is complete only when the most recent push has been through a review cycle with all threads resolved.
 
 ---
 
@@ -250,6 +274,7 @@ When both stages are complete, report to the user (or the invoking skill):
 
 | Path | Use when | Impact if skipped |
 |---|---|---|
-| `references/review-protocol.md` | Assessing reviewer feedback (Stage 1, step 3); PR body templates; subagent delegation | Mechanical/uncritical response to reviews; missed nuance in feedback assessment |
+| `references/review-protocol.md` | Assessing reviewer feedback (Stage 1, step 3); PR body guidance; subagent delegation | Mechanical/uncritical response to reviews; missed nuance in feedback assessment |
+| `/pull-request` skill | Writing or updating the PR body (Stage 1, step 1; after any material push) | Inconsistent PR body structure; missing sections; stale description |
 | `scripts/fetch-pr-feedback.sh` | Fetching review feedback and CI/CD status | Agent uses wrong/deprecated `gh` commands, misses inline review comments |
 | `scripts/investigate-ci-failures.sh` | Investigating CI/CD failures with logs (Stage 2) | Agent struggles to find run IDs, fetch logs, or compare with main |

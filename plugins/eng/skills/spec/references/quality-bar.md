@@ -27,6 +27,8 @@ Impact: Specs are not implementable, not testable, or fail to capture user value
 ## Should-have checklist
 - [ ] Consumer matrix (how each persona/consumer experiences this end-to-end)
 - [ ] Product surface-area impact map (dashboards, API, SDK, CLI, docs, billing, errors)
+- [ ] Internal surface-area impact map (build, CI/CD, database, auth, runtime, observability, deployment)
+- [ ] If repo-level surface area skills exist, were they consulted and referenced?
 - [ ] Alternatives considered (why not)
 - [ ] Risks and mitigations with owners
 - [ ] Phasing is ordered by architectural risk validation + user value (not just "small chunks")

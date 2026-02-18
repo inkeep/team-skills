@@ -44,18 +44,19 @@ Optional supporting artifacts (only if they reduce friction):
 
 ## Where to store artifacts
 
-**Default:** `~/.claude/specs/<spec-name>/SPEC.md`
+**Default:** `<repo-root>/specs/<spec-name>/SPEC.md`
 
 Override sources (checked in priority order):
 
 | Priority | Source | Example |
 |----------|--------|---------|
 | 1 | User says so in the current session | "Put the spec in `docs/rfcs/`" |
-| 2 | Env var `CLAUDE_SPECS_DIR` | `CLAUDE_SPECS_DIR=./specs` → `./specs/<spec-name>/SPEC.md` |
-| 3 | AI repo config (`CLAUDE.md`, `AGENTS.md`, etc.) | `specs-dir: docs/specs` |
-| 4 | Default | `~/.claude/specs/<spec-name>/SPEC.md` |
+| 2 | Env var `CLAUDE_SPECS_DIR` | `CLAUDE_SPECS_DIR=./my-specs` → `./my-specs/<spec-name>/SPEC.md` |
+| 3 | AI repo config (`CLAUDE.md`, `AGENTS.md`, etc.) | `specs-dir: .ai-dev/specs` |
+| 4 | Default (in a repo) | `<repo-root>/specs/<spec-name>/SPEC.md` |
+| 5 | Default (no repo) | `~/.claude/specs/<spec-name>/SPEC.md` |
 
-Do **not** auto-detect repo directories (`docs/`, `rfcs/`, `specs/`) — only use them when explicitly configured.
+Do **not** auto-detect repo directories (`docs/`, `rfcs/`) — only use them when explicitly configured. When inside a git repo, specs default to the repo-local `specs/` directory. When not inside a git repo, fall back to `~/.claude/specs/`.
 
 If the user wants "chat-only": produce Markdown in chat, but still keep a single canonical artifact in the thread.
 

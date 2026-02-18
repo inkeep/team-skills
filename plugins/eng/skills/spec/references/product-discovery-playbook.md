@@ -55,7 +55,9 @@ Turn prior art into:
 - pitfalls we should avoid
 
 ## Product surface-area impact
-Create a map of surfaces impacted:
+**First:** Check for existing repo-level surface area catalogs (e.g., a `product-surface-areas` skill in `.agents/skills/`). If one exists, load it as the baseline map and identify which surfaces this feature touches — including transitive dependencies via the catalog's impact matrix or dependency graph. Fill gaps only for surfaces the catalog doesn't cover.
+
+**If no catalog exists**, create a map of surfaces impacted:
 - dashboard/admin UI
 - API endpoints
 - SDK methods

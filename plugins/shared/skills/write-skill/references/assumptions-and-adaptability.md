@@ -17,7 +17,7 @@ Not every skill needs this. Simple guidance-only skills or single-file rules typ
 | Category | What it covers | Example |
 |---|---|---|
 | **Tool/binary** | External CLIs, package managers, shell utilities | "`gh` CLI is installed," "`pnpm` is available" |
-| **Platform capability** | Agent-runtime features, MCP tools, plugins | "Browser automation tools are available," "/ralph-loop plugin is present" |
+| **Platform capability** | Agent-runtime features, MCP tools, plugins | "Browser automation tools are available," "Claude CLI is on PATH" |
 | **Workflow model** | Collaboration patterns, branching strategies, review processes | "PR-based review loop," "git worktree for isolation" |
 | **User intent** | What the user wants to happen beyond explicit inputs | "User wants code pushed to remote," "user wants a draft PR" |
 | **Composition** | Other skills or plugins that must be present | "/spec skill is available," "/review skill can be composed" |

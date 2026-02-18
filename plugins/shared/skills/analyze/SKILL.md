@@ -141,11 +141,12 @@ Stop expanding when additional context is unlikely to change the analysis.
 - Do NOT rely solely on what you already know. Use tools to verify your understanding.
 - Track what you looked for and didn't find — gaps are as important as what you gather.
 
-**Skill composition** — when the analysis subject overlaps a domain served by another skill, prefer invoking that skill over approximating its work ad-hoc:
-- **Codebase understanding** (patterns, conventions, dependencies, blast radius) → invoke `/inspect`. It produces structured understanding faster and more reliably than ad-hoc file reading.
-- **Systematic evidence gathering** (when you discover evidence gaps that need formal investigation) → invoke `/research`.
-- Use judgment — not every code mention needs a full inspection. Invoke when the analysis would materially benefit from structured codebase understanding, not for quick lookups.
-- **Subagent delegation** — subagents do not inherit your loaded skills. When you delegate work to subagents, instruct them to load relevant skills via the Skill tool (e.g., `/analyze` for analytical work, `/inspect` for codebase investigation). The Skill tool is available in general-purpose, Explore, and Plan subagent types.
+**Skill composition** — when the analysis subject overlaps a domain served by another skill, prefer loading that skill over approximating its work ad-hoc:
+- **Codebase understanding** (patterns, conventions, dependencies, blast radius) → load `/inspect` skill. It produces structured understanding faster and more reliably than ad-hoc file reading.
+- **Systematic evidence gathering** (when you discover evidence gaps that need formal investigation) → load `/research` skill.
+- **Domain-level surface mapping** (what does this topic touch across product and internal surfaces, how do they connect) → load `/discover` skill. It produces structured surface-area maps faster than ad-hoc enumeration. Use when the analysis involves understanding a feature's blast radius, cross-surface dependencies, or system-wide impact.
+- Use judgment — not every code mention needs a full inspection. Load a skill when the analysis would materially benefit from structured understanding, not for quick lookups.
+- **Subagent delegation** — subagents do not inherit your loaded skills. When you delegate work to a subagent that needs a skill, use the `general-purpose` type (it has the Skill tool). Start the subagent's prompt with `Before doing anything, load /skill-name skill`, then provide context and the task.
 
 When context gathering is complete, briefly summarize what you found and what's still unknown before moving to structuring.
 
