@@ -4,17 +4,9 @@ Plugin for the Inkeep engineering team. Includes all [shared skills](../shared/)
 
 ## Install
 
-Two install methods. Choose based on your setup:
-
-| | Claude Code Plugin (recommended) | Skills CLI |
-|---|---|---|
-| **Auto-update** | Yes — skills update every session | No — manual `npx skills update` |
-| **For...** | Claude Code only | Claude Code, Cursor, Cline, Codex, etc. |
-| **Best for** | Claude Code-only users who want zero-maintenance updates | Multi-agent users (e.g., Cursor + Claude Code) |
-
 ### Option A: Claude Code Plugin (recommended)
 
-Auto-updates on every session. Skills stay current without manual intervention.
+Works on Claude Code only. **Auto-updates on every session.**
 
 ```bash
 # Add the marketplace with auto-update (one-time)
@@ -26,13 +18,13 @@ claude plugin install eng@inkeep-team-skills
 
 ### Option B: Skills CLI (any agent)
 
-Works with any agent that supports the [Agent Skills](https://agentskills.io) standard. Updates are manual.
+To install:
 
 ```bash
 npx skills add inkeep/team-skills/plugins/eng -y
 ```
 
-To update:
+To manually update:
 
 ```bash
 npx skills update
@@ -41,8 +33,6 @@ npx skills update
 ---
 
 ## Skill inventory
-
-Skills are on-demand procedural knowledge that Claude loads when relevant. 
 
 ### E2E Feature Development
 
@@ -71,7 +61,14 @@ Ship is an orchestrator that leverages these other skills:
 | `/docs` | 4 | Write docs for the changes |
 | `/review` | 5 | Address review comments and get CI green |
 
-Each can be used **standalone** as well:
+Each can be used **standalone** as well.
+
+**Gitignore requirement**:
+
+```.gitignore
+tmp
+specs
+```
 
 ### General Purpose
 
@@ -84,7 +81,7 @@ These are generally useful skills for investigating things and aiding in **decis
 | `/inspect` | User or model | Similar to discover but focused on codebase inspection. |
 | `/analyze` | User or model | Deeply compare pros and cons of a given decision. |
 
-### Standalone / supporting
+### Other
 
 | Skill | Invocation | Purpose |
 |---|---|---|
@@ -93,43 +90,6 @@ These are generally useful skills for investigating things and aiding in **decis
 | `/tdd` | Model-only | Background knowledge for behavior-focused testing (auto-loaded; key principles distilled inline in spec, ship, and implement) |
 
 **Shared:** `research`, `write-skill`, `write-agent`
-
-Add eng-only skills by creating a folder in `plugins/eng/skills/`.
-
----
-
-## How the skills relate
-
-`/ship` is the top-level orchestrator.
-
-Flow it goes in:
-
-```
-/ship
- ├── Phase 0: Detect context (capabilities, execution environment)
- ├── Phase 1: /spec ─── spec authoring, validation, and state activation (collaborative)
- │
- ├── ─── AUTOMATION STARTS ───
- │
- ├── Phase 2: /inspect + /implement (codebase understanding, implementation)
- ├── Create draft PR (stub body)
- ├── Phase 3: /qa-test (manual QA verification)
- ├── Write PR body (/pull-request)
- ├── Phase 4: /docs (product + internal documentation surface areas)
- ├── Phase 5: /review (PR feedback loop + CI/CD resolution)
- └── Phase 6: Completion
-```
-
----
-
-## Gitignore requirement
-
-`/ship` and `/implement` write execution state to `tmp/ship/` in the working directory (loop control, workflow state, spec.json, progress.txt, implementation prompt). These are transient files — not part of the deliverable. Add `tmp/` to your repo's `.gitignore`:
-
-```
-# Ship/Implement execution state
-tmp/
-```
 
 ---
 
