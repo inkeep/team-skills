@@ -43,7 +43,7 @@ All execution state lives in `tmp/ship/` (gitignored). The only committed artifa
 
 | Event | state.json | Other files |
 |---|---|---|
-| **Phase 1 end** | **Create** — populate all fields (`prNumber: null` until PR is created) | Create `loop.md` |
+| **Phase 1 end** | **Run** `ship-init-state.sh` — creates both `state.json` and `loop.md` (see Phase 1, Step 3) | — |
 | **Phase 2 start** | — | `/implement` creates `tmp/ship/spec.json`, `tmp/ship/implement-prompt.md`, `tmp/ship/progress.txt` |
 | **Any phase → next** | Set `currentPhase` to next phase, append completed phase to `completedPhases`, refresh `lastUpdated` | — |
 | **User amendment** (any phase) | Append to `amendments[]`: `{"description": "...", "status": "pending"}` | — |
@@ -105,12 +105,12 @@ Before anything else, check if `tmp/ship/state.json` exists. If found:
 
 #### Step 1: Establish feature name and starting point
 
-Determine what the user wants to build and whether a spec already exists:
+Determine what the user wants to build and whether a spec already exists. **A quick explore is fine here** — a few `Grep`/`Glob`/`Read` calls to orient yourself (e.g., find the relevant directory, confirm a module exists). But do not run extended investigation, spawn Explore subagents, or load skills. Deep investigation happens in Phase 1 after the scaffold exists.
 
 | Condition | Action |
 |---|---|
 | User provides a path to an existing SPEC.md | Load it. Derive the feature name from the spec. |
-| User provides a feature description (no SPEC.md) | Derive a short feature name (e.g., `org-members-page`, `auth-flow`). If the description is too vague to name, ask one targeted question — just enough for a semantic name, not deep scoping. |
+| User provides a feature description (no SPEC.md) | A quick explore of the relevant area is fine to orient yourself. Then derive a short feature name (e.g., `revoke-invite`, `org-members-page`, `auth-flow`). If the description is too vague to name, ask 1-2 targeted questions — just enough for a semantic name, not deep scoping. |
 | Ambiguous | Ask: "Do you have an existing SPEC.md, or should we spec this from scratch?" |
 
 #### Step 2: Create isolated working environment
@@ -147,31 +147,33 @@ The user is the product owner — your job is to help them think clearly about w
 
 #### Step 1: Author the spec
 
-**Scaffold first, refine second.** Before asking clarifying questions or loading `/spec`, immediately create a SPEC.md scaffold from whatever the user has provided so far — their description, conversation context, any requirements or constraints mentioned. Write it to `specs/<feature-name>/SPEC.md` (relative to repo root). This follows the `/spec` skill's default path convention — see `/spec` "Where to save the spec" for the full override priority (env var, AI repo config, user override). The scaffold captures:
+**Scaffold first, refine second.** Ask at most 1-2 scoping questions if the user's description is genuinely too vague to scaffold (e.g., "improve the system" with no specifics). If the request is concrete enough to write a problem statement — even an incomplete one — skip questions and write the scaffold immediately. Do not run an extended scoping conversation before the scaffold exists.
+
+Write it to `specs/<feature-name>/SPEC.md` (relative to repo root). This follows the `/spec` skill's default path convention — see `/spec` "Where to save the spec" for the full override priority (env var, AI repo config, user override). The scaffold captures:
 
 - Problem statement (what you understand so far)
 - Initial requirements and acceptance criteria (even if incomplete)
 - Known constraints or technical direction
 - Open questions (what still needs clarification)
 
-The scaffold doesn't need to be complete — it needs to exist on disk so it survives compaction and anchors the refinement conversation. Do not spend time scoping in conversation before the scaffold exists.
+The scaffold doesn't need to be complete — it needs to exist on disk so it survives compaction and anchors the refinement conversation. The deep dive (investigation, open questions, decisions, `/spec`) happens *after* the scaffold exists, not before.
 
-**For bug fixes and error reports — investigate root cause before refining.** When the user reports a bug, shares an error, or describes unexpected behavior, the scaffold captures the *symptom*. Before refining the spec, investigate to find the *root cause*:
+**After the scaffold exists — investigate.** Now that the scaffold anchors the conversation, do the deep investigation that informs the spec:
 
-1. **Trace the code path.** Load `/inspect` (system tracing lens) to follow the execution flow from the entry point through to where the error occurs. Map what the code actually does vs. what the user expects.
-2. **Identify the root cause.** The symptom (error message, wrong behavior, crash) is not the bug — it's a consequence. Trace backward from the symptom to find what actually went wrong: wrong logic, missing validation, race condition, incorrect assumption, stale data, etc.
-3. **Research if needed.** If the bug involves unfamiliar APIs, libraries, or system behavior, load `/research` to understand the correct behavior before proposing a fix.
-4. **Update the scaffold.** Revise the SPEC.md to describe the root cause (not just the symptom), the proposed fix, and acceptance criteria that verify the root cause is addressed — not just that the symptom is suppressed.
+1. **Trace the existing system.** Load `/inspect` to understand how the relevant area works today — patterns, shared abstractions, data flow, blast radius. For bug fixes, use the system tracing lens to follow execution from entry point to where the error occurs and identify the root cause (not just the symptom).
+2. **Research third-party dependencies.** If the feature involves third-party libraries, frameworks, packages, APIs, or external services, load `/research` to verify their capabilities, constraints, and correct usage *before* designing the solution. Do this every time — not just when the dependency feels unfamiliar. Even dependencies you've used before may have changed, have undocumented constraints, or behave differently in this context. Do not spec against assumed API shapes — verify them.
+3. **Update the scaffold.** Revise the SPEC.md with findings: root cause (for bugs), system constraints, API shapes, dependency capabilities, and refined acceptance criteria grounded in what you learned.
 
-Do not skip this step. A spec that describes "fix the error message" instead of "fix the null check that causes the error" leads to symptom-level patches that leave the underlying issue intact.
+This investigation is not optional — it's what separates a spec grounded in reality from one built on assumptions. A spec that assumes an API works a certain way, or that a module has a certain interface, leads to implementation surprises that cost more to fix later.
 
-**Then refine.** Load `/spec` skill to deepen and complete the spec through its interactive process. The scaffold gives `/spec` a starting point rather than a blank slate.
+**Then refine.** Load `/spec` skill to deepen and complete the spec through its interactive process. The scaffold and investigation findings give `/spec` a grounded starting point rather than a blank slate.
 
 During the spec process, ensure these are captured with evidence (not aspirationally):
 - All test cases and acceptance criteria. Criteria should describe observable behavior, not internal mechanisms (see /tdd for examples).
 - Failure modes and edge cases
+- Third-party dependency constraints and API shapes (verified via `/research`, not assumed)
 
-**If scope calibration indicated a lighter spec process** (enhancement or bug fix): refine the scaffold directly instead of invoking `/spec`. For bug fixes, the root cause investigation above replaces the full `/spec` process — the refined scaffold with root cause analysis is sufficient. The final SPEC.md must still capture: problem statement, root cause (for bug fixes), what "done" looks like (acceptance criteria), and what you will test.
+**If scope calibration indicated a lighter spec process** (enhancement or bug fix): refine the scaffold directly instead of invoking `/spec`. The investigation step above still applies — lighter spec does not mean lighter investigation. The final SPEC.md must still capture: problem statement, root cause (for bug fixes), what "done" looks like (acceptance criteria), and what you will test.
 
 **If the user provided an existing SPEC.md** (detected in Phase 0): skip to Step 2.
 
@@ -190,9 +192,19 @@ Do not proceed until the user confirms the SPEC.md is ready for implementation. 
 
 #### Step 3: Activate execution state
 
-**Load:** `references/state-initialization.md` — state.json schema, field reference, and loop.md activation.
+**Load:** `references/state-initialization.md` — contains the initialization script invocation and field reference.
 
-Create `tmp/ship/state.json` (populated from Phase 0 and Phase 1 outputs) and `tmp/ship/loop.md` (activates the stop hook for autonomous execution). The loop runs until `<complete>SHIP COMPLETE</complete>` or 20 iterations. Cancel manually with `/cancel-ship`.
+Run `<path-to-skill>/scripts/ship-init-state.sh` with values from Phase 0 (capabilities, scope) and Phase 1 (feature name, spec path, branch). **Do not manually write `state.json` or `loop.md` by hand — always use the script.** Hand-written JSON/YAML is the #1 cause of stop hook failures. See the reference for the full argument list and defaults.
+
+After the script runs, verify both files exist:
+
+```bash
+test -f tmp/ship/state.json && test -f tmp/ship/loop.md && echo "State initialized" || echo "ERROR: state files missing"
+```
+
+If either file is missing, check the script output for errors and re-run. Do not proceed to Phase 2 without both files.
+
+The script activates the stop hook for autonomous execution. The loop runs until `<complete>SHIP COMPLETE</complete>` or 20 iterations. Cancel manually with `/cancel-ship`.
 
 ---
 
@@ -332,7 +344,7 @@ These govern your behavior throughout:
    We're adding role-based access control — report existing auth conventions,
    shared abstractions, and middleware chain composition. Return a pattern brief.
    ```
-4. **Evidence over intuition.** Use `/research` to investigate unfamiliar codebases, APIs, or patterns before making decisions. Inspect the codebase directly. Web search when needed. The standard is: could you explain your reasoning to a senior engineer and defend it with evidence? If not, you haven't investigated enough.
+4. **Evidence over intuition.** Use `/research` to investigate codebases, APIs, and patterns before making decisions — not just when they feel unfamiliar. Inspect the codebase directly. Web search when needed. The standard is: could you explain your reasoning to a senior engineer and defend it with evidence? If not, you haven't investigated enough.
 5. **Right-size your response.** Research, spec work, and reviews may surface many approaches, concerns, and options. Your job is not to address every possibility — it is to evaluate which are real for this context and act on those. For each non-trivial decision, weigh:
    - **Necessity**: Does this solve a validated problem, or a hypothetical one?
    - **Proportionality**: Does the complexity of the solution match the complexity of the problem?
@@ -353,12 +365,14 @@ These govern your behavior throughout:
 
 ## Anti-patterns
 
+- **Deep investigation before setup.** Spawning Explore subagents, loading skills, or running extended codebase exploration during Phase 0. A quick explore (a few Grep/Glob/Read calls) to orient yourself is fine, but the deep dive — `/inspect`, `/research`, subagents — happens in Phase 1 after the scaffold exists. A user saying "add invite revocation" gives you the feature name (`revoke-invite`) immediately; you don't need to map the entire invite system first.
 - **Implementing before understanding.** Jumping into code before building a mental model of the feature, the codebase area, or the spec's intent.
 - Using a different package manager than what the repo specifies
 - Force-pushing or destructive git operations without user confirmation
 - Leaving the worktree without cleaning up (document how to clean up in PR description)
 - **Bypassing /ship for "small" work.** Scope calibration (Phase 0, Step 4) adjusts depth for every task size — bug fixes get a light SPEC.md and calibrated testing. The workflow always runs; rigor scales. Implementing directly outside /ship means no spec (requirements lost on compaction), no state persistence, no QA, no PR, no review loop. A 4-file security fix still needs a spec that captures what "fixed" looks like, tests that verify it, and a PR that documents it.
 - **Skipping `/implement` for "simple" changes.** `/implement` always runs — it owns spec.json conversion, the implementation prompt, and the iteration loop. Even small changes benefit from the structured prompt and verification cycle. Direct implementation outside `/implement` loses the spec.json tracking, progress log, and quality gate loop.
+- **Hand-writing state files.** Never manually write `tmp/ship/state.json` or `tmp/ship/loop.md` as raw JSON/YAML. Always use `ship-init-state.sh`. Hand-written files are the #1 cause of stop hook failures — malformed JSON, missing fields, wrong YAML frontmatter — and the resulting bug (hook silently exits, loop never activates) is invisible until context compaction, when it's too late.
 - **Outputting a false completion promise.** Never output `<complete>SHIP COMPLETE</complete>` until ALL phases have genuinely completed and all Phase 6 verification checks pass. The ship loop is designed to continue until genuine completion — do not lie to exit.
 
 ---

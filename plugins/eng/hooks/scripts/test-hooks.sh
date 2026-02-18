@@ -530,6 +530,21 @@ OUTPUT=$(echo '{"transcript_path":"'"$TRANSCRIPT2"'","cwd":"'"$WORKTREE2"'"}' \
   | (cd "$PROJ2" && "$SCRIPT_DIR/ship-stop-hook.sh") 2>/dev/null)
 assert_output_contains "Worktree cwd hint: blocks exit" "$OUTPUT" '"decision": "block"'
 
+# Test 20a: CLAUDE_PROJECT_DIR resolution — hook runs from plugin dir, state in project dir
+PROJ_PLUGIN="$TMPDIR/t20a_plugin_dir"
+PROJ_PROJECT="$TMPDIR/t20a_project"
+mkdir -p "$PROJ_PLUGIN" "$PROJ_PROJECT"
+(cd "$PROJ_PROJECT" && git init -q -b main && echo "init" > init.txt && git add -A && git commit -q -m "init")
+make_loop_file "$PROJ_PROJECT"
+make_state_file "$PROJ_PROJECT" "Phase 2"
+TRANSCRIPT_20a="$TMPDIR/transcript20a.jsonl"
+make_transcript "$TRANSCRIPT_20a" "working on implementation"
+# Run hook from the PLUGIN directory (not the project) — simulates real plugin hook execution
+OUTPUT=$(echo '{"transcript_path":"'"$TRANSCRIPT_20a"'"}' \
+  | (cd "$PROJ_PLUGIN" && CLAUDE_PROJECT_DIR="$PROJ_PROJECT" "$SCRIPT_DIR/ship-stop-hook.sh") 2>/dev/null)
+assert_output_contains "CLAUDE_PROJECT_DIR: blocks exit from plugin dir" "$OUTPUT" '"decision": "block"'
+assert_output_contains "CLAUDE_PROJECT_DIR: includes feature name" "$OUTPUT" "test-feature"
+
 # Test 20: Session-end worktree resolution — finds completed state in worktree
 PROJ3="$TMPDIR/t20_wt_end"
 mkdir -p "$PROJ3"

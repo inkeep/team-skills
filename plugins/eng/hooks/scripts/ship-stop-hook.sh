@@ -23,26 +23,34 @@ SHIP_STATE_FILE="tmp/ship/state.json"
 HOOK_SESSION_ID=$(echo "$HOOK_INPUT" | jq -r '.session_id // empty' 2>/dev/null || echo "")
 HOOK_CWD=$(echo "$HOOK_INPUT" | jq -r '.cwd // empty' 2>/dev/null || echo "")
 
-# --- Resolve working directory (worktree support) ---
-# The hook runs from the project root, but state files may be in a worktree.
-# Try: (1) current dir, (2) hook input cwd, (3) scan git worktrees.
+# --- Resolve working directory ---
+# Plugin hooks may run from the plugin directory, not the project directory.
+# Try: (1) current dir, (2) CLAUDE_PROJECT_DIR env var, (3) hook input cwd, (4) scan git worktrees.
 if [[ ! -f "$LOOP_STATE_FILE" ]]; then
   RESOLVED_DIR=""
 
+  # Try CLAUDE_PROJECT_DIR (set by Claude Code for plugin hooks)
+  if [[ -z "$RESOLVED_DIR" ]] && [[ -n "${CLAUDE_PROJECT_DIR:-}" ]] && [[ -f "${CLAUDE_PROJECT_DIR}/${LOOP_STATE_FILE}" ]]; then
+    RESOLVED_DIR="$CLAUDE_PROJECT_DIR"
+  fi
+
   # Try hook input cwd (agent's working directory during the session)
-  if [[ -n "$HOOK_CWD" ]] && [[ -f "${HOOK_CWD}/${LOOP_STATE_FILE}" ]]; then
+  if [[ -z "$RESOLVED_DIR" ]] && [[ -n "$HOOK_CWD" ]] && [[ -f "${HOOK_CWD}/${LOOP_STATE_FILE}" ]]; then
     RESOLVED_DIR="$HOOK_CWD"
   fi
 
-  # Try scanning git worktrees
-  if [[ -z "$RESOLVED_DIR" ]] && command -v git &>/dev/null && git rev-parse --is-inside-work-tree &>/dev/null 2>&1; then
-    while IFS= read -r wt_line; do
-      wt_path=$(echo "$wt_line" | awk '{print $1}')
-      if [[ -n "$wt_path" ]] && [[ "$wt_path" != "$(pwd)" ]] && [[ -f "${wt_path}/${LOOP_STATE_FILE}" ]]; then
-        RESOLVED_DIR="$wt_path"
-        break
-      fi
-    done < <(git worktree list 2>/dev/null)
+  # Try scanning git worktrees (from project dir if known, otherwise current dir)
+  if [[ -z "$RESOLVED_DIR" ]]; then
+    SEARCH_BASE="${CLAUDE_PROJECT_DIR:-${HOOK_CWD:-.}}"
+    if command -v git &>/dev/null && git -C "$SEARCH_BASE" rev-parse --is-inside-work-tree &>/dev/null 2>&1; then
+      while IFS= read -r wt_line; do
+        wt_path=$(echo "$wt_line" | awk '{print $1}')
+        if [[ -n "$wt_path" ]] && [[ "$wt_path" != "$(pwd)" ]] && [[ -f "${wt_path}/${LOOP_STATE_FILE}" ]]; then
+          RESOLVED_DIR="$wt_path"
+          break
+        fi
+      done < <(git -C "$SEARCH_BASE" worktree list 2>/dev/null)
+    fi
   fi
 
   if [[ -n "$RESOLVED_DIR" ]]; then
