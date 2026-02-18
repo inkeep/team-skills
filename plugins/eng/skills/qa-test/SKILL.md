@@ -76,12 +76,21 @@ Create these as task list items to track execution progress.
 
 ### Step 4: Persist the QA checklist
 
-If a PR exists, append a `## QA Checklist` section to the PR body:
+If a PR exists, write the QA checklist to the `## Test plan` section of the PR body. **Always update via `gh pr edit --body` — never post QA results as PR comments.**
+
+**Update mechanism:**
+
+1. Read the current PR body: `gh pr view <number> --json body -q '.body'`
+2. If a `## Test plan` section already exists, replace its content with the updated checklist.
+3. If no such section exists, append it to the end of the body.
+4. Write the updated body back: `gh pr edit <number> --body "<updated body>"`
+
+Section format:
 
 ```md
-## QA Checklist
+## Test plan
 
-_Manual QA scenarios that resist automation. Updated during testing._
+_Manual QA scenarios that resist automation. Updated as tests complete._
 
 - [ ] **<category>: <scenario name>** — <what you'll verify> · _Why not a test: <reason>_
 ```
@@ -151,7 +160,7 @@ Changes touch more of the system than what's visible to the user. After exercisi
 
 ### Step 6: Record results
 
-After each scenario, update the checklist:
+After each scenario (or batch of related scenarios), update the `## Test plan` section in the PR body using the same read → modify → write mechanism from Step 4. **The checklist in the PR body is the single source of truth — do not post results as PR comments.**
 
 | Result | How to record |
 |---|---|
@@ -166,7 +175,7 @@ After each scenario, update the checklist:
 
 ### Step 7: Report
 
-**If a PR exists:** The QA checklist in the PR body is your primary report. Ensure it's up-to-date with all results (pass/fail/fixed/blocked/skipped). Add a brief summary comment on the PR with the overall assessment.
+**If a PR exists:** The `## Test plan` section in the PR body is your primary report. Ensure it's up-to-date with all results (pass/fail/fixed/blocked/skipped). Do not add a separate PR comment — the PR body section is the report.
 
 **If no PR exists:** Report directly to the user with:
 

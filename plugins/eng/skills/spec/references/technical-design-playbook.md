@@ -37,9 +37,9 @@ Then explicitly say:
 ## Internal surface-area map
 Map which internal subsystems this feature touches. This is the internal counterpart to the product surface-area impact map.
 
-**First:** Check for existing repo-level surface area catalogs (e.g., an `internal-surface-areas` skill in `.agents/skills/`). If one exists, load it as the baseline and identify which internal surfaces this feature touches — including transitive dependencies via the catalog's dependency graph or impact matrix. Fill gaps only for areas the catalog doesn't cover.
+**First:** Load `/internal-surface-areas` skill if available. Use it as the baseline and identify which internal surfaces this feature touches — including transitive dependencies via the catalog's dependency graph or impact matrix. Fill gaps only for areas the catalog doesn't cover.
 
-**If no catalog exists**, enumerate from investigation:
+**If the skill is not available**, enumerate from investigation:
 - build & package graph
 - CI/CD pipelines
 - test infrastructure

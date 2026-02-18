@@ -498,6 +498,49 @@ echo '{"cwd":"'"$PROJ"'","hook_event_name":"SessionEnd","session_id":"test-s18",
   | CLAUDE_PROJECT_DIR="$PROJ" "$SCRIPT_DIR/ship-session-end.sh" 2>/dev/null
 assert_file_exists "Incomplete -> state preserved" "${PROJ}/tmp/ship/state.json"
 
+# Test 19: Worktree resolution — state files in worktree, hook runs from main repo
+PROJ="$TMPDIR/t19_worktree"
+mkdir -p "$PROJ"
+(cd "$PROJ" && git init -q -b main && echo "init" > init.txt && git add -A && git commit -q -m "init")
+WORKTREE="$TMPDIR/t19_wt"
+(cd "$PROJ" && git worktree add -q -b feat/test "$WORKTREE")
+# State files in the WORKTREE, not the main repo
+make_state_file "$WORKTREE"
+make_loop_file "$WORKTREE"
+TRANSCRIPT="$TMPDIR/transcript19_wt.jsonl"
+make_transcript "$TRANSCRIPT" "working on implementation"
+# Run hook from the MAIN REPO (not the worktree) — simulates real hook execution
+OUTPUT=$(echo '{"transcript_path":"'"$TRANSCRIPT"'"}' \
+  | (cd "$PROJ" && "$SCRIPT_DIR/ship-stop-hook.sh") 2>/dev/null)
+assert_output_contains "Worktree: finds state and blocks exit" "$OUTPUT" '"decision": "block"'
+assert_output_contains "Worktree: includes feature name" "$OUTPUT" "test-feature"
+
+# Test 19b: Worktree resolution with cwd hint — tries cwd first
+PROJ2="$TMPDIR/t19b_worktree"
+mkdir -p "$PROJ2"
+(cd "$PROJ2" && git init -q -b main && echo "init" > init.txt && git add -A && git commit -q -m "init")
+WORKTREE2="$TMPDIR/t19b_wt"
+(cd "$PROJ2" && git worktree add -q -b feat/test2 "$WORKTREE2")
+make_state_file "$WORKTREE2"
+make_loop_file "$WORKTREE2"
+TRANSCRIPT2="$TMPDIR/transcript19b_wt.jsonl"
+make_transcript "$TRANSCRIPT2" "working"
+# Pass cwd in hook input — hook should find state via cwd hint
+OUTPUT=$(echo '{"transcript_path":"'"$TRANSCRIPT2"'","cwd":"'"$WORKTREE2"'"}' \
+  | (cd "$PROJ2" && "$SCRIPT_DIR/ship-stop-hook.sh") 2>/dev/null)
+assert_output_contains "Worktree cwd hint: blocks exit" "$OUTPUT" '"decision": "block"'
+
+# Test 20: Session-end worktree resolution — finds completed state in worktree
+PROJ3="$TMPDIR/t20_wt_end"
+mkdir -p "$PROJ3"
+(cd "$PROJ3" && git init -q -b main && echo "init" > init.txt && git add -A && git commit -q -m "init")
+WORKTREE3="$TMPDIR/t20_wt_end_wt"
+(cd "$PROJ3" && git worktree add -q -b feat/test3 "$WORKTREE3")
+make_state_file "$WORKTREE3" "completed"
+echo '{"cwd":"'"$PROJ3"'","hook_event_name":"SessionEnd","session_id":"test-s20","reason":"other"}' \
+  | CLAUDE_PROJECT_DIR="$PROJ3" "$SCRIPT_DIR/ship-session-end.sh" 2>/dev/null
+assert_file_not_exists "Session-end worktree: completed state deleted" "${WORKTREE3}/tmp/ship/state.json"
+
 echo ""
 echo "=== Results: $PASS passed, $FAIL failed ==="
 [[ "$FAIL" -eq 0 ]] && exit 0 || exit 1

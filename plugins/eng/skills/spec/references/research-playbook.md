@@ -135,12 +135,12 @@ Before original investigation, check whether the repo provides pre-built domain 
    - **Internal surface-area catalogs** — infrastructure, shared code, CI/CD, database, auth, runtime, observability
    - **Dependency graphs** or **impact matrices** — what breaks when X changes
    - **Domain glossaries** or **system architecture maps**
-3. Load relevant skills as context for the world model. They replace from-scratch enumeration for the areas they cover.
-4. Identify gaps — surfaces or system areas the repo skills don't cover — and flag those for original investigation (types B, C, E, F).
+3. Load the relevant skills (e.g., `Load /product-surface-areas`, `Load /internal-surface-areas`). They replace from-scratch enumeration for the areas they cover.
+4. Identify gaps — surfaces or system areas the loaded skills don't cover — and flag those for original investigation (types B, C, E, F).
 
-**What to persist:** Reference the repo skills in evidence files (e.g., "Product surfaces grounded from `.agents/skills/product-surface-areas`; gaps identified: [list]"). Do not duplicate the catalog content — point to it.
+**What to persist:** Reference the loaded skills in evidence files (e.g., "Product surfaces grounded from `/product-surface-areas`; gaps identified: [list]"). Do not duplicate the catalog content — point to it.
 
-**When no repo-level knowledge exists:** Fall back entirely to original investigation. The world model still needs both product and internal surface-area maps — build them from `/inspect` traces, product research, and the enumeration guidance in the product discovery and technical design playbooks.
+**When no repo-level skills exist:** Fall back entirely to original investigation. The world model still needs both product and internal surface-area maps — build them from `/inspect` traces, product research, and the enumeration guidance in the product discovery and technical design playbooks.
 
 ---
 

@@ -19,12 +19,37 @@ HOOK_INPUT=$(cat)
 LOOP_STATE_FILE="tmp/ship/loop.md"
 SHIP_STATE_FILE="tmp/ship/state.json"
 
-# Extract session_id from hook input for session isolation
+# Extract session_id and cwd from hook input
 HOOK_SESSION_ID=$(echo "$HOOK_INPUT" | jq -r '.session_id // empty' 2>/dev/null || echo "")
+HOOK_CWD=$(echo "$HOOK_INPUT" | jq -r '.cwd // empty' 2>/dev/null || echo "")
 
-# --- Guard: no active loop → allow exit ---
+# --- Resolve working directory (worktree support) ---
+# The hook runs from the project root, but state files may be in a worktree.
+# Try: (1) current dir, (2) hook input cwd, (3) scan git worktrees.
 if [[ ! -f "$LOOP_STATE_FILE" ]]; then
-  exit 0
+  RESOLVED_DIR=""
+
+  # Try hook input cwd (agent's working directory during the session)
+  if [[ -n "$HOOK_CWD" ]] && [[ -f "${HOOK_CWD}/${LOOP_STATE_FILE}" ]]; then
+    RESOLVED_DIR="$HOOK_CWD"
+  fi
+
+  # Try scanning git worktrees
+  if [[ -z "$RESOLVED_DIR" ]] && command -v git &>/dev/null && git rev-parse --is-inside-work-tree &>/dev/null 2>&1; then
+    while IFS= read -r wt_line; do
+      wt_path=$(echo "$wt_line" | awk '{print $1}')
+      if [[ -n "$wt_path" ]] && [[ "$wt_path" != "$(pwd)" ]] && [[ -f "${wt_path}/${LOOP_STATE_FILE}" ]]; then
+        RESOLVED_DIR="$wt_path"
+        break
+      fi
+    done < <(git worktree list 2>/dev/null)
+  fi
+
+  if [[ -n "$RESOLVED_DIR" ]]; then
+    cd "$RESOLVED_DIR"
+  else
+    exit 0
+  fi
 fi
 
 # --- Parse loop state frontmatter ---

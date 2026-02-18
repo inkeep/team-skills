@@ -1,6 +1,6 @@
 ---
 name: ship
-description: "Orchestrate full-stack feature development from spec to merge-ready PR. Composes /spec, /implement, /review, and /research into an autonomous end-to-end workflow: spec authoring, worktree setup, TDD implementation, multi-modal testing, and iterative PR review. Use when implementing a feature end-to-end, taking a SPEC.md to production, or running the full spec-to-PR pipeline. Triggers: ship, ship it, feature development, implement end to end, spec to PR, full stack implementation, autonomous development."
+description: "Orchestrate any code change from requirements to merge-ready PR — scope-calibrated from small fixes to full features. Composes /spec, /implement, /review, and /research with depth that scales to the task: lightweight spec and direct implementation for bug fixes and config changes, full rigor for features. Use for ALL implementation work regardless of perceived scope — the workflow adapts depth, never skips phases. Triggers: ship, ship it, feature development, implement end to end, spec to PR, implement this, fix this, let's implement, let's go with that, build this, make the change, full stack implementation, autonomous development."
 argument-hint: "[feature description or path to SPEC.md] [--implement-docker [compose-file]]"
 ---
 
@@ -94,36 +94,36 @@ Before moving from any phase to the next:
 
 ### Phase 0: Detect context and starting point
 
-#### Step 1: Create isolated working environment
-
-Establish an isolated working directory so all artifacts live in the feature workspace from the start.
-
-**Load:** `references/worktree-setup.md` — contains the decision table (worktree vs. feature branch vs. skip), setup procedure, and dependency installation.
-
-#### Step 2: Detect execution context
-
-**Load:** `references/capability-detection.md` — probe table for all capabilities (GitHub CLI, quality gates, browser, macOS, Docker, skills) with degradation paths.
-
-Record results. If any capability is unavailable, briefly state what's missing as a negotiation checkpoint — the user may be able to fix it before work proceeds.
-
-#### Step 3: Detect starting point
-
-Determine which entry mode applies:
-
-| Condition | Action |
-|---|---|
-| User provides a path to an existing SPEC.md | Load it. Proceed to Phase 1 (skip spec authoring, start at validation). |
-| User provides a feature description (no SPEC.md) | Proceed to Phase 1. If `/spec` is unavailable, ask the user to provide a SPEC.md. |
-| Ambiguous | Ask: "Do you have an existing SPEC.md, or should we spec this from scratch?" |
-
 #### Recovery from previous session
 
-Before proceeding, check if `tmp/ship/state.json` exists. If found:
+Before anything else, check if `tmp/ship/state.json` exists. If found:
 
 1. Read it and present the recovered state to the user: feature name, current phase, completed phases, and any pending amendments.
 2. Ask: "A previous `/ship` session for **[feature]** was interrupted at **[phase]**. Resume from there, or start fresh?"
 3. If resuming: load the state (spec path, PR number, branch, worktree path, quality gates, capabilities, amendments) and skip to the recorded phase. Re-read the SPEC.md and any artifacts referenced in the state file. Check the amendments array for pending items — these are post-spec changes the user requested that may still need work. If `tmp/ship/loop.md` does not exist (loop was not active), re-activate it per Phase 1, Step 3.
 4. If starting fresh: delete the state file, delete `tmp/ship/loop.md` if it exists, and proceed normally.
+
+#### Step 1: Establish feature name and starting point
+
+Determine what the user wants to build and whether a spec already exists:
+
+| Condition | Action |
+|---|---|
+| User provides a path to an existing SPEC.md | Load it. Derive the feature name from the spec. |
+| User provides a feature description (no SPEC.md) | Derive a short feature name (e.g., `org-members-page`, `auth-flow`). If the description is too vague to name, ask one targeted question — just enough for a semantic name, not deep scoping. |
+| Ambiguous | Ask: "Do you have an existing SPEC.md, or should we spec this from scratch?" |
+
+#### Step 2: Create isolated working environment
+
+Now that you have a feature name, establish an isolated working directory so all artifacts live in the feature workspace from the start.
+
+**Load:** `references/worktree-setup.md` — contains the decision table (worktree vs. feature branch vs. skip), setup procedure, and dependency installation.
+
+#### Step 3: Detect execution context
+
+**Load:** `references/capability-detection.md` — probe table for all capabilities (GitHub CLI, quality gates, browser, macOS, Docker, skills) with degradation paths.
+
+Record results. If any capability is unavailable, briefly state what's missing as a negotiation checkpoint — the user may be able to fix it before work proceeds.
 
 #### Step 4: Calibrate workflow to scope
 
@@ -132,12 +132,12 @@ Assess the task and determine the appropriate depth for each phase. **Every phas
 | Task scope | Spec depth (Phase 1) | Implementation depth (Phase 2) | Testing depth (Phase 3) | Docs depth (Phase 4) | Review depth (Phase 5) |
 |---|---|---|---|---|---|
 | **Feature** (new capability, multi-file, user-facing) | Full `/spec` → SPEC.md → spec.json | Full `/implement` iteration loop | Full `/qa-test` | Full docs pass — product + internal | Full `/review` loop |
-| **Enhancement** (extending existing feature, moderate scope) | SPEC.md with problem + acceptance criteria + test cases; `/spec` optional | `/implement` or direct implementation (judgment call) | `/qa-test` (calibrated to scope) | Update existing docs if affected | Full `/review` loop |
-| **Bug fix / config change / infra** (small scope, targeted change) | SPEC.md with problem statement + what "fixed" looks like + acceptance criteria | Direct implementation (skip `/implement` tool, not Phase 2) | Targeted `/qa-test` if user-facing | Update docs only if behavior changed | `/review` loop |
+| **Enhancement** (extending existing feature, moderate scope) | SPEC.md with problem + acceptance criteria + test cases; `/spec` optional | `/implement` iteration loop | `/qa-test` (calibrated to scope) | Update existing docs if affected | Full `/review` loop |
+| **Bug fix / config change / infra** (small scope, targeted change) | SPEC.md with problem statement + what "fixed" looks like + acceptance criteria | `/implement` iteration loop (calibrated to scope) | Targeted `/qa-test` if user-facing | Update docs only if behavior changed | `/review` loop |
 
 A SPEC.md is always produced — conversational findings alone do not survive context loss.
 
-Present your scope assessment and adapted phase depths to the user. Do not begin implementation until they confirm the plan.
+Note the scope level internally — it governs phase depth throughout. Do not present a detailed phase-by-phase plan or wait for approval here; proceed directly to Phase 1 and let the SPEC.md scaffold capture the initial scope. The user confirms scope through the spec handoff (Phase 1, Step 2), not through a separate plan approval step.
 
 ---
 
@@ -147,13 +147,31 @@ The user is the product owner — your job is to help them think clearly about w
 
 #### Step 1: Author the spec
 
-Load `/spec` skill with the user's feature description. Follow the spec skill's interactive process.
+**Scaffold first, refine second.** Before asking clarifying questions or loading `/spec`, immediately create a SPEC.md scaffold from whatever the user has provided so far — their description, conversation context, any requirements or constraints mentioned. Write it to `specs/<feature-name>/SPEC.md` (relative to repo root). This follows the `/spec` skill's default path convention — see `/spec` "Where to save the spec" for the full override priority (env var, AI repo config, user override). The scaffold captures:
+
+- Problem statement (what you understand so far)
+- Initial requirements and acceptance criteria (even if incomplete)
+- Known constraints or technical direction
+- Open questions (what still needs clarification)
+
+The scaffold doesn't need to be complete — it needs to exist on disk so it survives compaction and anchors the refinement conversation. Do not spend time scoping in conversation before the scaffold exists.
+
+**For bug fixes and error reports — investigate root cause before refining.** When the user reports a bug, shares an error, or describes unexpected behavior, the scaffold captures the *symptom*. Before refining the spec, investigate to find the *root cause*:
+
+1. **Trace the code path.** Load `/inspect` (system tracing lens) to follow the execution flow from the entry point through to where the error occurs. Map what the code actually does vs. what the user expects.
+2. **Identify the root cause.** The symptom (error message, wrong behavior, crash) is not the bug — it's a consequence. Trace backward from the symptom to find what actually went wrong: wrong logic, missing validation, race condition, incorrect assumption, stale data, etc.
+3. **Research if needed.** If the bug involves unfamiliar APIs, libraries, or system behavior, load `/research` to understand the correct behavior before proposing a fix.
+4. **Update the scaffold.** Revise the SPEC.md to describe the root cause (not just the symptom), the proposed fix, and acceptance criteria that verify the root cause is addressed — not just that the symptom is suppressed.
+
+Do not skip this step. A spec that describes "fix the error message" instead of "fix the null check that causes the error" leads to symptom-level patches that leave the underlying issue intact.
+
+**Then refine.** Load `/spec` skill to deepen and complete the spec through its interactive process. The scaffold gives `/spec` a starting point rather than a blank slate.
 
 During the spec process, ensure these are captured with evidence (not aspirationally):
 - All test cases and acceptance criteria. Criteria should describe observable behavior, not internal mechanisms (see /tdd for examples).
 - Failure modes and edge cases
 
-**If scope calibration indicated a lighter spec process** (enhancement or bug fix): produce the SPEC.md directly instead of invoking `/spec`. The SPEC.md must still capture: problem statement, what "done" looks like (acceptance criteria), and what you will test.
+**If scope calibration indicated a lighter spec process** (enhancement or bug fix): refine the scaffold directly instead of invoking `/spec`. For bug fixes, the root cause investigation above replaces the full `/spec` process — the refined scaffold with root cause analysis is sufficient. The final SPEC.md must still capture: problem statement, root cause (for bug fixes), what "done" looks like (acceptance criteria), and what you will test.
 
 **If the user provided an existing SPEC.md** (detected in Phase 0): skip to Step 2.
 
@@ -186,7 +204,7 @@ Verify that you genuinely understand the feature — not just that the spec has 
 
 #### Step 2: Invoke /implement
 
-**If scope calibration indicated direct implementation** (bug fix / config change / small enhancement): implement directly instead of invoking `/implement`. Phase 2 still applies in full — particularly Step 3 (post-implementation review).
+Always invoke `/implement` — it owns spec.json conversion, prompt crafting, and the iteration loop regardless of scope. `/implement` calibrates its own depth internally. The only exception: changes so trivial they don't warrant a SPEC.md at all (a one-line typo fix, a config value change) — but those wouldn't go through `/ship` in the first place.
 
 Load `/implement` skill to handle the full implementation lifecycle — from spec conversion (SPEC.md → spec.json) through prompt crafting and execution. Provide it with:
 - Path to the SPEC.md — this is the highest-priority input. Do not omit it.
@@ -269,6 +287,8 @@ gh pr ready <pr-number>
 
 **Do not self-review the PR.** Your job in this phase is to load `/review` skill and iterate on *external* reviewer feedback — not to generate review feedback yourself. Do not run pr-review agents or subagents to review the code.
 
+**Load `/review` at the top level — not in a subagent.** `/review` is a pipeline skill that runs an extended loop (poll → assess → fix → push → repeat). It needs your context: state files, spec path, phase awareness, and the ability to escalate back to you. Delegating it to a subagent strips all of that. Use the Skill tool directly.
+
 Load `/review` skill with the PR number, the path to the SPEC.md, and the quality gate commands from Phase 0:
 
 ```
@@ -301,7 +321,9 @@ These govern your behavior throughout:
 2. **Outcomes over process.** The workflow phases exist to organize your work, not to compel forward motion. Never move to the next step just because you finished the current one — move when you have genuine confidence in what you've built so far. If something feels uncertain, stop and investigate. Build your own understanding of the codebase, the product, the intent of the spec, and the implications of your decisions before acting on them.
 3. **Delegate investigation; conserve your context.** Your context window is finite and must last through all phases. Default to spawning subagents for information-gathering work: codebase exploration, test failure diagnosis, CI log analysis, code review of implementation output, and pattern discovery. Give each subagent a clear question, the relevant file paths or error messages, and the output format you need. Act on their findings — not raw code or logs. Do investigation directly only when it's trivial (one small file, one quick command). The threshold: if it would take more than 2-3 tool calls or produce more than ~100 lines of output, delegate it.
 
-   **Subagent mechanics:** Subagents do not inherit your skills. For plain investigation, this doesn't matter — just provide a clear question and file paths. When a subagent needs a skill, use the `general-purpose` type (it has the Skill tool) and start the prompt with `Before doing anything, load /skill-name skill` — this reliably triggers the Skill tool. Follow it with context and the task:
+   **What to delegate vs. what to run top-level:** Subagents are for bounded investigation tasks — codebase exploration, test failure diagnosis, CI log analysis, pattern discovery. Pipeline skills (`/implement`, `/review`, `/qa-test`, `/docs`, `/pull-request`) must run at the top level via the Skill tool, never in a subagent. They run extended loops, manage state, and need your orchestrator context (state files, spec path, phase awareness, ability to escalate). Delegating them strips all of that.
+
+   **Subagent mechanics:** Subagents do not inherit your skills. For plain investigation, this doesn't matter — just provide a clear question and file paths. When a subagent needs an investigation skill (like `/inspect`), use the `general-purpose` type (it has the Skill tool) and start the prompt with `Before doing anything, load /skill-name skill` — this reliably triggers the Skill tool. Follow it with context and the task:
 
    ```
    Before doing anything, load /inspect skill
@@ -335,6 +357,8 @@ These govern your behavior throughout:
 - Using a different package manager than what the repo specifies
 - Force-pushing or destructive git operations without user confirmation
 - Leaving the worktree without cleaning up (document how to clean up in PR description)
+- **Bypassing /ship for "small" work.** Scope calibration (Phase 0, Step 4) adjusts depth for every task size — bug fixes get a light SPEC.md and calibrated testing. The workflow always runs; rigor scales. Implementing directly outside /ship means no spec (requirements lost on compaction), no state persistence, no QA, no PR, no review loop. A 4-file security fix still needs a spec that captures what "fixed" looks like, tests that verify it, and a PR that documents it.
+- **Skipping `/implement` for "simple" changes.** `/implement` always runs — it owns spec.json conversion, the implementation prompt, and the iteration loop. Even small changes benefit from the structured prompt and verification cycle. Direct implementation outside `/implement` loses the spec.json tracking, progress log, and quality gate loop.
 - **Outputting a false completion promise.** Never output `<complete>SHIP COMPLETE</complete>` until ALL phases have genuinely completed and all Phase 6 verification checks pass. The ship loop is designed to continue until genuine completion — do not lie to exit.
 
 ---

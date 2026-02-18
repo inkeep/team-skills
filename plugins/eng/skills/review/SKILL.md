@@ -75,7 +75,9 @@ git log origin/HEAD..HEAD --oneline
 
 #### 2. Poll for review feedback
 
-Wait approximately 6 minutes, then check for reviewer feedback. Opportunistically check CI/CD at the same time:
+Wait approximately 6 minutes, then check for reviewer feedback. Opportunistically check CI/CD at the same time.
+
+**Always use the skill's scripts for polling — do not call `gh pr checks` or `gh api` directly.** The scripts handle exit codes, parse output, and categorize results (passed/failed/pending). Raw `gh pr checks` returns exit code 8 for pending checks, which looks like an error but is normal — the scripts absorb this.
 
 ```bash
 # Primary: fetch all review feedback (reviews, inline comments, discussion)
@@ -87,6 +89,8 @@ Wait approximately 6 minutes, then check for reviewer feedback. Opportunisticall
 # Or fetch everything at once:
 <skill-base>/scripts/fetch-pr-feedback.sh <pr-number>
 ```
+
+Fall back to raw `gh pr checks` only if the scripts are unavailable (file not found).
 
 **Decision logic:**
 
@@ -194,21 +198,28 @@ After the review loop is finalized, shift focus to monitoring and resolving CI/C
 
 #### 2. Process failures as they appear
 
-Do NOT wait for the entire pipeline to finish. As soon as any check in a given run reports a failure, investigate immediately:
+Do NOT wait for the entire pipeline to finish. As soon as any check in a given run reports a failure or cancellation, investigate immediately:
 
 ```bash
-# Get failure details with logs and main branch comparison
+# Always use --compare-main — classification without main branch evidence is guesswork
 <skill-base>/scripts/investigate-ci-failures.sh <pr-number> --compare-main
 ```
 
-For each failing check, **classify**:
+**Cancelled runs are not "passed."** A run cancelled due to runner shutdown, timeout, or resource exhaustion is an unknown — you don't know if the code is clean. Re-trigger it and wait for the result.
 
-| Classification | Action |
-|---|---|
-| Caused by this PR's changes | Fix it. |
-| Pre-existing failure (fails on main too) | Note in PR comment. Do not fix unless trivial. |
-| Flaky test (passes on retry) | Note in PR comment. Retry if the CI system supports it. |
-| Infrastructure issue (timeout, resource, OIDC) | Note in PR comment. Retry. |
+**Classification requires evidence.** You must reach high confidence that a failure is NOT caused by this PR before classifying it as pre-existing or infrastructure. "It looks like infra" is not sufficient — verify with evidence (main branch comparison, retry results, log analysis).
+
+For each failing or cancelled check, **investigate then classify**:
+
+| Classification | Evidence required | Action |
+|---|---|---|
+| Caused by this PR's changes | Failure is in code paths touched by this PR; main branch passes the same check | Fix it. |
+| Pre-existing failure (fails on main too) | `--compare-main` shows the same workflow failing on main with the same error | Note in PR comment with evidence (main run ID, matching error). Do not fix unless trivial. |
+| Flaky test (passes on retry) | Same check passes on re-run without code changes | Re-trigger: `gh run rerun <run-id> --repo <owner/repo>`. Wait for the rerun. If it passes, note in PR comment. If it fails again, investigate deeper — two consecutive failures are not "flaky." |
+| Infrastructure issue (timeout, runner shutdown, OIDC, resource) | Logs show infrastructure-level error (not test/build failure); main branch shows similar issues OR the error is clearly unrelated to code | Re-trigger: `gh run rerun <run-id> --repo <owner/repo>`. Wait for the rerun. Note in PR comment with evidence. |
+| Cancelled (any reason) | Run was cancelled before completing | Re-trigger: `gh run rerun <run-id> --repo <owner/repo>`. Wait for the result. Do not classify a cancelled run as "passed" or "not PR-related." |
+
+**Re-trigger, don't just note.** For flaky, infrastructure, and cancelled failures, always re-trigger the run and wait for the result. Noting a failure without retrying leaves an unknown — the pipeline is not green and you have no evidence it would be.
 
 #### 3. Fix, test, push, and monitor next run
 
@@ -216,12 +227,13 @@ After fixing failures:
 1. Run tests locally to verify the fix.
 2. Push.
 3. Monitor the next CI/CD run.
-4. Repeat until the pipeline is green or all remaining failures are documented as pre-existing/unrelated.
+4. Repeat until the pipeline is green or all remaining failures are documented as pre-existing/unrelated with evidence.
 
 #### 4. Exit Stage 2
 
 Stop when ALL of these are true:
-- [ ] CI/CD pipeline is green (or failures are documented as pre-existing/unrelated)
+- [ ] CI/CD pipeline is green (or failures are documented as pre-existing/unrelated **with evidence** — main branch comparison, matching error, retry results)
+- [ ] No cancelled or pending runs — every check has a definitive pass or documented-with-evidence failure
 - [ ] You are satisfied with the implementation quality
 - [ ] No pending items in your task list
 
