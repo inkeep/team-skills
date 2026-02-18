@@ -34,7 +34,7 @@ After installing Playwright, download browser binaries: `npx playwright install 
 Most screenshots require browser interaction before capture — dismissing popups, logging in, clicking tabs, scrolling to a section, or navigating through a flow. The default workflow accounts for this.
 
 1. **Identify affected pages** from the PR diff
-2. **Plan interaction** — Load `/playwright` skill. For each route, determine what interaction is needed before the screenshot (dismiss cookie banners, click tabs, scroll, login, etc.). Write a pre-script to `/tmp/pw-pre-<name>.js`
+2. **Plan interaction** — Load `/use-browser` skill. For each route, determine what interaction is needed before the screenshot (dismiss cookie banners, click tabs, scroll, login, etc.). Write a pre-script to `/tmp/pw-pre-<name>.js`
 3. **Capture screenshots** — run `scripts/capture.ts` with `--pre-script`
 4. **Validate no sensitive data** — run `scripts/validate-sensitive.ts`
 5. **Annotate** — run `scripts/annotate.ts` (labels, borders, side-by-side)
@@ -52,7 +52,7 @@ Analyze the PR diff to determine which UI routes are impacted. Map changed compo
 
 ## Step 2: Plan Interaction (Pre-Scripts)
 
-Load `/playwright` skill for writing pre-scripts. A pre-script is a JS file that receives the Playwright `page` object and runs interaction before masking + screenshot.
+Load `/use-browser` skill for writing pre-scripts. A pre-script is a JS file that receives the Playwright `page` object and runs interaction before masking + screenshot.
 
 ### Pre-script contract
 
