@@ -262,6 +262,8 @@ If scope calibration indicated a lightweight scope (bug fix / config change), pa
 
 After Phase 3's exit gate and before entering Phase 4. Do not update `currentPhase` until Phase 4 begins.
 
+If the implementation includes UI changes and `/screengrabs` is available, invoke it before writing the PR body — capture screenshots of affected routes so the PR body's "Screenshots / recordings" section has visual evidence ready. `/screengrabs` supports `--pre-script` for interaction before capture (dismissing modals, navigating tabs, logging in).
+
 Load `/pull-request` skill with the PR number and `--spec <path/to/SPEC.md>` to write the full PR body. Implementation and testing are now complete — the body can cover approach, changes, architectural decisions, and test plan comprehensively.
 
 If no PR exists (`prNumber: null` — GitHub CLI was unavailable during draft PR creation), load `/pull-request` with `new --spec <path/to/SPEC.md>` to create the PR and write the body in one step. Update `prNumber` in `tmp/ship/state.json`. If `gh` is still unavailable, `/pull-request` will output the body for manual use — skip Phase 5.
