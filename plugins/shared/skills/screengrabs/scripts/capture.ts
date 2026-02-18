@@ -1,5 +1,5 @@
 /**
- * PR Screenshot Capture Script
+ * Screengrab Capture Script
  *
  * Captures screenshots of UI pages with automatic sensitive data masking.
  * Supports local dev servers, preview deployments, and reusable Playwright servers.
@@ -8,7 +8,7 @@
  *   npx tsx scripts/capture.ts \
  *     --base-url http://localhost:3000 \
  *     --routes "/dashboard,/settings" \
- *     --output-dir ./pr-screenshots
+ *     --output-dir ./screengrabs
  *
  * Playwright server mode:
  *   npx tsx scripts/capture.ts --serve --port 3001
@@ -114,7 +114,7 @@ async function startServer(port: number) {
 async function capture() {
   const baseUrl = getArg('base-url');
   const routesStr = getArg('routes');
-  const outputDir = getArg('output-dir') || './pr-screenshots';
+  const outputDir = getArg('output-dir') || './screengrabs';
   const viewport = getArg('viewport') || '1280x800';
   const connectUrl = getArg('connect');
   const extraMaskSelectors = getArg('mask-selectors');
@@ -128,7 +128,7 @@ async function capture() {
       'Usage: npx tsx capture.ts --base-url <url> --routes <path1,path2,...> [options]\n'
     );
     console.error('Options:');
-    console.error('  --output-dir <dir>       Output directory (default: ./pr-screenshots)');
+    console.error('  --output-dir <dir>       Output directory (default: ./screengrabs)');
     console.error('  --viewport <WxH>         Viewport size (default: 1280x800)');
     console.error('  --connect <ws-url>       Connect to existing Playwright server');
     console.error('  --mask-selectors <s>     Additional CSS selectors to blur (comma-separated)');

@@ -1,5 +1,5 @@
 node_modules/
 bun.lock
 .DS_Store
-pr-screenshots/
+/screengrabs/
 tmp/

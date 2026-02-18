@@ -1,5 +1,5 @@
 ---
-name: pr-screenshots
+name: screengrabs
 description: "Capture, annotate, and include screenshots in pull requests for UI changes. Use when creating or updating PRs that touch frontend components, pages, or any web-facing surface. Also use when asked to add before/after screenshots, visual diffs, or enrich PR descriptions. Triggers on: PR screenshots, before/after, visual diff, PR description, capture screenshot, PR images, enrich PR."
 license: MIT
 metadata:
@@ -7,7 +7,7 @@ metadata:
   version: "1.1"
 ---
 
-# PR Screenshots
+# Screengrabs
 
 Capture, redact, annotate, and embed screenshots in GitHub PRs for UI changes.
 
@@ -130,20 +130,20 @@ npx tsx scripts/capture.ts \
   --base-url http://localhost:3000 \
   --routes "/dashboard,/settings" \
   --pre-script /tmp/pw-pre-dashboard.js \
-  --output-dir ./pr-screenshots
+  --output-dir ./screengrabs
 
 # Simple capture (no interaction needed)
 npx tsx scripts/capture.ts \
   --base-url http://localhost:3000 \
   --routes "/landing,/about" \
-  --output-dir ./pr-screenshots
+  --output-dir ./screengrabs
 
 # Preview deployment with pre-script
 npx tsx scripts/capture.ts \
   --base-url https://your-preview-url.example.com \
   --routes "/dashboard" \
   --pre-script /tmp/pw-pre-dismiss-popups.js \
-  --output-dir ./pr-screenshots
+  --output-dir ./screengrabs
 ```
 
 ### All capture options
@@ -153,7 +153,7 @@ npx tsx scripts/capture.ts \
 | `--base-url <url>` | *required* | Target URL (local dev or preview) |
 | `--routes <paths>` | *required* | Comma-separated route paths |
 | `--pre-script <path>` | — | JS file to run on page before capture (for interaction) |
-| `--output-dir <dir>` | `./pr-screenshots` | Where to save PNGs and DOM text |
+| `--output-dir <dir>` | `./screengrabs` | Where to save PNGs and DOM text |
 | `--viewport <WxH>` | `1280x800` | Browser viewport size |
 | `--connect <ws-url>` | — | Connect to existing Playwright server |
 | `--mask-selectors <s>` | — | Additional CSS selectors to blur |
@@ -172,7 +172,7 @@ npx tsx scripts/capture.ts --serve --port 3001
 # Terminal 2+: connect and capture
 npx tsx scripts/capture.ts \
   --connect ws://localhost:3001 --base-url http://localhost:3000 \
-  --routes "/..." --pre-script /tmp/pw-pre-script.js --output-dir ./pr-screenshots
+  --routes "/..." --pre-script /tmp/pw-pre-script.js --output-dir ./screengrabs
 ```
 
 ---
@@ -183,7 +183,7 @@ npx tsx scripts/capture.ts \
 
 ```bash
 npx tsx scripts/validate-sensitive.ts \
-  --dir ./pr-screenshots
+  --dir ./screengrabs
 ```
 
 The script checks `.dom-text.txt` files (saved by capture) for:
@@ -234,7 +234,7 @@ Images in PR markdown need permanent URLs. Use one of:
 **Option A — PR comment with image** (simplest):
 ```bash
 # GitHub renders attached images with permanent CDN URLs
-gh pr comment {pr-number} --body "![Before](./pr-screenshots/before-labeled.png)"
+gh pr comment {pr-number} --body "![Before](./screengrabs/before-labeled.png)"
 ```
 
 **Option B — Update PR body directly**:

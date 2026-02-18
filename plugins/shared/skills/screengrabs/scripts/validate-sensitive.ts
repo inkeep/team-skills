@@ -6,7 +6,7 @@
  * screenshots to GitHub.
  *
  * Usage:
- *   npx tsx validate-sensitive.ts --dir ./pr-screenshots
+ *   npx tsx validate-sensitive.ts --dir ./screengrabs
  */
 
 import * as fs from 'node:fs';
@@ -84,7 +84,7 @@ function scanFile(filePath: string): { critical: string[]; warnings: string[] } 
 }
 
 function main() {
-  const dir = getArg('dir') || './pr-screenshots';
+  const dir = getArg('dir') || './screengrabs';
 
   if (!fs.existsSync(dir)) {
     console.error(`Directory not found: ${dir}`);
