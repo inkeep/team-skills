@@ -548,6 +548,85 @@ const TARGET_URL = 'http://localhost:3001';
 - Use `element.screenshot()` to crop to a specific panel instead of full-page
 - Target <200KB per image — crop aggressively
 
+### Media Asset Pipeline
+
+Choose the right preset and conversion for your target. Presets set viewport + DPR automatically — no manual config needed.
+
+| Target | Preset | Output | Max size | Why |
+|---|---|---|---|---|
+| Docs site screenshot | `docs-retina` | 2560×1440 PNG | <500 KB | Retina-sharp for Next.js Image |
+| GitHub PR screenshot | `pr-standard` | 1280×720 PNG | <200 KB | Crisp at GitHub's 894px display width |
+| GitHub PR GIF | `gif-compact` | 800×450 animated GIF | <10 MB | DPR 1 — GIF's 256-color palette is the bottleneck, not pixel density |
+
+**Capture a docs-quality screenshot with a preset:**
+
+```javascript
+// /tmp/playwright-test-preset-screenshot.js
+const { chromium } = require('playwright');
+const helpers = require('./lib/helpers');
+
+const TARGET_URL = 'http://localhost:3001';
+
+(async () => {
+  const browser = await chromium.launch({ headless: true });
+
+  // Preset sets viewport 1280x720 + DPR 2 → 2560x1440 output
+  const context = await helpers.createPresetContext(browser, 'docs-retina');
+  const page = await context.newPage();
+
+  await page.goto(`${TARGET_URL}/settings`);
+  await page.waitForLoadState('networkidle');
+
+  // Element-level crop for tight framing
+  const section = page.locator('.api-keys-section');
+  await section.screenshot({ path: '/tmp/doc-api-keys.png', type: 'png' });
+
+  console.log('Docs screenshot: 2560x1440 Retina PNG');
+  await browser.close();
+})();
+```
+
+**Create a step-by-step GIF for a PR:**
+
+```javascript
+// /tmp/playwright-test-pr-gif.js
+const { chromium } = require('playwright');
+const helpers = require('./lib/helpers');
+
+const TARGET_URL = 'http://localhost:3001';
+
+(async () => {
+  const browser = await chromium.launch({ headless: true });
+  // gif-compact: 800x450 @ DPR 1 — optimized for GitHub's 10MB limit
+  const context = await helpers.createPresetContext(browser, 'gif-compact');
+  const page = await context.newPage();
+
+  const frames = [];
+
+  // Frame 1: Starting state
+  await page.goto(`${TARGET_URL}/settings`);
+  await page.waitForLoadState('networkidle');
+  frames.push(await page.screenshot({ type: 'png' }));
+
+  // Frame 2: Click action
+  await page.click('button.save');
+  await page.waitForTimeout(500);
+  frames.push(await page.screenshot({ type: 'png' }));
+
+  // Frame 3: Success state
+  await page.waitForSelector('.success-toast');
+  frames.push(await page.screenshot({ type: 'png' }));
+
+  // Assemble GIF — 3 frames at 2fps = 1.5s loop
+  const result = await helpers.screenshotsToGif(frames, '/tmp/pr-demo.gif', {
+    width: 800, height: 450, fps: 2
+  });
+
+  console.log(`GIF: ${result.path} (${result.sizeMB} MB, ${result.frames} frames)`);
+  await browser.close();
+})();
+```
+
 ### Run Accessibility Audit
 
 Use when checking a page for WCAG violations.
@@ -662,6 +741,19 @@ All helpers live in `lib/helpers.js`. Use `const helpers = require('./lib/helper
 | Helper | When to use |
 |---|---|
 | `helpers.createVideoContext(browser, { outputDir: '/tmp/videos' })` | Create a context that records video. Video saved when page/context closes. |
+
+### Resolution Presets — consistent dimensions per target
+
+| Helper | When to use |
+|---|---|
+| `helpers.RESOLUTION_PRESETS` | Access preset configs. Keys: `docs-retina`, `pr-standard`, `gif-compact`. Each has `viewport` and `deviceScaleFactor`. |
+| `helpers.createPresetContext(browser, 'preset')` | Create a context with preset viewport + DPR. Replaces manual viewport/DPR config. |
+
+### Media Conversion — screenshots to GIF
+
+| Helper | When to use |
+|---|---|
+| `helpers.screenshotsToGif(frames, path, opts)` | Convert PNG buffers to animated GIF. Options: `width`, `height`, `fps`, `quality`. For PR step-by-step demos. |
 
 ### Accessibility — WCAG audits and keyboard navigation
 

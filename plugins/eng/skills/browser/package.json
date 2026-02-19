@@ -16,6 +16,8 @@
     "claude-skill"
   ],
   "dependencies": {
+    "@napi-rs/canvas": "^0.1.65",
+    "gifencoder": "^2.0.1",
     "playwright": "^1.57.0"
   },
   "engines": {

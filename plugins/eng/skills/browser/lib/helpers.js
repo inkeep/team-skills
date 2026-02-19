@@ -35,6 +35,33 @@ function getExtraHeadersFromEnv() {
   return null;
 }
 
+// ---------------------------------------------------------------------------
+// Resolution Presets
+// ---------------------------------------------------------------------------
+
+/**
+ * Pre-configured viewport + DPR combinations for different media targets.
+ * Use with createPresetContext() to get consistent dimensions.
+ *
+ * - docs-retina: 1280x720 viewport @ DPR 2 → 2560x1440 PNG (docs site, Retina-sharp)
+ * - pr-standard: 1280x720 viewport @ DPR 1 → 1280x720 PNG (GitHub PR inline images)
+ * - gif-compact: 800x450 viewport @ DPR 1 → 800x450 frames (GitHub PR GIFs, <10MB)
+ */
+const RESOLUTION_PRESETS = {
+  'docs-retina': {
+    viewport: { width: 1280, height: 720 },
+    deviceScaleFactor: 2
+  },
+  'pr-standard': {
+    viewport: { width: 1280, height: 720 },
+    deviceScaleFactor: 1
+  },
+  'gif-compact': {
+    viewport: { width: 800, height: 450 },
+    deviceScaleFactor: 1
+  }
+};
+
 /**
  * Launch browser with standard configuration
  * @param {string} browserType - 'chromium', 'firefox', or 'webkit'
@@ -370,6 +397,34 @@ async function createContext(browser, options = {}) {
 }
 
 /**
+ * Create a browser context using a resolution preset.
+ * Presets: 'docs-retina' (2560x1440), 'pr-standard' (1280x720), 'gif-compact' (800x450).
+ * @param {Object} browser - Browser instance
+ * @param {string} presetName - Key from RESOLUTION_PRESETS
+ * @param {Object} [extraOptions] - Additional context options (merged after preset)
+ * @returns {Object} Browser context configured for the preset
+ */
+async function createPresetContext(browser, presetName, extraOptions = {}) {
+  const preset = RESOLUTION_PRESETS[presetName];
+  if (!preset) {
+    const available = Object.keys(RESOLUTION_PRESETS).join(', ');
+    throw new Error(`Unknown resolution preset: "${presetName}". Available: ${available}`);
+  }
+
+  const envHeaders = getExtraHeadersFromEnv();
+  const mergedHeaders = { ...envHeaders, ...extraOptions.extraHTTPHeaders };
+
+  const contextOptions = {
+    viewport: preset.viewport,
+    deviceScaleFactor: preset.deviceScaleFactor,
+    ...(Object.keys(mergedHeaders).length > 0 && { extraHTTPHeaders: mergedHeaders }),
+    ...extraOptions
+  };
+
+  return await browser.newContext(contextOptions);
+}
+
+/**
  * Detect running dev servers on common ports
  * @param {Array<number>} customPorts - Additional ports to check
  * @returns {Promise<Array>} Array of detected server URLs
@@ -608,6 +663,71 @@ async function createVideoContext(browser, options = {}) {
   delete contextOptions.videoSize;
 
   return await browser.newContext(contextOptions);
+}
+
+// ---------------------------------------------------------------------------
+// Media Conversion
+// ---------------------------------------------------------------------------
+
+/**
+ * Convert an array of PNG screenshot buffers (or file paths) into an animated GIF.
+ * Best for step-by-step PR demos — precise frame control, crisp output, 1-5 MB.
+ * Requires: gifencoder + @napi-rs/canvas (installed via npm run setup).
+ * @param {Array<Buffer|string>} frames - PNG buffers from page.screenshot() or file paths
+ * @param {string} outputPath - Output GIF file path
+ * @param {Object} [options] - { width: 800, height: 450, fps: 10, quality: 10, repeat: 0 }
+ * @returns {Object} { path, size, sizeMB, frames, dimensions, fps }
+ */
+async function screenshotsToGif(frames, outputPath, options = {}) {
+  const GIFEncoder = require('gifencoder');
+  const { createCanvas, loadImage } = require('@napi-rs/canvas');
+  const fs = require('fs');
+  const path = require('path');
+
+  const width = options.width || 800;
+  const height = options.height || 450;
+  const fps = options.fps || 10;
+  const repeat = options.repeat !== undefined ? options.repeat : 0;
+  const quality = options.quality || 10;
+
+  const dir = path.dirname(outputPath);
+  fs.mkdirSync(dir, { recursive: true });
+
+  const encoder = new GIFEncoder(width, height);
+  const stream = fs.createWriteStream(outputPath);
+  encoder.createReadStream().pipe(stream);
+
+  encoder.start();
+  encoder.setRepeat(repeat);
+  encoder.setDelay(Math.round(1000 / fps));
+  encoder.setQuality(quality);
+
+  const canvas = createCanvas(width, height);
+  const ctx = canvas.getContext('2d');
+
+  for (const frame of frames) {
+    const imgData = Buffer.isBuffer(frame) ? frame : fs.readFileSync(frame);
+    const img = await loadImage(imgData);
+    ctx.drawImage(img, 0, 0, width, height);
+    encoder.addFrame(ctx);
+  }
+
+  encoder.finish();
+
+  await new Promise((resolve, reject) => {
+    stream.on('finish', resolve);
+    stream.on('error', reject);
+  });
+
+  const stats = fs.statSync(outputPath);
+  return {
+    path: outputPath,
+    size: stats.size,
+    sizeMB: Math.round(stats.size / 1024 / 1024 * 100) / 100,
+    frames: frames.length,
+    dimensions: `${width}x${height}`,
+    fps
+  };
 }
 
 // ---------------------------------------------------------------------------
@@ -943,8 +1063,11 @@ module.exports = {
   handleCookieBanner,
   retryWithBackoff,
   createContext,
+  createPresetContext,
   detectDevServers,
   getExtraHeadersFromEnv,
+  // Resolution presets
+  RESOLUTION_PRESETS,
   // Console monitoring
   startConsoleCapture,
   getConsoleErrors,
@@ -956,6 +1079,8 @@ module.exports = {
   waitForApiResponse,
   // Video recording
   createVideoContext,
+  // Media conversion
+  screenshotsToGif,
   // Browser state
   getLocalStorage,
   getSessionStorage,
