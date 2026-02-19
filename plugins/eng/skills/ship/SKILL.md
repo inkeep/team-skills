@@ -230,7 +230,7 @@ Wait for `/implement` to complete. If it reports that automated execution is una
 
 #### Step 3: Post-implementation review
 
-After implementation completes, verify that you are satisfied with the output before proceeding. You are responsible for this code — the implementation output is your starting point, not your endpoint. Do not review the output by reading every changed file yourself — delegate targeted verification to a subagent: "Does the implementation match the SPEC.md acceptance criteria? Are there gaps, dead code, or unresolved TODOs? Does every acceptance criterion have a corresponding test?" Act on the findings. Fix issues directly for small problems, or re-invoke `/implement` with specific feedback for larger rework.
+After implementation completes, verify that you are satisfied with the output before proceeding. You are responsible for this code — the implementation output is your starting point, not your endpoint. Do not review the output by reading every changed file yourself — delegate targeted verification to a subagent: "Does the implementation match the SPEC.md acceptance criteria? Are there gaps, dead code, or unresolved TODOs? Does every acceptance criterion have a corresponding test?" Act on the findings. Fix issues directly for small, obvious problems. For issues where the root cause isn't immediately clear, load `/debug` to diagnose before fixing. For larger rework that requires re-implementing a story, re-invoke `/implement` with specific feedback.
 
 **If you made any code changes** (whether direct fixes or by re-invoking `/implement`): re-run quality gates (test suite, typecheck, lint) and verify green before proceeding. `/implement` exits green, but post-implementation fixes happen outside its loop — you own verification of your own changes.
 
@@ -261,6 +261,8 @@ If scope calibration indicated a lightweight scope (bug fix / config change), pa
 ### Write PR body
 
 After Phase 3's exit gate and before entering Phase 4. Do not update `currentPhase` until Phase 4 begins.
+
+If the implementation includes UI changes and `/screengrabs` is available, invoke it before writing the PR body — capture screenshots of affected routes so the PR body's "Screenshots / recordings" section has visual evidence ready. `/screengrabs` supports `--pre-script` for interaction before capture (dismissing modals, navigating tabs, logging in).
 
 Load `/pull-request` skill with the PR number and `--spec <path/to/SPEC.md>` to write the full PR body. Implementation and testing are now complete — the body can cover approach, changes, architectural decisions, and test plan comprehensively.
 
@@ -394,4 +396,5 @@ These govern your behavior throughout:
 | `references/completion-checklist.md` | Final verification (Phase 6) | Incomplete work ships as "done" |
 | `/review` skill `scripts/fetch-pr-feedback.sh` | Fetching review feedback and CI/CD status (Phase 5, via /review). Canonical copies live in the `/review` skill — do not duplicate. | Agent uses wrong/deprecated `gh` commands, misses inline review comments |
 | `/review` skill `scripts/investigate-ci-failures.sh` | Investigating CI/CD failures with logs (Phase 5, via /review). Canonical copies live in the `/review` skill — do not duplicate. | Agent struggles to find run IDs, fetch logs, or compare with main |
+| `/debug` skill | Diagnosing root cause of failures encountered during implementation (Phase 2) or testing (Phase 3) — when the cause isn't obvious from the error | Shotgun debugging: fixing symptoms without understanding root cause, wasted iteration cycles |
 

@@ -1,0 +1,25 @@
+{
+  "name": "playwright-skill",
+  "version": "4.1.0",
+  "description": "Browser automation with Playwright for Claude Code — headless by default for Docker/CI",
+  "author": "lackeyjb",
+  "main": "run.js",
+  "scripts": {
+    "setup": "npm install && npx playwright install chromium",
+    "install-all-browsers": "npx playwright install chromium firefox webkit"
+  },
+  "keywords": [
+    "playwright",
+    "automation",
+    "browser-testing",
+    "web-automation",
+    "claude-skill"
+  ],
+  "dependencies": {
+    "playwright": "^1.57.0"
+  },
+  "engines": {
+    "node": ">=14.0.0"
+  },
+  "license": "MIT"
+}

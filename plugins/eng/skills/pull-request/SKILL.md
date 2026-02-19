@@ -60,6 +60,8 @@ Bullet list of what changed, organized by area.
 
 Visual evidence of UI or behavioral changes. **Omit if no visual changes.**
 
+When the diff touches UI files (components, pages, styles, layouts) and `/screengrabs` is available, invoke it to capture before/after screenshots of affected routes. This automates the most common visual evidence and ensures screenshots are consistent and up-to-date with the actual PR state. Add manual screenshots only for interactions or states that `/screengrabs` cannot capture (e.g., hover states, mid-animation frames, error modals triggered by specific sequences).
+
 #### How to verify
 
 Steps a reviewer can follow to manually verify the behavior. **Omit if changes are purely internal.**

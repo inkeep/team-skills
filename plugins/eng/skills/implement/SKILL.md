@@ -160,10 +160,10 @@ For stories with testable logic, also include:
 
 For stories that change UI — **if browser automation is available** (no `--no-browser` flag):
 ```
-"Verify in browser using dev-browser skill"
+"Verify in browser using use-browser skill"
 ```
 
-Frontend stories are NOT complete until visually verified. The iteration agent will use the dev-browser skill to navigate to the page, interact with the UI, and confirm changes work.
+Frontend stories are NOT complete until visually verified. The iteration agent will load the `/use-browser` skill to navigate to the page, interact with the UI, and confirm changes work. Beyond visual verification, the use-browser skill provides helpers for console error monitoring (`startConsoleCapture` / `getConsoleErrors`), network request verification (`startNetworkCapture` / `getFailedRequests`), and accessibility audits (`runAccessibilityAudit`) — use these when acceptance criteria warrant deeper verification than a visual check.
 
 **If browser is NOT available** (`--no-browser`): Omit the browser criterion. Instead, add Bash-verifiable criteria that cover the UI behavior through API responses or rendered output (e.g., "API response includes the updated status badge markup", "Server-rendered HTML contains filter dropdown with options: All, Active, Completed").
 
@@ -319,7 +319,7 @@ Add ability to mark tasks with different statuses.
         "Each task card shows colored status badge",
         "Badge colors: gray=pending, blue=in_progress, green=done",
         "Typecheck passes",
-        "Verify in browser using dev-browser skill"
+        "Verify in browser using use-browser skill"
       ],
       "priority": 2,
       "passes": false,
@@ -336,7 +336,7 @@ Add ability to mark tasks with different statuses.
         "API returns 400 with descriptive error when status value is not in [pending, in_progress, done]",
         "Status update is tenant-scoped (uses existing tenant middleware)",
         "Typecheck passes",
-        "Verify in browser using dev-browser skill"
+        "Verify in browser using use-browser skill"
       ],
       "priority": 3,
       "passes": false,
@@ -350,7 +350,7 @@ Add ability to mark tasks with different statuses.
         "Filter dropdown: All | Pending | In Progress | Done",
         "Filter persists in URL params",
         "Typecheck passes",
-        "Verify in browser using dev-browser skill"
+        "Verify in browser using use-browser skill"
       ],
       "priority": 4,
       "passes": false,
@@ -379,7 +379,7 @@ Before writing spec.json, verify:
 - [ ] Each story is completable in one iteration (small enough)
 - [ ] Stories are ordered by dependency (schema to backend to UI)
 - [ ] Every story has "Typecheck passes" as criterion
-- [ ] UI stories have "Verify in browser using dev-browser skill" as criterion (if browser available) or Bash-verifiable substitutes (if `--no-browser`)
+- [ ] UI stories have "Verify in browser using use-browser skill" as criterion (if browser available) or Bash-verifiable substitutes (if `--no-browser`)
 - [ ] Acceptance criteria are verifiable and not vague; functional criteria describe observable behavior, not internal mechanisms (see /tdd)
 - [ ] No story depends on a later story
 - [ ] **`implementationContext` extracted** from SPEC.md §8, §9, §10, §6 — concise prose, not a copy-paste
@@ -598,6 +598,7 @@ If the same story fails across 2 consecutive implement.sh runs with the same blo
 2. **Criteria ambiguous** → rewrite criteria to be more specific
 3. **External dependency blocking** → skip the story, set `notes` explaining the blocker
 4. **Wrong implementation approach** → add guidance to `tmp/ship/progress.txt` suggesting an alternative
+5. **Code defect blocking the story** (test fails, runtime error, type error the iteration agent can't resolve) → Load `/debug` to diagnose the root cause between runs. Apply the fix, then re-invoke implement.sh.
 
 After 3 consecutive failed runs on the same story, stop and consult the user.
 

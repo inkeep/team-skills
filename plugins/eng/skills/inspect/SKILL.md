@@ -185,6 +185,7 @@ Calibrate search depth and brief detail to the purpose:
 | **Implementing** | Focused | Adjacent patterns, shared utils, naming, imports, data access | L1-L3 (L2 is critical) |
 | **Reviewing** | Targeted | Specific convention claim — confirm or refute with evidence | L1-L2, just enough to answer the question |
 | **Testing** | Focused | Test utilities, setup/teardown patterns, what's mocked vs. real | L1-L2 in `__tests__/` directories |
+| **Debugging** | Focused | Call chains to/from error site, recent changes, data flow through the failing path | L1-L3, tracing lens |
 | **Pattern search** | Varies | "Do we do X elsewhere?" — find and classify matches | Start L1, expand as needed |
 | **Tracing** | Deep | Follow call chains, map dependencies, identify blast radius and surface area | Entry point → follow forward/backward to system boundaries |
 
