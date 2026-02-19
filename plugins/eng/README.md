@@ -80,6 +80,7 @@ These are generally useful skills for investigating things and aiding in **decis
 | `/discover` | User or model | Understand all the product knobs and code paths that XYZ feature touches. |
 | `/inspect` | User or model | Similar to discover but focused on codebase inspection. |
 | `/analyze` | User or model | Deeply compare pros and cons of a given decision. |
+| `/debug` | User or model | Systematic root cause investigation for code defects. Loaded by other skills (qa-test, implement, ship) when they hit failures. |
 
 ### Other
 
