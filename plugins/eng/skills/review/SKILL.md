@@ -2,7 +2,6 @@
 name: review
 description: "Manage the PR review iteration loop: poll for reviewer feedback, assess suggestions with evidence, implement fixes, resolve threads, and drive CI/CD to green. Works standalone on any PR (bug fix, refactor, hotfix, feature) or as a composable module invoked by /ship. Spec-aware when a SPEC.md is provided, but does not require one. Triggers: review, review loop, PR feedback, iterate on PR, resolve reviews, CI/CD resolution, green pipeline, address reviewer comments."
 argument-hint: "<PR number> [--spec path/to/SPEC.md] [--test-cmd 'custom test command']"
-disable-model-invocation: true
 ---
 
 # Review
