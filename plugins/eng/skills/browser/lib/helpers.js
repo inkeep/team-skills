@@ -251,6 +251,40 @@ async function authenticate(page, credentials, selectors = {}) {
   });
 }
 
+// ---------------------------------------------------------------------------
+// Auth State Persistence
+// ---------------------------------------------------------------------------
+
+/**
+ * Save browser auth state (cookies + localStorage) for reuse across runs.
+ * @param {Object} context - Playwright browser context (after login)
+ * @param {string} [savePath='/tmp/playwright-auth.json'] - Where to save
+ * @returns {{ path: string, cookies: number, origins: number }}
+ */
+async function saveAuthState(context, savePath = '/tmp/playwright-auth.json') {
+  const state = await context.storageState({ path: savePath });
+  return {
+    path: savePath,
+    cookies: state.cookies ? state.cookies.length : 0,
+    origins: state.origins ? state.origins.length : 0
+  };
+}
+
+/**
+ * Create a browser context with previously saved auth state.
+ * @param {Object} browser - Playwright browser instance
+ * @param {string} [authPath='/tmp/playwright-auth.json'] - Auth state file
+ * @param {Object} [options={}] - Extra options passed to createContext()
+ * @returns {Object} Browser context with saved auth applied
+ */
+async function loadAuthState(browser, authPath = '/tmp/playwright-auth.json', options = {}) {
+  const fs = require('fs');
+  if (!fs.existsSync(authPath)) {
+    throw new Error(`No auth state found at ${authPath}. Run a login flow with saveAuthState first.`);
+  }
+  return createContext(browser, { ...options, storageState: authPath });
+}
+
 /**
  * Scroll page
  * @param {Object} page - Playwright page
@@ -728,6 +762,90 @@ async function uploadToVimeo(filePath, options = {}) {
   });
 }
 
+/**
+ * Upload a video file to Bunny Stream. Optional — use only when the user asks to upload.
+ * Videos are saved locally to /tmp by default; this is the opt-in upload path.
+ * Requires env vars: BUNNY_STREAM_API_KEY, BUNNY_STREAM_LIBRARY_ID.
+ * Accepts WebM directly (VP8 explicitly supported — Bunny transcodes server-side).
+ * Two-step upload: POST to create video object, then PUT binary.
+ * @param {string} filePath - Path to video file (WebM or MP4)
+ * @param {Object} [options] - { name, collectionId, thumbnailTime }
+ * @returns {Promise<Object>} { videoId, url, embedUrl, directPlayUrl, thumbnailUrl }
+ */
+async function uploadToBunny(filePath, options = {}) {
+  const fs = require('fs');
+
+  const apiKey = process.env.BUNNY_STREAM_API_KEY;
+  const libraryId = process.env.BUNNY_STREAM_LIBRARY_ID;
+
+  if (!apiKey || !libraryId) {
+    throw new Error(
+      'Bunny Stream upload requires BUNNY_STREAM_API_KEY and BUNNY_STREAM_LIBRARY_ID env vars. ' +
+      'Get these from the Bunny Stream dashboard: https://dash.bunny.net/stream'
+    );
+  }
+
+  if (!fs.existsSync(filePath)) {
+    throw new Error(`Video file not found: ${filePath}`);
+  }
+
+  // Step 1: Create video object
+  const createBody = {
+    title: options.name || `Recording - ${new Date().toISOString().slice(0, 19)}`
+  };
+  if (options.collectionId) createBody.collectionId = options.collectionId;
+  if (options.thumbnailTime != null) createBody.thumbnailTime = options.thumbnailTime;
+
+  const createRes = await fetch(
+    `https://video.bunnycdn.com/library/${libraryId}/videos`,
+    {
+      method: 'POST',
+      headers: {
+        'AccessKey': apiKey,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(createBody)
+    }
+  );
+
+  if (!createRes.ok) {
+    const errText = await createRes.text();
+    throw new Error(`Bunny Stream: failed to create video (${createRes.status}): ${errText}`);
+  }
+
+  const video = await createRes.json();
+  const videoId = video.guid;
+
+  // Step 2: Upload binary
+  const fileBuffer = fs.readFileSync(filePath);
+  console.log(`Bunny Stream: uploading ${(fileBuffer.length / 1024 / 1024).toFixed(1)} MB...`);
+
+  const uploadRes = await fetch(
+    `https://video.bunnycdn.com/library/${libraryId}/videos/${videoId}`,
+    {
+      method: 'PUT',
+      headers: { 'AccessKey': apiKey },
+      body: fileBuffer
+    }
+  );
+
+  if (!uploadRes.ok) {
+    const errText = await uploadRes.text();
+    throw new Error(`Bunny Stream: upload failed (${uploadRes.status}): ${errText}`);
+  }
+
+  const embedUrl = `https://iframe.mediadelivery.net/embed/${libraryId}/${videoId}`;
+  console.log(`Bunny Stream: upload complete. Player: ${embedUrl}`);
+
+  return {
+    videoId,
+    url: `https://iframe.mediadelivery.net/play/${libraryId}/${videoId}`,
+    embedUrl,
+    directPlayUrl: `https://video.bunnycdn.com/play/${libraryId}/${videoId}`,
+    thumbnailUrl: `https://${video.pullZoneUrl || 'vz-cdn.net'}/${videoId}/thumbnail.jpg`
+  };
+}
+
 // ---------------------------------------------------------------------------
 // Media Conversion
 // ---------------------------------------------------------------------------
@@ -765,13 +883,42 @@ async function screenshotsToGif(frames, outputPath, options = {}) {
   encoder.setDelay(Math.round(1000 / fps));
   encoder.setQuality(quality);
 
+  const annotations = options.annotations || null;
+
   const canvas = createCanvas(width, height);
   const ctx = canvas.getContext('2d');
 
-  for (const frame of frames) {
+  for (let i = 0; i < frames.length; i++) {
+    const frame = frames[i];
     const imgData = Buffer.isBuffer(frame) ? frame : fs.readFileSync(frame);
     const img = await loadImage(imgData);
     ctx.drawImage(img, 0, 0, width, height);
+
+    // Apply annotations if present for this frame
+    const annotation = annotations && annotations[i];
+    if (annotation) {
+      if (annotation.click) {
+        const sx = annotation.sourceWidth || width;
+        const sy = annotation.sourceHeight || height;
+        const cx = annotation.click.x * (width / sx);
+        const cy = annotation.click.y * (height / sy);
+        ctx.beginPath();
+        ctx.arc(cx, cy, 12, 0, Math.PI * 2);
+        ctx.fillStyle = 'rgba(255, 0, 0, 0.3)';
+        ctx.fill();
+        ctx.strokeStyle = 'rgba(255, 0, 0, 0.8)';
+        ctx.lineWidth = 3;
+        ctx.stroke();
+      }
+      if (annotation.label) {
+        ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';
+        ctx.fillRect(0, height - 32, width, 32);
+        ctx.fillStyle = '#ffffff';
+        ctx.font = '14px sans-serif';
+        ctx.fillText(annotation.label, 10, height - 10);
+      }
+    }
+
     encoder.addFrame(ctx);
   }
 
@@ -1111,6 +1258,117 @@ async function getElementBounds(page, selector) {
   }, selector);
 }
 
+// ---------------------------------------------------------------------------
+// Page Structure Discovery
+// ---------------------------------------------------------------------------
+
+const INTERACTIVE_ROLES = new Set([
+  'button', 'link', 'textbox', 'checkbox', 'radio',
+  'combobox', 'slider', 'switch', 'tab', 'menuitem',
+  'searchbox', 'spinbutton', 'option'
+]);
+
+/**
+ * Flatten a nested accessibility tree into a flat list of nodes.
+ * @param {Object} node - Accessibility tree node
+ * @param {Array} result - Accumulator
+ * @returns {Array}
+ */
+function flattenTree(node, result = []) {
+  if (!node) return result;
+  const { children, ...rest } = node;
+  if (rest.role && rest.role !== 'none' && rest.role !== 'generic') {
+    result.push(rest);
+  }
+  if (children) {
+    for (const child of children) {
+      flattenTree(child, result);
+    }
+  }
+  return result;
+}
+
+/**
+ * Generate a suggested Playwright selector for an accessibility node.
+ * @param {Object} node - Flat accessibility node
+ * @returns {string}
+ */
+function suggestSelector(node) {
+  const { role, name, level } = node;
+  if (!name) return `getByRole('${role}')`;
+  const opts = [`name: '${name.replace(/'/g, "\\'")}'`];
+  if (level) opts.push(`level: ${level}`);
+  return `getByRole('${role}', { ${opts.join(', ')} })`;
+}
+
+/**
+ * Get page structure as a flat accessibility tree with suggested selectors.
+ * Use when you don't know a page's DOM — returns roles, names, and Playwright
+ * selectors so you can write interactions without reading source code.
+ *
+ * @param {Object} page - Playwright page
+ * @param {Object} [options={}]
+ * @param {boolean} [options.interactiveOnly=false] - Only return interactive elements
+ * @param {string} [options.root] - CSS selector to scope the tree (e.g., 'main', '#login-form')
+ * @returns {{ url: string, title: string, tree: Array, summary: Object }}
+ */
+async function getPageStructure(page, options = {}) {
+  const { interactiveOnly = false, root } = options;
+
+  let snapshotOpts = {};
+  if (root) {
+    const rootHandle = await page.$(root);
+    if (rootHandle) {
+      snapshotOpts.root = rootHandle;
+    }
+  }
+
+  const snapshot = await page.accessibility.snapshot(snapshotOpts);
+  if (!snapshot) {
+    return {
+      url: page.url(),
+      title: await page.title(),
+      tree: [],
+      summary: { total: 0, interactive: 0, headings: 0, links: 0, buttons: 0, inputs: 0 }
+    };
+  }
+
+  let nodes = flattenTree(snapshot);
+
+  if (interactiveOnly) {
+    nodes = nodes.filter(n => INTERACTIVE_ROLES.has(n.role));
+  }
+
+  const tree = nodes.map(node => {
+    const entry = {
+      role: node.role,
+      name: node.name || '',
+      selector: suggestSelector(node)
+    };
+    if (node.level) entry.level = node.level;
+    if (node.value !== undefined) entry.value = node.value;
+    if (node.checked !== undefined) entry.checked = node.checked;
+    if (node.disabled) entry.disabled = true;
+    return entry;
+  });
+
+  const summary = {
+    total: tree.length,
+    interactive: tree.filter(n => INTERACTIVE_ROLES.has(n.role)).length,
+    headings: tree.filter(n => n.role === 'heading').length,
+    links: tree.filter(n => n.role === 'link').length,
+    buttons: tree.filter(n => n.role === 'button').length,
+    inputs: tree.filter(n => ['textbox', 'searchbox', 'spinbutton', 'combobox', 'checkbox', 'radio'].includes(n.role)).length
+  };
+
+  return {
+    url: page.url(),
+    title: await page.title(),
+    tree,
+    summary
+  };
+}
+
 module.exports = {
   // Page interaction
   launchBrowser,
@@ -1129,6 +1387,9 @@ module.exports = {
   createPresetContext,
   detectDevServers,
   getExtraHeadersFromEnv,
+  // Auth state persistence
+  saveAuthState,
+  loadAuthState,
   // Resolution presets
   RESOLUTION_PRESETS,
   // Console monitoring
@@ -1144,6 +1405,7 @@ module.exports = {
   createVideoContext,
   // Video upload (optional)
   uploadToVimeo,
+  uploadToBunny,
   // Media conversion
   screenshotsToGif,
   // Browser state
@@ -1163,5 +1425,7 @@ module.exports = {
   simulateOffline,
   blockResources,
   // Layout
-  getElementBounds
+  getElementBounds,
+  // Page structure discovery
+  getPageStructure
 };

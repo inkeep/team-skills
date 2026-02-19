@@ -1,6 +1,6 @@
 ---
 name: browser
-description: "Browser automation with Playwright — navigate pages, fill forms, take screenshots, test responsive design, validate UX, test login flows, check links, inspect network requests, inject JavaScript, monitor console errors, capture network traffic, record video, inspect browser state, run accessibility audits, measure performance, and simulate network conditions. Headless by default for CI/Docker. Use when user wants to test websites, automate browser interactions, validate web functionality, or perform browser-based testing. Triggers: playwright, browser test, browser automation, web test, screenshot, responsive test, test the page, automate browser, headless browser, UI test, console errors, console monitoring, network inspection, network capture, accessibility audit, a11y test, performance metrics, web vitals, video recording, browser state, localStorage, network simulation, offline testing."
+description: "Browser automation with Playwright — navigate pages, fill forms, take screenshots, test responsive design, validate UX, test login flows, check links, inspect network requests, inject JavaScript, monitor console errors, capture network traffic, record video, inspect browser state, run accessibility audits, measure performance, simulate network conditions, discover page structure, persist auth sessions, and create annotated GIFs. Headless by default for CI/Docker. Use when user wants to test websites, automate browser interactions, validate web functionality, or perform browser-based testing. Triggers: playwright, browser test, browser automation, web test, screenshot, responsive test, test the page, automate browser, headless browser, UI test, console errors, console monitoring, network inspection, network capture, accessibility audit, a11y test, performance metrics, web vitals, video recording, browser state, localStorage, network simulation, offline testing, page structure, accessibility tree, authenticated testing, auth state, session reuse, annotated gif."
 argument-hint: "[URL or description of what to test/automate]"
 ---
 
@@ -135,6 +135,64 @@ const TARGET_URL = 'http://localhost:3001'; // Auto-detected
   // Wait for redirect
   await page.waitForURL('**/dashboard');
   console.log('Login successful, redirected to dashboard');
+
+  await browser.close();
+})();
+```
+
+### Test Authenticated Pages
+
+Login once, save the session, and reuse it across multiple test runs. Avoids re-logging in every time.
+
+**Step 1: Login and save auth state (run once)**
+
+```javascript
+// /tmp/playwright-auth-save.js
+const { chromium } = require('playwright');
+const helpers = require('./lib/helpers');
+
+const TARGET_URL = 'http://localhost:3001/login';
+
+(async () => {
+  const browser = await chromium.launch({ headless: true });
+  const context = await helpers.createContext(browser);
+  const page = await context.newPage();
+
+  await page.goto(TARGET_URL);
+  await helpers.authenticate(page, {
+    username: 'admin@example.com',
+    password: 'password123'
+  });
+
+  // Save session for reuse
+  const saved = await helpers.saveAuthState(context);
+  console.log('Auth state saved:', saved.path);
+  console.log(`  ${saved.cookies} cookies, ${saved.origins} origins`);
+
+  await browser.close();
+})();
+```
+
+**Step 2: Reuse saved auth in subsequent tests**
+
+```javascript
+// /tmp/playwright-test-dashboard.js
+const { chromium } = require('playwright');
+const helpers = require('./lib/helpers');
+
+const TARGET_URL = 'http://localhost:3001/dashboard';
+
+(async () => {
+  const browser = await chromium.launch({ headless: true });
+
+  // Load saved auth — skips login entirely
+  const context = await helpers.loadAuthState(browser);
+  const page = await context.newPage();
+
+  await page.goto(TARGET_URL);
+  console.log('Page title:', await page.title());
+  // You're now on the authenticated dashboard
+  await page.screenshot({ path: '/tmp/dashboard.png', fullPage: true });
 
   await browser.close();
 })();
@@ -501,6 +559,43 @@ const TARGET_URL = 'http://localhost:3001';
 })();
 ```
 
+### Discover Page Structure
+
+Use when you don't know a page's DOM structure — third-party sites, authenticated dashboards, or unfamiliar UIs. Get the accessibility tree to find the right selectors before writing interactions.
+
+```javascript
+// /tmp/playwright-test-discover.js
+const { chromium } = require('playwright');
+const helpers = require('./lib/helpers');
+
+const TARGET_URL = 'http://localhost:3001';
+
+(async () => {
+  const browser = await chromium.launch({ headless: true });
+  const context = await helpers.createContext(browser);
+  const page = await context.newPage();
+  await page.goto(TARGET_URL, { waitUntil: 'networkidle' });
+
+  // Get full page structure
+  const structure = await helpers.getPageStructure(page);
+  console.log('Page:', structure.title);
+  console.log('Elements:', JSON.stringify(structure.summary));
+  console.log('Interactive elements:');
+  structure.tree.filter(el =>
+    ['button','link','textbox','checkbox','combobox'].includes(el.role)
+  ).forEach(el => console.log(`  ${el.role}: "${el.name}" → ${el.selector}`));
+
+  // Or get only interactive elements within a specific section
+  const formElements = await helpers.getPageStructure(page, {
+    interactiveOnly: true,
+    root: 'form'
+  });
+  console.log('Form inputs:', JSON.stringify(formElements.tree, null, 2));
+
+  await browser.close();
+})();
+```
+
 ### Capture Screenshots for Documentation
 
 Use when writing docs, help articles, or PR screenshots that need consistent, high-quality images of the running UI.
@@ -557,6 +652,8 @@ Choose the right preset and conversion for your target. Presets set viewport + D
 | Docs site screenshot | `docs-retina` | 2560×1440 PNG | <500 KB | Retina-sharp for Next.js Image |
 | GitHub PR screenshot | `pr-standard` | 1280×720 PNG | <200 KB | Crisp at GitHub's 894px display width |
 | GitHub PR GIF | `gif-compact` | 800×450 animated GIF | <10 MB | DPR 1 — GIF's 256-color palette is the bottleneck, not pixel density |
+| Internal video (team demo, QA) | — | WebM → Bunny Stream | — | `uploadToBunny()` — VP8 WebM, JIT encoding, near-instant playback |
+| Customer-facing video (docs, marketing) | — | WebM → Vimeo | — | `uploadToVimeo()` — broad reach, familiar platform |
 
 **Capture a docs-quality screenshot with a preset:**
 
@@ -623,6 +720,53 @@ const TARGET_URL = 'http://localhost:3001';
   });
 
   console.log(`GIF: ${result.path} (${result.sizeMB} MB, ${result.frames} frames)`);
+  await browser.close();
+})();
+```
+
+**Annotated GIF with click indicators and step labels:**
+
+```javascript
+// /tmp/playwright-test-annotated-gif.js
+const { chromium } = require('playwright');
+const helpers = require('./lib/helpers');
+
+const TARGET_URL = 'http://localhost:3001';
+
+(async () => {
+  const browser = await chromium.launch({ headless: true });
+  const context = await helpers.createPresetContext(browser, 'gif-compact');
+  const page = await context.newPage();
+
+  const frames = [];
+  const annotations = [];
+
+  // Frame 1: Navigate to page
+  await page.goto(TARGET_URL);
+  frames.push(await page.screenshot({ type: 'png' }));
+  annotations.push({ label: 'Step 1: Open login page' });
+
+  // Frame 2: Click username field
+  await page.click('#username');
+  frames.push(await page.screenshot({ type: 'png' }));
+  annotations.push({ label: 'Step 2: Click username', click: { x: 640, y: 300 } });
+
+  // Frame 3: Type credentials
+  await page.fill('#username', 'admin');
+  frames.push(await page.screenshot({ type: 'png' }));
+  annotations.push({ label: 'Step 3: Enter username' });
+
+  // Frame 4: Click submit
+  await page.click('button[type="submit"]');
+  frames.push(await page.screenshot({ type: 'png' }));
+  annotations.push({ label: 'Step 4: Submit', click: { x: 640, y: 400 } });
+
+  const result = await helpers.screenshotsToGif(frames, '/tmp/login-demo.gif', {
+    width: 800, height: 450, fps: 2,
+    annotations
+  });
+
+  console.log(`Annotated GIF: ${result.path} (${result.sizeMB} MB, ${result.frames} frames)`);
   await browser.close();
 })();
 ```
@@ -707,6 +851,9 @@ All helpers live in `lib/helpers.js`. Use `const helpers = require('./lib/helper
 | `helpers.scrollPage(page, 'down', 500)` | Scroll page. Directions: `'down'`, `'up'`, `'top'`, `'bottom'`. |
 | `helpers.handleCookieBanner(page)` | Dismiss common cookie consent banners. Run early — clears overlays that block interaction. |
 | `helpers.authenticate(page, { username, password })` | Login flow with common field selectors. Auto-waits for redirect. |
+| `helpers.saveAuthState(context, path?)` | Save login session after authenticating. Default path: `/tmp/playwright-auth.json`. Reuse with `loadAuthState`. |
+| `helpers.loadAuthState(browser, path?, options?)` | Create a context with saved auth state. Skips re-login. Inherits `createContext` defaults. |
+| `helpers.getPageStructure(page, { interactiveOnly, root })` | Discover page structure before writing selectors. Returns accessibility tree with suggested Playwright selectors. Use for unfamiliar pages. |
 | `helpers.extractTableData(page, 'table.results')` | Extract structured data from HTML tables (headers + rows). |
 | `helpers.takeScreenshot(page, 'name')` | Save timestamped screenshot. |
 
@@ -742,6 +889,7 @@ All helpers live in `lib/helpers.js`. Use `const helpers = require('./lib/helper
 |---|---|
 | `helpers.createVideoContext(browser, { outputDir: '/tmp/videos' })` | Create a context that records video. Video saved when page/context closes. |
 | `helpers.uploadToVimeo(filePath, { name, privacy })` | **Optional** — upload a local video (WebM/MP4) to Vimeo. Only when user asks. Requires `VIMEO_CLIENT_ID`, `VIMEO_CLIENT_SECRET`, `VIMEO_ACCESS_TOKEN` env vars. Returns `{ videoId, url, embedUrl }`. |
+| `helpers.uploadToBunny(filePath, { name, collectionId })` | **Optional** — upload a local video (WebM/MP4) to Bunny Stream. For internal videos (team demos, QA recordings). Requires `BUNNY_STREAM_API_KEY`, `BUNNY_STREAM_LIBRARY_ID` env vars. VP8 WebM explicitly supported. Returns `{ videoId, url, embedUrl }`. |
 
 ### Resolution Presets — consistent dimensions per target
 
@@ -754,7 +902,7 @@ All helpers live in `lib/helpers.js`. Use `const helpers = require('./lib/helper
 
 | Helper | When to use |
 |---|---|
-| `helpers.screenshotsToGif(frames, path, opts)` | Convert PNG buffers to animated GIF. Options: `width`, `height`, `fps`, `quality`. For PR step-by-step demos. |
+| `helpers.screenshotsToGif(frames, path, opts)` | Convert PNG buffers to animated GIF. Options: `width`, `height`, `fps`, `quality`, `annotations` (per-frame click indicators + labels). |
 
 ### Accessibility — WCAG audits and keyboard navigation
 
