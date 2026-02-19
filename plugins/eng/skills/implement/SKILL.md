@@ -598,6 +598,7 @@ If the same story fails across 2 consecutive implement.sh runs with the same blo
 2. **Criteria ambiguous** → rewrite criteria to be more specific
 3. **External dependency blocking** → skip the story, set `notes` explaining the blocker
 4. **Wrong implementation approach** → add guidance to `tmp/ship/progress.txt` suggesting an alternative
+5. **Code defect blocking the story** (test fails, runtime error, type error the iteration agent can't resolve) → Load `/debug` to diagnose the root cause between runs. Apply the fix, then re-invoke implement.sh.
 
 After 3 consecutive failed runs on the same story, stop and consult the user.
 

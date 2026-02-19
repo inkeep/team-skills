@@ -180,8 +180,11 @@ After each scenario (or batch of related scenarios), update the `## Test plan` s
 | **Skipped (tool limitation)** | Leave unchecked, append: `— Skipped: <reason, e.g., no browser automation>` |
 
 **When you find a bug:**
-1. Can it be reproduced with a formal test? If yes — write the test first, then fix the bug, then verify both the test and manual scenario pass.
-2. If it can't be a test — fix it, verify manually, document what was found and fixed in the checklist.
+
+First, assess: do you see the root cause, or just the symptom?
+
+- **Root cause is obvious** (wrong variable, missing class, off-by-one visible in the code) — fix it directly. Write a test if possible, verify, document.
+- **Root cause is unclear** (unexpected behavior, cause not visible from the symptom) — load `/debug` for systematic root cause investigation before attempting a fix. QA resumes after the fix is verified.
 
 ### Step 7: Report
 
