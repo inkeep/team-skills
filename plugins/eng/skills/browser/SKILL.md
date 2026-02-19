@@ -987,6 +987,9 @@ All helpers live in `lib/helpers.js`. Use `const helpers = require('./lib/helper
 | Helper | When to use |
 |---|---|
 | `helpers.detectDevServers()` | **CRITICAL — run first** for localhost testing. Returns array of detected server URLs. |
+| `helpers.createContext(browser, options?)` | Create browser context with defaults: viewport 1280x720, locale en-US, timezone America/New_York. Pass `{ mobile: true }` for iPhone UA. Auto-merges env headers. |
+| `helpers.waitForPageReady(page, options?)` | Smart wait for page load (`networkidle` by default). Pass `{ waitForSelector: '.loaded' }` for dynamic content. |
+| `helpers.retryWithBackoff(fn, maxRetries?, initialDelay?)` | Retry an async function with exponential backoff. Default: 3 retries, 1s initial delay. |
 | `helpers.safeClick(page, selector, { retries: 3 })` | Click elements that may not be immediately visible/clickable. Auto-retries. |
 | `helpers.safeType(page, selector, text)` | Type into inputs. Clears field first by default. |
 | `helpers.extractTexts(page, selector)` | Get text from multiple matching elements as array. |
@@ -1104,7 +1107,15 @@ All helpers live in `lib/helpers.js`. Use `const helpers = require('./lib/helper
 
 | Helper | When to use |
 |---|---|
-| `helpers.getElementBounds(page, '.selector')` | Get bounding box, visibility, viewport presence, and computed styles. |
+| `helpers.getElementBounds(page, '.selector')` | Get bounding box, visibility, viewport presence, and computed styles. Returns `null` for non-existent selectors, `{ visible: false }` for hidden elements. |
+
+### Page Structure Internals — parse ARIA snapshots standalone
+
+| Helper | When to use |
+|---|---|
+| `helpers.parseAriaSnapshot(yaml)` | Parse a Playwright ARIA snapshot YAML string into structured node objects. Each node has `role`, `name`, and optional `level`, `checked`, `disabled`, `expanded`, `selected`. |
+| `helpers.suggestSelector(node)` | Generate a `getByRole(...)` selector string from a parsed ARIA node. |
+| `helpers.INTERACTIVE_ROLES` | `Set` of interactive ARIA roles (button, link, textbox, checkbox, radio, combobox, slider, switch, tab, menuitem, searchbox, spinbutton, option). |
 
 ## Custom HTTP Headers
 
