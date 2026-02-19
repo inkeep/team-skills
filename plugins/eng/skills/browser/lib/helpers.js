@@ -208,6 +208,7 @@ async function extractTexts(page, selector) {
  * @param {Object} page - Playwright page
  * @param {string} name - Screenshot name
  * @param {Object} options - Screenshot options
+ * @param {boolean} [options.fullPage=true] - Capture full page (default: true, unlike Playwright's false)
  */
 async function takeScreenshot(page, name, options = {}) {
   const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
@@ -1094,6 +1095,8 @@ async function checkFocusOrder(page, selectors) {
 /**
  * Capture page performance metrics including Navigation Timing and Web Vitals.
  * Call AFTER page has fully loaded (after networkidle or load event).
+ * Note: Web Vitals (FCP, LCP, CLS) require real page loads — they may be empty
+ * for pages served via page.route() or page.setContent().
  * @param {Object} page - Playwright page
  * @returns {Object} { timing: { ttfb, domInteractive, ... }, vitals: { fcp, lcp, cls } }
  */
@@ -1192,7 +1195,7 @@ async function captureResponsiveScreenshots(page, url, breakpoints, outputDir) {
 async function simulateSlowNetwork(page, latencyMs = 500) {
   await page.route('**/*', async route => {
     await new Promise(r => setTimeout(r, latencyMs));
-    await route.continue();
+    await route.fallback();
   });
 }
 
@@ -1214,7 +1217,7 @@ async function blockResources(page, types = ['image', 'font', 'stylesheet']) {
     if (types.includes(route.request().resourceType())) {
       return route.abort();
     }
-    return route.continue();
+    return route.fallback();
   });
 }
 
@@ -1229,7 +1232,11 @@ async function blockResources(page, types = ['image', 'font', 'stylesheet']) {
  * @returns {Object|null} { x, y, width, height, visible, inViewport, computedStyles }
  */
 async function getElementBounds(page, selector) {
-  await page.waitForSelector(selector, { timeout: 5000 });
+  try {
+    await page.waitForSelector(selector, { timeout: 5000, state: 'attached' });
+  } catch {
+    return null;
+  }
 
   return await page.evaluate((sel) => {
     const el = document.querySelector(sel);
@@ -1446,6 +1453,8 @@ function handleDialogs(page, options = {}) {
  * @param {Array<{ locator: string, action?: 'click'|'remove', clickTarget?: string }>} [overlays]
  *   Each entry: locator to detect the overlay, action to take, optional click target within it.
  *   Defaults to common cookie/consent banner patterns.
+ *   Note: default patterns are intentionally broad — they may match non-overlay buttons
+ *   (e.g., "Accept Invitation"). Pass custom overlays for production flows.
  * @returns {void}
  */
 async function dismissOverlays(page, overlays) {
@@ -1522,7 +1531,7 @@ async function stopTracing(context, outputPath = '/tmp/playwright-trace.zip') {
  * @param {boolean} [options.tagged=false] - Generate tagged (accessible) PDF
  * @param {boolean} [options.outline=false] - Embed document outline (bookmarks)
  * @param {boolean} [options.printBackground=true] - Print background graphics
- * @param {string} [options.margin] - Margins object { top, right, bottom, left }
+ * @param {Object} [options.margin] - Margins object { top, right, bottom, left }
  * @returns {{ path: string }}
  */
 async function generatePdf(page, outputPath = '/tmp/playwright-page.pdf', options = {}) {
@@ -1631,6 +1640,9 @@ module.exports = {
   getElementBounds,
   // Page structure discovery
   getPageStructure,
+  parseAriaSnapshot,
+  suggestSelector,
+  INTERACTIVE_ROLES,
   // Dialog handling
   handleDialogs,
   // Overlay dismissal
