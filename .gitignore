@@ -3,3 +3,5 @@ bun.lock
 .DS_Store
 /screengrabs/
 tmp/
+pr-screenshots/
+specs/
