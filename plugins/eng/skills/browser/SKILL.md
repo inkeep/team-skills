@@ -1,6 +1,6 @@
 ---
 name: browser
-description: "Browser automation with Playwright — navigate pages, fill forms, take screenshots, test responsive design, validate UX, test login flows, check links, inspect network requests, inject JavaScript, monitor console errors, capture network traffic, record video, inspect browser state, run accessibility audits, measure performance, simulate network conditions, discover page structure, persist auth sessions, and create annotated GIFs. Headless by default for CI/Docker. Use when user wants to test websites, automate browser interactions, validate web functionality, or perform browser-based testing. Triggers: playwright, browser test, browser automation, web test, screenshot, responsive test, test the page, automate browser, headless browser, UI test, console errors, console monitoring, network inspection, network capture, accessibility audit, a11y test, performance metrics, web vitals, video recording, browser state, localStorage, network simulation, offline testing, page structure, accessibility tree, authenticated testing, auth state, session reuse, annotated gif."
+description: "Browser automation with Playwright — navigate pages, fill forms, take screenshots, test responsive design, validate UX, test login flows, check links, inspect network requests, inject JavaScript, monitor console errors, capture network traffic, record video, inspect browser state, run accessibility audits, measure performance, simulate network conditions, discover page structure, persist auth sessions, create annotated GIFs, handle dialogs, dismiss overlays, capture traces, generate PDFs, and download files. Headless by default for CI/Docker. Use when user wants to test websites, automate browser interactions, validate web functionality, or perform browser-based testing. Triggers: playwright, browser test, browser automation, web test, screenshot, responsive test, test the page, automate browser, headless browser, UI test, console errors, console monitoring, network inspection, network capture, accessibility audit, a11y test, performance metrics, web vitals, video recording, browser state, localStorage, network simulation, offline testing, page structure, accessibility tree, authenticated testing, auth state, session reuse, annotated gif, dialog handling, overlay dismissal, cookie banner, tracing, trace viewer, pdf generation, file download, time manipulation, websocket interception."
 argument-hint: "[URL or description of what to test/automate]"
 ---
 
@@ -168,6 +168,9 @@ const TARGET_URL = 'http://localhost:3001/login';
   const saved = await helpers.saveAuthState(context);
   console.log('Auth state saved:', saved.path);
   console.log(`  ${saved.cookies} cookies, ${saved.origins} origins`);
+
+  // For Firebase/Supabase/modern auth that stores tokens in IndexedDB:
+  // const saved = await helpers.saveAuthState(context, '/tmp/auth.json', { indexedDB: true });
 
   await browser.close();
 })();
@@ -561,7 +564,9 @@ const TARGET_URL = 'http://localhost:3001';
 
 ### Discover Page Structure
 
-Use when you don't know a page's DOM structure — third-party sites, authenticated dashboards, or unfamiliar UIs. Get the accessibility tree to find the right selectors before writing interactions.
+Use when you don't know a page's DOM structure — third-party sites, authenticated dashboards, or unfamiliar UIs. Get the ARIA snapshot to find the right selectors before writing interactions.
+
+Returns `yaml` (raw ARIA snapshot string preserving hierarchy), `tree` (parsed nodes with suggested selectors), and `summary` (counts by role type).
 
 ```javascript
 // /tmp/playwright-test-discover.js
@@ -580,12 +585,17 @@ const TARGET_URL = 'http://localhost:3001';
   const structure = await helpers.getPageStructure(page);
   console.log('Page:', structure.title);
   console.log('Elements:', JSON.stringify(structure.summary));
+
+  // Raw YAML preserves nesting — useful for understanding page hierarchy
+  console.log('ARIA snapshot:\n', structure.yaml);
+
+  // Parsed tree has suggested selectors for each element
   console.log('Interactive elements:');
   structure.tree.filter(el =>
     ['button','link','textbox','checkbox','combobox'].includes(el.role)
   ).forEach(el => console.log(`  ${el.role}: "${el.name}" → ${el.selector}`));
 
-  // Or get only interactive elements within a specific section
+  // Scope to a specific section
   const formElements = await helpers.getPageStructure(page, {
     interactiveOnly: true,
     root: 'form'
@@ -815,6 +825,138 @@ const TARGET_URL = 'http://localhost:3001';
 })();
 ```
 
+### Handle Dialogs and Overlays
+
+Use when pages have `alert()`/`confirm()`/`prompt()` dialogs or blocking overlays (cookie banners, modals) that prevent interaction.
+
+```javascript
+// /tmp/playwright-test-dialogs.js
+const { chromium } = require('playwright');
+const helpers = require('./lib/helpers');
+
+const TARGET_URL = 'http://localhost:3001';
+
+(async () => {
+  const browser = await chromium.launch({ headless: true });
+  const page = await browser.newPage();
+
+  // Auto-accept all dialogs (call BEFORE navigating)
+  const dialogLog = helpers.handleDialogs(page);
+
+  // Auto-dismiss cookie banners and common overlays
+  await helpers.dismissOverlays(page);
+
+  await page.goto(TARGET_URL);
+  await page.click('button.delete'); // triggers confirm()
+
+  // Check what dialogs appeared
+  console.log('Dialogs captured:', dialogLog.dialogs.length);
+  dialogLog.dialogs.forEach(d =>
+    console.log(`  ${d.type}: "${d.message}"`)
+  );
+
+  // Custom overlay patterns (beyond the defaults)
+  await helpers.dismissOverlays(page, [
+    { locator: '.onboarding-modal .close-btn', action: 'click' },
+    { locator: '.promo-popup', action: 'remove' }  // remove from DOM entirely
+  ]);
+
+  await browser.close();
+})();
+```
+
+### Debug with Tracing
+
+Use when a flow fails and you need to understand exactly what happened — DOM state, screenshots, network, and console at each step. Produces a `.zip` viewable in Playwright Trace Viewer.
+
+```javascript
+// /tmp/playwright-test-trace.js
+const { chromium } = require('playwright');
+const helpers = require('./lib/helpers');
+
+const TARGET_URL = 'http://localhost:3001';
+
+(async () => {
+  const browser = await chromium.launch({ headless: true });
+  const context = await helpers.createContext(browser);
+
+  // Start tracing BEFORE creating pages
+  await helpers.startTracing(context);
+
+  const page = await context.newPage();
+  await page.goto(TARGET_URL);
+  await page.click('button.submit');
+  await page.waitForSelector('.result');
+
+  // Stop and save trace
+  const trace = await helpers.stopTracing(context, '/tmp/trace.zip');
+  console.log(`Trace saved: ${trace.path}`);
+  console.log('View with: npx playwright show-trace /tmp/trace.zip');
+
+  await browser.close();
+})();
+```
+
+### Generate PDF
+
+Use when you need a PDF export of a page — documentation, reports, or print-ready output. Chromium headless only.
+
+```javascript
+// /tmp/playwright-test-pdf.js
+const { chromium } = require('playwright');
+const helpers = require('./lib/helpers');
+
+const TARGET_URL = 'http://localhost:3001/report';
+
+(async () => {
+  const browser = await chromium.launch({ headless: true });
+  const page = await browser.newPage();
+  await page.goto(TARGET_URL, { waitUntil: 'networkidle' });
+
+  // Basic PDF
+  const result = await helpers.generatePdf(page, '/tmp/report.pdf');
+  console.log('PDF saved:', result.path);
+
+  // Accessible PDF with bookmarks
+  await helpers.generatePdf(page, '/tmp/report-accessible.pdf', {
+    tagged: true,   // accessible/tagged PDF
+    outline: true,  // document outline from headings
+    format: 'Letter',
+    margin: { top: '1cm', bottom: '1cm', left: '1cm', right: '1cm' }
+  });
+
+  await browser.close();
+})();
+```
+
+### Download Files
+
+Use when a button or link triggers a file download and you need to save or inspect the file.
+
+```javascript
+// /tmp/playwright-test-download.js
+const { chromium } = require('playwright');
+const helpers = require('./lib/helpers');
+
+const TARGET_URL = 'http://localhost:3001/exports';
+
+(async () => {
+  const browser = await chromium.launch({ headless: true });
+  const page = await browser.newPage();
+  await page.goto(TARGET_URL);
+
+  // Trigger download and save
+  const file = await helpers.waitForDownload(
+    page,
+    () => page.click('#export-csv'),  // action that triggers the download
+    '/tmp/export.csv'                   // optional save path
+  );
+  console.log(`Downloaded: ${file.suggestedFilename} → ${file.path}`);
+
+  await browser.close();
+})();
+```
+
 ## Inline Execution (Simple Tasks)
 
 For quick one-off tasks, you can execute code inline without creating files:
@@ -851,9 +993,11 @@ All helpers live in `lib/helpers.js`. Use `const helpers = require('./lib/helper
 | `helpers.scrollPage(page, 'down', 500)` | Scroll page. Directions: `'down'`, `'up'`, `'top'`, `'bottom'`. |
 | `helpers.handleCookieBanner(page)` | Dismiss common cookie consent banners. Run early — clears overlays that block interaction. |
 | `helpers.authenticate(page, { username, password })` | Login flow with common field selectors. Auto-waits for redirect. |
-| `helpers.saveAuthState(context, path?)` | Save login session after authenticating. Default path: `/tmp/playwright-auth.json`. Reuse with `loadAuthState`. |
+| `helpers.saveAuthState(context, path?, options?)` | Save login session after authenticating. Default path: `/tmp/playwright-auth.json`. Pass `{ indexedDB: true }` for Firebase/Supabase auth. Reuse with `loadAuthState`. |
 | `helpers.loadAuthState(browser, path?, options?)` | Create a context with saved auth state. Skips re-login. Inherits `createContext` defaults. |
-| `helpers.getPageStructure(page, { interactiveOnly, root })` | Discover page structure before writing selectors. Returns accessibility tree with suggested Playwright selectors. Use for unfamiliar pages. |
+| `helpers.getPageStructure(page, { interactiveOnly, root })` | Discover page structure via ARIA snapshot. Returns `yaml` (raw hierarchy), `tree` (parsed with selectors), and `summary` (counts). Use for unfamiliar pages. |
+| `helpers.handleDialogs(page, options?)` | Auto-handle `alert`/`confirm`/`prompt` dialogs. Call BEFORE navigating. Returns `{ dialogs }` for inspection after. |
+| `helpers.dismissOverlays(page, overlays?)` | Auto-dismiss cookie banners, modals, and blocking overlays using `addLocatorHandler`. Pass custom patterns or use defaults. |
 | `helpers.extractTableData(page, 'table.results')` | Extract structured data from HTML tables (headers + rows). |
 | `helpers.takeScreenshot(page, 'name')` | Save timestamped screenshot. |
 
@@ -865,6 +1009,8 @@ All helpers live in `lib/helpers.js`. Use `const helpers = require('./lib/helper
 | `helpers.getConsoleErrors(collector)` | Get only error-level messages and uncaught exceptions from collector. |
 | `helpers.getConsoleLogs(collector, filter?)` | Get all logs, or filter by string/RegExp/function. |
 
+**Lightweight alternative (Playwright v1.56+):** For quick checks without a collector, use `page.consoleMessages()` and `page.pageErrors()` after the fact — they return all messages/errors since page creation.
+
 ### Network Inspection — verify API calls during UI flows
 
 | Helper | When to use |
@@ -873,6 +1019,8 @@ All helpers live in `lib/helpers.js`. Use `const helpers = require('./lib/helper
 | `helpers.getFailedRequests(collector)` | Get 4xx, 5xx, and connection failures from collector. |
 | `helpers.getCapturedRequests(collector)` | Get all captured request/response entries. |
 | `helpers.waitForApiResponse(page, '/api/users', { status: 200 })` | Wait for a specific API call to complete. Returns `{ url, status, body, json }`. |
+
+**Lightweight alternative (Playwright v1.56+):** `page.requests()` returns all requests since page creation — useful for quick post-hoc inspection without setting up a collector.
 
 ### Browser State — inspect storage and cookies
 
@@ -930,6 +1078,27 @@ All helpers live in `lib/helpers.js`. Use `const helpers = require('./lib/helper
 | `helpers.simulateSlowNetwork(page, 500)` | Add artificial latency (ms) to all requests. |
 | `helpers.simulateOffline(context)` | Set browser to offline mode. |
 | `helpers.blockResources(page, ['image', 'font'])` | Block specific resource types (image, font, stylesheet, script, etc.). |
+
+**Simulating specific failures:** Use `route.abort('connectionrefused')` for targeted error simulation. Error types: `'connectionrefused'`, `'timedout'`, `'connectionreset'`, `'internetdisconnected'`.
+
+### Tracing & Debugging
+
+| Helper | When to use |
+|---|---|
+| `helpers.startTracing(context, options?)` | Start recording a trace (DOM snapshots, screenshots, network). Call before page interactions. |
+| `helpers.stopTracing(context, path?)` | Stop tracing and save `.zip`. View with `npx playwright show-trace trace.zip`. |
+
+### PDF Generation
+
+| Helper | When to use |
+|---|---|
+| `helpers.generatePdf(page, path?, options?)` | Generate PDF from current page. Options: `format`, `tagged` (accessible), `outline` (bookmarks), `margin`. Chromium headless only. |
+
+### File Downloads
+
+| Helper | When to use |
+|---|---|
+| `helpers.waitForDownload(page, triggerAction, savePath?)` | Wait for a download triggered by an action, then save it. Returns `{ path, suggestedFilename, url }`. |
 
 ### Layout Inspection — verify element positioning
 
@@ -1004,6 +1173,8 @@ For comprehensive Playwright API documentation, see [API_REFERENCE.md](API_REFER
 - **Error handling:** Always use try-catch for robust automation
 - **Console output:** Use `console.log()` to track progress and show what's happening
 - **Docker:** The `--no-sandbox` flag is included by default in helpers for container compatibility
+- **Time manipulation (Playwright v1.45+):** Use `page.clock` to control time in tests — `await page.clock.install()` then `await page.clock.fastForward('01:00')` to advance, or `await page.clock.pauseAt(new Date('2025-01-01'))` to freeze at a specific moment. Useful for testing timers, countdowns, session expiry, and time-dependent UI.
+- **WebSocket interception (Playwright v1.48+):** Use `page.routeWebSocket(url, handler)` to mock or monitor WebSocket connections. The handler receives a `WebSocketRoute` with `onMessage()`, `send()`, and `close()`. Useful for testing real-time features (chat, notifications, live updates) without a running server.
 
 ## Troubleshooting
 

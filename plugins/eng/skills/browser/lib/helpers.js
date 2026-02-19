@@ -256,13 +256,17 @@ async function authenticate(page, credentials, selectors = {}) {
 // ---------------------------------------------------------------------------
 
 /**
- * Save browser auth state (cookies + localStorage) for reuse across runs.
+ * Save browser auth state (cookies + localStorage + optionally IndexedDB) for reuse across runs.
  * @param {Object} context - Playwright browser context (after login)
  * @param {string} [savePath='/tmp/playwright-auth.json'] - Where to save
+ * @param {Object} [options={}]
+ * @param {boolean} [options.indexedDB=false] - Include IndexedDB contents (for Firebase, etc.)
  * @returns {{ path: string, cookies: number, origins: number }}
  */
-async function saveAuthState(context, savePath = '/tmp/playwright-auth.json') {
-  const state = await context.storageState({ path: savePath });
+async function saveAuthState(context, savePath = '/tmp/playwright-auth.json', options = {}) {
+  const stateOpts = { path: savePath };
+  if (options.indexedDB) stateOpts.indexedDB = true;
+  const state = await context.storageState(stateOpts);
   return {
     path: savePath,
     cookies: state.cookies ? state.cookies.length : 0,
@@ -1269,28 +1273,46 @@ const INTERACTIVE_ROLES = new Set([
 ]);
 
 /**
- * Flatten a nested accessibility tree into a flat list of nodes.
- * @param {Object} node - Accessibility tree node
- * @param {Array} result - Accumulator
- * @returns {Array}
+ * Parse a Playwright ARIA snapshot YAML string into structured nodes.
+ * Each line like `- role "name" [attr=value]` becomes an object.
+ * @param {string} yaml - ARIA snapshot YAML string
+ * @returns {Array<{ role: string, name: string, level?: number, checked?: boolean, disabled?: boolean, expanded?: boolean, selected?: boolean, indent: number }>}
  */
-function flattenTree(node, result = []) {
-  if (!node) return result;
-  const { children, ...rest } = node;
-  if (rest.role && rest.role !== 'none' && rest.role !== 'generic') {
-    result.push(rest);
-  }
-  if (children) {
-    for (const child of children) {
-      flattenTree(child, result);
+function parseAriaSnapshot(yaml) {
+  if (!yaml) return [];
+  const nodes = [];
+  const lines = yaml.split('\n');
+  for (const line of lines) {
+    // Match: "  - role "name" [attr=value, attr2]:" or "  - role "name":" or "  - role:"
+    const match = line.match(/^(\s*)- (\w+)(?: "([^"]*)")?(?:\s*\[([^\]]*)\])?/);
+    if (!match) continue;
+    const indent = match[1].length;
+    const role = match[2];
+    const name = match[3] || '';
+    const attrs = match[4] || '';
+
+    const node = { role, name, indent };
+
+    // Parse attributes like "level=1", "checked", "disabled", "expanded", "selected"
+    if (attrs) {
+      for (const attr of attrs.split(/,\s*/)) {
+        const [key, val] = attr.split('=');
+        if (key === 'level') node.level = parseInt(val, 10);
+        else if (key === 'checked') node.checked = val === undefined ? true : val === 'true';
+        else if (key === 'disabled') node.disabled = true;
+        else if (key === 'expanded') node.expanded = val === undefined ? true : val === 'true';
+        else if (key === 'selected') node.selected = val === undefined ? true : val === 'true';
+      }
     }
+
+    nodes.push(node);
   }
-  return result;
+  return nodes;
 }
 
 /**
- * Generate a suggested Playwright selector for an accessibility node.
- * @param {Object} node - Flat accessibility node
+ * Generate a suggested Playwright selector for a parsed ARIA node.
+ * @param {Object} node - Parsed ARIA node
  * @returns {string}
  */
 function suggestSelector(node) {
@@ -1302,38 +1324,36 @@ function suggestSelector(node) {
 }
 
 /**
- * Get page structure as a flat accessibility tree with suggested selectors.
- * Use when you don't know a page's DOM — returns roles, names, and Playwright
- * selectors so you can write interactions without reading source code.
+ * Get page structure via the accessibility tree. Returns the raw ARIA snapshot
+ * YAML (preserving hierarchy) plus a parsed summary with suggested selectors.
+ *
+ * Uses locator.ariaSnapshot() — the modern Playwright API (v1.49+).
  *
  * @param {Object} page - Playwright page
  * @param {Object} [options={}]
- * @param {boolean} [options.interactiveOnly=false] - Only return interactive elements
+ * @param {boolean} [options.interactiveOnly=false] - Only include interactive elements in parsed tree
  * @param {string} [options.root] - CSS selector to scope the tree (e.g., 'main', '#login-form')
- * @returns {{ url: string, title: string, tree: Array, summary: Object }}
+ * @returns {{ url: string, title: string, yaml: string, tree: Array, summary: Object }}
  */
 async function getPageStructure(page, options = {}) {
   const { interactiveOnly = false, root } = options;
 
-  let snapshotOpts = {};
-  if (root) {
-    const rootHandle = await page.$(root);
-    if (rootHandle) {
-      snapshotOpts.root = rootHandle;
-    }
-  }
+  const locator = root ? page.locator(root).first() : page.locator('body');
 
-  const snapshot = await page.accessibility.snapshot(snapshotOpts);
-  if (!snapshot) {
+  let yaml;
+  try {
+    yaml = await locator.ariaSnapshot();
+  } catch (e) {
     return {
       url: page.url(),
       title: await page.title(),
+      yaml: '',
       tree: [],
       summary: { total: 0, interactive: 0, headings: 0, links: 0, buttons: 0, inputs: 0 }
     };
   }
 
-  let nodes = flattenTree(snapshot);
+  let nodes = parseAriaSnapshot(yaml);
 
   if (interactiveOnly) {
     nodes = nodes.filter(n => INTERACTIVE_ROLES.has(n.role));
@@ -1342,13 +1362,14 @@ async function getPageStructure(page, options = {}) {
   const tree = nodes.map(node => {
     const entry = {
       role: node.role,
-      name: node.name || '',
+      name: node.name,
       selector: suggestSelector(node)
     };
     if (node.level) entry.level = node.level;
-    if (node.value !== undefined) entry.value = node.value;
     if (node.checked !== undefined) entry.checked = node.checked;
     if (node.disabled) entry.disabled = true;
+    if (node.expanded !== undefined) entry.expanded = node.expanded;
+    if (node.selected !== undefined) entry.selected = node.selected;
     return entry;
   });
 
@@ -1364,8 +1385,190 @@ async function getPageStructure(page, options = {}) {
   return {
     url: page.url(),
     title: await page.title(),
+    yaml,
     tree,
     summary
+  };
+}
+
+// ---------------------------------------------------------------------------
+// Dialog Handling
+// ---------------------------------------------------------------------------
+
+/**
+ * Auto-handle dialogs (alert, confirm, prompt, beforeunload) on a page.
+ * Call before navigating — registers a persistent listener.
+ *
+ * @param {Object} page - Playwright page
+ * @param {Object} [options={}]
+ * @param {boolean} [options.accept=true] - Accept dialogs (true) or dismiss (false)
+ * @param {string} [options.promptText=''] - Text to enter for prompt() dialogs
+ * @param {Function} [options.onDialog] - Optional callback(dialog) for custom logic; return true to skip default handling
+ * @returns {{ dialogs: Array }} - Access .dialogs to see all captured dialogs after the fact
+ */
+function handleDialogs(page, options = {}) {
+  const { accept = true, promptText = '', onDialog } = options;
+  const captured = { dialogs: [] };
+
+  page.on('dialog', async (dialog) => {
+    captured.dialogs.push({
+      type: dialog.type(),
+      message: dialog.message(),
+      defaultValue: dialog.defaultValue(),
+      timestamp: Date.now()
+    });
+
+    if (onDialog) {
+      const handled = await onDialog(dialog);
+      if (handled) return;
+    }
+
+    if (accept) {
+      await dialog.accept(dialog.type() === 'prompt' ? promptText : undefined);
+    } else {
+      await dialog.dismiss();
+    }
+  });
+
+  return captured;
+}
+
+// ---------------------------------------------------------------------------
+// Overlay / Popup Dismissal
+// ---------------------------------------------------------------------------
+
+/**
+ * Register handlers to auto-dismiss blocking overlays (cookie banners, modals,
+ * onboarding tours, etc.) whenever they appear during page interaction.
+ * Uses Playwright's addLocatorHandler (v1.42+).
+ *
+ * @param {Object} page - Playwright page
+ * @param {Array<{ locator: string, action?: 'click'|'remove', clickTarget?: string }>} [overlays]
+ *   Each entry: locator to detect the overlay, action to take, optional click target within it.
+ *   Defaults to common cookie/consent banner patterns.
+ * @returns {void}
+ */
+async function dismissOverlays(page, overlays) {
+  const defaults = [
+    { locator: '[class*="cookie"] button, [id*="cookie"] button', action: 'click' },
+    { locator: '[class*="consent"] button, [id*="consent"] button', action: 'click' },
+    { locator: '[class*="CookieBanner"] button', action: 'click' },
+    { locator: 'button:has-text("Accept"), button:has-text("Accept All"), button:has-text("Got it"), button:has-text("I agree")', action: 'click' },
+  ];
+
+  const entries = overlays || defaults;
+
+  for (const entry of entries) {
+    const loc = page.locator(entry.locator).first();
+    try {
+      await page.addLocatorHandler(loc, async () => {
+        if (entry.action === 'remove') {
+          await loc.evaluate(el => el.remove()).catch(() => {});
+        } else {
+          const target = entry.clickTarget ? page.locator(entry.clickTarget).first() : loc;
+          await target.click({ timeout: 2000 }).catch(() => {});
+        }
+      });
+    } catch (e) {
+      // addLocatorHandler may fail if locator is invalid — skip silently
+    }
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Tracing
+// ---------------------------------------------------------------------------
+
+/**
+ * Start a Playwright trace. Records DOM snapshots, screenshots, network, and
+ * console activity. Stop with stopTracing() to save a .zip viewable in
+ * Playwright Trace Viewer (npx playwright show-trace trace.zip).
+ *
+ * @param {Object} context - Playwright browser context
+ * @param {Object} [options={}]
+ * @param {boolean} [options.screenshots=true] - Capture screenshots at each step
+ * @param {boolean} [options.snapshots=true] - Capture DOM snapshots
+ * @param {boolean} [options.sources=false] - Include source files in the trace
+ * @returns {void}
+ */
+async function startTracing(context, options = {}) {
+  const { screenshots = true, snapshots = true, sources = false } = options;
+  await context.tracing.start({ screenshots, snapshots, sources });
+}
+
+/**
+ * Stop tracing and save the trace file.
+ *
+ * @param {Object} context - Playwright browser context
+ * @param {string} [outputPath='/tmp/playwright-trace.zip'] - Where to save
+ * @returns {{ path: string }}
+ */
+async function stopTracing(context, outputPath = '/tmp/playwright-trace.zip') {
+  await context.tracing.stop({ path: outputPath });
+  return { path: outputPath };
+}
+
+// ---------------------------------------------------------------------------
+// PDF Generation
+// ---------------------------------------------------------------------------
+
+/**
+ * Generate a PDF from the current page. Only works in Chromium headless.
+ *
+ * @param {Object} page - Playwright page
+ * @param {string} [outputPath='/tmp/playwright-page.pdf'] - Where to save
+ * @param {Object} [options={}]
+ * @param {string} [options.format='A4'] - Paper format (A4, Letter, Legal, etc.)
+ * @param {boolean} [options.tagged=false] - Generate tagged (accessible) PDF
+ * @param {boolean} [options.outline=false] - Embed document outline (bookmarks)
+ * @param {boolean} [options.printBackground=true] - Print background graphics
+ * @param {string} [options.margin] - Margins object { top, right, bottom, left }
+ * @returns {{ path: string }}
+ */
+async function generatePdf(page, outputPath = '/tmp/playwright-page.pdf', options = {}) {
+  const {
+    format = 'A4',
+    tagged = false,
+    outline = false,
+    printBackground = true,
+    margin
+  } = options;
+
+  const pdfOpts = { path: outputPath, format, printBackground };
+  if (tagged) pdfOpts.tagged = true;
+  if (outline) pdfOpts.outline = true;
+  if (margin) pdfOpts.margin = margin;
+
+  await page.pdf(pdfOpts);
+  return { path: outputPath };
+}
+
+// ---------------------------------------------------------------------------
+// File Download
+// ---------------------------------------------------------------------------
+
+/**
+ * Wait for a download triggered by an action, then save it.
+ *
+ * @param {Object} page - Playwright page
+ * @param {Function} triggerAction - Async function that triggers the download (e.g., () => page.click('#download-btn'))
+ * @param {string} [savePath] - Where to save. If omitted, uses suggested filename in /tmp/
+ * @returns {{ path: string, suggestedFilename: string, url: string }}
+ */
+async function waitForDownload(page, triggerAction, savePath) {
+  const [download] = await Promise.all([
+    page.waitForEvent('download'),
+    triggerAction()
+  ]);
+
+  const filename = download.suggestedFilename();
+  const finalPath = savePath || `/tmp/${filename}`;
+  await download.saveAs(finalPath);
+
+  return {
+    path: finalPath,
+    suggestedFilename: filename,
+    url: download.url()
   };
 }
 
@@ -1427,5 +1630,16 @@ module.exports = {
   // Layout
   getElementBounds,
   // Page structure discovery
-  getPageStructure
+  getPageStructure,
+  // Dialog handling
+  handleDialogs,
+  // Overlay dismissal
+  dismissOverlays,
+  // Tracing
+  startTracing,
+  stopTracing,
+  // PDF generation
+  generatePdf,
+  // File download
+  waitForDownload
 };
