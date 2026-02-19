@@ -2,23 +2,27 @@
 
 Plugin for the Inkeep engineering team. Includes all [shared skills](../shared/) plus eng-specific ones.
 
-## Install
+## Quick setup
 
-### Option A: Claude Code Plugin (recommended)
-
-Works on Claude Code only. **Auto-updates on every session.**
+Run this once to install the plugin, dependencies, and companion tools:
 
 ```bash
-# Add the marketplace with auto-update (one-time)
+# 1. Install the plugin (auto-updates every session)
 claude plugin marketplace add https://github.com/inkeep/team-skills.git && node -e "const f=require('os').homedir()+'/.claude/plugins/known_marketplaces.json',d=require(f);d['inkeep-team-skills'].autoUpdate=true;require('fs').writeFileSync(f,JSON.stringify(d,null,2));console.log('Auto-update enabled for inkeep-team-skills')"
-
-# Install the eng plugin
 claude plugin install eng@inkeep-team-skills
+
+# 2. Global deps
+npm install -g typescript-language-server typescript
+
+# 3. Browser automation (Playwright + Chromium)
+npm run setup --prefix ~/.claude/plugins/marketplaces/inkeep-team-skills/plugins/eng/skills/browser
+
+# 4. TypeScript LSP companion plugin
+claude plugin install typescript-lsp@claude-plugins-official
 ```
 
-### Option B: Skills CLI (any agent)
-
-To install:
+<details>
+<summary>Alternative: Skills CLI (any agent, not just Claude Code)</summary>
 
 ```bash
 npx skills add inkeep/team-skills/plugins/eng -y
@@ -29,6 +33,8 @@ To manually update:
 ```bash
 npx skills update
 ```
+
+</details>
 
 ---
 
@@ -88,12 +94,6 @@ These are generally useful skills for investigating things and aiding in **decis
 |---|---|---|
 | `/browser` | User or model | Playwright automation — write and run scripts for testing, screenshots, form filling, accessibility audits, network inspection. Works in CI/Docker. |
 
-`/browser` requires a one-time setup (installs Playwright + Chromium):
-
-```bash
-npm run setup --prefix ~/.claude/plugins/marketplaces/inkeep-team-skills/plugins/eng/skills/browser
-```
-
 ### Other
 
 | Skill | Invocation | Purpose |
@@ -117,23 +117,11 @@ Skills work across two execution environments. `/ship` detects the context in Ph
 
 ---
 
-## Recommended companion plugins
+## Companion plugins
 
-These plugins from `claude-plugins-official` complement the eng skills. Install them once — they auto-update with the marketplace.
+Installed via [Quick setup](#quick-setup). These auto-update with their marketplace.
 
-### TypeScript LSP
-
-Gives Claude Code go-to-definition, find-references, and type-error checking for TypeScript/JavaScript files. Significantly improves code navigation and catch-before-run error detection.
-
-**Prerequisites:**
-
-```bash
-npm install -g typescript-language-server typescript
-```
-
-**Install:**
-
-```bash
-claude plugin install typescript-lsp@claude-plugins-official
-```
+| Plugin | What it does |
+|---|---|
+| `typescript-lsp@claude-plugins-official` | Go-to-definition, find-references, and type-error checking for TypeScript/JavaScript files. |
 
