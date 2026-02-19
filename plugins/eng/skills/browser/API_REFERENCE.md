@@ -418,13 +418,143 @@ await helpers.simulateOffline(page.context());
 await helpers.blockResources(page, ['image', 'font']);
 ```
 
+**Composability note:** `simulateSlowNetwork` and `blockResources` use `route.fallback()`, so they compose with other `page.route()` handlers. You can mock API routes and add slow network simulation on the same page — the slow network handler delays, then falls through to your mock handler.
+
 ## Layout Inspection (via helpers)
 
 ```javascript
 const helpers = require('./lib/helpers');
 
 const bounds = await helpers.getElementBounds(page, '.hero-banner');
-// { x, y, width, height, visible, inViewport, computedStyles: { display, visibility, ... } }
+// Returns null for non-existent selectors
+// Returns { visible: false, ... } for display:none / visibility:hidden / opacity:0 elements
+// Returns { x, y, width, height, visible, inViewport, computedStyles: { display, visibility, opacity, position, zIndex, overflow } }
+```
+
+## Page Structure Discovery (via helpers)
+
+```javascript
+const helpers = require('./lib/helpers');
+
+// Get the full accessibility tree with suggested selectors
+const structure = await helpers.getPageStructure(page);
+// structure.yaml  — raw ARIA snapshot YAML (preserves hierarchy)
+// structure.tree  — parsed array of { role, name, selector, level?, checked?, disabled?, expanded?, selected? }
+// structure.summary — { total, interactive, headings, links, buttons, inputs }
+
+// Only interactive elements (buttons, links, inputs, etc.)
+const interactive = await helpers.getPageStructure(page, { interactiveOnly: true });
+
+// Scope to a specific section
+const form = await helpers.getPageStructure(page, { root: '#login-form' });
+
+// Parse ARIA snapshots standalone
+const nodes = helpers.parseAriaSnapshot(yamlString);
+// Each node: { role, name, indent, level?, checked?, disabled?, expanded?, selected? }
+
+// Generate a selector from a parsed node
+const sel = helpers.suggestSelector(nodes[0]);
+// e.g., "getByRole('button', { name: 'Submit' })"
+
+// INTERACTIVE_ROLES — Set of interactive ARIA roles
+// button, link, textbox, checkbox, radio, combobox, slider, switch, tab, menuitem, searchbox, spinbutton, option
+```
+
+## Dialog Handling (via helpers)
+
+```javascript
+const helpers = require('./lib/helpers');
+
+// Auto-accept all dialogs (alert, confirm, prompt, beforeunload)
+const captured = helpers.handleDialogs(page);
+// ... navigate and interact ...
+console.log(captured.dialogs);
+// [{ type: 'alert', message: '...', defaultValue: '', timestamp: ... }]
+
+// Auto-dismiss dialogs
+helpers.handleDialogs(page, { accept: false });
+
+// Provide text for prompt() dialogs
+helpers.handleDialogs(page, { promptText: 'my answer' });
+
+// Custom handler — return true to skip default handling
+helpers.handleDialogs(page, {
+  onDialog: async (dialog) => {
+    if (dialog.type() === 'confirm') {
+      await dialog.dismiss();
+      return true; // handled — skip default
+    }
+  }
+});
+```
+
+## Overlay Dismissal (via helpers)
+
+```javascript
+const helpers = require('./lib/helpers');
+
+// Auto-dismiss cookie banners and consent popups (broad default patterns)
+await helpers.dismissOverlays(page);
+
+// Custom overlay patterns
+await helpers.dismissOverlays(page, [
+  { locator: '.onboarding-modal', action: 'click', clickTarget: '.close-btn' },
+  { locator: '#promo-banner', action: 'remove' }  // removes from DOM
+]);
+```
+
+**Note:** Default patterns are intentionally broad and may match non-overlay buttons (e.g., "Accept Invitation"). Pass custom overlays for production flows.
+
+## Tracing (via helpers)
+
+```javascript
+const helpers = require('./lib/helpers');
+
+// Start a trace (records DOM snapshots, screenshots, network, console)
+await helpers.startTracing(context);
+// With options:
+await helpers.startTracing(context, { screenshots: true, snapshots: true, sources: false });
+
+// ... perform actions ...
+
+// Stop and save
+const { path } = await helpers.stopTracing(context, '/tmp/my-trace.zip');
+// View with: npx playwright show-trace /tmp/my-trace.zip
+```
+
+## PDF Generation (via helpers)
+
+```javascript
+const helpers = require('./lib/helpers');
+
+// Generate PDF from current page (Chromium headless only)
+const { path } = await helpers.generatePdf(page, '/tmp/page.pdf');
+
+// With options
+const { path: p } = await helpers.generatePdf(page, '/tmp/page.pdf', {
+  format: 'Letter',       // A4, Letter, Legal, etc.
+  tagged: true,            // accessible PDF
+  outline: true,           // bookmarks from headings
+  printBackground: true,   // include background graphics
+  margin: { top: '1cm', right: '1cm', bottom: '1cm', left: '1cm' }
+});
+```
+
+## File Download (via helpers)
+
+```javascript
+const helpers = require('./lib/helpers');
+
+// Wait for a download triggered by a click
+const download = await helpers.waitForDownload(page, () => page.click('#download-btn'));
+// { path: '/tmp/report.csv', suggestedFilename: 'report.csv', url: 'https://...' }
+
+// Save to a specific path
+const download2 = await helpers.waitForDownload(
+  page,
+  () => page.click('#export-btn'),
+  '/tmp/my-export.xlsx'
+);
 ```
 
 ## Responsive Screenshots (via helpers)

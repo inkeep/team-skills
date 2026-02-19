@@ -134,7 +134,11 @@ Work through each scenario. Use the strongest tool available for each.
 - **Performance baseline:** After page load, capture `capturePerformanceMetrics` to check for obvious regressions — TTFB, FCP, LCP, CLS. You're not doing formal perf testing; you're catching "this page takes 8 seconds to load" or "layout shifts when the hero image loads."
 - **Video recording:** For complex multi-step flows, record with `createVideoContext`. Attach recordings to QA results as evidence. Especially useful for flows that involve timing, animations, or state transitions that are hard to capture in a screenshot.
 - **Responsive verification:** Run `captureResponsiveScreenshots` to sweep standard breakpoints (mobile/tablet/desktop/wide). Compare screenshots for layout breakage, clipping, or missing elements across viewports.
-- **Degraded conditions:** Test with `simulateSlowNetwork` (e.g., 500ms latency) and `blockResources` (block images/fonts) to verify graceful degradation. Test `simulateOffline` if the feature has offline handling. This catches "works on fast connections, breaks on slow ones."
+- **Degraded conditions:** Test with `simulateSlowNetwork` (e.g., 500ms latency) and `blockResources` (block images/fonts) to verify graceful degradation. Test `simulateOffline` if the feature has offline handling. These helpers compose with `page.route()` mocks via `route.fallback()`.
+- **Dialog handling:** Use `handleDialogs` before navigating to auto-accept/dismiss alerts, confirms, and prompts — then inspect `captured.dialogs` to verify the right dialogs fired. Use `dismissOverlays` to auto-dismiss cookie banners and consent popups that block interaction during test flows.
+- **Page structure discovery:** Use `getPageStructure` to get the accessibility tree with suggested selectors. Useful for verifying ARIA roles, element discoverability, and building selectors for unfamiliar pages. Pass `{ interactiveOnly: true }` to focus on actionable elements.
+- **Tracing:** Use `startTracing`/`stopTracing` to capture a full Playwright trace (.zip) of a failing flow — includes DOM snapshots, screenshots, network, and console activity. View with `npx playwright show-trace`.
+- **PDF & download verification:** Use `generatePdf` to verify PDF export features. Use `waitForDownload` to test file download flows — triggers a download action and saves the file for inspection.
 
 **With macOS desktop automation:**
 - Test OS-level interactions when relevant — file dialogs, clipboard, multi-app workflows.
