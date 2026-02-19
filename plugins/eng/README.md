@@ -26,14 +26,7 @@ open "https://chromewebstore.google.com/detail/playwright-mcp-bridge/mmlmfjhmonk
 claude plugin install typescript-lsp@claude-plugins-official
 
 # 6. Environment variables (video upload credentials)
-node -e "
-const fs = require('fs'), p = require('path').join(require('os').homedir(), '.claude', 'settings.json');
-const s = fs.existsSync(p) ? JSON.parse(fs.readFileSync(p, 'utf8')) : {};
-const add = { BUNNY_STREAM_API_KEY: '', BUNNY_STREAM_LIBRARY_ID: '', VIMEO_CLIENT_ID: '', VIMEO_CLIENT_SECRET: '', VIMEO_ACCESS_TOKEN: '' };
-s.env = Object.assign(add, s.env || {});
-fs.writeFileSync(p, JSON.stringify(s, null, 2) + '\n');
-console.log('Env placeholders added to ' + p + ' — fill in your values.');
-"
+node -e "const fs=require('fs'),p=require('path').join(require('os').homedir(),'.claude','settings.json');const s=fs.existsSync(p)?JSON.parse(fs.readFileSync(p,'utf8')):{};const add={BUNNY_STREAM_API_KEY:'',BUNNY_STREAM_LIBRARY_ID:'',VIMEO_CLIENT_ID:'',VIMEO_CLIENT_SECRET:'',VIMEO_ACCESS_TOKEN:''};s.env=Object.assign(add,s.env||{});fs.writeFileSync(p,JSON.stringify(s,null,2)+'\n');console.log('Env placeholders added to '+p+' — fill in your values.')"
 ```
 
 > **Step 6 details:** The command above merges empty placeholders into `~/.claude/settings.json` without overwriting existing values. Open the file and fill in your keys:
