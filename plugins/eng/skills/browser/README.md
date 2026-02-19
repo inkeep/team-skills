@@ -11,18 +11,17 @@ npm run setup   # installs deps + Chromium
 
 ## Environment Variables
 
-Copy `.env.example` and fill in what you need. Everything is optional — the skill works without any env vars for basic automation.
+Env vars are configured via Claude Code's `~/.claude/settings.json` `env` field — available in every session, from any directory, survives plugin updates.
 
-| Variable | Required for | Where to get it |
-|---|---|---|
-| `BUNNY_STREAM_API_KEY` | `uploadToBunny()` | [Bunny Stream dashboard](https://dash.bunny.net/stream) → API & Webhooks |
-| `BUNNY_STREAM_LIBRARY_ID` | `uploadToBunny()` | Same page — numeric library ID |
-| `VIMEO_CLIENT_ID` | `uploadToVimeo()` | [Vimeo developer apps](https://developer.vimeo.com/apps) |
-| `VIMEO_CLIENT_SECRET` | `uploadToVimeo()` | Same app page |
-| `VIMEO_ACCESS_TOKEN` | `uploadToVimeo()` | Generate PAT with `upload` scope |
-| `HEADLESS` | Visible browser | Set to `false` for headed mode |
-| `SLOW_MO` | Debugging | Delay in ms between actions |
-| `PW_HEADER_NAME` / `PW_HEADER_VALUE` | Custom headers | Any value — sent with every request |
+**See [eng plugin README](../../README.md#quick-setup) step 5** for the one-liner setup command and credential guide.
+
+### Optional env vars
+
+| Variable | Purpose |
+|---|---|
+| `HEADLESS` | Set to `false` for visible browser (default: headless) |
+| `SLOW_MO` | Delay in ms between actions (debugging) |
+| `PW_HEADER_NAME` / `PW_HEADER_VALUE` | Custom HTTP header sent with every request |
 
 ## Video Upload Strategy
 

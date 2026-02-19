@@ -19,7 +19,29 @@ npm run setup --prefix ~/.claude/plugins/marketplaces/inkeep-team-skills/plugins
 
 # 4. TypeScript LSP companion plugin
 claude plugin install typescript-lsp@claude-plugins-official
+
+# 5. Environment variables (video upload credentials)
+node -e "
+const fs = require('fs'), p = require('path').join(require('os').homedir(), '.claude', 'settings.json');
+const s = fs.existsSync(p) ? JSON.parse(fs.readFileSync(p, 'utf8')) : {};
+const add = { BUNNY_STREAM_API_KEY: '', BUNNY_STREAM_LIBRARY_ID: '', VIMEO_CLIENT_ID: '', VIMEO_CLIENT_SECRET: '', VIMEO_ACCESS_TOKEN: '' };
+s.env = Object.assign(add, s.env || {});
+fs.writeFileSync(p, JSON.stringify(s, null, 2) + '\n');
+console.log('Env placeholders added to ' + p + ' — fill in your values.');
+"
 ```
+
+> **Step 5 details:** The command above merges empty placeholders into `~/.claude/settings.json` without overwriting existing values. Open the file and fill in your keys:
+>
+> | Variable | Where to get it |
+> |---|---|
+> | `BUNNY_STREAM_API_KEY` | [Bunny Stream](https://dash.bunny.net/stream) → your library → API & Webhooks |
+> | `BUNNY_STREAM_LIBRARY_ID` | Same page — numeric library ID |
+> | `VIMEO_CLIENT_ID` | [Vimeo developer apps](https://developer.vimeo.com/apps) → create app |
+> | `VIMEO_CLIENT_SECRET` | Same app page |
+> | `VIMEO_ACCESS_TOKEN` | Same app → Authentication → generate PAT with `upload` scope |
+>
+> These are only needed for the `/browser` skill's `uploadToBunny()` and `uploadToVimeo()` helpers. All other skills work without any env vars.
 
 <details>
 <summary>Alternative: Skills CLI (any agent, not just Claude Code)</summary>
