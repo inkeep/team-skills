@@ -3,6 +3,7 @@
 // Only viable on user's local machine (not Docker/sandbox).
 
 const http = require('http');
+const { execSync } = require('child_process');
 const { createRequire } = require('module');
 
 // The Chrome extension (v0.0.68+) requires @playwright/mcp's relay, not the one
@@ -26,6 +27,54 @@ const EXTENSION_STORE_URL =
   'https://chromewebstore.google.com/detail/playwright-mcp-bridge/mmlmfjhmonkocbjadbfplnigmagldckm';
 
 /**
+ * Check if Chrome is running. Fails fast with a clear message instead of
+ * waiting for the 15-second relay timeout.
+ */
+function ensureChromeRunning() {
+  const platform = process.platform;
+  try {
+    if (platform === 'darwin') {
+      execSync('pgrep -x "Google Chrome"', { stdio: 'pipe' });
+    } else if (platform === 'linux') {
+      execSync('pgrep -f "(chrome|chromium)"', { stdio: 'pipe' });
+    } else if (platform === 'win32') {
+      execSync('tasklist /FI "IMAGENAME eq chrome.exe" | findstr chrome.exe', { stdio: 'pipe' });
+    }
+  } catch {
+    throw new Error(
+      'Chrome is not running.\n\n' +
+      'Open Google Chrome and try again. The local browser mode connects\n' +
+      'to your running Chrome — it cannot start Chrome for you.'
+    );
+  }
+}
+
+/**
+ * Apply CDP workarounds to prevent Chrome from throttling the agent's tab
+ * when the developer switches to a different tab. Without these, screenshots
+ * take 10s+ and timers are throttled to 1/min in background tabs.
+ *
+ * Three workarounds applied:
+ * 1. DOM.enable + Overlay.enable — tricks Chrome into thinking DevTools is
+ *    inspecting the page, which disables scheduler throttling.
+ * 2. Page.startScreencast — keeps the rendering pipeline active so
+ *    screenshots return in ~100ms instead of 10s+.
+ */
+async function applyAntiThrottling(page) {
+  try {
+    const cdp = await page.context().newCDPSession(page);
+    await cdp.send('DOM.enable');
+    await cdp.send('Overlay.enable');
+    cdp.on('Page.screencastFrame', async (params) => {
+      await cdp.send('Page.screencastFrameAck', { sessionId: params.sessionId }).catch(() => {});
+    });
+    await cdp.send('Page.startScreencast', { format: 'jpeg', quality: 1, maxWidth: 1, maxHeight: 1 });
+  } catch {
+    // Non-fatal — automation still works, just slower in background tabs
+  }
+}
+
+/**
  * Connect to the user's running Chrome browser via the Playwright MCP Bridge extension.
  *
  * Starts a local WebSocket relay server, triggers the extension handshake by opening
@@ -45,6 +94,9 @@ async function connectToLocalBrowser(options = {}) {
     );
   }
 
+  // Pre-flight: fail fast if Chrome isn't running (instant vs 15s timeout)
+  ensureChromeRunning();
+
   const timeout = options.timeout || 15000;
   const browserChannel = options.browserChannel || 'chrome';
 
@@ -60,6 +112,7 @@ async function connectToLocalBrowser(options = {}) {
   // userDataDir and executablePath are left undefined to use the user's default profile.
   const relay = new CDPRelayServer(server, browserChannel, undefined, undefined);
 
+  console.log('Waiting for extension handshake...');
   try {
     // This spawns a Chrome tab to chrome-extension://.../connect.html which triggers
     // the extension to connect back to our relay via WebSocket.
@@ -84,18 +137,22 @@ async function connectToLocalBrowser(options = {}) {
       || msg.includes('abort') || (err && err.constructor && err.constructor.name === 'Event');
     if (isConnectionFailure) {
       throw new Error(
-        'Could not connect to Chrome via the Playwright MCP Bridge extension.\n\n' +
-        'Checklist:\n' +
-        '1. Chrome must be running\n' +
-        '2. Install the extension: ' + EXTENSION_STORE_URL + '\n' +
-        '3. Reload any Chrome tab after installing\n\n' +
-        'Then retry the command.'
+        'Chrome is running but the extension did not respond.\n\n' +
+        'The Playwright MCP Bridge extension is either not installed or not active.\n\n' +
+        'Setup (one-time):\n' +
+        '1. Install the extension: ' + EXTENSION_STORE_URL + '\n' +
+        '2. After installing, reload any Chrome tab (Cmd+R)\n' +
+        '3. Retry this command — you\'ll see a connection approval dialog\n' +
+        '4. Click "Allow" to approve the connection\n\n' +
+        'To skip the approval dialog on future connections, set the token:\n' +
+        '  PLAYWRIGHT_MCP_EXTENSION_TOKEN=<token from extension popup>'
       );
     }
     throw err;
   }
 
   // Connect Playwright to the relay's CDP endpoint
+  console.log('Extension connected. Attaching Playwright via CDP...');
   const browser = await chromium.connectOverCDP(relay.cdpEndpoint(), { isLocal: true });
   const context = browser.contexts()[0];
 
@@ -103,6 +160,12 @@ async function connectToLocalBrowser(options = {}) {
   // page scripts should use — context.newPage() does NOT work via CDP bridge.
   const pages = context.pages();
   const page = pages[0] || null;
+
+  // Apply anti-throttling workarounds so the agent's tab works at full speed
+  // even when the developer switches to a different tab.
+  if (page) {
+    await applyAntiThrottling(page);
+  }
 
   return {
     browser,
@@ -172,5 +235,7 @@ module.exports = {
   connectToLocalBrowser,
   getConnectedPage,
   extractAuthState,
+  applyAntiThrottling,
+  ensureChromeRunning,
   EXTENSION_STORE_URL
 };

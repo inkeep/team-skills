@@ -38,19 +38,12 @@ Fill in each section of the template below. Omit sections that don't apply (note
 
 #### Summary
 
-What this PR does and why — 1-3 sentences.
-
-#### Motivation
-
-What problem this solves, why now, who benefits.
-
-#### Approach
-
-Brief narrative of how the implementation works at a high level — the architecture, key patterns, and flow.
+What this PR does + what problem this solves, why now, who benefits. 1-3 sentences if brief, if multiple pronged, can use numbered list to describe key scenarios/problems being solved. Keep it to the point.
 
 #### Architectural decisions
+Brief narrative of how the implementation works at a high level — the architecture, key patterns, and flow.
 
-Key technical decisions: what was chosen, why, and what was considered. Flag gray areas where reasonable engineers might disagree or where the decision could be revisited. If the implementation diverged from the spec, capture the divergence here as a decision with rationale.
+Key technical decisions what was chosen, why, and what was considered. Flag gray areas where reasonable engineers might disagree or where the decision could be revisited. If the implementation diverged from the spec, capture the divergence here as a decision with rationale.
 
 #### Changes
 

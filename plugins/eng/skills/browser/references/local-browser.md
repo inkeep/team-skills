@@ -24,11 +24,26 @@ Connect Playwright to the user's running Chrome browser via the [Playwright MCP 
 
 **Decision rule:** Use local browser when you need the user's session state or are acting on their behalf. Use headless for everything else — it's faster, more capable, and works in any environment.
 
-## Prerequisites
+## Setup (one-time)
 
-1. **Chrome must be running** on the user's machine
-2. **Playwright MCP Bridge extension** must be installed: [Chrome Web Store](https://chromewebstore.google.com/detail/playwright-mcp-bridge/mmlmfjhmonkocbjadbfplnigmagldckm)
-3. Reload any Chrome tab after installing the extension (one-time)
+1. **Open Chrome** — it must be running before connecting.
+2. **Install the extension**: [Playwright MCP Bridge](https://chromewebstore.google.com/detail/playwright-mcp-bridge/mmlmfjhmonkocbjadbfplnigmagldckm) from the Chrome Web Store. Click "Add to Chrome".
+3. **Reload any Chrome tab** (Cmd+R / Ctrl+R) — the extension needs one page reload to activate.
+4. **Test the connection**:
+   ```bash
+   cd $SKILL_DIR && node run.js --connect "console.log('Connected:', await page.title())"
+   ```
+5. **First connection**: A Chrome tab briefly opens for the handshake. You'll see an **approval dialog** — click **Allow**.
+6. **Set the token** (optional — skips the approval dialog on future connections):
+   - Click the Playwright MCP Bridge icon in Chrome's toolbar
+   - Copy the token from the popup
+   - Add to `~/.claude/settings.json` → `env`: `"PLAYWRIGHT_MCP_EXTENSION_TOKEN": "<token>"`
+
+### Verifying the extension is working
+
+- Go to `chrome://extensions` → find "Playwright MCP Bridge" → must be **enabled** (blue toggle)
+- Click the extension icon in the toolbar → you should see the token and connection status
+- If the icon isn't visible, click the puzzle piece icon in the toolbar to pin it
 
 ## How it works
 
@@ -189,17 +204,28 @@ What does NOT transfer:
 
 ## Troubleshooting
 
-**"Could not connect to Chrome via the Playwright MCP Bridge extension"**
-1. Verify Chrome is running
-2. Check extension is installed and enabled at `chrome://extensions`
-3. Reload any Chrome tab after installing
-4. If Chrome was just updated, restart Chrome
+**"Chrome is not running"**
+- Open Google Chrome and try again. The local browser mode connects to your running Chrome.
+
+**"Chrome is running but the extension did not respond"**
+1. Go to `chrome://extensions` and verify "Playwright MCP Bridge" is installed and **enabled** (blue toggle)
+2. If not installed: [Install from Chrome Web Store](https://chromewebstore.google.com/detail/playwright-mcp-bridge/mmlmfjhmonkocbjadbfplnigmagldckm)
+3. After installing, **reload any Chrome tab** (Cmd+R) — the extension needs this to activate
+4. If Chrome was just updated, restart Chrome entirely
+5. Check that `PLAYWRIGHT_MCP_EXTENSION_TOKEN` is correct (tokens can expire — copy a fresh one from the extension popup)
+
+**`ERR_BLOCKED_BY_CLIENT` in Chrome**
+- **Most common cause**: Wrong Chrome profile. Extensions are per-profile — if you have multiple Chrome profiles, make sure the profile with the extension installed is the active one.
+- Also possible: An ad blocker is blocking the extension URL. Temporarily disable it or whitelist `chrome-extension://mmlmfjhmonkocbjadbfplnigmagldckm/*`.
 
 **"CDPRelayServer not available"**
-- Playwright version too old. Run: `cd $SKILL_DIR && npm install` (needs Playwright >= 1.50)
+- Missing dependency. Run: `cd $SKILL_DIR && npm install`
 
 **Connection works but pages behave oddly**
-- CDP mode has lower fidelity. If you need `page.route()` or advanced features, extract auth state and use headless instead.
+- CDP mode has lower fidelity than native Playwright. If you need `page.route()` or advanced features, extract auth state and use headless instead.
+
+**Screenshots are slow (10s+) when the tab is in the background**
+- This shouldn't happen — anti-throttling workarounds are applied automatically. If it does, the CDP session may have been lost. Reconnect with `connectToLocalBrowser()`.
 
 **Auth state doesn't work in headless**
 - The target site may bind sessions to browser fingerprint. Try setting a matching user-agent in the headless context.

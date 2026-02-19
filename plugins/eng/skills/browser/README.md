@@ -56,7 +56,25 @@ Connect to the user's running Chrome instead of launching headless. Gives the ag
 
 ### Setup (one-time)
 
-Install the [Playwright MCP Bridge](https://chromewebstore.google.com/detail/playwright-mcp-bridge/mmlmfjhmonkocbjadbfplnigmagldckm) Chrome extension. That's it — no Chrome restart or special flags needed.
+1. **Install the extension**: Open Chrome and install [Playwright MCP Bridge](https://chromewebstore.google.com/detail/playwright-mcp-bridge/mmlmfjhmonkocbjadbfplnigmagldckm) from the Chrome Web Store.
+
+2. **Reload any Chrome tab** (Cmd+R / Ctrl+R). The extension needs a page reload after install to activate.
+
+3. **Test the connection**:
+   ```bash
+   cd $SKILL_DIR && node run.js --connect "console.log('Connected:', await page.title())"
+   ```
+   A new Chrome tab will briefly open — this is the extension handshake. On first connection, you'll see an **approval dialog** in Chrome asking to allow the connection. Click **Allow**.
+
+4. **Set the token** (optional, skips the approval dialog on future connections):
+   - Click the Playwright MCP Bridge extension icon in Chrome's toolbar
+   - Copy the token shown in the popup
+   - Add to Claude Code settings (`~/.claude/settings.json` → `env`):
+     ```
+     "PLAYWRIGHT_MCP_EXTENSION_TOKEN": "<your-token>"
+     ```
+
+**If you get `ERR_BLOCKED_BY_CLIENT`**: An ad blocker is blocking the extension URL. Temporarily disable it (uBlock Origin, Adblock Plus, etc.) or whitelist `chrome-extension://mmlmfjhmonkocbjadbfplnigmagldckm/*`.
 
 ### Usage
 
@@ -72,8 +90,6 @@ cd $SKILL_DIR && node run.js --connect "console.log(await page.title())"
 ```
 
 Scripts get pre-wired `browser`, `context`, `page`, `helpers`, `connectToLocalBrowser`, `getConnectedPage`, and `extractAuthState` variables.
-
-Set `PLAYWRIGHT_MCP_EXTENSION_TOKEN` to bypass the extension approval dialog (copy token from extension popup).
 
 ### Extract auth for headless reuse
 
