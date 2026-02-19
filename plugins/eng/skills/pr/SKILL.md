@@ -1,5 +1,5 @@
 ---
-name: pull-request
+name: pr
 description: "Write or update a GitHub PR body — self-contained, stateless, and structured for efficient review. Gathers context from the diff, spec, and implementation to produce a comprehensive PR description. Standalone or composable with /ship and /review. Triggers: PR body, PR description, pull request, write PR, update PR, create PR, PR template."
 argument-hint: "[PR number | 'new'] [--spec path/to/SPEC.md]"
 ---
@@ -70,7 +70,7 @@ Steps a reviewer can follow to manually verify the behavior. **Omit if changes a
 
 Manual QA, smoke tests, and verification done **outside** the automated test suite. Do not restate what the test suite covers — reviewers can read the test files. Examples: browser testing, curl/API checks, edge case verification, error state inspection.
 
-**When `/qa-test` has already written a `## Test plan` section on the PR body:** Read the existing PR body before writing. Incorporate the QA checklist items (with their pass/fail/blocked status) into this section — do not discard them. The QA checklist is evidence of testing done; your job is to integrate it into the full PR body, not replace it.
+**When `/qa` has already written a `## Test plan` section on the PR body:** Read the existing PR body before writing. Incorporate the QA checklist items (with their pass/fail/blocked status) into this section — do not discard them. The QA checklist is evidence of testing done; your job is to integrate it into the full PR body, not replace it.
 
 #### Related issues
 

@@ -19,7 +19,7 @@ Before declaring done, verify:
 
 ## If a PR exists
 
-- [ ] PR description is comprehensive, up-to-date, and matches the `/pull-request` template (all applicable sections filled, self-contained, stateless)
+- [ ] PR description is comprehensive, up-to-date, and matches the `/pr` template (all applicable sections filled, self-contained, stateless)
 - [ ] Changelog entries created for published package changes (if applicable)
 - [ ] All reviewer feedback threads resolved (accepted or declined with reasoning)
 - [ ] CI/CD pipeline green

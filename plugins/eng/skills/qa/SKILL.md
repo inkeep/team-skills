@@ -1,5 +1,5 @@
 ---
-name: qa-test
+name: qa
 description: "Manual QA testing — verify features end-to-end as a user would, using every tool available (browser, macOS, bash, APIs). Focuses on what formal test suites cannot capture: visual correctness, UX flows, usability judgment, integration reality, edge cases, and failure modes. Standalone or composable with /ship. Triggers: qa, qa test, manual test, test the feature, verify it works, exploratory testing, smoke test, end-to-end verification."
 argument-hint: "[SPEC.md path | PR number | feature description | 'test what changed']"
 ---

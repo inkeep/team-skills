@@ -112,8 +112,8 @@ Ship is an orchestrator that leverages these other skills:
 |---|---|---|
 | `/spec` | 1 | Define what to build — requirements and technical design |
 | `/implement` | 2 | Write the code from the spec |
-| `/qa-test` | 3 | Automate "manual" testing of feature (e.g. Browser automation) |
-| `/pull-request` | After 3 | Write the PR description |
+| `/qa` | 3 | Automate "manual" testing of feature (e.g. Browser automation) |
+| `/pr` | After 3 | Write the PR description |
 | `/docs` | 4 | Write docs for the changes |
 | `/review` | 5 | Address review comments and get CI green |
 
@@ -128,7 +128,7 @@ These are generally useful skills for investigating things and aiding in **decis
 | `/research` | User or model | Deep technical research across web + OSS code bases |
 | `/explore` | User or model | Build deep understanding of a codebase area or system topic. Three lenses: surface mapping (what product/internal surfaces does this touch?), pattern inspection (what conventions exist here?), system tracing (what does this connect to and what breaks?). |
 | `/analyze` | User or model | Deeply compare pros and cons of a given decision. |
-| `/debug` | User or model | Systematic root cause investigation for code defects. Loaded by other skills (qa-test, implement, ship) when they hit failures. |
+| `/debug` | User or model | Systematic root cause investigation for code defects. Loaded by other skills (qa, implement, ship) when they hit failures. |
 
 ### Browser Automation
 

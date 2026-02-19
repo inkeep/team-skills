@@ -65,11 +65,11 @@ All execution state lives in `tmp/ship/` (gitignored). The only committed artifa
 
 ### PR description
 
-The PR body is a living document — not write-once. A draft PR with a stub body is created after Phase 2 (implementation). The full PR body is written after Phase 3 (testing is complete) by loading `/pull-request`. It then evolves as documentation and review phases proceed.
+The PR body is a living document — not write-once. A draft PR with a stub body is created after Phase 2 (implementation). The full PR body is written after Phase 3 (testing is complete) by loading `/pr`. It then evolves as documentation and review phases proceed.
 
-Load `/pull-request` skill for all PR body work — writing the full body and updating it after subsequent phases. The skill owns the template, section guidance, and principles (self-contained, stateless).
+Load `/pr` skill for all PR body work — writing the full body and updating it after subsequent phases. The skill owns the template, section guidance, and principles (self-contained, stateless).
 
-**Update rule:** After any phase that changes code or documentation, check whether the PR description is now stale and re-load `/pull-request` to update it. Phase 6 verifies the description is comprehensive and current.
+**Update rule:** After any phase that changes code or documentation, check whether the PR description is now stale and re-load `/pr` to update it. Phase 6 verifies the description is comprehensive and current.
 
 ---
 
@@ -141,9 +141,9 @@ Assess the task and determine the appropriate depth for each phase. **Every phas
 
 | Task scope | Spec depth (Phase 1) | Implementation depth (Phase 2) | Testing depth (Phase 3) | Docs depth (Phase 4) | Review depth (Phase 5) |
 |---|---|---|---|---|---|
-| **Feature** (new capability, multi-file, user-facing) | Full `/spec` → SPEC.md → spec.json | Full `/implement` iteration loop | Full `/qa-test` | Full docs pass — product + internal | Full `/review` loop |
-| **Enhancement** (extending existing feature, moderate scope) | SPEC.md with problem + acceptance criteria + test cases; `/spec` optional | `/implement` iteration loop | `/qa-test` (calibrated to scope) | Update existing docs if affected | Full `/review` loop |
-| **Bug fix / config change / infra** (small scope, targeted change) | SPEC.md with problem statement + what "fixed" looks like + acceptance criteria | `/implement` iteration loop (calibrated to scope) | Targeted `/qa-test` if user-facing | Update docs only if behavior changed | `/review` loop |
+| **Feature** (new capability, multi-file, user-facing) | Full `/spec` → SPEC.md → spec.json | Full `/implement` iteration loop | Full `/qa` | Full docs pass — product + internal | Full `/review` loop |
+| **Enhancement** (extending existing feature, moderate scope) | SPEC.md with problem + acceptance criteria + test cases; `/spec` optional | `/implement` iteration loop | `/qa` (calibrated to scope) | Update existing docs if affected | Full `/review` loop |
+| **Bug fix / config change / infra** (small scope, targeted change) | SPEC.md with problem statement + what "fixed" looks like + acceptance criteria | `/implement` iteration loop (calibrated to scope) | Targeted `/qa` if user-facing | Update docs only if behavior changed | `/review` loop |
 
 A SPEC.md is always produced — conversational findings alone do not survive context loss.
 
@@ -255,14 +255,14 @@ After Phase 2 completes and before entering Phase 3. Do not update `currentPhase
 
 ### Phase 3: Testing
 
-Load `/qa-test` skill with the SPEC.md path (or PR number if no spec). `/qa-test` handles the full manual QA lifecycle: tool detection, test plan derivation, execution with available tools (browser, macOS, bash), result recording, and gap documentation.
+Load `/qa` skill with the SPEC.md path (or PR number if no spec). `/qa` handles the full manual QA lifecycle: tool detection, test plan derivation, execution with available tools (browser, macOS, bash), result recording, and gap documentation.
 
-If scope calibration indicated a lightweight scope (bug fix / config change), pass that context so `/qa-test` calibrates depth accordingly.
+If scope calibration indicated a lightweight scope (bug fix / config change), pass that context so `/qa` calibrates depth accordingly.
 
 **Phase 3 exit gate — verify before proceeding to Phase 4:**
 
-- [ ] `/qa-test` complete: has run, fixed what it could, and documented results. Remaining gaps and unresolvable issues are documented — they do not block Phase 4.
-- [ ] If `/qa-test` made any code changes: re-run quality gates (test suite, typecheck, lint) and verify green. `/qa-test` fixes bugs it finds — you own verification that those fixes don't break anything else.
+- [ ] `/qa` complete: has run, fixed what it could, and documented results. Remaining gaps and unresolvable issues are documented — they do not block Phase 4.
+- [ ] If `/qa` made any code changes: re-run quality gates (test suite, typecheck, lint) and verify green. `/qa` fixes bugs it finds — you own verification that those fixes don't break anything else.
 - [ ] You can explain the implementation to another engineer: what was tested, what edge cases exist, how they are handled
 
 ---
@@ -273,9 +273,9 @@ After Phase 3's exit gate and before entering Phase 4. Do not update `currentPha
 
 If the implementation includes UI changes and `/screengrabs` is available, invoke it before writing the PR body — capture screenshots of affected routes so the PR body's "Screenshots / recordings" section has visual evidence ready. `/screengrabs` supports `--pre-script` for interaction before capture (dismissing modals, navigating tabs, logging in).
 
-Load `/pull-request` skill with the PR number and `--spec <path/to/SPEC.md>` to write the full PR body. Implementation and testing are now complete — the body can cover approach, changes, architectural decisions, and test plan comprehensively.
+Load `/pr` skill with the PR number and `--spec <path/to/SPEC.md>` to write the full PR body. Implementation and testing are now complete — the body can cover approach, changes, architectural decisions, and test plan comprehensively.
 
-If no PR exists (`prNumber: null` — GitHub CLI was unavailable during draft PR creation), load `/pull-request` with `new --spec <path/to/SPEC.md>` to create the PR and write the body in one step. Update `prNumber` in `tmp/ship/state.json`. If `gh` is still unavailable, `/pull-request` will output the body for manual use — skip Phase 5.
+If no PR exists (`prNumber: null` — GitHub CLI was unavailable during draft PR creation), load `/pr` with `new --spec <path/to/SPEC.md>` to create the PR and write the body in one step. Update `prNumber` in `tmp/ship/state.json`. If `gh` is still unavailable, `/pr` will output the body for manual use — skip Phase 5.
 
 ---
 
@@ -345,7 +345,7 @@ These govern your behavior throughout:
 2. **Outcomes over process.** The workflow phases exist to organize your work, not to compel forward motion. Never move to the next step just because you finished the current one — move when you have genuine confidence in what you've built so far. If something feels uncertain, stop and investigate. Build your own understanding of the codebase, the product, the intent of the spec, and the implications of your decisions before acting on them.
 3. **Delegate investigation; go deep on each phase.** Default to spawning subagents for information-gathering work: codebase exploration, test failure diagnosis, CI log analysis, code review of implementation output, and pattern discovery. This is an efficiency strategy — not a rationing strategy. Delegation lets you focus on orchestration and decision-making while subagents handle bounded research tasks. Give each subagent a clear question, the relevant file paths or error messages, and the output format you need. Act on their findings — not raw code or logs. Do investigation directly only when it's trivial (one small file, one quick command). The threshold: if it would take more than 2-3 tool calls or produce more than ~100 lines of output, delegate it. If context runs low at any point, the ship loop's automatic save/reboot mechanism handles continuity — do not trade phase depth for speed.
 
-   **What to delegate vs. what to run top-level:** Subagents are for bounded investigation tasks — codebase exploration, test failure diagnosis, CI log analysis, pattern discovery. Pipeline skills (`/implement`, `/review`, `/qa-test`, `/docs`, `/pull-request`) must run at the top level via the Skill tool, never in a subagent. They run extended loops, manage state, and need your orchestrator context (state files, spec path, phase awareness, ability to escalate). Delegating them strips all of that.
+   **What to delegate vs. what to run top-level:** Subagents are for bounded investigation tasks — codebase exploration, test failure diagnosis, CI log analysis, pattern discovery. Pipeline skills (`/implement`, `/review`, `/qa`, `/docs`, `/pr`) must run at the top level via the Skill tool, never in a subagent. They run extended loops, manage state, and need your orchestrator context (state files, spec path, phase awareness, ability to escalate). Delegating them strips all of that.
 
    **Subagent mechanics:** Subagents do not inherit your skills. For plain investigation, this doesn't matter — just provide a clear question and file paths. When a subagent needs an investigation skill (like `/explore`), use the `general-purpose` type (it has the Skill tool) and start the prompt with `Before doing anything, load /skill-name skill` — this reliably triggers the Skill tool. Follow it with context and the task:
 
@@ -395,14 +395,14 @@ These govern your behavior throughout:
 | Path | Use when | Impact if skipped |
 |---|---|---|
 | `/implement` skill | Converting spec, crafting prompt, and executing the iteration loop (Phase 2) | Missing spec.json, no implementation prompt, no automated execution |
-| `/qa-test` skill | Manual QA verification with available tools (Phase 3) | User-facing bugs missed, visual issues, broken UX flows, undocumented gaps |
-| `/pull-request` skill | Writing the full PR body (after Phase 3) and updating it after subsequent phases | Inconsistent PR body, missing sections, stale description |
+| `/qa` skill | Manual QA verification with available tools (Phase 3) | User-facing bugs missed, visual issues, broken UX flows, undocumented gaps |
+| `/pr` skill | Writing the full PR body (after Phase 3) and updating it after subsequent phases | Inconsistent PR body, missing sections, stale description |
 | `/docs` skill | Writing or updating documentation — product + internal surface areas (Phase 4) | Docs not written, wrong format, missed documentation surfaces, mismatched with project conventions |
 | `/review` skill | Running the push → review → fix → CI/CD loop (Phase 5) | Missed feedback, unresolved threads, mechanical response to reviews, CI/CD failures not investigated |
 | `references/worktree-setup.md` | Creating worktree (Phase 0, Step 1) | Work bleeds into main directory |
 | `references/capability-detection.md` | Detecting execution context (Phase 0, Step 2) | Child skills receive wrong flags, phases skipped or run with wrong assumptions |
 | `references/state-initialization.md` | Activating execution state (Phase 1, Step 3) | Stop hook cannot recover context, loop cannot activate |
-| `references/pr-creation.md` | Creating draft PR after implementation (between Phase 2 and Phase 3) | QA results lost on compaction (no PR to post to), /qa-test cannot post checklist as PR comment |
+| `references/pr-creation.md` | Creating draft PR after implementation (between Phase 2 and Phase 3) | QA results lost on compaction (no PR to post to), /qa cannot post checklist as PR comment |
 | `references/completion-checklist.md` | Final verification (Phase 6) | Incomplete work ships as "done" |
 | `/review` skill `scripts/fetch-pr-feedback.sh` | Fetching review feedback and CI/CD status (Phase 5, via /review). Canonical copies live in the `/review` skill — do not duplicate. | Agent uses wrong/deprecated `gh` commands, misses inline review comments |
 | `/review` skill `scripts/investigate-ci-failures.sh` | Investigating CI/CD failures with logs (Phase 5, via /review). Canonical copies live in the `/review` skill — do not duplicate. | Agent struggles to find run IDs, fetch logs, or compare with main |

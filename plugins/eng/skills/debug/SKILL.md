@@ -9,7 +9,7 @@ description: |
   cycles, tool patterns, agent metacognition (loop detection, strategy switching,
   confidence calibration), escalation heuristics. Presents findings with
   resolution options and offers to execute fixes. Composable with /implement,
-  /qa-test, /ship, /tdd, /explore.
+  /qa, /ship, /tdd, /explore.
   Triggers: debug, fix bug, root cause, why is this failing, investigate error,
   diagnose, troubleshoot, something broken, test failure, crash, regression,
   stack trace, error message, it worked before, flaky test, wrong output,
@@ -433,7 +433,7 @@ This skill is standalone but integrates with the broader skill ecosystem:
 |---|---|
 | Need to understand unfamiliar code or map surfaces before debugging | Load `/explore` for structured codebase exploration and surface mapping |
 | Need to write a regression test for the fix | Load `/tdd` for test design methodology (focused on greenfield test authoring) |
-| Bug found during QA testing | `/qa-test` invokes `/debug` for diagnosis |
+| Bug found during QA testing | `/qa` invokes `/debug` for diagnosis |
 | Implementation iteration hits a failure | Agent escalates to invoker, which can load `/debug` for diagnosis |
 | Full feature delivery pipeline | When `/ship` encounters failures, debugging methodology from this skill applies |
 | Complex multi-faceted issue needs deeper analysis | Load `/analyze` for multi-angle evidence-based analysis |

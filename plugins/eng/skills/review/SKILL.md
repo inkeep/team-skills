@@ -69,7 +69,7 @@ git log origin/HEAD..HEAD --oneline
 | Already pushed, review feedback waiting | Skip push. Proceed directly to step 3 (assess feedback). |
 | Already pushed, no feedback yet | Proceed to step 2 (poll). |
 
-**When pushing:** update the PR body if the implementation has changed materially. Load `/pull-request` skill to rewrite the PR body — it is a stateless snapshot of the PR's scope relative to origin/main, not a history of its evolution. Not every small fix requires a PR body edit.
+**When pushing:** update the PR body if the implementation has changed materially. Load `/pr` skill to rewrite the PR body — it is a stateless snapshot of the PR's scope relative to origin/main, not a history of its evolution. Not every small fix requires a PR body edit.
 
 **Load:** `references/review-protocol.md` (section: "PR body")
 
@@ -287,6 +287,6 @@ When both stages are complete (and second-pass review if triggered), report to t
 | Path | Use when | Impact if skipped |
 |---|---|---|
 | `references/review-protocol.md` | Assessing reviewer feedback (Stage 1, step 3); PR body guidance; subagent delegation | Mechanical/uncritical response to reviews; missed nuance in feedback assessment |
-| `/pull-request` skill | Writing or updating the PR body (Stage 1, step 1; after any material push) | Inconsistent PR body structure; missing sections; stale description |
+| `/pr` skill | Writing or updating the PR body (Stage 1, step 1; after any material push) | Inconsistent PR body structure; missing sections; stale description |
 | `scripts/fetch-pr-feedback.sh` | Fetching review feedback and CI/CD status | Agent uses wrong/deprecated `gh` commands, misses inline review comments |
 | `scripts/investigate-ci-failures.sh` | Investigating CI/CD failures with logs (Stage 2) | Agent struggles to find run IDs, fetch logs, or compare with main |
