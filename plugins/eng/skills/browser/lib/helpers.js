@@ -46,6 +46,7 @@ function getExtraHeadersFromEnv() {
  * - docs-retina: 1280x720 viewport @ DPR 2 → 2560x1440 PNG (docs site, Retina-sharp)
  * - pr-standard: 1280x720 viewport @ DPR 1 → 1280x720 PNG (GitHub PR inline images)
  * - gif-compact: 800x450 viewport @ DPR 1 → 800x450 frames (GitHub PR GIFs, <10MB)
+ * - video: 2560x1440 viewport @ DPR 1 → 2560x1440 WebM (all video — Bunny Stream or Vimeo)
  */
 const RESOLUTION_PRESETS = {
   'docs-retina': {
@@ -58,6 +59,10 @@ const RESOLUTION_PRESETS = {
   },
   'gif-compact': {
     viewport: { width: 800, height: 450 },
+    deviceScaleFactor: 1
+  },
+  'video': {
+    viewport: { width: 2560, height: 1440 },
     deviceScaleFactor: 1
   }
 };

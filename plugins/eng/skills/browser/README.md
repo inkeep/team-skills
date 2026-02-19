@@ -49,3 +49,39 @@ await page.screenshot({ path: '/tmp/screenshot.png' });
 await browser.close();
 "
 ```
+
+## Local Browser Mode (User's Chrome)
+
+Connect to the user's running Chrome instead of launching headless. Gives the agent access to the user's auth, cookies, extensions, and browsing state.
+
+### Setup (one-time)
+
+Install the [Playwright MCP Bridge](https://chromewebstore.google.com/detail/playwright-mcp-bridge/mmlmfjhmonkocbjadbfplnigmagldckm) Chrome extension. That's it — no Chrome restart or special flags needed.
+
+### Usage
+
+```bash
+# Standalone connector
+cd $SKILL_DIR && node scripts/connect-local.js /tmp/my-script.js
+
+# Or via run.js with --connect flag
+cd $SKILL_DIR && node run.js --connect /tmp/my-script.js
+
+# Quick inline
+cd $SKILL_DIR && node run.js --connect "console.log(await page.title())"
+```
+
+Scripts get pre-wired `browser`, `context`, `page`, `helpers`, `connectToLocalBrowser`, `getConnectedPage`, and `extractAuthState` variables.
+
+Set `PLAYWRIGHT_MCP_EXTENSION_TOKEN` to bypass the extension approval dialog (copy token from extension popup).
+
+### Extract auth for headless reuse
+
+```bash
+cd $SKILL_DIR && node run.js --connect "
+await extractAuthState(context, { path: '/tmp/auth.json', indexedDB: true });
+"
+# Then use in headless: helpers.loadAuthState(browser, '/tmp/auth.json')
+```
+
+See [references/local-browser.md](references/local-browser.md) for the full routing table, limitations, and auth portability guide.

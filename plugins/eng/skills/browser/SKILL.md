@@ -15,7 +15,15 @@ General-purpose browser automation skill. Write custom Playwright code for any a
 
 **CRITICAL WORKFLOW - Follow these steps in order:**
 
-1. **Auto-detect dev servers** - For localhost testing, ALWAYS run server detection FIRST:
+1. **Start a session** - If you expect to run more than one script (debugging, iterating, multi-step flows), start a persistent browser session FIRST. This is the **default mode** for all interactive work:
+
+   ```bash
+   cd $SKILL_DIR && node run.js --session start
+   ```
+
+   Scripts auto-detect the session and connect via WebSocket (~50ms) instead of launching a new browser (~2-3s). Login state, cookies, and localStorage persist between runs. Skip this step only for true one-off scripts or CI/CD environments.
+
+2. **Auto-detect dev servers** - For localhost testing, run server detection:
 
    ```bash
    cd $SKILL_DIR && node -e "require('./lib/helpers').detectDevServers().then(servers => console.log(JSON.stringify(servers)))"
@@ -25,20 +33,39 @@ General-purpose browser automation skill. Write custom Playwright code for any a
    - If **multiple servers found**: Ask user which one to test
    - If **no servers found**: Ask for URL or offer to help start dev server
 
-2. **Write scripts to /tmp** - NEVER write test files to skill directory; always use `/tmp/playwright-test-*.js`
-
-3. **Use headless browser by default** - Always use `headless: true` unless user specifically requests visible/headed mode. This ensures Docker/CI compatibility.
+3. **Write scripts to /tmp** - NEVER write test files to skill directory; always use `/tmp/playwright-test-*.js`
 
 4. **Parameterize URLs** - Always make URLs configurable via environment variable or constant at top of script
+
+5. **Stop session when done** - Clean up the persistent browser when the task is complete:
+
+   ```bash
+   cd $SKILL_DIR && node run.js --session stop
+   ```
+
+   Sessions also auto-stop after 10 minutes of inactivity.
 
 ## How It Works
 
 1. You describe what you want to test/automate
-2. Auto-detect running dev servers (or ask for URL if testing external site)
-3. Write custom Playwright code in `/tmp/playwright-test-*.js` (won't clutter your project)
-4. Execute it via: `cd $SKILL_DIR && node run.js /tmp/playwright-test-*.js`
-5. Results displayed in real-time
-6. Test files auto-cleaned from /tmp by your OS
+2. Start a session (`--session start`) — browser stays warm for all subsequent scripts
+3. Auto-detect running dev servers (or ask for URL if testing external site)
+4. Write custom Playwright code in `/tmp/playwright-test-*.js` (won't clutter your project)
+5. Execute it via: `cd $SKILL_DIR && node run.js /tmp/playwright-test-*.js` — auto-connects to session
+6. Results displayed in real-time; login state and pages persist between runs
+7. Stop session when done (`--session stop`); test files auto-cleaned from /tmp by OS
+
+### Local browser mode (user's Chrome)
+
+When the user asks you to interact with their actual browser — using their auth, cookies, or extensions — use the local browser connector instead of headless Playwright.
+
+**When to use:** User directs you to do something in their browser on their behalf, or you need their authenticated session. Only available on the user's local machine (not Docker/sandbox).
+
+**Prerequisites:** Chrome running + [Playwright MCP Bridge](https://chromewebstore.google.com/detail/playwright-mcp-bridge/mmlmfjhmonkocbjadbfplnigmagldckm) extension installed.
+
+**Execute:** `cd $SKILL_DIR && node scripts/connect-local.js /tmp/my-script.js` or `cd $SKILL_DIR && node run.js --connect /tmp/my-script.js`
+
+**Load:** `references/local-browser.md` for routing guidance, limitations, and examples.
 
 ## Setup (First Time)
 
@@ -662,8 +689,7 @@ Choose the right preset and conversion for your target. Presets set viewport + D
 | Docs site screenshot | `docs-retina` | 2560×1440 PNG | <500 KB | Retina-sharp for Next.js Image |
 | GitHub PR screenshot | `pr-standard` | 1280×720 PNG | <200 KB | Crisp at GitHub's 894px display width |
 | GitHub PR GIF | `gif-compact` | 800×450 animated GIF | <10 MB | DPR 1 — GIF's 256-color palette is the bottleneck, not pixel density |
-| Internal video (team demo, QA) | — | WebM → Bunny Stream | — | `uploadToBunny()` — VP8 WebM, JIT encoding, near-instant playback |
-| Customer-facing video (docs, marketing) | — | WebM → Vimeo | — | `uploadToVimeo()` — broad reach, familiar platform |
+| Video (internal or customer-facing) | `video` | 2560×1440 WebM → Bunny or Vimeo | — | `uploadToBunny()` or `uploadToVimeo()` — both transcode to ABR. DPR 1 is correct for video (DPR only affects CSS rendering, not video output resolution) |
 
 **Capture a docs-quality screenshot with a preset:**
 
@@ -978,6 +1004,94 @@ await browser.close();
 - **Inline**: Quick one-off tasks (screenshot, check if element exists, get page title)
 - **Files**: Complex tests, responsive design checks, anything user might want to re-run
 
+## Session Mode (Persistent Browser) — Default
+
+Session mode is the **recommended default** for all interactive browser automation. Start a session before running scripts — every subsequent script connects in ~50ms instead of launching a new browser (~2-3s), and login state persists automatically.
+
+**Use session mode for:** All interactive work — debugging, testing, iterative flows, auth-heavy pages, video recording, multi-step automation. This covers the vast majority of agent use cases.
+
+**Use headless (no session) only for:** True one-off scripts, CI/CD pipelines, or environments where a persistent daemon is inappropriate.
+
+### Quick start
+
+```bash
+# Start a session (do this first)
+cd $SKILL_DIR && node run.js --session start
+
+# Run scripts — they auto-connect to the session
+cd $SKILL_DIR && node run.js /tmp/my-script.js
+# Cookies, localStorage, and current URL all persist between runs
+
+# Check session status
+cd $SKILL_DIR && node run.js --session status
+
+# Stop when done
+cd $SKILL_DIR && node run.js --session stop
+```
+
+### How it works
+
+1. `--session start` launches a headless Chromium via Playwright's `launchServer()`
+2. The browser runs as a background daemon (detached process)
+3. Session info is written to `/tmp/playwright-session.json`
+4. When you run a script, `run.js` auto-detects the session and connects via WebSocket
+5. Your code gets pre-wired `browser`, `context`, and `page` variables
+6. On script exit, cookies/localStorage/current URL are saved to `/tmp/playwright-session-state.json`
+7. Next script reconnects and restores state — same auth, same URL, ready to continue
+
+### What your code gets
+
+In session mode, your code has these variables pre-defined:
+
+| Variable | Description |
+|---|---|
+| `browser` | Connected browser instance (persists across runs) |
+| `context` | Browser context with restored cookies/localStorage from previous run |
+| `page` | Page navigated to the last URL from previous run (or blank on first run) |
+| `saveState` | Call before exiting to persist cookies/localStorage/URL (called automatically by wrapper) |
+| `helpers` | All helper functions from `lib/helpers` |
+| `chromium`, `devices` | Playwright exports (for creating additional contexts) |
+
+### Session mode vs headless (no session)
+
+| | Session mode (default) | Headless — no session |
+|---|---|---|
+| Browser launch | Once (on `--session start`) | Every script execution |
+| Startup time | ~50ms (WebSocket connect) | ~2-3s (browser launch) |
+| Login state | Persists automatically (cookies/localStorage saved between runs) | Lost each run (use `saveAuthState`/`loadAuthState`) |
+| Current URL | Restored from previous run | Starts at `about:blank` |
+| `page.route()` | Full support | Full support |
+| Token cost | Minimal (no launch/close boilerplate) | Higher (launch + close in every script) |
+| Best for | **All interactive work** — debugging, testing, iterating, auth flows | CI/CD, isolated tests, one-off scripts |
+
+### Options
+
+```bash
+# Start with headed browser (visible)
+cd $SKILL_DIR && node run.js --session start --headless false
+
+# Start with a resolution preset
+cd $SKILL_DIR && node run.js --session start --preset video
+```
+
+### Auto-cleanup
+
+- Session auto-stops after 10 minutes of inactivity (no scripts run)
+- If the session process crashes, the next script detects the stale session and falls back to fresh headless mode
+- The session file and state file are cleaned up automatically
+
+### Creating fresh contexts in session mode
+
+The default is to reuse the existing context (for state persistence). If you need a clean context:
+
+```javascript
+// Create an isolated context within the session
+const freshContext = await browser.newContext();
+const freshPage = await freshContext.newPage();
+await freshPage.goto('https://example.com');
+// This context has no cookies/localStorage from previous runs
+```
+
 ## Available Helpers
 
 All helpers live in `lib/helpers.js`. Use `const helpers = require('./lib/helpers');` in scripts. Organized by what you need to do:
@@ -1116,6 +1230,16 @@ All helpers live in `lib/helpers.js`. Use `const helpers = require('./lib/helper
 | `helpers.parseAriaSnapshot(yaml)` | Parse a Playwright ARIA snapshot YAML string into structured node objects. Each node has `role`, `name`, and optional `level`, `checked`, `disabled`, `expanded`, `selected`. |
 | `helpers.suggestSelector(node)` | Generate a `getByRole(...)` selector string from a parsed ARIA node. |
 | `helpers.INTERACTIVE_ROLES` | `Set` of interactive ARIA roles (button, link, textbox, checkbox, radio, combobox, slider, switch, tab, menuitem, searchbox, spinbutton, option). |
+
+### Local Browser — connect to user's Chrome
+
+These helpers live in `lib/local-browser.js`. Use `const { connectToLocalBrowser, getConnectedPage, extractAuthState } = require('./lib/local-browser');` in scripts. See `references/local-browser.md` for full docs.
+
+| Helper | When to use |
+|---|---|
+| `connectToLocalBrowser(options?)` | Connect to user's running Chrome via extension bridge. Returns `{ browser, context, page, close() }`. Requires [Playwright MCP Bridge](https://chromewebstore.google.com/detail/playwright-mcp-bridge/mmlmfjhmonkocbjadbfplnigmagldckm) extension. Set `PLAYWRIGHT_MCP_EXTENSION_TOKEN` env var to bypass the approval dialog. |
+| `getConnectedPage(context, url?)` | Get the page exposed by the extension and optionally navigate. Note: `context.newPage()` does NOT work via the extension bridge — use this or the `page` from `connectToLocalBrowser()`. |
+| `extractAuthState(context, options?)` | Extract cookies + localStorage (+ IndexedDB with `{ indexedDB: true }`) from user's browser. Save to file with `{ path: '/tmp/auth.json' }` for later reuse via `helpers.loadAuthState()`. |
 
 ## Custom HTTP Headers
 

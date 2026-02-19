@@ -47,22 +47,46 @@ function installPlaywright() {
 }
 
 /**
+ * Parse flags from argv. Returns { flags, codeArgs }.
+ */
+function parseArgs() {
+  const args = process.argv.slice(2);
+  const flags = { connect: false, session: null, headless: true, preset: null };
+  const codeArgs = [];
+
+  for (let i = 0; i < args.length; i++) {
+    const arg = args[i];
+    if (arg === '--connect') {
+      flags.connect = true;
+    } else if (arg === '--session') {
+      flags.session = args[++i] || 'auto';
+    } else if (arg === '--headless') {
+      flags.headless = args[++i] !== 'false';
+    } else if (arg === '--preset') {
+      flags.preset = args[++i];
+    } else {
+      codeArgs.push(arg);
+    }
+  }
+
+  return { flags, codeArgs };
+}
+
+/**
  * Get code to execute from various sources
  */
-function getCodeToExecute() {
-  const args = process.argv.slice(2);
-
+function getCodeToExecute(codeArgs) {
   // Case 1: File path provided
-  if (args.length > 0 && fs.existsSync(args[0])) {
-    const filePath = path.resolve(args[0]);
+  if (codeArgs.length > 0 && fs.existsSync(codeArgs[0])) {
+    const filePath = path.resolve(codeArgs[0]);
     console.log(`Executing file: ${filePath}`);
     return fs.readFileSync(filePath, 'utf8');
   }
 
   // Case 2: Inline code provided as argument
-  if (args.length > 0) {
+  if (codeArgs.length > 0) {
     console.log('Executing inline code');
-    return args.join(' ');
+    return codeArgs.join(' ');
   }
 
   // Case 3: Code from stdin
@@ -74,9 +98,15 @@ function getCodeToExecute() {
   // No input
   console.error('No code to execute');
   console.error('Usage:');
-  console.error('  node run.js script.js          # Execute file');
-  console.error('  node run.js "code here"        # Execute inline');
-  console.error('  cat script.js | node run.js    # Execute from stdin');
+  console.error('  node run.js script.js              # Execute file (headless)');
+  console.error('  node run.js --connect script.js     # Execute file (user\'s Chrome)');
+  console.error('  node run.js "code here"             # Execute inline');
+  console.error('  cat script.js | node run.js         # Execute from stdin');
+  console.error('');
+  console.error('Session management:');
+  console.error('  node run.js --session start         # Start persistent browser');
+  console.error('  node run.js --session stop          # Stop persistent browser');
+  console.error('  node run.js --session status        # Check session status');
   process.exit(1);
 }
 
@@ -104,9 +134,11 @@ function cleanupOldTempFiles() {
 }
 
 /**
- * Wrap code in async IIFE if not already wrapped
+ * Wrap code in async IIFE if not already wrapped.
+ * @param {string} code - Raw user code
+ * @param {{ connect?: boolean }} options - Wrapping options
  */
-function wrapCodeIfNeeded(code) {
+function wrapCodeIfNeeded(code, options = {}) {
   // Check if code already has require() and async structure
   const hasRequire = code.includes('require(');
   const hasAsyncIIFE = code.includes('(async () => {') || code.includes('(async()=>{');
@@ -114,6 +146,82 @@ function wrapCodeIfNeeded(code) {
   // If it's already a complete script, return as-is
   if (hasRequire && hasAsyncIIFE) {
     return code;
+  }
+
+  // Session mode: connect to running browser server
+  if (options.session && !hasRequire) {
+    return `
+const { chromium, firefox, webkit, devices } = require('playwright');
+const helpers = require('./lib/helpers');
+const session = require('./lib/session');
+
+const __extraHeaders = helpers.getExtraHeadersFromEnv();
+
+function getContextOptionsWithHeaders(options = {}) {
+  if (!__extraHeaders) return options;
+  return {
+    ...options,
+    extraHTTPHeaders: {
+      ...__extraHeaders,
+      ...(options.extraHTTPHeaders || {})
+    }
+  };
+}
+
+(async () => {
+  try {
+    const sessionInfo = session.getActiveSession();
+    if (!sessionInfo) {
+      throw new Error('Session is no longer active. Run: node run.js --session start');
+    }
+    const sessionConn = await session.connectToSession(sessionInfo);
+    const { browser, context, page, saveState } = sessionConn;
+    console.log('Connected to session (PID ' + sessionInfo.pid + ')\\n');
+
+    ${code}
+
+    // Save state (cookies, localStorage, current URL) for next connection
+    await saveState();
+  } catch (error) {
+    console.error('Automation error:', error.message);
+    if (error.stack) {
+      console.error(error.stack);
+    }
+    process.exitCode = 1;
+  } finally {
+    process.exit(process.exitCode || 0);
+  }
+})();
+`;
+  }
+
+  // --connect mode: wrap with local browser connection
+  if (options.connect && !hasRequire) {
+    return `
+const helpers = require('./lib/helpers');
+const { connectToLocalBrowser, getConnectedPage, extractAuthState } = require('./lib/local-browser');
+
+(async () => {
+  let connection;
+  try {
+    console.log('Connecting to Chrome via Playwright MCP Bridge extension...');
+    connection = await connectToLocalBrowser();
+    const { browser, context, page } = connection;
+    console.log('Connected to Chrome. Page ready.\\n');
+
+    ${code}
+
+  } catch (error) {
+    console.error('Automation error:', error.message);
+    if (error.stack) {
+      console.error(error.stack);
+    }
+    process.exit(1);
+  } finally {
+    if (connection) await connection.close();
+  }
+})();
+`;
   }
 
   // If it's just Playwright commands, wrap in full template
@@ -180,7 +288,72 @@ function getContextOptionsWithHeaders(options = {}) {
  * Main execution
  */
 async function main() {
-  console.log('Playwright Skill - Universal Executor\n');
+  const { flags, codeArgs } = parseArgs();
+
+  // Handle session management commands (no code execution needed)
+  if (flags.session === 'start' || flags.session === 'stop' || flags.session === 'status') {
+    if (!checkPlaywrightInstalled()) {
+      const installed = installPlaywright();
+      if (!installed) process.exit(1);
+    }
+
+    const session = require('./lib/session');
+
+    if (flags.session === 'start') {
+      try {
+        const result = await session.startSession({
+          headless: flags.headless,
+          preset: flags.preset,
+        });
+        console.log('Session started.');
+        console.log(`  PID: ${result.pid}`);
+        console.log(`  Endpoint: ${result.wsEndpoint}`);
+        console.log('\nRun scripts normally — they will auto-connect to this session.');
+        console.log('Stop with: node run.js --session stop');
+      } catch (err) {
+        console.error(err.message);
+        process.exit(1);
+      }
+      return;
+    }
+
+    if (flags.session === 'stop') {
+      const stopped = await session.stopSession();
+      console.log(stopped ? 'Session stopped.' : 'No active session found.');
+      return;
+    }
+
+    if (flags.session === 'status') {
+      const status = session.getSessionStatus();
+      if (status.active) {
+        console.log('Session active:');
+        console.log(`  PID: ${status.pid}`);
+        console.log(`  Endpoint: ${status.wsEndpoint}`);
+        console.log(`  Started: ${status.startedAt}`);
+        console.log(`  Uptime: ${status.uptime}`);
+        console.log(`  Headless: ${status.headless}`);
+      } else {
+        console.log('No active session.');
+      }
+      return;
+    }
+  }
+
+  // Detect execution mode
+  let useSession = false;
+  if (!flags.connect) {
+    const session = require('./lib/session');
+    const activeSession = session.getActiveSession();
+    if (activeSession) {
+      useSession = true;
+    }
+  }
+
+  console.log(flags.connect
+    ? 'Playwright Skill - Local Browser Connector\n'
+    : useSession
+      ? 'Playwright Skill - Session Mode\n'
+      : 'Playwright Skill - Universal Executor\n');
 
   // Clean up old temp files from previous runs
   cleanupOldTempFiles();
@@ -194,8 +367,8 @@ async function main() {
   }
 
   // Get code to execute
-  const rawCode = getCodeToExecute();
-  const code = wrapCodeIfNeeded(rawCode);
+  const rawCode = getCodeToExecute(codeArgs);
+  const code = wrapCodeIfNeeded(rawCode, { connect: flags.connect, session: useSession });
 
   // Create temporary file for execution
   const tempFile = path.join(__dirname, `.temp-execution-${Date.now()}.js`);
