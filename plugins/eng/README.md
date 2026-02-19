@@ -38,6 +38,29 @@ npx skills update
 
 ---
 
+## Per-project setup
+
+Each repo that uses these skills needs a few things. Run once per project:
+
+```bash
+# 1. Gitignore — /ship writes workflow state to tmp/ and specs/
+echo -e "tmp\nspecs" >> .gitignore
+
+# 2. Screenshot support — /screengrabs needs these for capture + annotation
+pnpm add -Dw sharp tsx
+```
+
+**That's it.** Everything else is auto-detected:
+
+| What | How it's detected |
+|---|---|
+| Test / typecheck / lint commands | Read from `package.json` `scripts` field. Override with `--test-cmd`, `--typecheck-cmd`, `--lint-cmd`. |
+| Package manager | `packageManager` field in `package.json` (falls back to npm) |
+| GitHub CLI | `gh auth status` — if missing, PR creation/review phases are skipped |
+| Browser automation | `/browser` skill availability (set up via [Quick setup](#quick-setup)) |
+
+---
+
 ## Skill inventory
 
 ### E2E Feature Development
@@ -68,13 +91,6 @@ Ship is an orchestrator that leverages these other skills:
 | `/review` | 5 | Address review comments and get CI green |
 
 Each can be used **standalone** as well.
-
-**Gitignore requirement**:
-
-```.gitignore
-tmp
-specs
-```
 
 ### General Purpose
 
