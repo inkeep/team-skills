@@ -23,7 +23,7 @@ Detect what capabilities are available before starting work. For each capability
 | Claude CLI subprocess | Detected by `/implement` during Phase 2 execution | `/implement` handles degradation internally — if subprocess unavailable, it provides manual iteration instructions. Ship does not need to detect this. |
 | Docker execution (`--implement-docker`) | User passes `--implement-docker` (optionally with compose file path) | Host execution (default). When passed, forwarded to `/implement` as `--docker` in Phase 2. The skill auto-discovers the compose file if no path given. |
 | /spec skill | Check skill availability | Require SPEC.md as input (no interactive spec authoring) |
-| /inspect skill | Check skill availability | Use direct codebase exploration (Glob, Grep, Read) |
+| /explore skill | Check skill availability | Use direct codebase exploration (Glob, Grep, Read) |
 
 ## Recording results
 

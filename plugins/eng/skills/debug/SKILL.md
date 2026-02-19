@@ -9,7 +9,7 @@ description: |
   cycles, tool patterns, agent metacognition (loop detection, strategy switching,
   confidence calibration), escalation heuristics. Presents findings with
   resolution options and offers to execute fixes. Composable with /implement,
-  /qa-test, /ship, /tdd, /inspect, /discover.
+  /qa-test, /ship, /tdd, /explore.
   Triggers: debug, fix bug, root cause, why is this failing, investigate error,
   diagnose, troubleshoot, something broken, test failure, crash, regression,
   stack trace, error message, it worked before, flaky test, wrong output,
@@ -123,7 +123,7 @@ Follow these phases in order. Do not skip phases. Each phase has explicit comple
    - If the failure is intermittent: run 5-10 times to establish frequency. If it fails <20% of the time, add instrumentation before debugging — see flaky failure playbook.
 
 2. **Map the relevant system area.**
-   Do not just read the error site. Trace the dependency chain until you understand the full flow that produces the error. Follow /inspect principles — read siblings, trace imports, follow the data:
+   Do not just read the error site. Trace the dependency chain until you understand the full flow that produces the error. Follow /explore principles — read siblings, trace imports, follow the data:
    - Read the code at the error location with 30-50 lines of context.
    - **Follow every function call and import** in the error path. Read the function bodies — not just signatures. If `canUseProjectStrict` calls `toSpiceDbProjectId`, read `toSpiceDbProjectId`. If a function formats a key, read the formatter.
    - Read 2-3 sibling files that do similar things (parallel routes, similar handlers). They reveal conventions and expected patterns.
@@ -431,8 +431,7 @@ This skill is standalone but integrates with the broader skill ecosystem:
 
 | Situation | Composition |
 |---|---|
-| Need to understand unfamiliar code before debugging | Load `/inspect` for structured codebase exploration |
-| Need to map all surfaces a feature touches | Load `/discover` for cross-surface dependency mapping |
+| Need to understand unfamiliar code or map surfaces before debugging | Load `/explore` for structured codebase exploration and surface mapping |
 | Need to write a regression test for the fix | Load `/tdd` for test design methodology (focused on greenfield test authoring) |
 | Bug found during QA testing | `/qa-test` invokes `/debug` for diagnosis |
 | Implementation iteration hits a failure | Agent escalates to invoker, which can load `/debug` for diagnosis |

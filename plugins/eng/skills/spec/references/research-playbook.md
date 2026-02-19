@@ -1,4 +1,4 @@
-Use when: Executing autonomous investigation to validate assertions; deciding when to dispatch /research or /inspect; matching investigation depth to priority; ensuring product research gets equal rigor.
+Use when: Executing autonomous investigation to validate assertions; deciding when to dispatch /research or /explore; matching investigation depth to priority; ensuring product research gets equal rigor.
 Priority: P0
 Impact: Decisions are made on vibes; prior art is missed; dependency constraints are discovered too late.
 
@@ -66,13 +66,13 @@ These are the agent's investigation tools. Execute them as part of autonomous in
 - What parts are reusable
 - What parts must differ (because constraints changed)
 
-**Execution:** Dispatch `general-purpose` Task subagents that load `/inspect` skill with the **pattern lens**. Each subagent receives the target area and what kind of similarity to search for (structural, analogous, conceptual). Returns a pattern brief inline with shared vocabulary and reusable abstractions. The spec agent persists load-bearing findings to `evidence/`.
+**Execution:** Dispatch `general-purpose` Task subagents that load `/explore` skill with the **pattern lens**. Each subagent receives the target area and what kind of similarity to search for (structural, analogous, conceptual). Returns a pattern brief inline with shared vocabulary and reusable abstractions. The spec agent persists load-bearing findings to `evidence/`.
 
 ### C) Current-state trace (end-to-end reality)
 Trace from entrypoint → runtime → config → storage → UI/UX → ops.
 Goal: discover hidden constraints and latent bugs.
 
-**Execution:** Dispatch `general-purpose` Task subagents that load `/inspect` skill with the **tracing lens**. Each subagent receives the entry point and the trace question (what does this connect to, what's the full flow, what crosses boundaries). Returns a trace brief inline with dependencies, cross-boundary transitions, and surface area touched.
+**Execution:** Dispatch `general-purpose` Task subagents that load `/explore` skill with the **tracing lens**. Each subagent receives the entry point and the trace question (what does this connect to, what's the full flow, what crosses boundaries). Returns a trace brief inline with dependencies, cross-boundary transitions, and surface area touched.
 
 ### D) Dependency constraints
 Verify with types/source (not just docs):
@@ -123,7 +123,7 @@ For changes with wide impact:
 - Can the change be deployed independently or does it require coordination?
 - Identify silent failure modes (things that break without producing errors)
 
-**Execution:** Dispatch `general-purpose` Task subagents that load `/inspect` skill with the **tracing lens** focused on blast radius. Each subagent receives the changed area and traces forward/backward to identify direct and transitive dependents, surface area touched, and coupling tightness.
+**Execution:** Dispatch `general-purpose` Task subagents that load `/explore` skill with the **tracing lens** focused on blast radius. Each subagent receives the changed area and traces forward/backward to identify direct and transitive dependents, surface area touched, and coupling tightness.
 
 ### G) Repo-level structured knowledge
 Before original investigation, check whether the repo provides pre-built domain knowledge — surface area catalogs, system maps, dependency graphs — as skills or structured documents.
@@ -140,7 +140,7 @@ Before original investigation, check whether the repo provides pre-built domain 
 
 **What to persist:** Reference the loaded skills in evidence files (e.g., "Product surfaces grounded from `/product-surface-areas`; gaps identified: [list]"). Do not duplicate the catalog content — point to it.
 
-**When no repo-level skills exist:** Fall back entirely to original investigation. The world model still needs both product and internal surface-area maps — build them from `/inspect` traces, product research, and the enumeration guidance in the product discovery and technical design playbooks.
+**When no repo-level skills exist:** Fall back entirely to original investigation. The world model still needs both product and internal surface-area maps — build them from `/explore` traces, product research, and the enumeration guidance in the product discovery and technical design playbooks.
 
 ---
 

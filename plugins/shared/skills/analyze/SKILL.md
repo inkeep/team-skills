@@ -22,7 +22,7 @@ Analysis is conversational by default — findings are delivered in the conversa
 | User asks "help me think about X" or "what are the implications of Y" | This skill |
 | Need a formal evidence-based report with citations and persistent artifacts | `/research` |
 | Need to design and specify a feature or product | `/spec` |
-| Need to understand code patterns or trace call chains | `/inspect` |
+| Need to understand code patterns, trace call chains, or map surface areas | `/explore` |
 
 **Distinguishing analysis from research:** Analysis is structured reasoning about a problem space using available context. Research is systematic evidence gathering with formal outputs. Analysis may invoke research when evidence gaps are discovered, but its primary mode is reasoning — not evidence collection.
 
@@ -142,9 +142,8 @@ Stop expanding when additional context is unlikely to change the analysis.
 - Track what you looked for and didn't find — gaps are as important as what you gather.
 
 **Skill composition** — when the analysis subject overlaps a domain served by another skill, prefer loading that skill over approximating its work ad-hoc:
-- **Codebase understanding** (patterns, conventions, dependencies, blast radius) → load `/inspect` skill. It produces structured understanding faster and more reliably than ad-hoc file reading.
+- **Codebase understanding and surface mapping** (patterns, conventions, dependencies, blast radius, what surfaces does this touch, how do they connect) → load `/explore` skill. It produces structured understanding faster and more reliably than ad-hoc file reading. Use the pattern lens for conventions, the tracing lens for dependencies and blast radius, and the surface mapping lens for cross-surface impact.
 - **Systematic evidence gathering** (when you discover evidence gaps that need formal investigation) → load `/research` skill.
-- **Domain-level surface mapping** (what does this topic touch across product and internal surfaces, how do they connect) → load `/discover` skill. It produces structured surface-area maps faster than ad-hoc enumeration. Use when the analysis involves understanding a feature's blast radius, cross-surface dependencies, or system-wide impact.
 - **Defect diagnosis** (analysis reveals something is broken or malfunctioning, not just a decision to make) → load `/debug` skill. Analysis answers "what's the situation?"; debugging answers "why is this broken?" If the analysis subject transitions from understanding a system to diagnosing why it's failing, hand off to `/debug` rather than attempting ad-hoc diagnosis.
 - Use judgment — not every code mention needs a full inspection. Load a skill when the analysis would materially benefit from structured understanding, not for quick lookups.
 - **Subagent delegation** — subagents do not inherit your loaded skills. When you delegate work to a subagent that needs a skill, use the `general-purpose` type (it has the Skill tool). Start the subagent's prompt with `Before doing anything, load /skill-name skill`, then provide context and the task.

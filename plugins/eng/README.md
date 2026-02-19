@@ -17,10 +17,15 @@ npm install -g typescript-language-server typescript
 # 3. Browser automation (Playwright + Chromium)
 npm run setup --prefix ~/.claude/plugins/marketplaces/inkeep-team-skills/plugins/eng/skills/browser
 
-# 4. TypeScript LSP companion plugin
+# 4. Local browser mode (optional — lets the agent use your Chrome with your auth/cookies)
+#    Install the Playwright MCP Bridge extension:
+open "https://chromewebstore.google.com/detail/playwright-mcp-bridge/mmlmfjhmonkocbjadbfplnigmagldckm"
+#    Then reload any Chrome tab. That's it — no env vars needed.
+
+# 5. TypeScript LSP companion plugin
 claude plugin install typescript-lsp@claude-plugins-official
 
-# 5. Environment variables (video upload credentials)
+# 6. Environment variables (video upload credentials)
 node -e "
 const fs = require('fs'), p = require('path').join(require('os').homedir(), '.claude', 'settings.json');
 const s = fs.existsSync(p) ? JSON.parse(fs.readFileSync(p, 'utf8')) : {};
@@ -31,7 +36,7 @@ console.log('Env placeholders added to ' + p + ' — fill in your values.');
 "
 ```
 
-> **Step 5 details:** The command above merges empty placeholders into `~/.claude/settings.json` without overwriting existing values. Open the file and fill in your keys:
+> **Step 6 details:** The command above merges empty placeholders into `~/.claude/settings.json` without overwriting existing values. Open the file and fill in your keys:
 >
 > | Variable | Where to get it |
 > |---|---|
@@ -121,8 +126,7 @@ These are generally useful skills for investigating things and aiding in **decis
 | Skill | Invocation | Purpose |
 |---|---|---|
 | `/research` | User or model | Deep technical research across web + OSS code bases |
-| `/discover` | User or model | Understand all the product knobs and code paths that XYZ feature touches. |
-| `/inspect` | User or model | Similar to discover but focused on codebase inspection. |
+| `/explore` | User or model | Build deep understanding of a codebase area or system topic. Three lenses: surface mapping (what product/internal surfaces does this touch?), pattern inspection (what conventions exist here?), system tracing (what does this connect to and what breaks?). |
 | `/analyze` | User or model | Deeply compare pros and cons of a given decision. |
 | `/debug` | User or model | Systematic root cause investigation for code defects. Loaded by other skills (qa-test, implement, ship) when they hit failures. |
 

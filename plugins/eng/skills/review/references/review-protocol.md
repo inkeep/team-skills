@@ -69,7 +69,7 @@ For each suggestion, build enough context to make a **high-confidence judgment**
 | Making a claim you're uncertain about | **Research.** Use web search, load `/research` skill, or use codebase inspection to gather evidence. Do not guess. |
 
 Investigation tools (use as needed):
-- **Codebase inspection:** Read adjacent files, grep for patterns, trace call chains. Understand what the reviewer may not have seen. Load `/inspect` skill for structured understanding — pattern discovery or end-to-end flow tracing.
+- **Codebase inspection:** Read adjacent files, grep for patterns, trace call chains. Understand what the reviewer may not have seen. Load `/explore` skill for structured understanding — pattern discovery or end-to-end flow tracing.
 - **Spec/intent check:** If a SPEC.md was provided, re-read the relevant sections. Does the suggestion align with or contradict the design intent?
 - **Web search:** For claims about library behavior, API semantics, best practices, or security considerations.
 - **`/research`:** For complex questions requiring deep investigation (e.g., "is this pattern actually safer?" or "how do other systems handle this?"). Load `/research` skill for research-grade evidence trails.

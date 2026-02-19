@@ -69,9 +69,7 @@ Which internal subsystems, patterns, or conventions does this change affect?
 | New required configuration | Upgrade guide |
 | Changed defaults | Changelog entry explaining the change and impact |
 
-**Use `/inspect` if needed.** If the blast radius is unclear — e.g., a core primitive changed and you need to understand what depends on it — dispatch a `general-purpose` Task subagent that loads `/inspect` skill to trace the transitive impact before deciding what to document.
-
-**Use `/discover` for complex blast radius.** If the change crosses many surfaces and you need a structured surface-area map before mapping documentation impact, dispatch a `general-purpose` Task subagent that loads `/discover` skill with the change topic (consumer: `/docs`). Use the World Model Brief to identify which documentation surfaces are affected. If `/discover` is unavailable, enumerate directly using the tables above.
+**Use `/explore` if needed.** If the blast radius is unclear — e.g., a core primitive changed and you need to understand what depends on it — dispatch a `general-purpose` Task subagent that loads `/explore` skill to trace the transitive impact and map affected surfaces before deciding what to document. Use the tracing lens for dependency chains and the surface mapping lens for a structured surface-area map (consumer: `/docs`). If `/explore` is unavailable, enumerate directly using the tables above.
 
 ### Step 3: Discover repo documentation conventions
 

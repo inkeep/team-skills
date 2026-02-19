@@ -72,7 +72,7 @@ If the user wants "chat-only": produce Markdown in chat, but still keep a single
 **Keep in evidence files (proof):**
 - code-path traces, file:line references
 - dependency type signatures / source excerpts
-- codebase pattern analysis (e.g., `/inspect` findings that informed the design)
+- codebase pattern analysis (e.g., `/explore` findings that informed the design)
 - transitive dependency chains, blast radius analysis
 - external prior art citations
 - negative searches ("NOT FOUND")

@@ -26,6 +26,16 @@ Jump directly to the section for your current phase. Your first action is to con
 
 ---
 
+## Context is managed — never rush phases
+
+The ship loop has an automatic state save and reboot mechanism. If your context runs low, the stop hook saves your full state (`state.json`, SPEC.md, `spec.json`, progress log) and re-injects you into the correct phase with everything you need to continue. This is by design, not a failure.
+
+**What this means for you:** Context is not a resource you need to ration across phases. Never compress, rush, or skip a phase because you anticipate running out of context. Go as deep as needed on every single phase — load every required skill, run every checklist, delegate to subagents for investigation. If context runs out mid-phase, the system handles continuity automatically.
+
+**The failure mode this prevents:** An agent that rushes Phases 3-6 (testing, docs, review, completion) because "context was running low" ships incomplete work. A clean reboot that re-enters Phase 3 with full context produces better outcomes than a compressed pass through four phases on fumes.
+
+---
+
 ## State files
 
 All execution state lives in `tmp/ship/` (gitignored). The only committed artifact is SPEC.md. Child skills (/spec, /implement) manage their own internal artifacts — see their SKILL.md files for details.
@@ -85,7 +95,7 @@ Before moving from any phase to the next:
 
    The stop hook detects `<input>` and lets you wait for the user's response. The loop stays active — when they respond and you finish acting on it, the loop resumes automatically.
 
-   **Do NOT pause for:** routine engineering decisions you can make with evidence, questions answerable by reading code or docs, anything you could resolve with `/research` or `/inspect`. The bar: would a senior engineer on this team make this call alone, or escalate to a product owner?
+   **Do NOT pause for:** routine engineering decisions you can make with evidence, questions answerable by reading code or docs, anything you could resolve with `/research` or `/explore`. The bar: would a senior engineer on this team make this call alone, or escalate to a product owner?
 
 5. Update `tmp/ship/state.json` per the "When to update what" table above (does not exist before end of Phase 1).
    - **Amendments:** When the user requests a change not in the original spec — ad-hoc tasks, improvements, tweaks, or user-approved scope expansions from review feedback — append to `amendments` before acting: `{ "description": "<brief what>", "status": "pending" }`. Set `status` to `"done"` when completed. This log survives compaction and tells a resumed agent what post-spec work was requested.
@@ -160,7 +170,7 @@ The scaffold doesn't need to be complete — it needs to exist on disk so it sur
 
 **After the scaffold exists — investigate.** Now that the scaffold anchors the conversation, do the deep investigation that informs the spec:
 
-1. **Trace the existing system.** Load `/inspect` to understand how the relevant area works today — patterns, shared abstractions, data flow, blast radius. For bug fixes, use the system tracing lens to follow execution from entry point to where the error occurs and identify the root cause (not just the symptom).
+1. **Trace the existing system.** Load `/explore` to understand how the relevant area works today — patterns, shared abstractions, data flow, blast radius. For bug fixes, use the system tracing lens to follow execution from entry point to where the error occurs and identify the root cause (not just the symptom).
 2. **Research third-party dependencies.** If the feature involves third-party libraries, frameworks, packages, APIs, or external services, load `/research` to verify their capabilities, constraints, and correct usage *before* designing the solution. Do this every time — not just when the dependency feels unfamiliar. Even dependencies you've used before may have changed, have undocumented constraints, or behave differently in this context. Do not spec against assumed API shapes — verify them.
 3. **Update the scaffold.** Revise the SPEC.md with findings: root cause (for bugs), system constraints, API shapes, dependency capabilities, and refined acceptance criteria grounded in what you learned.
 
@@ -212,7 +222,7 @@ The script activates the stop hook for autonomous execution. The loop runs until
 
 #### Step 1: Build codebase understanding
 
-Verify that you genuinely understand the feature — not just that the spec has the right sections. Test yourself: can you articulate what this feature does, why it matters, how it works technically, what the riskiest parts are, and what you would test first? If not, re-read the spec and investigate the codebase until you can. Use `/inspect` on the target area (purpose: implementing) to understand the patterns, conventions, and shared abstractions you'll need to work with. Build your understanding from `/inspect` findings and the SPEC.md — do not aimlessly browse implementation files; let `/inspect` structure your exploration. If you need deeper understanding of a specific subsystem, delegate a targeted question to a subagent (e.g., "How does the auth middleware chain work in src/middleware/? What conventions does it follow?"). Your understanding should be architectural, not line-by-line. This understanding is what you will use to evaluate the implementation output and reviewer feedback later.
+Verify that you genuinely understand the feature — not just that the spec has the right sections. Test yourself: can you articulate what this feature does, why it matters, how it works technically, what the riskiest parts are, and what you would test first? If not, re-read the spec and investigate the codebase until you can. Use `/explore` on the target area (purpose: implementing) to understand the patterns, conventions, and shared abstractions you'll need to work with. Build your understanding from `/explore` findings and the SPEC.md — do not aimlessly browse implementation files; let `/explore` structure your exploration. If you need deeper understanding of a specific subsystem, delegate a targeted question to a subagent (e.g., "How does the auth middleware chain work in src/middleware/? What conventions does it follow?"). Your understanding should be architectural, not line-by-line. This understanding is what you will use to evaluate the implementation output and reviewer feedback later.
 
 #### Step 2: Invoke /implement
 
@@ -220,7 +230,7 @@ Always invoke `/implement` — it owns spec.json conversion, prompt crafting, an
 
 Load `/implement` skill to handle the full implementation lifecycle — from spec conversion (SPEC.md → spec.json) through prompt crafting and execution. Provide it with:
 - Path to the SPEC.md — this is the highest-priority input. Do not omit it.
-- The codebase context from Step 1 — the patterns, conventions, and shared abstractions you identified via `/inspect`
+- The codebase context from Step 1 — the patterns, conventions, and shared abstractions you identified via `/explore`
 - Quality gate command overrides from Phase 0 (which may differ from pnpm defaults)
 - Browser availability from Phase 0 (if browser tools are unavailable, pass `--no-browser` so `/implement` adapts criteria)
 - Docker execution from Phase 0 (if `--implement-docker` was passed, forward to `/implement` as `--docker`, including the compose file path if one was provided)
@@ -333,16 +343,16 @@ These govern your behavior throughout:
 
 1. **You are the engineer, not a messenger.** `/implement` produces code; reviewers suggest changes; CI reports failures. You decide what to do about each.
 2. **Outcomes over process.** The workflow phases exist to organize your work, not to compel forward motion. Never move to the next step just because you finished the current one — move when you have genuine confidence in what you've built so far. If something feels uncertain, stop and investigate. Build your own understanding of the codebase, the product, the intent of the spec, and the implications of your decisions before acting on them.
-3. **Delegate investigation; conserve your context.** Your context window is finite and must last through all phases. Default to spawning subagents for information-gathering work: codebase exploration, test failure diagnosis, CI log analysis, code review of implementation output, and pattern discovery. Give each subagent a clear question, the relevant file paths or error messages, and the output format you need. Act on their findings — not raw code or logs. Do investigation directly only when it's trivial (one small file, one quick command). The threshold: if it would take more than 2-3 tool calls or produce more than ~100 lines of output, delegate it.
+3. **Delegate investigation; go deep on each phase.** Default to spawning subagents for information-gathering work: codebase exploration, test failure diagnosis, CI log analysis, code review of implementation output, and pattern discovery. This is an efficiency strategy — not a rationing strategy. Delegation lets you focus on orchestration and decision-making while subagents handle bounded research tasks. Give each subagent a clear question, the relevant file paths or error messages, and the output format you need. Act on their findings — not raw code or logs. Do investigation directly only when it's trivial (one small file, one quick command). The threshold: if it would take more than 2-3 tool calls or produce more than ~100 lines of output, delegate it. If context runs low at any point, the ship loop's automatic save/reboot mechanism handles continuity — do not trade phase depth for speed.
 
    **What to delegate vs. what to run top-level:** Subagents are for bounded investigation tasks — codebase exploration, test failure diagnosis, CI log analysis, pattern discovery. Pipeline skills (`/implement`, `/review`, `/qa-test`, `/docs`, `/pull-request`) must run at the top level via the Skill tool, never in a subagent. They run extended loops, manage state, and need your orchestrator context (state files, spec path, phase awareness, ability to escalate). Delegating them strips all of that.
 
-   **Subagent mechanics:** Subagents do not inherit your skills. For plain investigation, this doesn't matter — just provide a clear question and file paths. When a subagent needs an investigation skill (like `/inspect`), use the `general-purpose` type (it has the Skill tool) and start the prompt with `Before doing anything, load /skill-name skill` — this reliably triggers the Skill tool. Follow it with context and the task:
+   **Subagent mechanics:** Subagents do not inherit your skills. For plain investigation, this doesn't matter — just provide a clear question and file paths. When a subagent needs an investigation skill (like `/explore`), use the `general-purpose` type (it has the Skill tool) and start the prompt with `Before doing anything, load /skill-name skill` — this reliably triggers the Skill tool. Follow it with context and the task:
 
    ```
-   Before doing anything, load /inspect skill
+   Before doing anything, load /explore skill
 
-   Inspect src/middleware/auth/ for pattern discovery (purpose: implementing).
+   Explore src/middleware/auth/ for pattern discovery (purpose: implementing).
    We're adding role-based access control — report existing auth conventions,
    shared abstractions, and middleware chain composition. Return a pattern brief.
    ```
@@ -367,7 +377,7 @@ These govern your behavior throughout:
 
 ## Anti-patterns
 
-- **Deep investigation before setup.** Spawning Explore subagents, loading skills, or running extended codebase exploration during Phase 0. A quick explore (a few Grep/Glob/Read calls) to orient yourself is fine, but the deep dive — `/inspect`, `/research`, subagents — happens in Phase 1 after the scaffold exists. A user saying "add invite revocation" gives you the feature name (`revoke-invite`) immediately; you don't need to map the entire invite system first.
+- **Deep investigation before setup.** Spawning Explore subagents, loading skills, or running extended codebase exploration during Phase 0. A quick explore (a few Grep/Glob/Read calls) to orient yourself is fine, but the deep dive — `/explore`, `/research`, subagents — happens in Phase 1 after the scaffold exists. A user saying "add invite revocation" gives you the feature name (`revoke-invite`) immediately; you don't need to map the entire invite system first.
 - **Implementing before understanding.** Jumping into code before building a mental model of the feature, the codebase area, or the spec's intent.
 - Using a different package manager than what the repo specifies
 - Force-pushing or destructive git operations without user confirmation
@@ -376,6 +386,7 @@ These govern your behavior throughout:
 - **Skipping `/implement` for "simple" changes.** `/implement` always runs — it owns spec.json conversion, the implementation prompt, and the iteration loop. Even small changes benefit from the structured prompt and verification cycle. Direct implementation outside `/implement` loses the spec.json tracking, progress log, and quality gate loop.
 - **Hand-writing state files.** Never manually write `tmp/ship/state.json` or `tmp/ship/loop.md` as raw JSON/YAML. Always use `ship-init-state.sh`. Hand-written files are the #1 cause of stop hook failures — malformed JSON, missing fields, wrong YAML frontmatter — and the resulting bug (hook silently exits, loop never activates) is invisible until context compaction, when it's too late.
 - **Outputting a false completion promise.** Never output `<complete>SHIP COMPLETE</complete>` until ALL phases have genuinely completed and all Phase 6 verification checks pass. The ship loop is designed to continue until genuine completion — do not lie to exit.
+- **Rushing or skipping phases due to context concerns.** Never compress, abbreviate, or skip Phases 3-6 because you feel context is running low. The ship loop's stop hook automatically saves state and reboots you into the correct phase with full context. A clean reboot that re-enters at the right phase produces better outcomes than a compressed pass through multiple phases on fumes. Every phase loads its skill, runs its checklist, and completes fully — context pressure is never a valid reason to skip or abbreviate. If you catch yourself thinking "context is running low, let me quickly cover the remaining phases" — stop. That thought is the anti-pattern.
 
 ---
 

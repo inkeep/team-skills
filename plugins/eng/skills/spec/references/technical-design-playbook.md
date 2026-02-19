@@ -19,7 +19,7 @@ Before recommending architecture:
 - identify reusable patterns
 
 If you cannot verify current state from the codebase directly:
-- investigate using `/research` or `/inspect` to confirm
+- investigate using `/research` or `/explore` to confirm
 - label what remains uncertain after investigation
 
 ## Internal prior art

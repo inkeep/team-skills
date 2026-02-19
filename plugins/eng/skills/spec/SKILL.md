@@ -25,7 +25,7 @@ argument-hint: "[feature/product] (optional: context, constraints, target users,
 3. **Investigate evidence gaps autonomously; stop for judgment gaps.**
    - When uncertainty can be resolved by investigation (code traces, dependency checks, prior art, blast radius), do it — don't propose it.
    - Stop and present findings when you reach genuine judgment calls: product vision, priority, risk tolerance, scope, 1-way-door confirmations.
-   - Use `/research` for deep evidence trails; use `/inspect` for codebase understanding. Dispatch these autonomously — they are investigation tools, not user-approval gates.
+   - Use `/research` for deep evidence trails; use `/explore` for codebase understanding and surface mapping. Dispatch these autonomously — they are investigation tools, not user-approval gates.
    - Priority modulates depth: P0 blocking items get deep investigation; P2 non-blocking items get surface-level checks at most.
 
 4. **Keep the user in the driver seat via batched decisions.**
@@ -122,12 +122,12 @@ Resolution rules:
 
 ### 3) Build the first world model (product + technical, together)
 Do:
-- **Build product and internal surface-area maps.** Dispatch a `general-purpose` Task subagent that loads `/discover` skill with the feature topic (consumer: `/spec`). Use the World Model Brief as the foundation for the product and internal surface-area maps. Fill gaps with original investigation using the playbook references below. If `/discover` is unavailable, build the maps inline — see `references/product-discovery-playbook.md` "Product surface-area impact" and `references/technical-design-playbook.md` "Internal surface-area map."
+- **Build product and internal surface-area maps.** Dispatch a `general-purpose` Task subagent that loads `/explore` skill with the feature topic (consumer: `/spec`, lens: surface mapping). Use the World Model Brief as the foundation for the product and internal surface-area maps. Fill gaps with original investigation using the playbook references below. If `/explore` is unavailable, build the maps inline — see `references/product-discovery-playbook.md` "Product surface-area impact" and `references/technical-design-playbook.md` "Internal surface-area map."
 - Map the **user journey(s)** and "what success looks like" (product).
 - Map the **current system behavior** and constraints end-to-end (technical). As you trace current behavior, persist factual findings to `evidence/` immediately — don't wait for the world model to be complete (see `references/artifact-strategy.md` "Current system behavior discovered").
 - Create a **Consumer Matrix** when there are multiple consumption modes (SDK, UI, API, internal runtime, etc.).
 - **When the design depends on third-party code** (packages, libraries, frameworks, external services): dispatch `general-purpose` Task subagents to investigate each key 3P dependency — scoped to the spec's scenario and the capabilities under consideration, not a general survey. Include a sanity check: is this the right 3P choice, or is there a better-suited alternative? Persist findings to `evidence/`. See `references/research-playbook.md` "Third-party dependency investigation" for scope and execution guidance.
-- **When the spec touches existing system areas** (current behavior, internal patterns, blast radius): dispatch `general-purpose` Task subagents that load `/inspect` skill to build structured codebase understanding — pattern lens for conventions and prior art, tracing lens for end-to-end flows and blast radius, or both. Scope to the spec's areas of interest, not the entire codebase. Each subagent returns a pattern brief or trace brief inline; persist load-bearing findings to `evidence/`. See `references/research-playbook.md` investigation types B, C, and F for what to investigate.
+- **When the spec touches existing system areas** (current behavior, internal patterns, blast radius): dispatch `general-purpose` Task subagents that load `/explore` skill to build structured codebase understanding — pattern lens for conventions and prior art, tracing lens for end-to-end flows and blast radius, or both. Scope to the spec's areas of interest, not the entire codebase. Each subagent returns a pattern brief or trace brief inline; persist load-bearing findings to `evidence/`. See `references/research-playbook.md` investigation types B, C, and F for what to investigate.
 
 **Subagent dispatch:** When a Task subagent needs a skill, use the `general-purpose` type (it has the Skill tool). Start the subagent's prompt with `Before doing anything, load /skill-name skill`, then provide context and the task.
 
@@ -179,7 +179,7 @@ This is the core of the skill. Repeat until Phase N is fully scoped.
 Loop steps:
 1. **Identify what needs investigation** — extract from the OQ backlog + cascade from prior decisions. Prioritize: P0 blocking items first.
 2. **Investigate autonomously:**
-   - **P0 / blocking:** Deep investigation — dispatch `general-purpose` Task subagents that load `/research` skill or `/inspect` skill, multi-file traces, external prior art searches.
+   - **P0 / blocking:** Deep investigation — dispatch `general-purpose` Task subagents that load `/research` skill or `/explore` skill, multi-file traces, external prior art searches.
    - **P1:** Moderate investigation — direct file reads, targeted searches, quick dependency checks.
    - **P2 non-blocking:** Surface-level only — note the question, don't investigate deeply.
    - Before drafting options for any non-trivial decision, verify (by investigating, not by proposing):
@@ -269,7 +269,7 @@ Categorize assertions and dispatch subagents in parallel:
 
 | Track | Tool | Scope |
 |---|---|---|
-| Own codebase (behavior, patterns, blast radius) | `general-purpose` Task subagents that load `/inspect` skill | Verify each assertion against current code. Each subagent gets the specific claim + relevant file paths or areas. |
+| Own codebase (behavior, patterns, blast radius) | `general-purpose` Task subagents that load `/explore` skill | Verify each assertion against current code. Each subagent gets the specific claim + relevant file paths or areas. |
 | Third-party dependencies (capabilities, types, behavior) | `general-purpose` Task subagents that load `/research` skill | Verify against current source/types/docs for each dependency, scoped to the spec's scenario. |
 | External claims (prior art, ecosystem conventions) | `general-purpose` Task subagents that load `/research` skill, or web search | Spot-check factual claims about external systems or ecosystem patterns. |
 
