@@ -501,6 +501,53 @@ const TARGET_URL = 'http://localhost:3001';
 })();
 ```
 
+### Capture Screenshots for Documentation
+
+Use when writing docs, help articles, or PR screenshots that need consistent, high-quality images of the running UI.
+
+```javascript
+// /tmp/playwright-test-doc-screenshot.js
+const { chromium } = require('playwright');
+
+const TARGET_URL = 'http://localhost:3001';
+
+(async () => {
+  const browser = await chromium.launch({ headless: true });
+  const context = await browser.newContext({
+    viewport: { width: 1280, height: 720 },
+    deviceScaleFactor: 2, // Retina clarity
+  });
+  const page = await context.newPage();
+
+  await page.goto(`${TARGET_URL}/settings`);
+  await page.waitForLoadState('networkidle');
+
+  // Crop to the relevant section — avoid full-page captures with empty space
+  const section = page.locator('.api-keys-section');
+  await section.screenshot({
+    path: '/tmp/doc-settings-api-keys.png',
+    type: 'png',
+  });
+
+  // Full-page fallback when you need the whole view
+  await page.screenshot({
+    path: '/tmp/doc-settings-full.png',
+    type: 'png',
+    fullPage: false, // Viewport-only — keep it tight
+  });
+
+  console.log('Doc screenshots saved to /tmp/doc-*.png');
+  await browser.close();
+})();
+```
+
+**Key settings for doc screenshots:**
+- `viewport: { width: 1280, height: 720 }` — standard docs width
+- `deviceScaleFactor: 2` — retina resolution for sharp text
+- `type: 'png'` — lossless for UI screenshots
+- Use `element.screenshot()` to crop to a specific panel instead of full-page
+- Target <200KB per image — crop aggressively
+
 ### Run Accessibility Audit
 
 Use when checking a page for WCAG violations.
