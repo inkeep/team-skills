@@ -853,14 +853,14 @@ async function uploadToBunny(filePath, options = {}) {
 /**
  * Convert an array of PNG screenshot buffers (or file paths) into an animated GIF.
  * Best for step-by-step PR demos — precise frame control, crisp output, 1-5 MB.
- * Requires: gifencoder + @napi-rs/canvas (installed via npm run setup).
+ * Requires: gif-encoder-2 + @napi-rs/canvas (installed via npm run setup).
  * @param {Array<Buffer|string>} frames - PNG buffers from page.screenshot() or file paths
  * @param {string} outputPath - Output GIF file path
  * @param {Object} [options] - { width: 800, height: 450, fps: 10, quality: 10, repeat: 0 }
  * @returns {Object} { path, size, sizeMB, frames, dimensions, fps }
  */
 async function screenshotsToGif(frames, outputPath, options = {}) {
-  const GIFEncoder = require('gifencoder');
+  const GIFEncoder = require('gif-encoder-2');
   const { createCanvas, loadImage } = require('@napi-rs/canvas');
   const fs = require('fs');
   const path = require('path');
