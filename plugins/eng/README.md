@@ -82,6 +82,22 @@ These are generally useful skills for investigating things and aiding in **decis
 | `/analyze` | User or model | Deeply compare pros and cons of a given decision. |
 | `/debug` | User or model | Systematic root cause investigation for code defects. Loaded by other skills (qa-test, implement, ship) when they hit failures. |
 
+### Browser Automation
+
+Two complementary approaches to browser automation:
+
+| Skill / Tool | Invocation | Purpose |
+|---|---|---|
+| `/use-browser` | User or model | Headless Playwright automation — write and run scripts for testing, screenshots, form filling, accessibility audits, network inspection. Works in CI/Docker. |
+| Claude in Chrome | MCP tools | Control the user's real Chrome browser — navigate, fill forms, read pages, execute JS, record GIFs. See [setup instructions](#recommended-claude-in-chrome-setup) below. |
+
+`/use-browser` requires a one-time setup (installs Playwright + Chromium):
+
+```bash
+cd ~/.claude/plugins/marketplaces/inkeep-team-skills/plugins/eng/skills/use-browser
+npm run setup
+```
+
 ### Other
 
 | Skill | Invocation | Purpose |
