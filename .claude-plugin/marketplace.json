@@ -9,7 +9,7 @@
     {
       "name": "eng",
       "description": "Skills for the Inkeep engineering team",
-      "version": "1.2.24",
+      "version": "1.2.25",
       "author": {
         "name": "Inkeep"
       },
@@ -19,7 +19,7 @@
     {
       "name": "gtm",
       "description": "Skills for the Inkeep GTM team",
-      "version": "1.2.24",
+      "version": "1.2.25",
       "author": {
         "name": "Inkeep"
       },
@@ -29,7 +29,7 @@
     {
       "name": "shared",
       "description": "Shared skills across all Inkeep teams",
-      "version": "1.2.24",
+      "version": "1.2.25",
       "author": {
         "name": "Inkeep"
       },

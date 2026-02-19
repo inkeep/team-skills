@@ -1,7 +1,7 @@
 {
   "name": "shared",
   "description": "Shared skills across all Inkeep teams",
-  "version": "1.2.24",
+  "version": "1.2.25",
   "author": {
     "name": "Inkeep"
   },
