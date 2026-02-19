@@ -144,7 +144,7 @@ pnpm typecheck
 pnpm lint
 ```
 
-If changes affect user-facing behavior, also verify the experience manually (API calls, browser testing, etc.) as appropriate. When fixing a reviewer-flagged UI issue and `/use-browser` is available, load it to verify the fix: navigate to the affected page, confirm the visual change, and check for console errors (`startConsoleCapture` / `getConsoleErrors`). Capture a screenshot as evidence — this strengthens your reply when resolving the thread.
+If changes affect user-facing behavior, also verify the experience manually (API calls, browser testing, etc.) as appropriate. When fixing a reviewer-flagged UI issue and `/browser` is available, load it to verify the fix: navigate to the affected page, confirm the visual change, and check for console errors (`startConsoleCapture` / `getConsoleErrors`). Capture a screenshot as evidence — this strengthens your reply when resolving the thread.
 
 If your changes affect documented behavior — whether product-facing (user docs, API reference, guides) or internal (architecture docs, READMEs, runbooks) — update the relevant documentation files (`.md`, `.mdx`, etc.) alongside the code fix. Docs should stay accurate through the review loop, not deferred to later.
 

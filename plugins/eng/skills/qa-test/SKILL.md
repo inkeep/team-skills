@@ -33,7 +33,7 @@ Record what's available. If browser or desktop tools are missing, say so upfront
 
 **Probe aggressively.** Don't stop at "browser automation is available." Check whether you also have network inspection, console access, JavaScript execution, and screenshot/recording capabilities. Each expands your testing surface area. The more tools you have, the more you should use.
 
-**Cross-skill integration:** When browser automation is available, `Load /use-browser skill` for structured testing primitives. The use-browser skill provides helpers for console monitoring, network capture, accessibility audits, video recording, performance metrics, browser state inspection, and network simulation — all designed for use during QA flows. These helpers turn "check the console for errors" into reliable, automatable verification with structured output. Reference `/use-browser` SKILL.md for the full helper table and usage patterns.
+**Cross-skill integration:** When browser automation is available, `Load /browser skill` for structured testing primitives. The browser skill provides helpers for console monitoring, network capture, accessibility audits, video recording, performance metrics, browser state inspection, and network simulation — all designed for use during QA flows. These helpers turn "check the console for errors" into reliable, automatable verification with structured output. Reference `/browser` SKILL.md for the full helper table and usage patterns.
 
 **Get the system running.** Check `AGENTS.md`, `CLAUDE.md`, or similar repo configuration files for build, run, and setup instructions. If the software can be started locally, start it — you cannot test user-facing behavior against a system that isn't running. If the system depends on external services, databases, or environment variables, check what's available and what you can reach. Document anything you cannot start.
 
@@ -129,7 +129,7 @@ Work through each scenario. Use the strongest tool available for each.
 - **In-page assertions:** Execute JavaScript in the page to verify DOM state, computed styles, data attributes, or application state that isn't visible on screen. Use `getElementBounds` for layout verification (visibility, viewport presence, computed styles). Use this when visual inspection alone can't confirm correctness (e.g., "is this element actually hidden via CSS, or just scrolled off-screen?").
 - **Rendered text verification:** Extract page text to verify content rendering — especially dynamic content, interpolated values, and conditional text.
 
-**With browser-based quality signals (when /use-browser primitives are available):**
+**With browser-based quality signals (when /browser primitives are available):**
 - **Accessibility audit:** Run `runAccessibilityAudit` on each major page/view. Report WCAG violations by impact level (critical > serious > moderate). Test keyboard focus order with `checkFocusOrder` — verify tab navigation follows logical reading order, especially on new or changed UI.
 - **Performance baseline:** After page load, capture `capturePerformanceMetrics` to check for obvious regressions — TTFB, FCP, LCP, CLS. You're not doing formal perf testing; you're catching "this page takes 8 seconds to load" or "layout shifts when the hero image loads."
 - **Video recording:** For complex multi-step flows, record with `createVideoContext`. Attach recordings to QA results as evidence. Especially useful for flows that involve timing, animations, or state transitions that are hard to capture in a screenshot.

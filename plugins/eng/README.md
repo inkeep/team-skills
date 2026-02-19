@@ -84,18 +84,14 @@ These are generally useful skills for investigating things and aiding in **decis
 
 ### Browser Automation
 
-Two complementary approaches to browser automation:
-
-| Skill / Tool | Invocation | Purpose |
+| Skill | Invocation | Purpose |
 |---|---|---|
-| `/use-browser` | User or model | Headless Playwright automation — write and run scripts for testing, screenshots, form filling, accessibility audits, network inspection. Works in CI/Docker. |
-| Claude in Chrome | MCP tools | Control the user's real Chrome browser — navigate, fill forms, read pages, execute JS, record GIFs. See [setup instructions](#recommended-claude-in-chrome-setup) below. |
+| `/browser` | User or model | Playwright automation — write and run scripts for testing, screenshots, form filling, accessibility audits, network inspection. Works in CI/Docker. |
 
-`/use-browser` requires a one-time setup (installs Playwright + Chromium):
+`/browser` requires a one-time setup (installs Playwright + Chromium):
 
 ```bash
-cd ~/.claude/plugins/marketplaces/inkeep-team-skills/plugins/eng/skills/use-browser
-npm run setup
+npm run setup --prefix ~/.claude/plugins/marketplaces/inkeep-team-skills/plugins/eng/skills/browser
 ```
 
 ### Other
@@ -141,46 +137,3 @@ npm install -g typescript-language-server typescript
 claude plugin install typescript-lsp@claude-plugins-official
 ```
 
----
-
-## Recommended: Claude in Chrome setup
-
-Browser automation tools (`mcp__claude-in-chrome__*`) let Claude Code interact with Chrome — navigate pages, fill forms, read content, execute JS, record GIFs, and more.
-
-### 1. Install the extension
-
-Install **"Claude"** by Anthropic from the [Chrome Web Store](https://chromewebstore.google.com/detail/claude/fcoeoabgfenejglbffodgkkbkcdhcgfn). Supported browsers: Chrome and Edge only.
-
-Sign into the extension with the **same claude.ai account** your Claude Code CLI uses. (Check your CLI account with `claude config get oauthAccount` — the `emailAddress` field must match.)
-
-### 2. Link to Claude Code
-
-```bash
-claude /chrome
-```
-
-This installs a native messaging host so Chrome can communicate with Claude Code. **Restart Chrome after first-time setup** so it picks up the new host manifest.
-
-To link within an existing session, type `/chrome` at the prompt.
-
-### 3. Enable by default
-
-So browser tools load on every session without needing `--chrome`:
-
-```bash
-claude /chrome
-# Select "Enabled by default"
-```
-
-This sets `claudeInChromeDefaultEnabled: true` in `~/.claude.json`.
-
-Alternatively, launch a single session with browser tools via `claude --chrome`.
-
-### Troubleshooting
-
-| Symptom | Fix |
-|---|---|
-| "No Chrome extension connected" | Run `/chrome` to re-link. If that fails, toggle the extension off/on at `chrome://extensions`, then retry. |
-| Extension connects to Claude Desktop instead of Code | Both apps register the same extension ID. Quit the one you're not using. ([#20943](https://github.com/anthropics/claude-code/issues/20943)) |
-| Connection drops mid-session | Chrome service workers go idle. Run `/chrome` and select reconnect. |
-| Stale native host after CLI update | Verify `~/.claude/chrome/chrome-native-host` points to the current binary: `cat ~/.claude/chrome/chrome-native-host` |

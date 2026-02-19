@@ -1,5 +1,5 @@
 ---
-name: use-browser
+name: browser
 description: "Browser automation with Playwright — navigate pages, fill forms, take screenshots, test responsive design, validate UX, test login flows, check links, inspect network requests, inject JavaScript, monitor console errors, capture network traffic, record video, inspect browser state, run accessibility audits, measure performance, and simulate network conditions. Headless by default for CI/Docker. Use when user wants to test websites, automate browser interactions, validate web functionality, or perform browser-based testing. Triggers: playwright, browser test, browser automation, web test, screenshot, responsive test, test the page, automate browser, headless browser, UI test, console errors, console monitoring, network inspection, network capture, accessibility audit, a11y test, performance metrics, web vitals, video recording, browser state, localStorage, network simulation, offline testing."
 argument-hint: "[URL or description of what to test/automate]"
 ---
@@ -7,7 +7,7 @@ argument-hint: "[URL or description of what to test/automate]"
 **IMPORTANT - Path Resolution:**
 This skill is installed via the plugin system. Before executing any commands, determine the skill directory based on where you loaded this SKILL.md file, and use that path in all commands below. Replace `$SKILL_DIR` with the actual discovered path.
 
-Expected plugin path: `~/.claude/plugins/marketplaces/inkeep-team-skills/plugins/eng/skills/use-browser`
+Expected plugin path: `~/.claude/plugins/marketplaces/inkeep-team-skills/plugins/eng/skills/browser`
 
 # Playwright Browser Automation
 
