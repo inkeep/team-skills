@@ -1,7 +1,6 @@
 ---
 name: cold-email
-description: Generate cold emails for B2B personas. Use when asked to write cold outreach, sales emails, or prospect messaging. Supports 19 persona archetypes (Founder-CEO, CTO, VP Engineering, CIO, CPO, Product Directors, VP CX, Head of Support, Support Ops, DevRel, Head of Docs, Technical Writer, Head of Community, VP Growth, Head of AI, etc.). Can generate first-touch and follow-up emails.
-argument-hint: "{persona} {company/context}"
+description: Generate cold emails for B2B personas. Use when asked to write cold outreach, sales emails, or prospect messaging. Supports 19 persona archetypes (Founder-CEO, CTO, VP Engineering, CIO, CPO, Product Directors, VP CX, Head of Support, Support Ops, DevRel, Head of Docs, Technical Writer, Head of Community, VP Growth, Head of AI, etc.). Can generate first-touch and follow-up emails. When a LinkedIn profile URL is provided, uses Crustdata MCP to enrich prospect data (name, title, company, career history, recent posts) for deep personalization.
 ---
 
 # Cold Email Generation
@@ -14,9 +13,27 @@ Generate high-quality cold emails tailored to specific B2B personas, using evide
    - Identify the target persona (see Persona Quick Reference below)
    - Extract company context (name, industry, size, any signals like funding, hiring, product launches)
    - Determine email type: first-touch or follow-up (default: first-touch)
+   - **If user provides a LinkedIn profile URL**, proceed to step 1b
+
+1b. **Enrich prospect via Crustdata MCP** (when LinkedIn URL provided)
+   - Call `mcp__crustdata__enrich_person_by_linkedin` with the LinkedIn URL
+   - Extract and use the following for personalization:
+     - **Name and title**: Use first name in greeting, title to identify persona
+     - **Current company**: Company name, domain, description, funding stage
+     - **Career history**: Past employers and roles (useful for "you've scaled teams before" angles)
+     - **Education**: Schools and degrees (use sparingly, only if highly relevant)
+     - **Skills/languages**: Can inform communication style
+   - Call `mcp__crustdata__get_person_linkedin_posts` to find recent posts for personalization hooks
+   - Call `mcp__crustdata__enrich_company_by_domain` with their company domain for deeper company intel (headcount, revenue, funding, founders)
+   - **Personalization priorities from Crustdata data:**
+     1. Recent LinkedIn posts (best hook if they posted about relevant topic)
+     2. Current role + company context (product-specific hooks)
+     3. Career trajectory (e.g., "Since joining from [previous company]...")
+     4. Company growth signals (funding, headcount growth)
 
 2. **Research the company first** (CRITICAL for CS/CX leaders)
-   - Use web search to find the company's core products and platform names
+   - If Crustdata already provided company data, use it; otherwise use web search
+   - Find the company's core products and platform names
    - Identify what their CS/support teams actually manage day-to-day
    - Look for product-specific terminology (e.g., "HealthRules Payer", "RingEX", "Qualtrics XM")
    - Find recent news, integrations, or platform updates
@@ -50,6 +67,78 @@ Generate high-quality cold emails tailored to specific B2B personas, using evide
 8. **Output the email**
    - Provide subject line + body
    - If multiple variants requested, provide 2-3 options
+
+---
+
+## Crustdata MCP Integration
+
+When a LinkedIn profile URL is provided, use Crustdata MCP tools to gather rich prospect data for personalization.
+
+### Available Crustdata Tools
+
+| Tool | Purpose | When to Use |
+|------|---------|-------------|
+| `mcp__crustdata__enrich_person_by_linkedin` | Get person details: name, title, company, career history, education, skills | Always, when LinkedIn URL provided |
+| `mcp__crustdata__get_person_linkedin_posts` | Get last 5 LinkedIn posts with engagement metrics | For personalization hooks based on recent activity |
+| `mcp__crustdata__enrich_company_by_domain` | Get company details: revenue, headcount, funding, founders | When company context needed beyond basic info |
+| `mcp__crustdata__get_company_linkedin_posts` | Get last 5 company posts | For company news/announcements to reference |
+
+### Data Fields from Person Enrichment
+
+```
+person:
+  - name, title, headline, location
+  - email (if available), twitter_handle
+  - summary, profile_picture_url
+  - connections count
+  - skills, languages
+
+current_employment:
+  - company_name, title, location, start_date
+  - company_details: linkedin_id, website_domain, logo_url, description
+
+past_employment:
+  - company_name, title, start_date, end_date
+
+career_summary:
+  - all_titles, all_employers, all_schools, all_degrees
+```
+
+### Personalization Strategy by Data Type
+
+| Data Type | How to Use | Example |
+|-----------|------------|---------|
+| **Recent LinkedIn post** | Reference specific topic they posted about | "Your recent post on AI in support resonated..." |
+| **Current title + tenure** | Tailor persona messaging | New in role = quick wins; 2+ years = strategic initiatives |
+| **Company description** | Extract product names for subject line | "Qualtrics XM QBR prep" not "faster QBR prep" |
+| **Past employers** | Build credibility through shared context | "Since scaling support at [previous co]..." |
+| **Company headcount/funding** | Identify growth stage for pain points | Series B = scaling chaos; Enterprise = tool consolidation |
+| **Skills/languages** | Inform communication style | Technical skills = can go deeper on architecture |
+
+### Example: LinkedIn URL to Personalized Email
+
+**Input:** `https://www.linkedin.com/in/johndoe`
+
+**Crustdata returns:**
+- Name: John Doe
+- Title: VP of Customer Success
+- Company: Acme Corp (Series B, 200 employees, data analytics platform)
+- Recent post: "Just shipped our new dashboard..."
+- Past: Director of CS at DataCo
+
+**Personalized hook:**
+> "Your team is proving ROI across Acme's analytics deployments while keeping pace with the dashboard updates you just shipped. Turning usage signals, support themes, and stakeholder feedback into renewal-ready briefs still takes manual stitching."
+
+**vs. Generic hook:**
+> "I saw you lead Customer Success at Acme Corp." (wastes characters, no insight)
+
+### When Crustdata Data is Limited
+
+If enrichment returns sparse data:
+1. Fall back to web search for company research
+2. Use title alone to identify persona archetype
+3. Focus on company-specific hooks rather than personal hooks
+4. Check if `enrich_realtime: true` option provides fresher data (costs more credits)
 
 ---
 
@@ -709,7 +798,6 @@ When customizing for a new prospect:
 - Has generic social proof ("leading companies")
 - Asks for meeting before establishing value
 - Reads above 8th grade level
-- Uses dashes or em dashes to connect thoughts instead of commas or periods
 - Subject line could apply to any company (not product-specific)
 - Opens with recipient's job title
 

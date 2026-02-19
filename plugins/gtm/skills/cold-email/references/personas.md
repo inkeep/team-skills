@@ -5,6 +5,22 @@ Source: ~/.claude/reports/b2b-persona-messaging-playbook/REPORT.md
 
 ---
 
+# Inkeep Market Pain Points (CEO Framing)
+
+Before diving into personas, understand the two core pain points Inkeep solves:
+
+## Pain Point 1: Fragmented AI Solutions
+
+> *"Technical B2B SaaS companies are aiming to adopt AI to accelerate and improve every step of the customer journey. To do so, they are adopting a mix of AI solutions to cover different company-specific workflows and use cases covering everything from product onboarding, support engineering, success, and content teams. The problem: system of record platforms like support platforms often have siloed "closed garden" AI functionality that just doesn't work that well or doesn't connect or interface with a company's knowledge sources, customer data, 1st party product APIs and apps, or the other 3rd party SaaS solutions that the customer may use. Companies find themselves purchasing piece-meal solutions from specialized vendors (often startups) that solve narrow scenarios (e.g. "support chatbot") or workflows ("turn support tickets into documentation updates"). These solutions don't talk to each other, are configured and behave differently, or just don't quite work well in the specific requirements, data sources, workflows, or use cases unique to a company (and every company has a unique combination of these). Any limitation turns into a feature request to 1 vendor which may or may not get prioritized, and you're bottlenecked by that vendor's ability to ship features or make their solution extensible (which is often not a priority). This piecemeal approach poses significant burden on vendor procurement, security and governance, and actual adoption across every CX-related function of the company."*
+> — Nick Mishra, CEO
+
+## Pain Point 2: Support Engineers Don't Get to Spend Time on Tough Problems
+
+> *"In B2B SaaS companies, support is part of the product. B2B SaaS companies gravitate towards Enterprise sales motions, so providing a great customer experience and keeping individual customers happy is often a basic expectation of any of their Enterprise customers. Similarly, for product-led companies, support and a great user experience is imperative to promoting word of mouth and organic growth. Because of these dynamics, B2B SaaS companies invest heavily and see as a requirement to deliver timely, accurate, top-notch support. Delivering this support often relies on highly specialized talent including dedicated support engineers or engineering members of their product team. These engineers have to become always-up-to-date product experts (which has a ramp up period and is hard to hire for), but also need to spend significant amount of time performing **workflows** to help gather all the right context to resolve a problem. This often includes gathering additional context from the user, looking up customer information in downstream systems like error logs, CRMs, 1st party product-specific data sources or APIs, cross-referencing information with engineering and product backlogs, etc. All of these systems are often varied, and the workflows that stem from them are often custom to the company and how it operates. AI Support solutions today often **don't** cover anything beyond product knowledge chat Q&A, and even there, often don't handle the varied knowledge sources of a technical B2B SaaS company (knowledge base, docs, github, internal KBs like confluence, marketing site, etc.). The result: technical B2B SaaS companies struggle to adopt AI in a meaningful way beyond chat Q&A; keeping time-to-resolution stats high and support and product engineering teams swamped with the more manual and tedious parts of support."*
+> — Nick Mishra, CEO
+
+---
+
 # Persona Archetypes (19 Total)
 
 ## Part 1: Executive & Technical Leadership
