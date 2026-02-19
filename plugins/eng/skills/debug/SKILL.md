@@ -1,13 +1,15 @@
 ---
 name: debug
 description: |
-  Systematic debugging methodology for local development. Enforces root cause
-  investigation before any fix attempt. 5-phase process: Triage, Reproduce &
-  Comprehend, Investigate, Fix & Verify, Harden. Includes bug category triage
-  playbooks, hypothesis-test-refine cycles, error message interpretation, tool
-  usage patterns, agent metacognition (loop detection, strategy switching,
-  confidence calibration), and escalation heuristics. Standalone or composable
-  with /implement, /qa-test, /ship, /tdd, and /inspect.
+  Systematic debugging for local development. Enforces root cause investigation
+  before fixes. 6-phase: Triage, Reproduce & Comprehend, Investigate, Classify,
+  Resolve, Harden. Classifies root causes as dev environment/config vs code bugs.
+  Uses tools aggressively for observable verification — runs commands, queries
+  state, checks actual output. Includes triage playbooks, hypothesis-test-refine
+  cycles, tool patterns, agent metacognition (loop detection, strategy switching,
+  confidence calibration), escalation heuristics. Presents findings with
+  resolution options and offers to execute fixes. Composable with /implement,
+  /qa-test, /ship, /tdd, /inspect, /discover.
   Triggers: debug, fix bug, root cause, why is this failing, investigate error,
   diagnose, troubleshoot, something broken, test failure, crash, regression,
   stack trace, error message, it worked before, flaky test, wrong output,
@@ -17,7 +19,30 @@ argument-hint: "[error message | failing test | symptom description | 'debug wha
 
 # Debug
 
-You are a systematic debugger. Your job is to find the **root cause** of a defect and fix it — not to make symptoms disappear. Debugging is a search process constrained by evidence. Every action you take must gather evidence, test a hypothesis, or narrow the search space.
+You are a systematic debugger. Your job is to find the **root cause** of a defect, classify it, present your findings, and resolve it — not to make symptoms disappear. Debugging is a search process constrained by evidence. Every action you take must gather evidence, test a hypothesis, or narrow the search space.
+
+---
+
+## Tool Autonomy
+
+You have broad permission to investigate. Use tools aggressively — the goal is observable evidence, not reasoning from code alone.
+
+**Do freely (no permission needed):**
+- Read any file, grep any pattern, glob any directory
+- Run tests, build commands, type checks, linters
+- Run the application or failing scenario to reproduce
+- Check service/infrastructure state: `docker ps`, `curl localhost:*`, query databases, check logs
+- Execute any read-only diagnostic command (API calls, CLI tools, status checks)
+- Add and remove temporary diagnostic logging
+- Run scripts that exist in the repo (test runners, sync scripts, seed scripts)
+
+**Ask the user first:**
+- Mutations on shared or non-dev environments (staging, production)
+- Destructive operations (dropping databases, deleting data, `git reset --hard`)
+- Installing new dependencies or global packages
+- Running commands that send external requests (emails, webhooks, third-party APIs)
+
+**Default assumption:** If you're in a local development environment, act. If you're unsure whether an environment is dev or shared, ask.
 
 ---
 
@@ -97,18 +122,29 @@ Follow these phases in order. Do not skip phases. Each phase has explicit comple
    - Confirm you see the same error/symptom.
    - If the failure is intermittent: run 5-10 times to establish frequency. If it fails <20% of the time, add instrumentation before debugging — see flaky failure playbook.
 
-2. **Read the relevant code.**
-   - Read the code at the error location with 30-50 lines of context — not just the error line.
-   - Read the immediate callers and callees of the failing function.
+2. **Map the relevant system area.**
+   Do not just read the error site. Trace the dependency chain until you understand the full flow that produces the error. Follow /inspect principles — read siblings, trace imports, follow the data:
+   - Read the code at the error location with 30-50 lines of context.
+   - **Follow every function call and import** in the error path. Read the function bodies — not just signatures. If `canUseProjectStrict` calls `toSpiceDbProjectId`, read `toSpiceDbProjectId`. If a function formats a key, read the formatter.
+   - Read 2-3 sibling files that do similar things (parallel routes, similar handlers). They reveal conventions and expected patterns.
    - Read related tests — they encode expected behavior.
-   - Understand the data flow: what goes in, what transformations happen, what comes out.
+   - Understand the data flow end-to-end: what goes in, what transformations happen, what format/shape, what comes out.
 
-3. **Check recent changes.**
+3. **Check actual system state.**
+   Do not rely on code reading alone. Verify that runtime state matches your mental model:
+   - Are expected services running? (`docker ps`, process lists, port checks)
+   - Does the database/store contain what the code expects? (Query it directly)
+   - Are config values, env vars, and feature flags set correctly?
+   - What does the actual API response or service output look like? (Call it)
+   - **Load:** `references/tool-patterns.md` §7 for runtime verification patterns.
+
+4. **Check recent changes.**
    - `git log --oneline -10 -- <relevant_files>` — what changed recently?
    - `git diff HEAD~5 -- <relevant_files>` — what are the actual changes?
    - If this is a regression: identify when it last worked. This bounds your search.
+   - **Read the diffs of suspicious commits** (`git show <hash>`). A commit titled "migrate X format" or "change Y schema" that touches the failing subsystem is a P0 signal — read the full diff, don't just note the title.
 
-4. **Build a mental model.**
+5. **Build a mental model.**
    - What is this code SUPPOSED to do? (Read tests, docs, type signatures)
    - What is it ACTUALLY doing? (The error/symptom tells you)
    - Where does the gap between expected and actual behavior begin?
@@ -136,6 +172,9 @@ REPEAT:
      - Prediction fails → hypothesis wrong, form a new one
 ```
 
+**Core principle: Observable verification over code reasoning.**
+Do not conclude from code reading alone. Every hypothesis must be tested with an observable action — run the code, query the state, check the output, add logging. If your only evidence is "I read the code and it looks like X," you have not tested the hypothesis. Code tells you what SHOULD happen; observable evidence tells you what DOES happen.
+
 **Rules for this phase:**
 
 - **One hypothesis at a time.** Do not test multiple hypotheses simultaneously — you won't know which one the evidence supports.
@@ -153,6 +192,7 @@ REPEAT:
 | What the stack trace means | Stack trace parsing | **Load:** `references/tool-patterns.md` §3 |
 | What the runtime state is | Diagnostic logging | **Load:** `references/tool-patterns.md` §4 |
 | If this pattern exists elsewhere | Pattern search | **Load:** `references/tool-patterns.md` §5 |
+| What the actual runtime state is | Direct state verification | **Load:** `references/tool-patterns.md` §7 |
 
 **Completion criteria:** You have a specific root cause, supported by evidence from at least one diagnostic action. You can state: "The root cause is X. I know this because when I checked Y, I found Z, which confirms X."
 
@@ -162,30 +202,61 @@ REPEAT:
 
 ---
 
-### Phase 4: Fix & Verify
+### Phase 4: Classify
 
-**Goal:** Fix the root cause — not the symptom — then prove the fix works.
+**Goal:** Classify the root cause so the resolution path matches the problem type.
+
+Once you have a confirmed root cause from Phase 3, classify it before proceeding:
+
+| Classification | Signals | Resolution path |
+|---|---|---|
+| **Dev environment / config issue** | Wrong env var, missing service, stale build, wrong branch, local-only misconfiguration, missing seed data, Docker not running | Fix the local setup. No code change needed. Explain what was wrong and how to fix it. |
+| **Code bug / product issue** | Logic error, wrong data format, missing validation, broken migration, incorrect API contract, race condition | Code fix required. Proceed to Phase 5 with a fix proposal. |
+| **Both** | Code is fragile AND local state exposed it; e.g., migration bug that only manifests with certain data | Fix the code bug (primary). Document the env setup that exposes it (secondary). |
+
+**Present findings to the user before proceeding:**
+
+> "The root cause is **[X]**. I confirmed this by **[observable evidence]**.
+> This is a **[dev environment issue / code bug / both]** because **[reasoning]**.
+> Here's what I recommend: **[resolution path]**."
+
+If the classification is **dev environment / config issue**: explain the fix, offer to execute it, and stop. Do not proceed to Phase 5 — there is no code bug to fix.
+
+If the classification is **code bug** or **both**: proceed to Phase 5.
+
+---
+
+### Phase 5: Resolve
+
+**Goal:** Fix the root cause — not the symptom — then prove the fix works. Present resolution options and execute with the user's consent.
 
 **Steps:**
 
-1. **Write a failing test** that reproduces the bug (if one doesn't already exist).
+1. **Present resolution options.**
+   Before writing code, explain to the user what you propose and why:
+   - What the fix is (concrete: which file, what change, why it's correct)
+   - What alternatives exist (if any — e.g., fix upstream vs add validation downstream)
+   - What the blast radius is (what other code/tests are affected)
+   - Offer to implement the fix: "I can make this change now. Should I proceed?"
+
+2. **Write a failing test** that reproduces the bug (if one doesn't already exist).
    - This is your regression gate. If you can't write a test, document why.
    - The test should fail NOW and pass AFTER your fix.
    - Load `/tdd` for test design guidance if writing a new regression test from scratch.
 
-2. **Implement a single, minimal fix.**
+3. **Implement a single, minimal fix.**
    - Fix the ROOT CAUSE identified in Phase 3. Nothing else.
    - Do not bundle improvements, refactors, or other fixes. One bug, one fix.
    - If the fix requires changes in multiple files, every changed line must be necessary for this specific root cause.
 
-3. **Verify the fix.**
+4. **Verify the fix.**
    - Run the originally failing test/command — it should pass.
    - Run all tests in the same file/module — no regressions.
    - Run type check and lint — no new errors.
    - If the bug was user-reported: manually verify the user-facing symptom is gone.
    - **Load:** `references/tool-patterns.md` §6 for the complete verification sequence.
 
-4. **Confirm the fix is correct, not lucky.**
+5. **Confirm the fix is correct, not lucky.**
    - Can you explain WHY the fix works?
    - Does it address the root cause from Phase 3, or something else?
    - If the fix differs from what your investigation predicted — go back. Your understanding may be wrong and the fix coincidental.
@@ -196,7 +267,7 @@ REPEAT:
 
 ---
 
-### Phase 5: Harden
+### Phase 6: Harden
 
 **Goal:** Prevent this class of bug from recurring.
 
@@ -207,7 +278,7 @@ REPEAT:
    - If you found a race condition, check other concurrent code paths.
    - **Load:** `references/tool-patterns.md` §5 for pattern search sequences.
 
-2. **Run the full test suite** — not just the targeted tests from Phase 4.
+2. **Run the full test suite** — not just the targeted tests from Phase 5.
    - If the full suite is too slow, run at minimum the test files that import the modified modules.
 
 3. **Harden where appropriate:**
@@ -342,23 +413,7 @@ Provide ALL of the following:
 
 ## Error Message Interpretation
 
-Error messages have structure. Parse them systematically.
-
-**Error anatomy:**
-
-- **Exception type:** The KIND of error (TypeError, NullPointerException, ENOENT) — narrows the category
-- **Message text:** The WHAT — what went wrong in human-readable terms
-- **Location:** The WHERE (file, line, column) — symptom location, not necessarily root cause
-- **Stack trace:** The HOW — call chain that led to the error
-- **Caused by / chained exceptions:** The WHY — root cause, if the framework exposes it
-
-**Interpretation heuristics:**
-
-1. The exception type tells you WHAT to look for (null? wrong type? missing file? permission denied?)
-2. The first frame in YOUR code is the primary investigation point — skip framework/library frames
-3. The innermost "Caused by" exception is usually more diagnostic than the outer exception
-4. If the error is in framework code with no user frames: the bug is in how you CALL the framework
-5. If the error location doesn't match the code you see: verify the build is fresh and source maps are correct
+**Load:** `references/tool-patterns.md` §8 for systematic error message parsing (anatomy, interpretation heuristics, frame selection).
 
 ---
 
@@ -377,6 +432,7 @@ This skill is standalone but integrates with the broader skill ecosystem:
 | Situation | Composition |
 |---|---|
 | Need to understand unfamiliar code before debugging | Load `/inspect` for structured codebase exploration |
+| Need to map all surfaces a feature touches | Load `/discover` for cross-surface dependency mapping |
 | Need to write a regression test for the fix | Load `/tdd` for test design methodology (focused on greenfield test authoring) |
 | Bug found during QA testing | `/qa-test` invokes `/debug` for diagnosis |
 | Implementation iteration hits a failure | Agent escalates to invoker, which can load `/debug` for diagnosis |

@@ -1,4 +1,4 @@
-Use when: Phase 3 (Investigate) or Phase 4 (Fix & Verify) needs specific tool sequences.
+Use when: Phase 3 (Investigate) or Phase 5 (Resolve) needs specific tool sequences.
 Priority: P0
 Impact: Without concrete tool patterns, the agent uses ad-hoc tool sequences and misses efficient investigation shortcuts.
 
@@ -312,3 +312,75 @@ VERIFICATION SEQUENCE:
 4. You can explain WHY the fix works (not just that it does)
 
 If you can't explain why it works, you don't understand the root cause. Go back to Phase 3.
+
+---
+
+## §7 Runtime State Verification
+
+**When:** You need to verify that runtime state matches what the code implies. Use this whenever your hypothesis depends on the state of services, databases, configuration, or external systems. This is the most commonly skipped verification step — and the one most likely to reveal the real root cause.
+
+```
+VERIFICATION BY DOMAIN:
+
+Services & Infrastructure:
+  docker ps                              # Are expected containers running?
+  docker logs <container> --tail 50      # Recent logs from a specific service
+  curl -s localhost:<port>/health         # Is the service responding?
+  lsof -i :<port>                        # What's listening on this port?
+  ps aux | grep <process>                # Is the process running?
+
+Databases & Stores:
+  # Query the actual data — don't assume it matches what the code writes
+  # For SpiceDB/authz: zed relationship read ...
+  # For PostgreSQL: psql -c "SELECT ..."
+  # For Redis: redis-cli GET key
+  # For MongoDB: mongosh --eval "db.collection.find({...})"
+  # Compare actual stored format vs what the code expects
+
+Environment & Configuration:
+  echo $ENV_VAR                          # Is the env var set?
+  cat .env | grep KEY                    # What's in the env file?
+  printenv | grep -i relevant_prefix     # All related env vars
+  # Compare env values against what code expects
+
+API & Network:
+  curl -s http://localhost:PORT/endpoint  # What does the API actually return?
+  curl -v ...                             # Include headers for auth debugging
+  # Compare actual response shape/values vs code expectations
+
+Logs & Output:
+  tail -100 /path/to/log                 # Recent log entries
+  docker compose logs --tail 50 service  # Container logs
+  # Search for error patterns, unexpected values
+```
+
+**Key heuristic:** When the code says "write X to store Y" and later "read X from store Y," verify BOTH operations independently. A common bug pattern is: the write succeeds with format A, but the read expects format B. Code reading alone won't catch format mismatches — you need to see the actual stored value.
+
+**Verification sequence:**
+
+1. Identify what state your hypothesis depends on
+2. Query that state directly (don't trust code to tell you what's there)
+3. Compare actual state vs expected state
+4. If they differ — that's your lead. Trace why they differ
+
+---
+
+## §8 Error Message Interpretation
+
+**When:** Phase 1 (Triage) — you have an error output and need to extract actionable information before reading code.
+
+**Error anatomy:**
+
+- **Exception type:** The KIND of error (TypeError, NullPointerException, ENOENT) — narrows the category
+- **Message text:** The WHAT — what went wrong in human-readable terms
+- **Location:** The WHERE (file, line, column) — symptom location, not necessarily root cause
+- **Stack trace:** The HOW — call chain that led to the error
+- **Caused by / chained exceptions:** The WHY — root cause, if the framework exposes it
+
+**Interpretation heuristics:**
+
+1. The exception type tells you WHAT to look for (null? wrong type? missing file? permission denied?)
+2. The first frame in YOUR code is the primary investigation point — skip framework/library frames
+3. The innermost "Caused by" exception is usually more diagnostic than the outer exception
+4. If the error is in framework code with no user frames: the bug is in how you CALL the framework
+5. If the error location doesn't match the code you see: verify the build is fresh and source maps are correct
