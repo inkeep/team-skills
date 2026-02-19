@@ -741,6 +741,7 @@ All helpers live in `lib/helpers.js`. Use `const helpers = require('./lib/helper
 | Helper | When to use |
 |---|---|
 | `helpers.createVideoContext(browser, { outputDir: '/tmp/videos' })` | Create a context that records video. Video saved when page/context closes. |
+| `helpers.uploadToVimeo(filePath, { name, privacy })` | **Optional** — upload a local video (WebM/MP4) to Vimeo. Only when user asks. Requires `VIMEO_CLIENT_ID`, `VIMEO_CLIENT_SECRET`, `VIMEO_ACCESS_TOKEN` env vars. Returns `{ videoId, url, embedUrl }`. |
 
 ### Resolution Presets — consistent dimensions per target
 

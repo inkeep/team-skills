@@ -666,6 +666,69 @@ async function createVideoContext(browser, options = {}) {
 }
 
 // ---------------------------------------------------------------------------
+// Video Upload (optional — only when user requests it)
+// ---------------------------------------------------------------------------
+
+/**
+ * Upload a video file to Vimeo. Optional — use only when the user asks to upload.
+ * Videos are saved locally to /tmp by default; this is the opt-in upload path.
+ * Requires env vars: VIMEO_CLIENT_ID, VIMEO_CLIENT_SECRET, VIMEO_ACCESS_TOKEN.
+ * Accepts WebM directly (no conversion needed — Vimeo transcodes server-side).
+ * @param {string} filePath - Path to video file (WebM or MP4)
+ * @param {Object} [options] - { name, description, privacy: 'unlisted'|'anybody'|'nobody'|'password', password }
+ * @returns {Promise<Object>} { videoId, url, embedUrl, uri }
+ */
+async function uploadToVimeo(filePath, options = {}) {
+  const { Vimeo } = require('@vimeo/vimeo');
+
+  const clientId = process.env.VIMEO_CLIENT_ID;
+  const clientSecret = process.env.VIMEO_CLIENT_SECRET;
+  const accessToken = process.env.VIMEO_ACCESS_TOKEN;
+
+  if (!clientId || !clientSecret || !accessToken) {
+    throw new Error(
+      'Vimeo upload requires VIMEO_CLIENT_ID, VIMEO_CLIENT_SECRET, and VIMEO_ACCESS_TOKEN env vars. ' +
+      'Generate a Personal Access Token at https://developer.vimeo.com/apps'
+    );
+  }
+
+  const client = new Vimeo(clientId, clientSecret, accessToken);
+
+  const params = {
+    name: options.name || `Recording - ${new Date().toISOString().slice(0, 19)}`,
+    description: options.description || 'Uploaded via Playwright browser skill',
+    privacy: { view: options.privacy || 'unlisted' }
+  };
+
+  if (options.privacy === 'password' && options.password) {
+    params.password = options.password;
+  }
+
+  return new Promise((resolve, reject) => {
+    client.upload(
+      filePath,
+      params,
+      function (uri) {
+        const videoId = uri.split('/').pop();
+        resolve({
+          videoId,
+          url: `https://vimeo.com/${videoId}`,
+          embedUrl: `https://player.vimeo.com/video/${videoId}`,
+          uri
+        });
+      },
+      function (bytesUploaded, bytesTotal) {
+        const pct = ((bytesUploaded / bytesTotal) * 100).toFixed(0);
+        console.log(`Vimeo upload: ${pct}%`);
+      },
+      function (error) {
+        reject(new Error(`Vimeo upload failed: ${error}`));
+      }
+    );
+  });
+}
+
+// ---------------------------------------------------------------------------
 // Media Conversion
 // ---------------------------------------------------------------------------
 
@@ -1079,6 +1142,8 @@ module.exports = {
   waitForApiResponse,
   // Video recording
   createVideoContext,
+  // Video upload (optional)
+  uploadToVimeo,
   // Media conversion
   screenshotsToGif,
   // Browser state
