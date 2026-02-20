@@ -5,3 +5,4 @@ bun.lock
 tmp/
 pr-screenshots/
 specs/
+.claude/worktrees/
