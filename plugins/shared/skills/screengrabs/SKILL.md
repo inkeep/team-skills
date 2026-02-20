@@ -4,7 +4,7 @@ description: "Capture, annotate, and include screenshots in pull requests for UI
 license: MIT
 metadata:
   author: "inkeep"
-  version: "1.1"
+  version: "1.2"
 ---
 
 # Screengrabs
@@ -31,16 +31,19 @@ After installing Playwright, download browser binaries: `npx playwright install 
 
 ## Workflow
 
-Most screenshots require browser interaction before capture — dismissing popups, logging in, clicking tabs, scrolling to a section, or navigating through a flow. The default workflow accounts for this.
+Most screenshots require understanding the target page before capture — what state it's in, what popups appear, what content needs to be visible. The default workflow is **explore → capture → verify → iterate**.
 
 1. **Identify affected pages** from the PR diff
-2. **Plan interaction** — Load `/browser` skill. For each route, determine what interaction is needed before the screenshot (dismiss cookie banners, click tabs, scroll, login, etc.). Write a pre-script to `/tmp/pw-pre-<name>.js`
-3. **Capture screenshots** — run `scripts/capture.ts` with `--pre-script`
-4. **Validate no sensitive data** — run `scripts/validate-sensitive.ts`
-5. **Annotate** — run `scripts/annotate.ts` (labels, borders, side-by-side)
-6. **Upload & embed** — update PR body with images
+2. **Explore target pages** — visit each page with the browser to understand layout, state, and interaction needs before writing any capture logic
+3. **Plan & write pre-scripts** — based on what you observed, write pre-scripts for interaction needed before capture
+4. **Capture screenshots** — run `scripts/capture.ts` with `--pre-script`
+5. **Verify captures** — look at each captured image to confirm it shows what was expected
+6. **Iterate if needed** — if a capture is wrong (spinner, overlay, wrong state, missing content), adjust and re-capture
+7. **Validate no sensitive data** — run `scripts/validate-sensitive.ts`
+8. **Annotate** — run `scripts/annotate.ts` (labels, borders, side-by-side)
+9. **Upload & embed** — update PR body with images
 
-**Simple captures (no interaction needed):** For static pages where goto + wait is sufficient, skip step 2 and omit `--pre-script`. Everything else stays the same.
+**Simple captures (no interaction needed):** For static pages where goto + wait is sufficient, skip step 3 and omit `--pre-script`. Steps 2 (explore) and 5 (verify) still apply — always understand what you're capturing and confirm you got it right.
 
 ---
 
@@ -50,9 +53,37 @@ Analyze the PR diff to determine which UI routes are impacted. Map changed compo
 
 ---
 
-## Step 2: Plan Interaction (Pre-Scripts)
+## Step 2: Explore Target Pages
 
-Load `/browser` skill for writing pre-scripts. A pre-script is a JS file that receives the Playwright `page` object and runs interaction before masking + screenshot.
+**Before writing any pre-scripts or capture commands**, visit each target page to understand what you're capturing. Load `/browser` skill and use its **Visual Inspection** pattern — navigate to each route, take a temporary screenshot, and read it to see what the page looks like.
+
+### What to observe
+
+For each page, note:
+
+- **Current layout and content** — what's visible above the fold, key sections, data states
+- **Popups and overlays** — cookie banners, modals, onboarding tours, notification prompts
+- **Loading behavior** — spinners, skeleton screens, lazy-loaded content, how long until stable
+- **Auth requirements** — login walls, permission gates, session-dependent content
+- **Dynamic state** — tabs, accordions, expandable sections, content that requires interaction to reveal
+- **What the PR changed** — which specific elements or areas the screenshot needs to highlight
+
+### Decide what to capture
+
+Based on exploration, decide:
+
+- Which **view states** each page needs (e.g., default tab vs. specific tab, collapsed vs. expanded)
+- Whether **multiple captures per route** are needed (e.g., before/after a user action)
+- What **viewport and scroll position** will frame the relevant change
+- What **interaction** is needed before each capture (popups to dismiss, elements to click, sections to scroll to)
+
+Do not proceed to pre-script writing until you understand each page's behavior. Exploration often reveals interaction needs that aren't obvious from the diff alone (popups that appear on first visit, content behind tabs, lazy loading delays).
+
+---
+
+## Step 3: Plan & Write Pre-Scripts
+
+Load `/browser` skill for writing pre-scripts. A pre-script is a JS file that receives the Playwright `page` object and runs interaction before masking + screenshot. Use your findings from Step 2 to write targeted pre-scripts.
 
 ### Pre-script contract
 
@@ -112,7 +143,7 @@ module.exports = async function({ page }) {
 
 ---
 
-## Step 3: Capture Screenshots
+## Step 4: Capture Screenshots
 
 ### Environment setup
 
@@ -177,7 +208,65 @@ npx tsx scripts/capture.ts \
 
 ---
 
-## Step 4: Validate Sensitive Data
+## Step 5: Verify Captures
+
+**Do not skip this step.** After capturing, look at each screenshot to confirm it captured what you intended.
+
+### Verification checklist
+
+For each captured image, read the PNG file and check:
+
+- [ ] **Correct page/route** — the screenshot shows the intended page, not a redirect, error page, or login wall
+- [ ] **Expected content visible** — the elements or sections that the PR changed are visible in the frame
+- [ ] **Stable state** — no spinners, skeleton loaders, or partially-rendered content
+- [ ] **No unexpected overlays** — cookie banners, modals, notification toasts, or tooltips aren't blocking the content
+- [ ] **Proper framing** — the viewport and scroll position highlight the relevant change (not cut off, not too zoomed out)
+- [ ] **Redaction intact** — sensitive data masking was applied correctly (passwords blurred, tokens replaced)
+
+### How to verify
+
+Use the Read tool to view each captured PNG — it renders images visually. Compare what you see against what you observed during exploration (Step 2).
+
+```
+# Read the captured image to verify
+Read tool → tmp/screengrabs/<route-name>.png
+```
+
+If all captures pass verification, proceed to Step 7 (validate sensitive data). If any capture is wrong, go to Step 6.
+
+---
+
+## Step 6: Iterate (if verification fails)
+
+When a capture doesn't match expectations, diagnose and re-capture. Do not upload incorrect screenshots.
+
+### Common issues and fixes
+
+| Problem | Likely cause | Fix |
+|---|---|---|
+| Spinner or skeleton visible | Insufficient wait time | Increase `--wait` (e.g., `--wait 5000`) or add `waitForSelector` in pre-script |
+| Cookie banner or modal blocking content | Pre-script didn't dismiss it | Add dismiss logic to pre-script (`.catch(() => {})` for optional popups) |
+| Wrong tab or section visible | Pre-script didn't navigate to correct state | Update pre-script to click the right tab/accordion/section |
+| Login wall or auth error | Missing auth cookie or expired session | Use `--auth-cookie` or add login flow to pre-script |
+| Content cut off or wrong scroll position | Default viewport insufficient | Adjust `--viewport`, add `scrollIntoViewIfNeeded()` in pre-script, or use `--full-page` |
+| Partially loaded images or assets | Network still loading | Add `waitForLoadState('networkidle')` in pre-script after interaction |
+
+### Iteration process
+
+1. Identify which captures failed verification and why
+2. Adjust the pre-script, capture parameters, or both
+3. Re-run `scripts/capture.ts` for the affected routes only
+4. Re-verify (Step 5) — read the new images and confirm they're correct
+5. Repeat if needed — maximum **3 iterations per route** before stopping to reassess the approach
+
+### When to stop iterating
+
+- After 3 failed attempts for the same route, reconsider whether the page is in a capturable state (is the dev server running correctly? is the feature complete?)
+- If the issue is environmental (server not running, deployment not ready), fix the environment rather than adjusting capture parameters
+
+---
+
+## Step 7: Validate Sensitive Data
 
 **Always run before uploading to GitHub.**
 
@@ -207,7 +296,7 @@ Add more with `--mask-selectors "selector1,selector2"`.
 
 ---
 
-## Step 5: Annotate Images
+## Step 8: Annotate Images
 
 ```bash
 # Add "Before" label with red border
@@ -225,7 +314,7 @@ npx tsx scripts/annotate.ts \
 
 ---
 
-## Step 6: Upload & Embed in PR
+## Step 9: Upload & Embed in PR
 
 Images in PR markdown need permanent URLs.
 
