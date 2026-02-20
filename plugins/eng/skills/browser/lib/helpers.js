@@ -857,6 +857,61 @@ async function uploadToBunny(filePath, options = {}) {
 }
 
 // ---------------------------------------------------------------------------
+// Image/File Upload — Bunny Edge Storage (general-purpose CDN)
+// ---------------------------------------------------------------------------
+
+/**
+ * Upload any file (image, GIF, PDF, etc.) to Bunny Edge Storage and return a permanent CDN URL.
+ * Use for PR screenshots, annotated images, comparison PNGs — anything that needs a public URL.
+ * Requires: BUNNY_STORAGE_API_KEY, BUNNY_STORAGE_ZONE_NAME, BUNNY_STORAGE_HOSTNAME env vars.
+ * Set up a Storage Zone + Pull Zone at https://dash.bunny.net/storage
+ * @param {string} filePath - Local file to upload
+ * @param {string} remotePath - Path within the storage zone (e.g., "pr-123/dashboard-before.png")
+ * @param {Object} [options] - { region: '' } — storage region prefix (e.g., 'ny' for New York)
+ * @returns {Object} { url, storagePath, size }
+ */
+async function uploadToBunnyStorage(filePath, remotePath, options = {}) {
+  const fs = require('fs');
+  const apiKey = process.env.BUNNY_STORAGE_API_KEY;
+  const zoneName = process.env.BUNNY_STORAGE_ZONE_NAME;
+  const cdnHostname = process.env.BUNNY_STORAGE_HOSTNAME;
+  if (!apiKey || !zoneName || !cdnHostname) {
+    throw new Error(
+      'Bunny Storage upload requires BUNNY_STORAGE_API_KEY, BUNNY_STORAGE_ZONE_NAME, and BUNNY_STORAGE_HOSTNAME env vars. ' +
+      'Set up a Storage Zone + Pull Zone at https://dash.bunny.net/storage'
+    );
+  }
+  if (!fs.existsSync(filePath)) {
+    throw new Error(`File not found: ${filePath}`);
+  }
+  const region = options.region || '';
+  const endpoint = region
+    ? `https://${region}.storage.bunnycdn.com`
+    : 'https://storage.bunnycdn.com';
+  const fileBuffer = fs.readFileSync(filePath);
+  console.log(`Bunny Storage: uploading ${(fileBuffer.length / 1024 / 1024).toFixed(1)} MB → ${remotePath}`);
+  const res = await fetch(
+    `${endpoint}/${zoneName}/${remotePath}`,
+    {
+      method: 'PUT',
+      headers: { 'AccessKey': apiKey },
+      body: fileBuffer
+    }
+  );
+  if (!res.ok) {
+    const errText = await res.text();
+    throw new Error(`Bunny Storage: upload failed (${res.status}): ${errText}`);
+  }
+  const url = `https://${cdnHostname}/${remotePath}`;
+  console.log(`Bunny Storage: upload complete. URL: ${url}`);
+  return {
+    url,
+    storagePath: `${zoneName}/${remotePath}`,
+    size: fileBuffer.length
+  };
+}
+
+// ---------------------------------------------------------------------------
 // Media Conversion
 // ---------------------------------------------------------------------------
 
@@ -1623,6 +1678,8 @@ module.exports = {
   // Video upload (optional)
   uploadToVimeo,
   uploadToBunny,
+  // Image/file upload to Bunny Edge Storage (optional)
+  uploadToBunnyStorage,
   // Media conversion
   screenshotsToGif,
   // Browser state

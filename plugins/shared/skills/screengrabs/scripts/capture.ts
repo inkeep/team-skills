@@ -114,7 +114,7 @@ async function startServer(port: number) {
 async function capture() {
   const baseUrl = getArg('base-url');
   const routesStr = getArg('routes');
-  const outputDir = getArg('output-dir') || './screengrabs';
+  const outputDir = getArg('output-dir') || 'tmp/screengrabs';
   const viewport = getArg('viewport') || '1280x800';
   const connectUrl = getArg('connect');
   const extraMaskSelectors = getArg('mask-selectors');
@@ -128,7 +128,7 @@ async function capture() {
       'Usage: npx tsx capture.ts --base-url <url> --routes <path1,path2,...> [options]\n'
     );
     console.error('Options:');
-    console.error('  --output-dir <dir>       Output directory (default: ./screengrabs)');
+    console.error('  --output-dir <dir>       Output directory (default: tmp/screengrabs)');
     console.error('  --viewport <WxH>         Viewport size (default: 1280x800)');
     console.error('  --connect <ws-url>       Connect to existing Playwright server');
     console.error('  --mask-selectors <s>     Additional CSS selectors to blur (comma-separated)');

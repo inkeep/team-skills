@@ -13,6 +13,18 @@ Conduct **evidence-driven technical research** with flexible output options. Res
 
 Choose based on whether the knowledge needs to be persistent/shareable, is for immediate use, or is an incremental update to prior work.
 
+### Reports directory
+
+Reports are stored in a configurable directory. Resolution priority:
+
+| Priority | Source | Example |
+|----------|--------|---------|
+| 1 | **`--reports-dir` flag** on catalogue/normalize scripts | `--reports-dir ./my-reports` |
+| 2 | **Env var `CLAUDE_REPORTS_DIR`** | `CLAUDE_REPORTS_DIR=~/research/reports` |
+| 3 | **Default** | `~/.claude/reports/` |
+
+Throughout this skill, `~/.claude/reports/` refers to the resolved reports directory. If `CLAUDE_REPORTS_DIR` is set, use that path instead.
+
 ---
 
 ## When to Use This Skill

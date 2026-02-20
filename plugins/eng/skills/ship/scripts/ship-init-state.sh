@@ -19,6 +19,9 @@
 
 set -euo pipefail
 
+# --- Ship directory (configurable via CLAUDE_SHIP_DIR env var) ---
+SHIP_DIR="${CLAUDE_SHIP_DIR:-tmp/ship}"
+
 # --- Defaults ---
 FEATURE_NAME=""
 SPEC_PATH=""
@@ -98,7 +101,7 @@ for flag_name in gh browser peekaboo docker; do
 done
 
 # --- Create directory ---
-mkdir -p tmp/ship
+mkdir -p "$SHIP_DIR"
 
 NOW=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
 
@@ -121,7 +124,7 @@ jq -n \
     currentPhase: "Phase 2",
     featureName: $feature,
     specPath: $spec,
-    specJsonPath: "tmp/ship/spec.json",
+    specJsonPath: "'"$SHIP_DIR"'/spec.json",
     branch: $branch,
     worktreePath: (if $worktree == "" then null else $worktree end),
     prNumber: null,
@@ -140,10 +143,10 @@ jq -n \
     scopeCalibration: $scope,
     amendments: [],
     lastUpdated: $now
-  }' > tmp/ship/state.json
+  }' > "$SHIP_DIR/state.json"
 
 # --- Write loop.md ---
-cat > tmp/ship/loop.md << EOF
+cat > "$SHIP_DIR/loop.md" << EOF
 ---
 active: true
 iteration: 1
@@ -155,8 +158,8 @@ EOF
 
 # --- Confirmation ---
 echo "Ship state initialized:"
-echo "  state.json: tmp/ship/state.json"
-echo "  loop.md:    tmp/ship/loop.md"
+echo "  state.json: $SHIP_DIR/state.json"
+echo "  loop.md:    $SHIP_DIR/loop.md"
 echo "  Feature:    $FEATURE_NAME"
 echo "  Branch:     $BRANCH"
 echo "  Spec:       $SPEC_PATH"

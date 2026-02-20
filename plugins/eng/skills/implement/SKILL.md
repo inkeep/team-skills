@@ -16,6 +16,10 @@ Each phase can be entered independently. If you already have a spec.json, start 
 
 When composed by `/ship`, Ship invokes `/implement` for the full lifecycle and reviews the output afterward. When standalone, `/implement` runs end-to-end and reports results directly.
 
+### Ship working directory
+
+All implementation artifacts are stored in a configurable directory. Resolution: env var `CLAUDE_SHIP_DIR` (default: `tmp/ship`). Throughout this skill, `tmp/ship/` refers to the resolved directory. The `implement.sh` script reads this env var automatically.
+
 ---
 
 ## Inputs

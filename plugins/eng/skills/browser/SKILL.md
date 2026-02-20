@@ -687,8 +687,8 @@ Choose the right preset and conversion for your target. Presets set viewport + D
 | Target | Preset | Output | Max size | Why |
 |---|---|---|---|---|
 | Docs site screenshot | `docs-retina` | 2560×1440 PNG | <500 KB | Retina-sharp for Next.js Image |
-| GitHub PR screenshot | `pr-standard` | 1280×720 PNG | <200 KB | Crisp at GitHub's 894px display width |
-| GitHub PR GIF | `gif-compact` | 800×450 animated GIF | <10 MB | DPR 1 — GIF's 256-color palette is the bottleneck, not pixel density |
+| GitHub PR screenshot | `pr-standard` | 1280×720 PNG | <200 KB | Crisp at GitHub's 894px display width. Use `uploadToBunnyStorage()` for CDN URLs |
+| GitHub PR GIF | `gif-compact` | 800×450 animated GIF | <10 MB | DPR 1 — GIF's 256-color palette is the bottleneck, not pixel density. Use `uploadToBunnyStorage()` for CDN URLs |
 | Video (internal or customer-facing) | `video` | 2560×1440 WebM → Bunny or Vimeo | — | `uploadToBunny()` or `uploadToVimeo()` — both transcode to ABR. DPR 1 is correct for video (DPR only affects CSS rendering, not video output resolution) |
 
 **Capture a docs-quality screenshot with a preset:**
@@ -1155,6 +1155,12 @@ All helpers live in `lib/helpers.js`. Use `const helpers = require('./lib/helper
 | `helpers.createVideoContext(browser, { outputDir: '/tmp/videos' })` | Create a context that records video. Video saved when page/context closes. |
 | `helpers.uploadToVimeo(filePath, { name, privacy })` | **Optional** — upload a local video (WebM/MP4) to Vimeo. Only when user asks. Requires `VIMEO_CLIENT_ID`, `VIMEO_CLIENT_SECRET`, `VIMEO_ACCESS_TOKEN` env vars. Returns `{ videoId, url, embedUrl }`. |
 | `helpers.uploadToBunny(filePath, { name, collectionId })` | **Optional** — upload a local video (WebM/MP4) to Bunny Stream. For internal videos (team demos, QA recordings). Requires `BUNNY_STREAM_API_KEY`, `BUNNY_STREAM_LIBRARY_ID` env vars. VP8 WebM explicitly supported. Returns `{ videoId, url, embedUrl }`. |
+
+### Image/File Upload — Bunny Edge Storage
+
+| Helper | When to use |
+|---|---|
+| `helpers.uploadToBunnyStorage(filePath, remotePath, { region })` | Upload any file (PNG, GIF, PDF) to Bunny Edge Storage and get a permanent CDN URL. Use for PR screenshots, annotated images, comparison PNGs. Requires `BUNNY_STORAGE_API_KEY`, `BUNNY_STORAGE_ZONE_NAME`, `BUNNY_STORAGE_HOSTNAME` env vars. Returns `{ url, storagePath, size }`. |
 
 ### Resolution Presets — consistent dimensions per target
 

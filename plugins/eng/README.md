@@ -25,21 +25,33 @@ open "https://chromewebstore.google.com/detail/playwright-mcp-bridge/mmlmfjhmonk
 # 5. TypeScript LSP companion plugin
 claude plugin install typescript-lsp@claude-plugins-official
 
-# 6. Environment variables (video upload credentials)
-node -e "const fs=require('fs'),p=require('path').join(require('os').homedir(),'.claude','settings.json');const s=fs.existsSync(p)?JSON.parse(fs.readFileSync(p,'utf8')):{};const add={BUNNY_STREAM_API_KEY:'',BUNNY_STREAM_LIBRARY_ID:'',VIMEO_CLIENT_ID:'',VIMEO_CLIENT_SECRET:'',VIMEO_ACCESS_TOKEN:''};s.env=Object.assign(add,s.env||{});fs.writeFileSync(p,JSON.stringify(s,null,2)+'\n');console.log('Env placeholders added to '+p+' — fill in your values.')"
+# 6. Environment variables (credentials + directory overrides)
+node -e "const fs=require('fs'),p=require('path').join(require('os').homedir(),'.claude','settings.json');const s=fs.existsSync(p)?JSON.parse(fs.readFileSync(p,'utf8')):{};const add={BUNNY_STORAGE_API_KEY:'',BUNNY_STORAGE_ZONE_NAME:'',BUNNY_STORAGE_HOSTNAME:'',BUNNY_STREAM_API_KEY:'',BUNNY_STREAM_LIBRARY_ID:'',VIMEO_CLIENT_ID:'',VIMEO_CLIENT_SECRET:'',VIMEO_ACCESS_TOKEN:''};s.env=Object.assign(add,s.env||{});fs.writeFileSync(p,JSON.stringify(s,null,2)+'\n');console.log('Env placeholders added to '+p+' — fill in your values.')"
 ```
 
 > **Step 6 details:** The command above merges empty placeholders into `~/.claude/settings.json` without overwriting existing values. Open the file and fill in your keys:
 >
 > | Variable | Where to get it |
 > |---|---|
+> | `BUNNY_STORAGE_API_KEY` | [Bunny Storage](https://dash.bunny.net/storage) → your zone → FTP & API Access → Password |
+> | `BUNNY_STORAGE_ZONE_NAME` | Storage Zone name (e.g., `inkeep-pr-assets`) |
+> | `BUNNY_STORAGE_HOSTNAME` | Pull Zone CDN hostname (e.g., `inkeep-pr-assets.b-cdn.net`) |
 > | `BUNNY_STREAM_API_KEY` | [Bunny Stream](https://dash.bunny.net/stream) → your library → API & Webhooks |
 > | `BUNNY_STREAM_LIBRARY_ID` | Same page — numeric library ID |
 > | `VIMEO_CLIENT_ID` | [Vimeo developer apps](https://developer.vimeo.com/apps) → create app |
 > | `VIMEO_CLIENT_SECRET` | Same app page |
 > | `VIMEO_ACCESS_TOKEN` | Same app → Authentication → generate PAT with `upload` scope |
 >
-> These are only needed for the `/browser` skill's `uploadToBunny()` and `uploadToVimeo()` helpers. All other skills work without any env vars.
+>
+> **Optional directory overrides** (set only if you want non-default locations):
+>
+> | Variable | Default | What it controls |
+> |---|---|---|
+> | `CLAUDE_REPORTS_DIR` | `~/.claude/reports/` | Where `/research` stores reports and evidence |
+> | `CLAUDE_SHIP_DIR` | `tmp/ship` | Where `/ship` and `/implement` store workflow state |
+> | `CLAUDE_SPECS_DIR` | `<repo>/specs/` or `~/.claude/specs/` | Where `/spec` stores spec artifacts |
+>
+> Credentials are only needed for the `/browser` skill's `uploadToBunnyStorage()`, `uploadToBunny()`, and `uploadToVimeo()` helpers. Directory overrides and all other skills work without any env vars.
 
 <details>
 <summary>Alternative: Skills CLI (any agent, not just Claude Code)</summary>

@@ -429,7 +429,9 @@ function printValidation(allIssues: ValidationIssue[], validCount: number) {
 
 function main() {
   const args = process.argv.slice(2);
-  let reportsDir = path.join(os.homedir(), ".claude", "reports");
+  let reportsDir =
+    process.env.CLAUDE_REPORTS_DIR ||
+    path.join(os.homedir(), ".claude", "reports");
 
   const dirIdx = args.indexOf("--reports-dir");
   if (dirIdx !== -1 && args[dirIdx + 1]) {

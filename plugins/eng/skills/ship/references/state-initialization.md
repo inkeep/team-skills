@@ -6,6 +6,8 @@ Impact: Without state initialization, stop hook cannot recover context after com
 
 # State Initialization
 
+The ship directory is configurable via `CLAUDE_SHIP_DIR` env var (default: `tmp/ship`). The initialization script respects this env var automatically. Throughout this reference, `tmp/ship/` refers to the resolved directory.
+
 The worktree and feature branch were created in Phase 0, Step 1. Dependency installation and build verification are handled by `/implement` at the start of Phase 2.
 
 ## Run the initialization script

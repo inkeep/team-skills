@@ -14,7 +14,7 @@ import { join, basename } from "path";
 import { existsSync } from "fs";
 import { execSync } from "child_process";
 
-const REPORTS_DIR = join(process.env.HOME!, ".claude", "reports");
+const REPORTS_DIR = process.env.CLAUDE_REPORTS_DIR || join(process.env.HOME!, ".claude", "reports");
 const DRY_RUN = process.argv.includes("--dry-run");
 const TODAY = new Date().toISOString().split("T")[0]; // YYYY-MM-DD
 

@@ -36,6 +36,17 @@ The ship loop has an automatic state save and reboot mechanism. If your context 
 
 ---
 
+## Ship working directory
+
+All execution state lives in a configurable working directory (gitignored). Resolution priority:
+
+| Priority | Source | Default |
+|----------|--------|---------|
+| 1 | **Env var `CLAUDE_SHIP_DIR`** | — |
+| 2 | **Default** | `tmp/ship` |
+
+Throughout this skill and its child skills (/implement, /cancel-ship), `tmp/ship/` refers to the resolved ship directory. If `CLAUDE_SHIP_DIR` is set, use that path instead. The shell scripts (`ship-init-state.sh`, `implement.sh`) read this env var automatically.
+
 ## State files
 
 All execution state lives in `tmp/ship/` (gitignored). The only committed artifact is SPEC.md. Child skills (/spec, /implement) manage their own internal artifacts — see their SKILL.md files for details.

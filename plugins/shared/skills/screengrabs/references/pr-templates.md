@@ -114,14 +114,29 @@ Use when a change affects several different pages.
 
 ## Image Upload Methods
 
-### Method A: Drag and drop (simplest)
+### Method A: Bunny Edge Storage (recommended)
+
+Programmatic upload with permanent CDN URLs. Best for automated workflows.
+
+```javascript
+const helpers = require('./lib/helpers');
+const result = await helpers.uploadToBunnyStorage(
+  './tmp/screengrabs/dashboard-labeled.png',
+  `pr-${prNumber}/dashboard-before.png`
+);
+// result.url → "https://{cdn-hostname}/pr-123/dashboard-before.png"
+```
+
+Requires `BUNNY_STORAGE_API_KEY`, `BUNNY_STORAGE_ZONE_NAME`, `BUNNY_STORAGE_HOSTNAME` env vars.
+
+### Method B: Drag and drop
 
 1. Edit the PR description on GitHub
 2. Drag a PNG/GIF/MOV file into the text area
 3. GitHub uploads it and inserts a markdown image link
 4. Save
 
-### Method B: gh CLI comment
+### Method C: gh CLI comment
 
 ```bash
 # Post a comment with an image reference
@@ -129,7 +144,7 @@ gh pr comment {pr-number} --body "### Screenshot
 ![Description](image-url)"
 ```
 
-### Method C: Update PR body programmatically
+### Method D: Update PR body programmatically
 
 ```bash
 # Read current PR body, append visual changes section
@@ -146,7 +161,8 @@ gh pr edit {pr-number} --body "$NEW_BODY"
 
 ## Notes
 
-- GitHub image URLs from drag-and-drop are permanent CDN links
+- Bunny Storage URLs are permanent and served via CDN — no expiration
+- GitHub image URLs from drag-and-drop are also permanent CDN links
 - GitHub supports PNG, GIF, JPG, and MOV/MP4 uploads
 - Maximum file size: 10MB for images, 100MB for videos (on paid plans)
 - Always add descriptive alt text for accessibility

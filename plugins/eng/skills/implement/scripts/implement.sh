@@ -5,12 +5,15 @@ set -e
 # Spawns independent Claude Code processes to implement user stories from spec.json.
 # Each iteration is a fresh process with no memory — state persists via files and git.
 
+# --- Ship directory (configurable via CLAUDE_SHIP_DIR env var) ---
+SHIP_DIR="${CLAUDE_SHIP_DIR:-tmp/ship}"
+
 # --- Defaults ---
 MAX_ITERATIONS=10
 MAX_TURNS=75
-PROMPT_FILE="tmp/ship/implement-prompt.md"
-SPEC_FILE="tmp/ship/spec.json"
-PROGRESS_FILE="tmp/ship/progress.txt"
+PROMPT_FILE="$SHIP_DIR/implement-prompt.md"
+SPEC_FILE="$SHIP_DIR/spec.json"
+PROGRESS_FILE="$SHIP_DIR/progress.txt"
 FORCE=false
 PROTECTED_BRANCHES="main master"
 
@@ -256,5 +259,5 @@ echo -e "${YELLOW}━━━━━━━━━━━━━━━━━━━━�
 echo -e "${YELLOW}  Max iterations reached ($MAX_ITERATIONS).${NC}"
 echo -e "${YELLOW}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
 echo ""
-echo "Check tmp/ship/spec.json for incomplete stories and tmp/ship/progress.txt for blockers."
+echo "Check $SHIP_DIR/spec.json for incomplete stories and $SHIP_DIR/progress.txt for blockers."
 exit 1
