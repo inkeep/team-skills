@@ -132,6 +132,8 @@ Do not skip this step. Partial context loading is the primary cause of routing d
 **Hard constraint:** Subagents cannot spawn other subagents.
 So a **workflow orchestrator must run as the top-level session agent** (e.g., `claude --agent feature-development …`), not as a Task-spawned subagent.
 
+**CLI invocation note:** Agents can be invoked directly via `claude --agent <name>` (interactive) or `claude --agent <name> -p "prompt"` (non-interactive). For spawning Claude Code subprocesses from within a running session (e.g., iteration loops), use the `env -u CLAUDECODE -u CLAUDE_CODE_ENTRYPOINT claude -p ...` pattern — this bypasses the nesting guard. Always set `--max-turns` and `--dangerously-skip-permissions` on subprocesses. See `references/claude-code-mechanics.md` for the full invocation reference including multi-level nesting.
+
 Templates:
 - Subagents: `templates/subagent-template.md`, `templates/subagent-reviewer-template.md`, `templates/subagent-worker-template.md`
 - Orchestrators: `templates/workflow-orchestrator-template.md`
@@ -421,7 +423,7 @@ This index helps you quickly find the right deep-dive. In the main workflow, fol
 | Path | Priority | Use when | Impact if skipped |
 |---|---|---|---|
 | `references/updating-existing-agents.md` | P0 | "Update" or "refactor" requests for existing agents | Intent drift; broken routing; capability creep; downstream orchestrator failures |
-| `references/claude-code-mechanics.md` | P0 | Configuring frontmatter, understanding constraints, permissions, or composition | Broken routing, permission errors, failed spawning |
+| `references/claude-code-mechanics.md` | P0 | Configuring frontmatter, understanding constraints, permissions, composition, **CLI invocation patterns** (`--agent`, `-p`, `--resume`), and **recursive invocation limits** | Broken routing, permission errors, failed spawning, blocked recursive calls |
 | `references/prompt-structure.md` | P0 | Structuring the system prompt body; writing Role & mission, tool policies, output contracts | Missed steps, inconsistent outputs, unclear escalation |
 | `references/failure-modes.md` | P1 | Selecting which failure modes to guard against for this agent type | Agents exhibit predictable LLM blind spots |
 | `references/personality-and-intent.md` | P1 | Writing effective Role & mission statements; avoiding escape hatches | Vague identity, risky tradeoff framing |

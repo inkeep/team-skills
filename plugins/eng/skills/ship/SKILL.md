@@ -110,6 +110,29 @@ Before moving from any phase to the next:
 
 5. Update `tmp/ship/state.json` per the "When to update what" table above (does not exist before end of Phase 1).
    - **Amendments:** When the user requests a change not in the original spec — ad-hoc tasks, improvements, tweaks, or user-approved scope expansions from review feedback — append to `amendments` before acting: `{ "description": "<brief what>", "status": "pending" }`. Set `status` to `"done"` when completed. This log survives compaction and tells a resumed agent what post-spec work was requested.
+6. Update the task list: mark the completing phase's task as `completed` and the next phase's task as `in_progress`.
+
+---
+
+### Create phase task list (first action on every fresh run)
+
+Before starting Phase 0, create a task for every phase using `TaskCreate`. This makes the full workflow visible upfront and ensures no phase is skipped.
+
+Create these tasks in order:
+
+1. **Phase 0: Detect context and starting point** — Recovery check, feature name, worktree, capability detection, scope calibration
+2. **Phase 1: Spec authoring and handoff** — Scaffold spec, investigate, refine with /spec, validate, activate state
+3. **Phase 2: Implementation** — Build understanding, invoke /implement, post-implementation review
+4. **Create draft PR** — Push branch, create draft PR, set prNumber in state.json
+5. **Phase 3: Testing** — Load /qa, run test plan, verify exit gate
+6. **Write PR body** — Capture screenshots if applicable, load /pr to write full body
+7. **Phase 4: Documentation** — Load /docs, write/update all affected documentation surfaces
+8. **Phase 5: Review iteration loop** — Mark PR ready, load /review, iterate until all threads resolved and CI green
+9. **Phase 6: Completion** — Run completion checklist, report to user, output completion promise
+
+As each phase begins, mark its task `in_progress`. When the phase completes, mark it `completed`.
+
+**On Ship Loop re-entry (`[SHIP-LOOP]`):** Check `TaskList` first. If tasks already exist, resume — mark completed phases as `completed` if not already, and continue from the current phase's task. If no tasks exist (session predates this step), create them and mark already-completed phases as `completed` based on `state.json`'s `completedPhases`.
 
 ---
 
