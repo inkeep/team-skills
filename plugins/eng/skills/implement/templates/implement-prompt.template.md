@@ -6,7 +6,7 @@ Impact: Without this template, the iteration prompt must be reconstructed from m
 
 # Implementation Prompt Template
 
-This file contains two complete prompt variants for the iteration agents. The Phase 2 agent selects **ONE** variant, fills all `{{PLACEHOLDERS}}`, and saves the result to `tmp/ship/implement-prompt.md`.
+This file contains two complete prompt variants for the iteration agents. The `implement.sh` script selects the correct variant based on `--spec-path`, fills all `{{PLACEHOLDERS}}`, and saves the result to `tmp/ship/implement-prompt.md`.
 
 **Do NOT include both variants in the saved prompt.** The iteration agent sees a single, unconditional workflow — never both variants, never conditional "if spec is available" logic.
 
@@ -14,11 +14,12 @@ This file contains two complete prompt variants for the iteration agents. The Ph
 
 | Placeholder | Source | Used in |
 |---|---|---|
-| `{{SPEC_PATH}}` | Path to SPEC.md relative to working directory (e.g., `.claude/specs/my-feature/SPEC.md`) | Variant A only |
-| `{{TYPECHECK_CMD}}` | `--typecheck-cmd` input or default `pnpm typecheck` | Both |
-| `{{LINT_CMD}}` | `--lint-cmd` input or default `pnpm lint` | Both |
-| `{{TEST_CMD}}` | `--test-cmd` input or default `pnpm test --run` | Both |
-| `{{CODEBASE_CONTEXT}}` | Key patterns, shared vocabulary, and abstractions from the target codebase area — see SKILL.md Phase 2 for guidance on what to include | Both |
+| `{{SPEC_PATH}}` | Path to SPEC.md — from `--spec-path` argument, injected by implement.sh | Variant A only |
+| `{{TYPECHECK_CMD}}` | `--typecheck-cmd` argument or default `pnpm typecheck` — injected by implement.sh | Both |
+| `{{LINT_CMD}}` | `--lint-cmd` argument or default `pnpm lint` — injected by implement.sh | Both |
+| `{{TEST_CMD}}` | `--test-cmd` argument or default `pnpm test --run` — injected by implement.sh | Both |
+| `{{CODEBASE_CONTEXT}}` | From spec.json `implementationContext` — injected by implement.sh | Both |
+| `{{DIFF}}` | Cleaned git diff (full if small, stat tree if large) — injected by implement.sh each iteration | Both |
 
 ---
 
@@ -68,6 +69,10 @@ Implement the story. **One story per iteration** — keep changes focused.
 **Codebase context:**
 
 {{CODEBASE_CONTEXT}}
+
+**Changes under test:**
+
+{{DIFF}}
 
 ### 5. Verify quality
 
@@ -168,6 +173,10 @@ Implement the story. **One story per iteration** — keep changes focused.
 **Codebase context:**
 
 {{CODEBASE_CONTEXT}}
+
+**Changes under test:**
+
+{{DIFF}}
 
 ### 4. Verify quality
 

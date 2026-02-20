@@ -428,53 +428,37 @@ Put spec.json at `tmp/ship/spec.json`. Create `tmp/ship/` if it doesn't exist (`
 
 If on `main` or `master`, warn before proceeding — the implement skill should normally run on a feature branch. If no branching model exists (e.g., container environment with no PR workflow), proceed with caution and ensure commits are isolated.
 
-### Craft the implementation prompt
+### Template assembly (handled by implement.sh)
 
-**Load:** `templates/implement-prompt.template.md`
+The `implement.sh` script handles all template assembly automatically. It reads `templates/implement-prompt.template.md`, selects the correct variant based on `--spec-path`, extracts `implementationContext` from spec.json, computes a fresh git diff each iteration, and fills all `{{PLACEHOLDERS}}`.
 
-The template contains two complete prompt variants with `{{PLACEHOLDER}}` syntax. Choose ONE variant and fill all placeholders.
+**Your job in Phase 2:** Ensure spec.json has a rich `implementationContext` field — this becomes the iteration agent's codebase context. Include specific patterns, shared vocabulary, abstractions in the area being modified, and repo conventions from CLAUDE.md (testing patterns, file locations, formatting). See Phase 1's implementationContext guidance for details.
 
-**Choose variant:**
-- **Variant A** — when a SPEC.md path is available (directly provided or from Phase 1)
-- **Variant B** — when only spec.json is available (no SPEC.md)
+**You do NOT need to:** read the template, select a variant, fill placeholders, or save a prompt file. The script does all of this.
 
-**Conditionality lives HERE (in Phase 2 construction), NOT in the iteration prompt.** The iteration agent sees a single, unconditional workflow — never both variants, never conditional "if spec is available" logic.
+### Copy artifacts to execution location
 
-**Fill `{{CODEBASE_CONTEXT}}`:** Include the specific patterns, shared vocabulary, and abstractions in the area being modified — more actionable than generic CLAUDE.md guidance. Examples: "The API follows RESTful patterns under /api/tasks/", "Auth uses tenant-scoped middleware in auth.ts", "Data access uses the repository pattern in data-access/". Also include repo conventions from CLAUDE.md (testing patterns, file locations, formatting) that the iteration agent needs.
-
-**Fill quality gate commands:** Use the commands from Inputs (defaults: `pnpm typecheck`, `pnpm lint`, `pnpm test --run`) — override with `--typecheck-cmd`, `--lint-cmd`, `--test-cmd` if provided.
-
-**Fill `{{SPEC_PATH}}`** (Variant A only): Use a path relative to the working directory (e.g., `.claude/specs/my-feature/SPEC.md`). Relative paths work across execution contexts (host, Docker, worktree). Do NOT use absolute paths — they break when the prompt is executed in a different environment. Do NOT embed spec content in the prompt — the iteration agent reads it via the Read tool each iteration.
-
-### Save the prompt
-
-Save the crafted implementation prompt to `tmp/ship/implement-prompt.md`. This file is consumed by Phase 3 (`scripts/implement.sh`) for automated execution, or by the user for manual iteration (`claude -p`).
-
-### Copy implement.sh to execution location
-
-Copy the skill's canonical `scripts/implement.sh` to `tmp/ship/implement.sh` in the working directory and make it executable:
+Copy the skill's canonical `scripts/implement.sh` and template to `tmp/ship/` in the working directory and make the script executable:
 
 ```bash
 cp <path-to-skill>/scripts/implement.sh tmp/ship/implement.sh
+cp <path-to-skill>/templates/implement-prompt.template.md tmp/ship/implement-prompt.template.md
 chmod +x tmp/ship/implement.sh
 ```
 
-This places the iteration loop script alongside the implementation prompt (`tmp/ship/implement-prompt.md`) as a paired execution artifact. The copy enables:
+This places the iteration loop script and template as paired execution artifacts. The copy enables:
 - **Manual execution** — users can run `tmp/ship/implement.sh --force` directly without knowing the skill's install path
 - **Docker execution** — containers access `tmp/ship/implement.sh` via bind mount (see `references/execution.md`)
 
-Phase 3 on host uses the skill's own `scripts/implement.sh` directly (validate-spec.ts is available next to it). The `tmp/ship/implement.sh` copy is for Docker, manual, and external execution contexts.
+Phase 3 on host uses the skill's own `scripts/implement.sh` directly (template is auto-detected next to it). The `tmp/ship/` copies are for Docker, manual, and external execution contexts.
 
 ### Phase 2 checklist
 
 - [ ] spec.json validated against SPEC.md (if available)
 - [ ] spec.json schema validated (via `scripts/validate-spec.ts` if bun available)
 - [ ] Stories correctly scoped, ordered, and with verifiable criteria
-- [ ] Implementation prompt crafted from template with correct variant (A or B)
-- [ ] All `{{PLACEHOLDERS}}` filled (spec path, quality gates, codebase context)
-- [ ] Completion signal present in saved prompt (included in template — verify not accidentally removed)
-- [ ] Prompt saved to `tmp/ship/implement-prompt.md`
-- [ ] `implement.sh` copied to `tmp/ship/implement.sh` and made executable
+- [ ] `implementationContext` is rich and actionable (architecture, constraints, key decisions, codebase patterns)
+- [ ] `implement.sh` and template copied to `tmp/ship/` and made executable
 
 ---
 
@@ -566,10 +550,12 @@ Count the incomplete stories in spec.json and select parameters:
 
 Run in background to avoid the Bash tool's 600-second timeout.
 
+Pass `--spec-path` when a SPEC.md is available (selects Variant A of the prompt template). Pass quality gate commands if overridden from defaults.
+
 **Host execution (default):**
 
 ```
-Bash(command: "<path-to-skill>/scripts/implement.sh --max-iterations <N> --max-turns <M> --force",
+Bash(command: "<path-to-skill>/scripts/implement.sh --max-iterations <N> --max-turns <M> --force --spec-path <SPEC_PATH> --typecheck-cmd '<CMD>' --lint-cmd '<CMD>' --test-cmd '<CMD>'",
      run_in_background: true,
      description: "Implement execution run 1")
 ```
@@ -577,12 +563,14 @@ Bash(command: "<path-to-skill>/scripts/implement.sh --max-iterations <N> --max-t
 **Docker execution (when `--docker` was passed — compose file resolved in Step 3):**
 
 ```
-Bash(command: "docker compose -f <compose-file> exec sandbox tmp/ship/implement.sh --max-iterations <N> --max-turns <M> --force",
+Bash(command: "docker compose -f <compose-file> exec sandbox tmp/ship/implement.sh --max-iterations <N> --max-turns <M> --force --template tmp/ship/implement-prompt.template.md --spec-path <SPEC_PATH> --typecheck-cmd '<CMD>' --lint-cmd '<CMD>' --test-cmd '<CMD>'",
      run_in_background: true,
      description: "Implement Docker execution run 1")
 ```
 
-Always pass `--force` — background execution has no TTY for interactive prompts.
+Always pass `--force` — background execution has no TTY for interactive prompts. In Docker, pass `--template tmp/ship/implement-prompt.template.md` since the skill directory isn't available inside the container.
+
+Omit `--spec-path` when no SPEC.md is available (selects Variant B). Omit quality gate args to use defaults (`pnpm typecheck`, `pnpm lint`, `pnpm test --run`).
 
 Poll for completion using `TaskOutput(block: false)` at intervals. While waiting, do lightweight work (re-read spec, review task list) but do NOT make code changes that could conflict.
 

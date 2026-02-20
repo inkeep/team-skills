@@ -58,6 +58,8 @@ All execution state lives in `tmp/ship/` (gitignored). The only committed artifa
 | `tmp/ship/last-prompt.md` | Last re-injection prompt — the full prompt the stop hook constructed on its most recent re-entry, for debugging | Stop hook | Each re-entry (overwritten) | Debugging only |
 | `tmp/ship/spec.json` | User stories — acceptance criteria, priority, pass/fail status | Phase 2 (/implement) | Each iteration (sets `passes: true`) | implement.sh, iterations, Ship |
 | `tmp/ship/progress.txt` | Iteration log — what was done, learnings, blockers | Phase 2 start (implement.sh) | Each iteration (append) | Iterations, Ship |
+| `tmp/ship/qa.json` | Test scenarios — success criteria, tools, priority, pass/fail status, results | Phase 3 (/qa) | Each QA iteration (sets `passes`, `result`, `notes`) | qa.sh, QA iterations, Ship |
+| `tmp/ship/qa-progress.txt` | QA iteration log — what was tested, findings, learnings, blockers | Phase 3 start (qa.sh) | Each QA iteration (append) | QA iterations, Ship |
 | SPEC.md *(committed)* | Product + tech spec — requirements, design, decisions, non-goals | Phase 1 (/spec or user) | Phase 1 only | All phases, iterations |
 
 ### When to update what
@@ -66,9 +68,11 @@ All execution state lives in `tmp/ship/` (gitignored). The only committed artifa
 |---|---|---|
 | **Phase 1 end** | **Run** `ship-init-state.sh` — creates both `state.json` and `loop.md` (see Phase 1, Step 3) | — |
 | **Phase 2 start** | — | `/implement` creates `tmp/ship/spec.json`, `tmp/ship/implement-prompt.md`, `tmp/ship/progress.txt` |
+| **Phase 3 start** | — | `/qa` creates `tmp/ship/qa.json`, `tmp/ship/qa-prompt.md`, `tmp/ship/qa-progress.txt` |
 | **Any phase → next** | Set `currentPhase` to next phase, append completed phase to `completedPhases`, refresh `lastUpdated` | — |
 | **User amendment** (any phase) | Append to `amendments[]`: `{"description": "...", "status": "pending"}` | — |
 | **Iteration completes a story** | — | `tmp/ship/spec.json`: set story `passes: true`. `tmp/ship/progress.txt`: append iteration log. |
+| **QA iteration completes a scenario** | — | `tmp/ship/qa.json`: set scenario `passes`, `result`, `notes`. `tmp/ship/qa-progress.txt`: append iteration log. |
 | **PR created** (after Phase 2) | Set `prNumber` | Draft PR created on GitHub |
 | **Phase 6 → completed** | Set `currentPhase: "completed"` | Stop hook deletes `loop.md` |
 | **Stop hook re-entry** | — | `loop.md`: iteration incremented. Prompt re-injected from `state.json` + SKILL.md. |
@@ -289,14 +293,17 @@ After Phase 2 completes and before entering Phase 3. Do not update `currentPhase
 
 ### Phase 3: Testing
 
-Load `/qa` skill with the SPEC.md path (or PR number if no spec). `/qa` handles the full manual QA lifecycle: tool detection, test plan derivation, execution with available tools (browser, macOS, bash), result recording, and gap documentation.
+Load `/qa` skill with the SPEC.md path (or PR number if no spec). `/qa` runs a subprocess iteration loop — it generates `qa.json` (structured test plan with scenarios and success criteria), crafts an iteration prompt, and executes `qa.sh` which spawns fresh Claude Code subprocesses per scenario.
 
-If scope calibration indicated a lightweight scope (bug fix / config change), pass that context so `/qa` calibrates depth accordingly.
+Pass the scope calibration context so `/qa` calibrates scenario depth accordingly (fewer scenarios for bug fixes, full coverage for features).
+
+`/qa` handles the full lifecycle: tool detection (once, stored in qa.json), scenario derivation, subprocess execution, result recording, bug fixing, and gap documentation. Results are tracked in `tmp/ship/qa.json` and `tmp/ship/qa-progress.txt`.
 
 **Phase 3 exit gate — verify before proceeding to Phase 4:**
 
-- [ ] `/qa` complete: has run, fixed what it could, and documented results. Remaining gaps and unresolvable issues are documented — they do not block Phase 4.
-- [ ] If `/qa` made any code changes: re-run quality gates (test suite, typecheck, lint) and verify green. `/qa` fixes bugs it finds — you own verification that those fixes don't break anything else.
+- [ ] `/qa` complete: qa.json shows all scenarios with `passes: true`. Check results: how many passed, how many were fixed, how many blocked/skipped.
+- [ ] If `/qa` made any code changes (bug fixes via `[qa-fix]` commits): re-run quality gates (test suite, typecheck, lint) and verify green. `/qa` fixes bugs it finds — you own verification that those fixes don't break anything else.
+- [ ] Remaining gaps and unresolvable issues are documented in qa.json `notes` fields — they do not block Phase 4.
 - [ ] You can explain the implementation to another engineer: what was tested, what edge cases exist, how they are handled
 
 ---
@@ -429,7 +436,7 @@ These govern your behavior throughout:
 | Path | Use when | Impact if skipped |
 |---|---|---|
 | `/implement` skill | Converting spec, crafting prompt, and executing the iteration loop (Phase 2) | Missing spec.json, no implementation prompt, no automated execution |
-| `/qa` skill | Manual QA verification with available tools (Phase 3) | User-facing bugs missed, visual issues, broken UX flows, undocumented gaps |
+| `/qa` skill | QA subprocess loop — generates qa.json, crafts iteration prompt, runs qa.sh (Phase 3). Results in `tmp/ship/qa.json` and `tmp/ship/qa-progress.txt` | User-facing bugs missed, visual issues, broken UX flows, undocumented gaps |
 | `/pr` skill | Writing the full PR body (after Phase 3) and updating it after subsequent phases | Inconsistent PR body, missing sections, stale description |
 | `/docs` skill | Writing or updating documentation — product + internal surface areas (Phase 4) | Docs not written, wrong format, missed documentation surfaces, mismatched with project conventions |
 | `/review` skill | Running the push → review → fix → CI/CD loop (Phase 5) | Missed feedback, unresolved threads, mechanical response to reviews, CI/CD failures not investigated |

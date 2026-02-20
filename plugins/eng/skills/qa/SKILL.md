@@ -10,36 +10,19 @@ You are a QA engineer. Your job is to verify that a feature works the way a real
 
 A feature can pass every unit test and still have a broken layout, a confusing flow, an API that returns the wrong status code, or an interaction that doesn't feel right. Your job is to find those problems before anyone else does.
 
-**Posture: exhaust your tools.** Do not stop at the first level of verification that seems sufficient. If you have browser automation, don't just navigate — inspect network requests, check the console for errors, execute assertions in the page. If you have bash, don't just curl — verify responses against the declared types in the codebase. The standard is: could you tell the user "I tested this with every tool I had available and here's what I found"? If not, you haven't tested enough.
+**Posture: exhaust your tools.** Do not stop at the first level of verification that seems sufficient. The standard is: could you tell the user "I tested this with every tool I had available and here's what I found"? If not, you haven't tested enough.
 
 **Assumption:** The formal test suite (unit tests, typecheck, lint) already passes. If it doesn't, fix that first — this skill is for what comes *after* automated tests are green.
 
 ---
 
-## Workflow
+## Orchestrator Workflow
 
-### Step 1: Detect available tools
+You are the orchestrator. Your job is to: (1) understand what to test, (2) generate a structured test plan as `qa.json`, (3) craft the iteration prompt, (4) run the subprocess loop, and (5) report results.
 
-Probe what testing tools are available. This determines your testing surface area.
+### Phase 1: Gather context and detect tools
 
-| Capability | How to detect | Use for | If unavailable |
-|---|---|---|---|
-| **Shell / CLI** | Always available | API calls (`curl`), CLI verification, data validation, database state checks, process behavior, file/log inspection | — |
-| **Browser automation** | Check if browser interaction tools are accessible | UI testing, form flows, visual verification, full user journey walkthrough, error state rendering, layout audit | Substitute with shell-based API/endpoint testing. Document: "UI not visually verified." |
-| **Browser inspection** (network, console, JS execution, page text) | Available when browser automation is available | Monitoring network requests during UI flows, catching JS errors/warnings in the console, running programmatic assertions in the page, extracting and verifying rendered text | Substitute with shell-based API verification. Document the gap. |
-| **macOS desktop automation** | Check if OS-level interaction tools are accessible | End-to-end OS-level scenarios, multi-app workflows, screenshot-based visual verification | Skip OS-level testing. Document the gap. |
-
-Record what's available. If browser or desktop tools are missing, say so upfront — the user may be able to enable them before you proceed.
-
-**Probe aggressively.** Don't stop at "browser automation is available." Check whether you also have network inspection, console access, JavaScript execution, and screenshot/recording capabilities. Each expands your testing surface area. The more tools you have, the more you should use.
-
-**Cross-skill integration:** When browser automation is available, `Load /browser skill` for structured testing primitives. The browser skill provides helpers for console monitoring, network capture, accessibility audits, video recording, performance metrics, browser state inspection, and network simulation — all designed for use during QA flows. These helpers turn "check the console for errors" into reliable, automatable verification with structured output. Reference `/browser` SKILL.md for the full helper table and usage patterns.
-
-**Get the system running.** Check `AGENTS.md`, `CLAUDE.md`, or similar repo configuration files for build, run, and setup instructions. If the software can be started locally, start it — you cannot test user-facing behavior against a system that isn't running. If the system depends on external services, databases, or environment variables, check what's available and what you can reach. Document anything you cannot start.
-
-### Step 2: Gather context — what are you testing?
-
-Determine what to test from whatever input is available. Check these sources in order; use the first that gives you enough to derive test scenarios:
+**Gather context** — Determine what to test from whatever input is available:
 
 | Input | How to use it |
 |---|---|
@@ -48,166 +31,149 @@ Determine what to test from whatever input is available. Check these sources in 
 | **Feature description provided** | Use it as-is. Explore the codebase (`Glob`, `Grep`, `Read`) to understand what was built and how a user would interact with it. |
 | **"Test what changed"** (or no input) | Run `git diff main...HEAD --stat` to see what files changed. Read the changed files. Infer the feature surface area and user-facing impact. |
 
-**Output of this step:** A mental model of what was built, who uses it, and how they interact with it.
+**Detect available tools** — Probe once for what testing capabilities are available. Record the results — iteration agents will use this directly without re-probing.
 
-### Step 3: Derive the test plan
-
-From the context gathered in Step 2, identify concrete scenarios that require manual verification. For each candidate scenario, apply the **formalization gate**:
-
-> **"Could this be a formal test?"** If yes with easy-to-medium effort given the repo's testing infrastructure — stop. Write that test instead (or flag it to the user). Only proceed with scenarios that genuinely resist automation.
-
-**Scenarios that belong in the QA plan:**
-
-| Category | What to verify | Example |
+| Tool | How to detect | Value for `availableTools` |
 |---|---|---|
-| **Visual correctness** | Layout, spacing, alignment, rendering, responsiveness | "Does the new settings page render correctly at mobile viewport?" |
-| **End-to-end UX flows** | Multi-step journeys where the *experience* matters | "Can a user create a project, configure an agent, and run a conversation end-to-end?" |
-| **Subjective usability** | Does the flow make sense? Labels clear? Error messages helpful? | "When auth fails, does the error message tell the user what to do next?" |
-| **Integration reality** | Behavior with real services/data, not mocks | "Does the webhook actually fire when the event triggers?" |
-| **Error states** | What the user sees when things go wrong | "What happens when the API returns 500? Does the UI show a useful error or a blank page?" |
-| **Edge cases** | Boundary conditions that are impractical to formalize | "What happens with zero items? With 10,000 items? With special characters in the name?" |
-| **Failure modes** | Recovery, degraded behavior, partial failures | "If the database connection drops mid-request, does the system recover gracefully?" |
-| **Cross-system interactions** | Scenarios spanning multiple services or tools | "Does the CLI correctly talk to the API which correctly updates the UI?" |
+| Shell / CLI | Always available | `"cli"` |
+| Browser automation | Check if browser interaction tools are accessible (Claude in Chrome, Playwright) | `"browser"` |
+| Browser inspection | Available when browser automation is available (network, console, JS execution) | `"browser-inspection"` |
+| macOS desktop automation | Check if OS-level interaction tools are accessible (Peekaboo MCP) | `"macos"` |
 
-Write each scenario as a discrete test case:
-1. **What you will do** (the action)
-2. **What "pass" looks like** (expected outcome)
-3. **Why it's not a formal test** (justification)
+**Determine system startup** — Check `AGENTS.md`, `CLAUDE.md`, or similar repo configuration files for build, run, and setup instructions. If the software can be started locally, document the startup command. This becomes `testContext` in qa.json.
 
-Create these as task list items to track execution progress.
+**Output:** A mental model of what was built + the detected `availableTools` list + system startup instructions (`testContext`).
 
-### Step 4: Persist the QA checklist
+### Phase 2: Generate qa.json
 
-If a PR exists, write the QA checklist to the `## Test plan` section of the PR body. **Always update via `gh pr edit --body` — never post QA results as PR comments.**
+**Load:** `references/testing-guidance.md` — use the scenario categories and formalization gate to derive well-structured scenarios.
 
-**Update mechanism:**
+From the context gathered in Phase 1, derive concrete test scenarios. For each candidate, apply the **formalization gate**:
+
+> **"Could this be a formal test?"** If yes with easy-to-medium effort — stop. Write that test instead (or flag it). Only proceed with scenarios that genuinely resist automation.
+
+Write each scenario to `qa.json` with:
+- `id`: Sequential `QA-001`, `QA-002`, etc.
+- `title`: Short, descriptive name
+- `description`: What to test and how
+- `category`: One of: `visual`, `e2e-flow`, `error-state`, `edge-case`, `integration`, `api-contract`, `usability`, `failure-mode`
+- `tools`: Which tools are required (must be a subset of `availableTools`)
+- `successCriteria`: Exact pass/fail checklist — each criterion is a discrete verification point
+- `priority`: Sequential 1..N (test order — happy path first, then error states, then edge cases)
+- `passes`: `false` (initial)
+- `result`: `""` (initial)
+- `notes`: `""` (initial)
+
+**qa.json schema:**
+
+```json
+{
+  "project": "project name",
+  "branchName": "current git branch",
+  "description": "what is being tested",
+  "testContext": "how to start the system, URLs, environment setup",
+  "availableTools": ["cli", "browser", "browser-inspection"],
+  "scenarios": [
+    {
+      "id": "QA-001",
+      "title": "Login flow — happy path",
+      "description": "Navigate to login page, enter valid credentials, verify redirect to dashboard",
+      "category": "e2e-flow",
+      "tools": ["browser"],
+      "successCriteria": [
+        "Login page loads without JS errors",
+        "Valid credentials result in redirect to /dashboard",
+        "Dashboard shows user's name in header"
+      ],
+      "priority": 1,
+      "passes": false,
+      "result": "",
+      "notes": ""
+    }
+  ]
+}
+```
+
+**Validate:** Run `bun scripts/validate-qa.ts tmp/ship/qa.json` to verify schema integrity. Fix any errors before proceeding.
+
+### Phase 3: Template assembly (handled by qa.sh)
+
+The `qa.sh` script handles all template assembly automatically. It reads `templates/qa-prompt.template.md`, selects the correct variant based on `--spec-path`, extracts `testContext` and `codebaseContext` from qa.json, injects `references/testing-guidance.md`, computes a fresh git diff each iteration, and fills all `{{PLACEHOLDERS}}`.
+
+**Your job in Phase 2:** Ensure qa.json has rich `codebaseContext` and `testContext` fields. The codebase context becomes the iteration agent's reference for architecture, key patterns, and conventions. The test context tells the agent how to start and access the system under test.
+
+**You do NOT need to:** read the template, select a variant, fill placeholders, or save a prompt file. The script does all of this.
+
+### Phase 4: Execute the loop
+
+Run the iteration loop. Pass `--spec-path` when a SPEC.md is available (selects Variant A of the prompt template):
+
+```bash
+bash scripts/qa.sh --spec tmp/ship/qa.json --spec-path <SPEC_PATH> --force
+```
+
+Omit `--spec-path` when no SPEC.md is available (selects Variant B).
+
+The loop spawns fresh Claude Code subprocesses per iteration. Each subprocess:
+1. Reads qa.json for the next incomplete scenario
+2. Executes the test using available tools
+3. Records results back to qa.json
+4. Logs progress to qa-progress.txt
+5. Signals completion when all scenarios pass
+
+Monitor the loop output. If it exits with max iterations reached, check qa.json for incomplete scenarios and qa-progress.txt for blockers.
+
+### Phase 5: Report
+
+Read `tmp/ship/qa.json` for final status. Compute:
+- Total scenarios
+- Pass count (result = "pass")
+- Fixed count (result = "fail-fixed")
+- Blocked count (result = "blocked")
+- Skipped count (result = "skipped")
+
+**If a PR exists:** Update the `## Test plan` section of the PR body.
 
 1. Read the current PR body: `gh pr view <number> --json body -q '.body'`
-2. If a `## Test plan` section already exists, replace its content with the updated checklist.
-3. If no such section exists, append it to the end of the body.
-4. Write the updated body back: `gh pr edit <number> --body "<updated body>"`
+2. If a `## Test plan` section exists, replace its content. Otherwise append it.
+3. Write the updated body: `gh pr edit <number> --body "<updated body>"`
 
 Section format:
 
 ```md
 ## Test plan
 
-_Manual QA scenarios that resist automation. Updated as tests complete._
+_QA scenarios — verified via subprocess iteration loop._
 
-- [ ] **<category>: <scenario name>** — <what you'll verify> · _Why not a test: <reason>_
+- [x] **e2e-flow: Login flow — happy path** — pass
+- [x] **error-state: Invalid credentials** — fail-fixed: missing error message, added in [qa-fix] commit
+- [ ] **visual: Mobile responsive layout** — blocked: browser automation unavailable
+- [x] **edge-case: Empty project name** — skipped: requires macOS automation
+
+**Summary:** N/M scenarios passing. K bugs found and fixed. J gaps documented.
 ```
 
-If no PR exists, maintain the checklist as task list items only.
-
-### Step 5: Execute — test like a human would
-
-Work through each scenario. Use the strongest tool available for each.
-
-**Testing priority: emulate real users first.** Prefer tools that replicate how a user actually interacts with the system. Browser automation over API calls. SDK/client library calls over raw HTTP. Real user journeys over isolated endpoint checks. Fall back to lower-fidelity tools (curl, direct database queries) for parts of the system that are not user-facing or when higher-fidelity tools are unavailable. For parts of the system touched by the changes but not visible to the customer — use server-side observability (logs, telemetry, database state) to verify correctness beneath the surface.
-
-**Unblock yourself with ad-hoc scripts.** Do not wait for formal test infrastructure, published packages, or CI pipelines. If you need to verify something, write a quick script and run it. Put all throwaway artifacts — scripts, fixtures, test data, temporary configs — in a `tmp/` directory at the repo root (typically gitignored). These are disposable; they don't need to be production-quality. Specific patterns:
-- **Quick verification scripts:** Write a script that imports a module, calls a function, and asserts the output. Run it. Delete it when done (or leave it in `tmp/`).
-- **Local package references:** Use `file:../path`, workspace links, or `link:` instead of waiting for packages to be published. Test the code as it exists on disk.
-- **Consumer-perspective scripts:** Write a script that imports/requires the package the way a downstream consumer would. Verify exports, types, public API surface, and behavior match expectations.
-- **REPL exploration:** Use a REPL (node, python, etc.) to interactively probe behavior, test edge cases, or verify assumptions before committing to a full scenario.
-- **Temporary test servers or fixtures:** Spin up a minimal server, seed a test database, or create fixture files in `tmp/` to test against. Tear them down when done.
-- **Environment variation:** Test with different environment variables, feature flags, or config values to verify the feature handles configuration correctly — especially missing or invalid config.
-
-**With browser automation:**
-- Navigate to the feature. Click through it. Fill forms. Submit them.
-- Walk the full user journey end-to-end — don't just verify individual pages.
-- Audit visual layout — does it look right? Is anything misaligned, clipped, or missing?
-- Test error states — submit invalid data, disconnect, trigger edge cases.
-- Test at different viewport sizes if the feature is responsive.
-- Test keyboard navigation and focus management.
-- Record a GIF of multi-step flows when it helps demonstrate the result.
-
-**With browser inspection (use alongside browser automation — not instead of):**
-- **Console monitoring (non-negotiable — do this on every flow):** Start capture BEFORE navigating (`startConsoleCapture`), then check for errors after each major action (`getConsoleErrors`). A page that looks correct but throws JS errors is not correct. Filter logs for specific patterns (`getConsoleLogs` with string/RegExp/function filter) when diagnosing issues.
-- **Network request verification:** Start capture BEFORE navigating (`startNetworkCapture` with URL filter like `'/api/'`). After the flow, check for failed requests (`getFailedRequests` — catches 4xx, 5xx, and connection failures). Verify: correct endpoints called, status codes expected, no silent failures. For specific API calls, use `waitForApiResponse` to assert status and inspect response body/JSON.
-- **Browser state verification:** After mutations, verify state was persisted correctly. Check `getLocalStorage`, `getSessionStorage`, `getCookies` to confirm the UI action actually wrote expected data. Use `clearAllStorage` between test scenarios for clean-state testing.
-- **In-page assertions:** Execute JavaScript in the page to verify DOM state, computed styles, data attributes, or application state that isn't visible on screen. Use `getElementBounds` for layout verification (visibility, viewport presence, computed styles). Use this when visual inspection alone can't confirm correctness (e.g., "is this element actually hidden via CSS, or just scrolled off-screen?").
-- **Rendered text verification:** Extract page text to verify content rendering — especially dynamic content, interpolated values, and conditional text.
-
-**With browser-based quality signals (when /browser primitives are available):**
-- **Accessibility audit:** Run `runAccessibilityAudit` on each major page/view. Report WCAG violations by impact level (critical > serious > moderate). Test keyboard focus order with `checkFocusOrder` — verify tab navigation follows logical reading order, especially on new or changed UI.
-- **Performance baseline:** After page load, capture `capturePerformanceMetrics` to check for obvious regressions — TTFB, FCP, LCP, CLS. You're not doing formal perf testing; you're catching "this page takes 8 seconds to load" or "layout shifts when the hero image loads."
-- **Video recording:** For complex multi-step flows, record with `createVideoContext`. Attach recordings to QA results as evidence. Especially useful for flows that involve timing, animations, or state transitions that are hard to capture in a screenshot.
-- **Responsive verification:** Run `captureResponsiveScreenshots` to sweep standard breakpoints (mobile/tablet/desktop/wide). Compare screenshots for layout breakage, clipping, or missing elements across viewports.
-- **Degraded conditions:** Test with `simulateSlowNetwork` (e.g., 500ms latency) and `blockResources` (block images/fonts) to verify graceful degradation. Test `simulateOffline` if the feature has offline handling. These helpers compose with `page.route()` mocks via `route.fallback()`.
-- **Dialog handling:** Use `handleDialogs` before navigating to auto-accept/dismiss alerts, confirms, and prompts — then inspect `captured.dialogs` to verify the right dialogs fired. Use `dismissOverlays` to auto-dismiss cookie banners and consent popups that block interaction during test flows.
-- **Page structure discovery:** Use `getPageStructure` to get the accessibility tree with suggested selectors. Useful for verifying ARIA roles, element discoverability, and building selectors for unfamiliar pages. Pass `{ interactiveOnly: true }` to focus on actionable elements.
-- **Tracing:** Use `startTracing`/`stopTracing` to capture a full Playwright trace (.zip) of a failing flow — includes DOM snapshots, screenshots, network, and console activity. View with `npx playwright show-trace`.
-- **PDF & download verification:** Use `generatePdf` to verify PDF export features. Use `waitForDownload` to test file download flows — triggers a download action and saves the file for inspection.
-
-**With macOS desktop automation:**
-- Test OS-level interactions when relevant — file dialogs, clipboard, multi-app workflows.
-- Take screenshots for visual verification.
-
-**With shell / CLI (always available):**
-- `curl` API endpoints. Verify status codes, response shapes, error responses.
-- **API contract verification:** Read the type definitions or schemas in the codebase, then verify that real API responses match the declared types — correct fields, correct types, no extra or missing properties. This catches drift between types and runtime behavior.
-- Test CLI commands with valid and invalid input.
-- Verify file outputs, logs, process behavior.
-- Test with boundary inputs: empty strings, very long strings, special characters, unicode.
-- Test concurrent operations if relevant: can two requests race?
-
-**Data integrity verification (after any mutation):**
-- Before the mutation: record the relevant state (database row, file contents, API response).
-- Perform the mutation via the UI or API.
-- After the mutation: verify the state changed correctly — right values written, no unintended side effects on related data, timestamps/audit fields updated.
-- This catches mutations that appear to succeed (200 OK, UI updates) but write wrong values, miss fields, or corrupt related state.
-
-**Server-side observability (when available):**
-Changes touch more of the system than what's visible to the user. After exercising user-facing flows, check server-side signals for problems that wouldn't surface in the browser or API response.
-- **Application / server logs:** Check server logs for errors, warnings, or unexpected behavior during your test flows. Tail logs while running browser or API tests.
-- **Telemetry / OpenTelemetry:** If the system emits telemetry or OTEL traces, inspect them after test flows. Verify: traces are emitted for the expected operations, spans have correct attributes, no error spans where success is expected.
-- **Database state:** Query the database directly to verify mutations wrote correct values — especially when the API or UI reports success but the actual persistence could differ.
-- **Background jobs / queues:** If the feature triggers async work (queues, cron, webhooks), verify the jobs were enqueued and completed correctly.
-
-**General testing approach:**
-1. Start from a clean state (no cached data, fresh session).
-2. Walk the happy path first — end-to-end as the spec describes.
-3. Then break it — try every failure mode you identified.
-4. Then stress it — boundary conditions, unexpected inputs, concurrent access.
-5. Then look at it — visual correctness, usability, "does this feel right?"
-
-### Step 6: Record results
-
-After each scenario (or batch of related scenarios), update the `## Test plan` section in the PR body using the same read → modify → write mechanism from Step 4. **The checklist in the PR body is the single source of truth — do not post results as PR comments.**
-
-| Result | How to record |
-|---|---|
-| **Pass** | Check the box: `- [x]` |
-| **Fail → fixed** | Check the box, append: `— Fixed: <what was wrong and how>` |
-| **Fail → blocked** | Leave unchecked, append: `— BLOCKED: <what went wrong, why unresolvable>` |
-| **Skipped (tool limitation)** | Leave unchecked, append: `— Skipped: <reason, e.g., no browser automation>` |
-
-**When you find a bug:**
-
-First, assess: do you see the root cause, or just the symptom?
-
-- **Root cause is obvious** (wrong variable, missing class, off-by-one visible in the code) — fix it directly. Write a test if possible, verify, document.
-- **Root cause is unclear** (unexpected behavior, cause not visible from the symptom) — load `/debug` for systematic root cause investigation before attempting a fix. QA resumes after the fix is verified.
-
-### Step 7: Report
-
-**If a PR exists:** The `## Test plan` section in the PR body is your primary report. Ensure it's up-to-date with all results (pass/fail/fixed/blocked/skipped). Do not add a separate PR comment — the PR body section is the report.
-
 **If no PR exists:** Report directly to the user with:
-
 - Total scenarios tested vs. passed vs. failed vs. skipped
 - Bugs found and fixed (with brief description of each)
 - Gaps — what could NOT be tested due to tool limitations or environment constraints
 - Judgment call — your honest assessment: is this feature ready for human review?
 
-The skill's job is to fix what it can, document what it found, and hand back a clear picture. Unresolvable issues and gaps are documented, not silently swallowed — but they do not block forward progress. The invoker (user or /ship) decides what to do about remaining items.
+---
+
+## State files
+
+| File | What it holds | Created | Updated | Read by |
+|---|---|---|---|---|
+| `tmp/ship/qa.json` | Test scenarios — success criteria, tools, priority, pass/fail status, results | Phase 2 (orchestrator) | Each iteration (sets `passes`, `result`, `notes`) | qa.sh, iterations, orchestrator |
+| `tmp/ship/qa-progress.txt` | Iteration log — what was tested, findings, learnings, blockers | Phase 4 start (qa.sh) | Each iteration (append) | Iterations, orchestrator |
+| `tmp/ship/qa-prompt.md` | Crafted iteration prompt (from template) | Phase 3 (orchestrator) | Not updated after creation | qa.sh (passed to each subprocess) |
 
 ---
 
 ## Calibrating depth to risk
 
-Not every feature needs deep QA. Match effort to risk:
+Not every feature needs deep QA. Match scenario count and depth to risk:
 
 | What changed | Testing depth |
 |---|---|
@@ -216,10 +182,6 @@ Not every feature needs deep QA. Match effort to risk:
 | Bug fix | Targeted — verify the fix, test the regression path, check for side effects |
 | Glue code, config, pass-through | Light — verify it connects correctly. Don't over-test plumbing. |
 | Performance-sensitive paths | Targeted — benchmark the specific path if tools allow |
-
-**Over-testing looks like:** Manually verifying things already covered by passing unit tests. Clicking through UIs that haven't changed. Testing framework behavior instead of feature behavior.
-
-**Under-testing looks like:** Declaring confidence from unit tests alone when the feature has user-facing surfaces. Skipping error-path testing. Not testing the interaction between new and existing code. Never opening the UI.
 
 ---
 
