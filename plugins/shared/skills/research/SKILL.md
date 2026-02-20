@@ -531,11 +531,12 @@ Keep this short. The user already has the full report/answer — the recap is a 
 
 Based on what emerged during research, offer **2–4 natural follow-up options**. These should feel like a knowledgeable colleague saying "here's what I'd look at next" — not a generic menu.
 
-**Where follow-ups come from:**
+**Where follow-ups come from (research angles only):**
 - Gaps/open questions that emerged during research (the "we couldn't confirm X" items)
 - Adjacent dimensions the rubric didn't cover but findings suggest matter (e.g., "performance didn't come up in scoping, but the architecture we found has known scaling concerns")
-- Deeper dives into findings that were covered at moderate depth but could go deeper
-- Practical next steps that bridge research to action (e.g., "want me to prototype the integration pattern we identified?")
+- Deeper dives into findings that were covered at moderate depth but could go deeper (e.g., "we confirmed the auth model at a high level — a deeper dive into token lifecycle and revocation semantics would sharpen the security assessment")
+- Cross-cutting perspectives that would reframe or stress-test existing findings (e.g., "we assessed features from the builder's perspective — investigating from the operator/SRE perspective might reveal different trade-offs")
+- Emerging questions that the research itself surfaced — things you didn't know to ask before starting (e.g., "the codebase revealed an undocumented plugin system — investigating its stability and API surface could change the extensibility assessment")
 - **Coherence review** — proactively suggest this (not just list as a generic option) when you observed 2+ of these signals during research:
   - Conflicting evidence across dimensions (sources disagree, or findings tension with each other)
   - High density of UNCERTAIN findings on pivotal claims
@@ -546,6 +547,8 @@ Based on what emerged during research, offer **2–4 natural follow-up options**
   > "This research surfaced [specific tension]. A coherence audit would help reconcile these findings. Want me to run one?" (load `references/coherence-audit.md`)
 
   When signals are absent, omit — don't offer a coherence audit as a default follow-up on every report.
+
+**Stay in the research lane.** Follow-ups must be *further research* — additional angles, deeper investigation, adjacent domains, unexplored dimensions. Never suggest derivative deliverables (checklists, templates, scorecards, playbooks, audits of the user's own assets) or productized outputs that belong to other skills. If a research finding naturally implies a downstream action ("this finding suggests you'd benefit from X"), name the implication in the report's findings — but the follow-up option should be "investigate X further," not "let me build X for you."
 
 **When the user asks "anything else to research?" / "what else should we look at?" / "is there more?":**
 
@@ -566,7 +569,7 @@ The goal is the quality of thinking a senior colleague would bring — "given wh
 > 2. **[Descriptive direction]** — [why it matters]. *[Depth: ...]*
 > 3. **[Descriptive direction]** — [why it matters]. *[Depth: ...]*
 >
-> Any of these interest you, or is there something else that came to mind?
+> Want to dive deeper into any of these, or is there another angle that came to mind?
 
 **Calibration guidance:**
 - Match the follow-up tone to the research tone. If the user asked a quick question (Path B), offer lightweight follow-ups. If they commissioned a deep report (Path A), offer substantial next dimensions.
@@ -608,6 +611,7 @@ Use consistently throughout:
 * **Defaulting to conclusions without asking** (must honor stance)
 * **Over-updating**: rewriting a report wholesale when the user asked for a delta (use Path C)
 * **Generic follow-ups**: offering "want to learn more?" without tying options to specific findings or gaps from the research
+* **Deliverable follow-ups instead of research follow-ups**: suggesting checklists, templates, scorecards, style guides, audits-of-user-assets, or other productized outputs as "where we could go from here" — follow-ups must be further research directions (deeper dives, adjacent dimensions, unexplored angles), not downstream deliverables that belong to other skills
 * **Skipping the recap**: dumping a report and going silent — always close with a recap + natural follow-up options unless the user explicitly signals they're done
 * **Ignoring existing reports**: starting new research without scanning `~/.claude/reports/` first — the user may not know what prior research exists, and duplicate work wastes time
 
