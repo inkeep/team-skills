@@ -25,23 +25,35 @@ open "https://chromewebstore.google.com/detail/playwright-mcp-bridge/mmlmfjhmonk
 # 5. TypeScript LSP companion plugin
 claude plugin install typescript-lsp@claude-plugins-official
 
-# 6. Environment variables (credentials + directory overrides)
-node -e "const fs=require('fs'),p=require('path').join(require('os').homedir(),'.claude','settings.json');const s=fs.existsSync(p)?JSON.parse(fs.readFileSync(p,'utf8')):{};const add={BUNNY_STORAGE_API_KEY:'',BUNNY_STORAGE_ZONE_NAME:'',BUNNY_STORAGE_HOSTNAME:'',BUNNY_STREAM_API_KEY:'',BUNNY_STREAM_LIBRARY_ID:'',VIMEO_CLIENT_ID:'',VIMEO_CLIENT_SECRET:'',VIMEO_ACCESS_TOKEN:''};s.env=Object.assign(add,s.env||{});fs.writeFileSync(p,JSON.stringify(s,null,2)+'\n');console.log('Env placeholders added to '+p+' — fill in your values.')"
+# 6. Environment variables (credentials via 1Password)
+#    Requires: 1Password app → Settings → Developer → "Integrate with 1Password CLI"
+brew install 1password-cli  # skip if already installed
+~/.claude/plugins/marketplaces/inkeep-team-skills/plugins/eng/scripts/setup-claude-env.sh --account inkeep.1password.com
 ```
 
-> **Step 6 details:** The command above merges empty placeholders into `~/.claude/settings.json` without overwriting existing values. Open the file and fill in your keys:
+> **Step 6 details:** The script pulls shared secrets from 1Password and merges them into `~/.claude/settings.json` without overwriting your other settings.
 >
-> | Variable | Where to get it |
+> **Prerequisites:**
+> - 1Password desktop app with CLI integration: Settings → Developer → "Integrate with 1Password CLI"
+> - Access to the **Shared** vault (ask your team admin)
+>
+> The script reads these env vars from the shared "Claude Code Secrets" item:
+>
+> | Variable | Purpose |
 > |---|---|
-> | `BUNNY_STORAGE_API_KEY` | [Bunny Storage](https://dash.bunny.net/storage) → your zone → FTP & API Access → Password |
-> | `BUNNY_STORAGE_ZONE_NAME` | Storage Zone name (e.g., `inkeep-pr-assets`) |
-> | `BUNNY_STORAGE_HOSTNAME` | Pull Zone CDN hostname (e.g., `inkeep-pr-assets.b-cdn.net`) |
-> | `BUNNY_STREAM_API_KEY` | [Bunny Stream](https://dash.bunny.net/stream) → your library → API & Webhooks |
-> | `BUNNY_STREAM_LIBRARY_ID` | Same page — numeric library ID |
-> | `VIMEO_CLIENT_ID` | [Vimeo developer apps](https://developer.vimeo.com/apps) → create app |
-> | `VIMEO_CLIENT_SECRET` | Same app page |
-> | `VIMEO_ACCESS_TOKEN` | Same app → Authentication → generate PAT with `upload` scope |
+> | `BUNNY_STORAGE_API_KEY` | PR screenshot uploads via `/screengrabs` |
+> | `BUNNY_STORAGE_ZONE_NAME` | Storage zone name |
+> | `BUNNY_STORAGE_HOSTNAME` | CDN hostname for uploaded assets |
+> | `BUNNY_STREAM_API_KEY` | Video uploads via `/browser` |
+> | `BUNNY_STREAM_LIBRARY_ID` | Stream library ID |
+> | `VIMEO_CLIENT_ID` | Vimeo API access |
+> | `VIMEO_CLIENT_SECRET` | Vimeo API secret |
+> | `VIMEO_ACCESS_TOKEN` | Vimeo upload token |
 >
+> **Don't have 1Password?** Manually add empty placeholders and fill in values from the service dashboards ([Bunny Storage](https://dash.bunny.net/storage), [Bunny Stream](https://dash.bunny.net/stream), [Vimeo developer apps](https://developer.vimeo.com/apps)):
+> ```bash
+> node -e "const fs=require('fs'),p=require('path').join(require('os').homedir(),'.claude','settings.json');const s=fs.existsSync(p)?JSON.parse(fs.readFileSync(p,'utf8')):{};const add={BUNNY_STORAGE_API_KEY:'',BUNNY_STORAGE_ZONE_NAME:'',BUNNY_STORAGE_HOSTNAME:'',BUNNY_STREAM_API_KEY:'',BUNNY_STREAM_LIBRARY_ID:'',VIMEO_CLIENT_ID:'',VIMEO_CLIENT_SECRET:'',VIMEO_ACCESS_TOKEN:''};s.env=Object.assign(add,s.env||{});fs.writeFileSync(p,JSON.stringify(s,null,2)+'\n');console.log('Env placeholders added to '+p+' — fill in your values.')"
+> ```
 >
 > **Optional directory overrides** (set only if you want non-default locations):
 >
@@ -52,6 +64,11 @@ node -e "const fs=require('fs'),p=require('path').join(require('os').homedir(),'
 > | `CLAUDE_SPECS_DIR` | `<repo>/specs/` or `~/.claude/specs/` | Where `/spec` stores spec artifacts |
 >
 > Credentials are only needed for the `/browser` skill's `uploadToBunnyStorage()`, `uploadToBunny()`, and `uploadToVimeo()` helpers. Directory overrides and all other skills work without any env vars.
+>
+> **Admin:** To push your current secrets to 1Password (run once), run:
+> ```bash
+> ~/.claude/plugins/marketplaces/inkeep-team-skills/plugins/eng/scripts/1password-push.sh --account inkeep.1password.com
+> ```
 
 <details>
 <summary>Alternative: Skills CLI (any agent, not just Claude Code)</summary>

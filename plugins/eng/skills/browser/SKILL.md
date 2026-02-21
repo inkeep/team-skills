@@ -633,6 +633,54 @@ const TARGET_URL = 'http://localhost:3001';
 })();
 ```
 
+### Visual Inspection (look at a page)
+
+Use when you need to **see** what a page looks like — before taking final screenshots, during exploration, after an action, or to verify a UI state. This is for your own understanding, not for output.
+
+The pattern: take a temporary screenshot, then read it.
+
+```javascript
+// /tmp/playwright-test-inspect.js
+const { chromium } = require('playwright');
+const helpers = require('./lib/helpers');
+
+const TARGET_URL = 'http://localhost:3001';
+
+(async () => {
+  const browser = await chromium.launch({ headless: true });
+  const context = await helpers.createContext(browser);
+  const page = await context.newPage();
+  await page.goto(`${TARGET_URL}/dashboard`, { waitUntil: 'networkidle' });
+
+  // Take a quick screenshot to see the page
+  await page.screenshot({ path: '/tmp/inspect.png' });
+
+  // Inspect a specific section
+  const section = page.locator('.settings-panel');
+  await section.screenshot({ path: '/tmp/inspect-section.png' });
+
+  await browser.close();
+})();
+```
+
+After running the script, **read the image file** to see what the page looks like:
+
+```
+Read tool → /tmp/inspect.png
+```
+
+Claude renders PNG files visually, so you can see the actual page layout, content, popups, loading states, and any issues.
+
+**When to use this vs `getPageStructure()`:**
+
+| Need | Use |
+|---|---|
+| Find selectors, understand DOM hierarchy | `getPageStructure()` (text — faster, more precise) |
+| See what the page actually looks like | Visual inspection (screenshot — layout, colors, overlays, rendering) |
+| Both — unfamiliar page | Do both: structure first for selectors, then screenshot to see the visual result |
+
+**Tip:** For iterative work (exploring a page, debugging a pre-script), use a persistent session so you don't relaunch the browser each time. The screenshot file gets overwritten on each run.
+
 ### Capture Screenshots for Documentation
 
 Use when writing docs, help articles, or PR screenshots that need consistent, high-quality images of the running UI.
