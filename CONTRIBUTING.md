@@ -24,11 +24,11 @@ This cache layer matters: **editing files in the marketplace directory does NOT 
 # 1. Clone the repo
 git clone https://github.com/inkeep/team-skills.git ~/team-skills
 
-# 2. Add as a local marketplace (in Claude Code)
-/plugin marketplace add ~/team-skills
+# 2. Add as a local marketplace
+claude plugin marketplace add ~/team-skills
 
-# 3. Install your team's plugin (in Claude Code)
-/plugin install eng@inkeep-team-skills
+# 3. Install your team's plugin
+claude plugin install eng@inkeep-team-skills
 ```
 
 Auto-update is disabled by default for local-path marketplaces, which is what you want — your local changes won't be overwritten by a `git pull` at startup.
@@ -42,16 +42,13 @@ If you already have the marketplace installed (consumer setup from the README), 
 git clone https://github.com/inkeep/team-skills.git ~/team-skills
 
 # 2. Remove the git-sourced marketplace
-#    (in Claude Code, run:)
-/plugin marketplace remove inkeep-team-skills
+claude plugin marketplace remove inkeep-team-skills
 
 # 3. Re-add from your local clone
-#    (in Claude Code, run:)
-/plugin marketplace add ~/team-skills
+claude plugin marketplace add ~/team-skills
 
 # 4. Re-install your team's plugin
-#    (in Claude Code, run:)
-/plugin install eng@inkeep-team-skills
+claude plugin install eng@inkeep-team-skills
 ```
 
 After this, Claude Code reads skills from `~/team-skills` (via the plugin cache). The git-sourced auto-update is replaced by a local-path marketplace that you control.

@@ -45,6 +45,10 @@ claude plugin marketplace add https://github.com/inkeep/team-skills.git && node 
 # Install your team's plugin
 claude plugin install eng@inkeep-team-skills    # engineering
 claude plugin install gtm@inkeep-team-skills    # GTM
+
+# Add the official Anthropic marketplace and install TypeScript LSP (recommended)
+claude plugin marketplace add anthropics/claude-plugins-official
+claude plugin install typescript-lsp@claude-plugins-official
 ```
 
 ### Option B: Skills CLI (cross-agent)

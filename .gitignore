@@ -6,3 +6,5 @@ tmp/
 pr-screenshots/
 specs/
 .claude/worktrees/
+.dmux/
+.dmux-hooks/
