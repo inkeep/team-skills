@@ -26,30 +26,32 @@ open "https://chromewebstore.google.com/detail/playwright-mcp-bridge/mmlmfjhmonk
 claude plugin marketplace add anthropics/claude-plugins-official
 claude plugin install typescript-lsp@claude-plugins-official
 
-# 6. Environment variables (credentials via 1Password)
+# 6. Skill secrets (credentials via 1Password)
 #    Requires: 1Password app → Settings → Developer → "Integrate with 1Password CLI"
 brew install 1password-cli  # skip if already installed
-~/.claude/plugins/marketplaces/inkeep-team-skills/plugins/eng/scripts/setup-claude-env.sh --account inkeep.1password.com
+~/.claude/plugins/marketplaces/inkeep-team-skills/secrets/setup.sh --account inkeep.1password.com
 ```
 
-> **Step 6 details:** The script pulls shared secrets from 1Password and merges them into `~/.claude/settings.json` without overwriting your other settings.
+> **Step 6 details:** The script reads `secrets/secrets.json` to discover which 1Password items to pull, then merges the env vars into `~/.claude/settings.json` without overwriting your other settings.
 >
 > **Prerequisites:**
+> - 1Password CLI: `brew install 1password-cli`
 > - 1Password desktop app with CLI integration: Settings → Developer → "Integrate with 1Password CLI"
 > - Access to the **Shared** vault (ask your team admin)
 >
-> The script reads these env vars from the shared "Claude Code Secrets" item:
+> **Usage:**
+> ```bash
+> ./secrets/setup.sh                              # pull all skills' secrets
+> ./secrets/setup.sh --skill screengrabs           # pull just screengrabs secrets
+> ./secrets/setup.sh --list                        # show available skills and their vars
+> ./secrets/setup.sh --skill screengrabs --dry-run # preview without writing
+> ```
 >
-> | Variable | Purpose |
-> |---|---|
-> | `BUNNY_STORAGE_API_KEY` | PR screenshot uploads via `/screengrabs` |
-> | `BUNNY_STORAGE_ZONE_NAME` | Storage zone name |
-> | `BUNNY_STORAGE_HOSTNAME` | CDN hostname for uploaded assets |
-> | `BUNNY_STREAM_API_KEY` | Video uploads via `/browser` |
-> | `BUNNY_STREAM_LIBRARY_ID` | Stream library ID |
-> | `VIMEO_CLIENT_ID` | Vimeo API access |
-> | `VIMEO_CLIENT_SECRET` | Vimeo API secret |
-> | `VIMEO_ACCESS_TOKEN` | Vimeo upload token |
+> **Current skills and their env vars** (defined in `secrets/secrets.json`):
+>
+> | Skill | 1Password Item | Env vars |
+> |---|---|---|
+> | `screengrabs` | Screengrabs | `BUNNY_STORAGE_API_KEY`, `BUNNY_STORAGE_ZONE_NAME`, `BUNNY_STORAGE_HOSTNAME`, `BUNNY_STREAM_API_KEY`, `BUNNY_STREAM_LIBRARY_ID`, `VIMEO_CLIENT_ID`, `VIMEO_CLIENT_SECRET`, `VIMEO_ACCESS_TOKEN` |
 >
 > **Don't have 1Password?** Manually add empty placeholders and fill in values from the service dashboards ([Bunny Storage](https://dash.bunny.net/storage), [Bunny Stream](https://dash.bunny.net/stream), [Vimeo developer apps](https://developer.vimeo.com/apps)):
 > ```bash
@@ -59,16 +61,16 @@ brew install 1password-cli  # skip if already installed
 > **Optional directory overrides** (set only if you want non-default locations):
 >
 > | Variable | Default | What it controls |
-> |---|---|
+> |---|---|---|
 > | `CLAUDE_REPORTS_DIR` | `~/.claude/reports/` | Where `/research` stores reports and evidence |
 > | `CLAUDE_SHIP_DIR` | `tmp/ship` | Where `/ship` and `/implement` store workflow state |
 > | `CLAUDE_SPECS_DIR` | `<repo>/specs/` or `~/.claude/specs/` | Where `/spec` stores spec artifacts |
 >
-> Credentials are only needed for the `/browser` skill's `uploadToBunnyStorage()`, `uploadToBunny()`, and `uploadToVimeo()` helpers. Directory overrides and all other skills work without any env vars.
+> Credentials are only needed for media upload helpers (`uploadToBunnyStorage()`, `uploadToBunny()`, `uploadToVimeo()`). Directory overrides and all other skills work without any env vars.
 >
-> **Admin:** To push your current secrets to 1Password (run once), run:
+> **Admin:** To push secrets to 1Password (creates one item per skill), run:
 > ```bash
-> ~/.claude/plugins/marketplaces/inkeep-team-skills/plugins/eng/scripts/1password-push.sh --account inkeep.1password.com
+> ~/.claude/plugins/marketplaces/inkeep-team-skills/secrets/push.sh --account inkeep.1password.com
 > ```
 
 <details>

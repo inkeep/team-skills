@@ -44,4 +44,17 @@ npx skills update
 | `/write-skill` | Author or update Agent Skills (SKILL.md + supporting files) |
 | `/write-agent` | Design Claude Code agents and agent prompts (.claude/agents/*.md) |
 
-**Shared:** `research`, `analyze`, `write-skill`, `write-agent`
+**Shared:** `research`, `analyze`, `screengrabs`, `write-skill`, `write-agent`
+
+---
+
+## Skill secrets (optional)
+
+`/screengrabs` needs media upload credentials. Pull them with:
+
+```bash
+brew install 1password-cli  # skip if already installed
+~/.claude/plugins/marketplaces/inkeep-team-skills/secrets/setup.sh --skill screengrabs --account inkeep.1password.com
+```
+
+Run `./secrets/setup.sh --list` to see all available skills and their env vars. See the [main README](../../README.md#skill-secrets-optional) for more details.

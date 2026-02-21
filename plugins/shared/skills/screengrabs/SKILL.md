@@ -329,7 +329,7 @@ const result = await helpers.uploadToBunnyStorage(
 // result.url → "https://{cdn-hostname}/pr-123/dashboard-before.png" (permanent)
 ```
 
-Requires `BUNNY_STORAGE_API_KEY`, `BUNNY_STORAGE_ZONE_NAME`, `BUNNY_STORAGE_HOSTNAME` env vars (see [Quick setup](../../eng/README.md#quick-setup)).
+Requires `BUNNY_STORAGE_API_KEY`, `BUNNY_STORAGE_ZONE_NAME`, `BUNNY_STORAGE_HOSTNAME` env vars. Set up with `./secrets/setup.sh --skill screengrabs` (see [secrets/secrets.json](../../../../secrets/secrets.json)).
 
 **Fallback: GitHub drag-and-drop** — drag images into the PR description editor on GitHub. GitHub generates permanent CDN URLs automatically.
 

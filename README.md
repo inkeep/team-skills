@@ -62,6 +62,23 @@ npx skills add inkeep/team-skills/plugins/gtm -y    # GTM
 npx skills add inkeep/team-skills/plugins/shared -y
 ```
 
+## Skill secrets (optional)
+
+Some skills (e.g. `/screengrabs`) need credentials for media uploads. These are managed via 1Password and a `secrets/` directory at the repo root.
+
+```bash
+# Pull all skill secrets
+./secrets/setup.sh --account inkeep.1password.com
+
+# Pull just one skill's secrets
+./secrets/setup.sh --skill screengrabs --account inkeep.1password.com
+
+# See available skills and their env vars
+./secrets/setup.sh --list
+```
+
+See [secrets/secrets.json](secrets/secrets.json) for the full mapping. Requires 1Password CLI (`brew install 1password-cli`).
+
 ## Update
 
 **Plugin users:** Skills auto-update on every Claude Code session — no action needed.
