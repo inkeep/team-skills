@@ -584,7 +584,15 @@ Bash(command: "docker compose -f <compose-file> exec sandbox tmp/ship/implement.
 
 Always pass `--force` — background execution has no TTY for interactive prompts.
 
-Poll for completion using `TaskOutput(block: false)` at intervals. While waiting, do lightweight work (re-read spec, review task list) but do NOT make code changes that could conflict.
+Poll for completion using `TaskOutput(block: false)` at the interval below. Implementation is slow — each iteration spawns a full Claude Code subprocess that works through a user story (typically 5-15 minutes per story). Polling more frequently wastes context on redundant checks.
+
+| Feature complexity | Poll interval |
+|---|---|
+| Small (1-3 stories) | 3 minutes |
+| Medium (4-8 stories) | 5 minutes |
+| Large (9+ stories) | 8 minutes |
+
+While waiting, do lightweight work (re-read spec, review task list) but do NOT make code changes that could conflict.
 
 ### Step 7: Assess results
 

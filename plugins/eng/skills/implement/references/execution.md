@@ -53,7 +53,15 @@ Bash(command: "scripts/implement.sh --max-iterations 15 --max-turns 75 --force",
      description: "Implement execution run N")
 ```
 
-Poll for completion using `TaskOutput(block: false)` at intervals (e.g., every 60 seconds). When the task completes, read spec.json and progress.txt to assess results.
+Poll for completion using `TaskOutput(block: false)` at the interval matching feature complexity. Each iteration spawns a full subprocess that typically takes 5-15 minutes per story — polling more frequently wastes context.
+
+| Feature complexity | Poll interval |
+|---|---|
+| Small (1-3 stories) | 3 minutes |
+| Medium (4-8 stories) | 5 minutes |
+| Large (9+ stories) | 8 minutes |
+
+When the task completes, read spec.json and progress.txt to assess results.
 
 **While waiting:** Read the spec, review the task list, or do lightweight planning. Do NOT make code changes that could conflict with the running iteration.
 
