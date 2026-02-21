@@ -23,6 +23,7 @@ open "https://chromewebstore.google.com/detail/playwright-mcp-bridge/mmlmfjhmonk
 #    Then reload any Chrome tab. That's it — no env vars needed.
 
 # 5. TypeScript LSP companion plugin
+claude plugin marketplace add anthropics/claude-plugins-official
 claude plugin install typescript-lsp@claude-plugins-official
 
 # 6. Environment variables (credentials via 1Password)
@@ -58,7 +59,7 @@ brew install 1password-cli  # skip if already installed
 > **Optional directory overrides** (set only if you want non-default locations):
 >
 > | Variable | Default | What it controls |
-> |---|---|---|
+> |---|---|
 > | `CLAUDE_REPORTS_DIR` | `~/.claude/reports/` | Where `/research` stores reports and evidence |
 > | `CLAUDE_SHIP_DIR` | `tmp/ship` | Where `/ship` and `/implement` store workflow state |
 > | `CLAUDE_SPECS_DIR` | `<repo>/specs/` or `~/.claude/specs/` | Where `/spec` stores spec artifacts |
@@ -120,9 +121,9 @@ From Claude Code, run:
 \ship <feature description, bug, or improvement>
 ```
 
-| Skill | Invocation | Purpose |
-|---|---|---|
-| `/ship` | User | End-to-end orchestrator: takes you from spec through merge-ready PR. |
+| Skill | Purpose |
+|---|---|
+| `/ship` | End-to-end orchestrator: takes you from spec through merge-ready PR. |
 
 `ship` is the entry point for **end-to-end feature development**. It works with you to `spec` out a feature by investigating the codebase and asking you questions. **Speccing is the most important part**. It takes that spec and implements it end to end, including automated testing, PR review, and more.
 
@@ -131,7 +132,7 @@ From Claude Code, run:
 Ship is an orchestrator that leverages these other skills:
 
 | Skill | Phase | What it does |
-|---|---|---|
+|---|---|
 | `/spec` | 1 | Define what to build — requirements and technical design |
 | `/implement` | 2 | Write the code from the spec |
 | `/qa` | 3 | Automate "manual" testing of feature (e.g. Browser automation) |
@@ -145,28 +146,28 @@ Each can be used **standalone** as well.
 
 These are generally useful skills for investigating things and aiding in **decision making**.
 
-| Skill | Invocation | Purpose |
-|---|---|---|
-| `/research` | User or model | Deep technical research across web + OSS code bases |
-| `/explore` | User or model | Build deep understanding of a codebase area or system topic. Three lenses: surface mapping (what product/internal surfaces does this touch?), pattern inspection (what conventions exist here?), system tracing (what does this connect to and what breaks?). |
-| `/analyze` | User or model | Deeply compare pros and cons of a given decision. |
-| `/debug` | User or model | Systematic root cause investigation for code defects. Loaded by other skills (qa, implement, ship) when they hit failures. |
+| Skill | Purpose |
+|---|---|
+| `/research` | Deep technical research across web + OSS code bases |
+| `/explore` | Build deep understanding of a codebase area or system topic. Three lenses: surface mapping (what product/internal surfaces does this touch?), pattern inspection (what conventions exist here?), system tracing (what does this connect to and what breaks?). |
+| `/analyze` | Deeply compare pros and cons of a given decision. |
+| `/debug` | Systematic root cause investigation for code defects. Loaded by other skills (qa, implement, ship) when they hit failures. |
 
 ### Browser Automation
 
-| Skill | Invocation | Purpose |
-|---|---|---|
-| `/browser` | User or model | Playwright automation — write and run scripts for testing, screenshots, form filling, accessibility audits, network inspection. Works in CI/Docker. |
+| Skill | Purpose |
+|---|---|
+| `/browser` | Playwright automation — write and run scripts for testing, screenshots, form filling, accessibility audits, network inspection. Works in CI/Docker. |
 
 ### Other
 
-| Skill | Invocation | Purpose |
-|---|---|---|
-| `/write-skill` | User or model | Author or update Claude Code skills (SKILL.md + supporting files) |
-| `/write-agent` | User or model | Design Claude Code agents and agent prompts (.claude/agents/*.md) |
-| `/tdd` | Model-only | Background knowledge for behavior-focused testing (auto-loaded; key principles distilled inline in spec, ship, and implement) |
+| Skill | Purpose |
+|---|---|
+| `/write-skill` | Author or update Claude Code skills (SKILL.md + supporting files) |
+| `/write-agent` | Design Claude Code agents and agent prompts (.claude/agents/*.md) |
+| `/tdd` | Background knowledge for behavior-focused testing (auto-loaded by spec, ship, and implement) |
 
-**Shared:** `research`, `write-skill`, `write-agent`
+**Shared:** `research`, `analyze`, `write-skill`, `write-agent`, `screengrabs`
 
 ---
 
@@ -175,7 +176,7 @@ These are generally useful skills for investigating things and aiding in **decis
 Skills work across two execution environments. `/ship` detects the context in Phase 0 and sets the context for the run.
 
 | Context | What's available | What degrades |
-|---|---|---|
+|---|---|
 | **Git worktree** | Same as host, isolated directory | Nothing (full capability) |
 | **Docker container** | Git, filesystem — but no gh CLI, no browser, no macOS tools | PR creation/review skipped, browser testing substituted with Bash |
 

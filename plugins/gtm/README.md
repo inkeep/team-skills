@@ -2,14 +2,46 @@
 
 Plugin for the Inkeep GTM team. Includes all [shared skills](../shared/) plus GTM-specific ones.
 
-## Install
+## Quick setup
 
 ```bash
+# Install the plugin (auto-updates every session)
+claude plugin marketplace add https://github.com/inkeep/team-skills.git && node -e "const f=require('os').homedir()+'/.claude/plugins/known_marketplaces.json',d=require(f);d['inkeep-team-skills'].autoUpdate=true;require('fs').writeFileSync(f,JSON.stringify(d,null,2));console.log('Auto-update enabled for inkeep-team-skills')"
 claude plugin install gtm@inkeep-team-skills
 ```
 
-## Skills
+<details>
+<summary>Alternative: Skills CLI (any agent, not just Claude Code)</summary>
 
-**Shared:** `research`, `write-skill`, `write-agent`
+```bash
+npx skills add inkeep/team-skills/plugins/gtm -y
+```
 
-Add GTM-only skills by creating a folder in `plugins/gtm/skills/`.
+To manually update:
+
+```bash
+npx skills update
+```
+
+</details>
+
+---
+
+## Skill inventory
+
+### GTM-specific
+
+| Skill | Purpose |
+|---|---|
+| `/cold-email` | Generate cold outbound emails tailored to B2B personas. Supports 19 persona archetypes (Founder-CEO, CTO, VP Eng, etc.). Enriches prospects via Crustdata MCP when given a LinkedIn URL. |
+
+### General Purpose
+
+| Skill | Purpose |
+|---|---|
+| `/research` | Deep research across web + OSS code bases with formal reports and evidence files |
+| `/analyze` | Deep analysis of decisions, trade-offs, and open questions |
+| `/write-skill` | Author or update Agent Skills (SKILL.md + supporting files) |
+| `/write-agent` | Design Claude Code agents and agent prompts (.claude/agents/*.md) |
+
+**Shared:** `research`, `analyze`, `write-skill`, `write-agent`

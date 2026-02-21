@@ -18,11 +18,13 @@ Use by typing e.g. `/skill-name` in Claude Code or Cursor, e.g. `/research`.
 |--------|-------------|
 | `/research <topic>` | Evidence-driven research with formal reports and evidence files collected from high authority web sources, **inspecting open source code repos**, docs, research articles, etc. |
 | `/write-skill <goal>` | Create or refine/revise Agent Skills (SKILL.md + references/scripts/assets) from existing knowledge or giving it iterative feedback. |
+| `/analyze <decision/question>` | Deep, iterative analysis of decisions, trade-offs, and open questions. Reasons from multiple angles before converging on a recommendation. |
 | `/write-agent <goal>` | (advanced) Design and write Claude Code agents and prompts. |
+| `/screengrabs` | Capture, annotate, and embed before/after screenshots in GitHub PRs for UI changes. Requires Playwright. |
 
 ## Team-specific skills
 
-Each team plugin (`eng`, `gtm`) is a proper Claude Code plugin with its own `.claude-plugin/plugin.json` which contains all the `shared` skills in addition to team-specific skills.
+Each team plugin (`eng`, `gtm`) is a proper Claude Code plugin that bundles all `shared` skills alongside team-specific ones.
 
 ## Install
 
@@ -45,10 +47,6 @@ claude plugin marketplace add https://github.com/inkeep/team-skills.git && node 
 # Install your team's plugin
 claude plugin install eng@inkeep-team-skills    # engineering
 claude plugin install gtm@inkeep-team-skills    # GTM
-
-# Add the official Anthropic marketplace and install TypeScript LSP (recommended)
-claude plugin marketplace add anthropics/claude-plugins-official
-claude plugin install typescript-lsp@claude-plugins-official
 ```
 
 ### Option B: Skills CLI (cross-agent)
@@ -142,8 +140,6 @@ The two most powerful shared skills.
 
 **Use case 2: Skill generation.** Same `/research` step as above, but then `/write-skill` distills the findings into a SKILL.md that agents can execute. The report is raw analytical knowledge; the skill is the operationalized workflow from that knowledge.
 
-## Using Them
-
 ## Using `research`
 
 Invoke by typing `/research <topic>` within Claude Code or Cursor.
@@ -182,7 +178,7 @@ Reports live in `~/.claude/reports/<name>/` with:
 To open the directory of reports in Cursor:
 `cursor ~/.claude/reports` or simply navigate to it.
 
-In MacOS, while in a Home directory (e.g. `nickgomez/`, click on `cmd + shift + . ` to see hidden `.claude` folder.)
+In macOS, while in a home directory (e.g. `your-username/`), press `Cmd + Shift + .` to see the hidden `.claude` folder.
 
 ### Key behaviors
 
@@ -224,14 +220,14 @@ skill-name/
 ├── SKILL.md              # Main skill (frontmatter + workflow)
 ├── references/           # Deep-dive docs loaded on demand
 ├── scripts/              # Executable utilities
-└── templates/            # Reusable output templates
+└── templates/            # Reusable output templates (optional)
 ```
 
 ### Auto-improving skills
 
 ```
 # Update an existing skill (preserves intent)
-/write-skill The emails being produced by 'write-email' sound too abstract for the 'b2b-, help me update the skill so that the emails don't use abstract concepts.
+/write-skill The emails being produced by 'write-email' sound too abstract for the 'b2b-outbound-email' audience, help me update the skill so that the emails don't use abstract concepts.
 
 ```
 
@@ -246,5 +242,5 @@ Claude-code specific skill that creates or updates Claude Code agents (`.claude/
 Useful pattern:
 
 ```bash
-/write-agent can you take skills /research-prospect and /write-email and help me write an agent that researches prospects and writes a sequenece of emails?
+/write-agent can you take skills /research-prospect and /write-email and help me write an agent that researches prospects and writes a sequence of emails?
 ```
