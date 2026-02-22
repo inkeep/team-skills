@@ -1,0 +1,5 @@
+{
+  "name": "pr-review",
+  "description": "Multi-domain PR review system with orchestrator and 15 domain-specific reviewers",
+  "version": "1.0.0"
+}
