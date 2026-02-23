@@ -236,5 +236,37 @@ SETTINGS_PATH="$SETTINGS" node -e "
   keys.forEach(k => console.log('  ' + k));
 "
 
+# --- Run skill-specific setup scripts ---
+
+SETUP_SCRIPTS=$(echo "$SKILLS_JSON" | SCRIPT_DIR="$SCRIPT_DIR" node -e "
+  const d = [];
+  process.stdin.on('data', c => d.push(c));
+  process.stdin.on('end', () => {
+    const data = JSON.parse(d.join(''));
+    const skills = data.skills || {};
+    const results = [];
+    for (const [name, skill] of Object.entries(skills)) {
+      if (skill.setup) {
+        results.push(skill.setup);
+      }
+    }
+    console.log(results.join('\n'));
+  });
+")
+
+if [[ -n "$SETUP_SCRIPTS" ]]; then
+  while IFS= read -r SETUP_SCRIPT; do
+    [[ -z "$SETUP_SCRIPT" ]] && continue
+    FULL_PATH="$SCRIPT_DIR/$SETUP_SCRIPT"
+    if [[ -f "$FULL_PATH" ]]; then
+      echo ""
+      echo "Running setup: $SETUP_SCRIPT..."
+      SECRETS_FILE="$SECRETS_FILE" bash "$FULL_PATH"
+    else
+      echo "Warning: Setup script not found: $FULL_PATH"
+    fi
+  done <<< "$SETUP_SCRIPTS"
+fi
+
 echo ""
 echo "Done."
