@@ -89,6 +89,11 @@ The Figma file has many pages organized by section (COVER, BRAND, COMPLETE, POST
 
 Wait for user confirmation before proceeding.
 
+**Building for an existing presentation:** When the graphic targets a specific slide in an existing deck (Google Slides, Keynote, PowerPoint), export the relevant slides as PDF and visually cross-reference before designing. Pay attention to:
+- Which specific icons/marks the deck uses (e.g., a favicon variant vs the full logo mark) — don't assume; match exactly
+- What text comes from the slide master/layout vs. what's on the slide itself — you'll need to avoid duplicating master-provided elements
+- The deck's visual weight and density — match the existing slides' level of detail
+
 ### 3. Pull brand tokens from Figma
 
 Use the Figma MCP to extract brand tokens from the design system.
@@ -160,6 +165,14 @@ From the composition plan (Step 4), list every visual element the graphic requir
 9. **Colors** — pull exact hex values from the Brand Guide page
 
 For each asset found, record what it is, where it is (file key + node ID), and how you'll use it (clone, export, extract style values). For assets you'll incorporate, stage them: clone nodes into your working page, or note exact style values.
+
+**Missing third-party logos:** The asset library won't have every logo (e.g., Totango, Gong, Salesforce). When a needed third-party logo isn't in the Brand Assets page:
+1. Search the web for an SVG version of the logo
+2. Import it into Figma via `figma.createNodeFromSvg(svgString)` in `figma_execute`
+3. Adapt to the graphic's visual treatment — if other logos are monochrome/grey, convert the imported logo to match (replace fills with the target color)
+4. Scale to match sibling logo sizes
+
+If SVG import fails or the logo is too complex, create a styled text pill as a placeholder (brand name in a rounded rectangle) and flag it for the user to replace manually.
 
 **Cross-file asset transfer:** When source assets live in a different Figma file than your target, choose a strategy:
 
@@ -247,6 +260,8 @@ Fix any issues now — it's much easier to fix individual atoms than after compo
 - [ ] Visual hierarchy reads correctly
 - [ ] Text is readable at intended display size (see output medium table in Step 1)
 - [ ] No content overflow or collapsed spacing from dimensional changes
+- [ ] **Bounds check:** every child element fits within the root frame (x + width ≤ frame width, y + height ≤ frame height). Run a programmatic check when the layout has many positioned elements — don't rely on visual inspection alone for edge clipping.
+- [ ] **Sibling consistency:** for repeating elements (card grids, icon rows, tag lists), verify that siblings have matching visual weight — equal heights, same number of text lines, consistent padding. A single-line label next to a two-line label misaligns everything below it. Fix content or equalize container sizes before moving on.
 - [ ] **If adapting an existing asset:** screenshot the original reference AND your output — compare element-by-element. "The original" means the source Figma file, not any derived copy (not your HTML mockup, not your plan description). Check arrow directions, element ordering, label placement, and logo usage against the actual source.
 
 #### Phase E: Polish and verify
@@ -315,6 +330,15 @@ For SVGs: validate the code is clean and renders correctly.
    - [ ] No orphaned or mispositioned elements
 2. Share the Figma file URL with the user
 3. If PNG/SVG export is also needed, use `figma_execute` to export or guide the user to export from Figma
+
+**Handoff to Google Slides:** When the graphic needs to land in a Google Slides deck:
+1. **Strip master-provided elements** — if the target slide's layout/master provides headers, labels, or icons, create a separate export version of the Figma frame with those elements removed to avoid visual doubling
+2. **Export** — use `figma_execute` with `node.exportAsync({ format: 'PNG', constraint: { type: 'SCALE', value: 4 } })` for high-res output
+3. **Host the image** — Google Slides `add_image_to_slide_tool` requires a publicly accessible URL. Export to base64, save locally as PNG, upload to a temporary host or Google Drive
+4. **Place the image** — coordinate mapping from Figma to Google Slides: `gslides_pt = figma_px × 0.75` (for 960×540 Figma canvas → 720×405 pt Google Slides). Full-slide placement: `x=0, y=0, width=720, height=405`
+5. **Verify** — export the slide as PDF and visually confirm alignment with the slide master
+
+This pipeline has friction (public hosting, coordinate mapping, master element stripping). When possible, defer to the **gslides skill** for the full insertion workflow.
 
 **For code-based outputs (SVG, D2, Mermaid):**
 1. Save the graphic to the appropriate location

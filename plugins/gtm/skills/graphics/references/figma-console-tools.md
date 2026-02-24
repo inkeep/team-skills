@@ -220,6 +220,29 @@ Build connection arrows **after** all elements are in their final positions. If 
 
 **Workaround:** Use `figma_set_text` instead of `figma_execute` for setting text content. `figma_set_text` handles font loading internally and is more reliable. Reserve `figma_execute` for text operations only when you need to set properties that `figma_set_text` does not support (e.g., `textAutoResize`, `paragraphSpacing`).
 
+**Font verification pattern:** When you must use `figma_execute` for text, verify font availability before building text-heavy compositions. Not all weight variants exist in every file (e.g., `Inter SemiBold` may be unavailable even when `Inter Bold` works).
+
+```javascript
+// Verify fonts before building — fail fast, not mid-composition
+const fontsNeeded = [
+  { family: "Inter", style: "Bold" },
+  { family: "Inter", style: "Regular" },
+  { family: "Inter", style: "Medium" },
+];
+const loaded = [];
+for (const font of fontsNeeded) {
+  try {
+    await figma.loadFontAsync(font);
+    loaded.push(font);
+  } catch {
+    console.log(`Font unavailable: ${font.family} ${font.style}`);
+  }
+}
+return loaded; // Check which loaded before proceeding
+```
+
+If a needed weight is unavailable, fall back to the nearest available weight (e.g., `Medium` → `Regular`, `SemiBold` → `Bold`).
+
 ### `figma_navigate` required before cross-file operations
 
 When the active file changes (switching between files, or after the user navigates to a different file), you **must** call `figma_navigate` with the target file/page URL before `figma_execute` can access nodes in that file. Without this, `getNodeByIdAsync` returns `null` silently — no error is thrown, and operations fail without explanation.
@@ -245,6 +268,41 @@ await instance.getMainComponentAsync();
 ```
 
 **Rule:** If a Figma Plugin API method has an `Async` variant, always use it inside `figma_execute`.
+
+### `findAll()` on large files crashes the plugin
+
+`figma.root.findAll()` or `figma.root.findOne()` on files with many pages (50+) and thousands of nodes can crash the plugin bridge or hang indefinitely. The search traverses every node in the entire file — not just the current page.
+
+**Workaround:** Always scope searches to a specific page or section by ID:
+
+```javascript
+// BAD — traverses entire file, crashes on large files:
+const icon = figma.root.findOne(n => n.name === 'icon/search');
+
+// GOOD — scoped to a known page:
+const page = await figma.getNodeByIdAsync('5003:63');
+const icon = page.findOne(n => n.name === 'icon/search');
+```
+
+If you need to search across pages, enumerate `figma.root.children` (the page list) and search each page individually.
+
+### Page context drift after session breaks
+
+After a session break (context compaction, conversation continuation, or long idle), `figma.currentPage` may point to an unexpected page — especially if multiple pages share the same name. `findOne()` and `findAll()` on `figma.currentPage` will silently search the wrong page and return `null`.
+
+**Workaround:** At the start of any resumed session, verify page identity by node ID, not name:
+
+```javascript
+// Check where you actually are:
+const current = figma.currentPage;
+console.log(`Current page: "${current.name}" (${current.id})`);
+
+// Navigate to the correct page by ID:
+const target = await figma.getNodeByIdAsync('5003:63');
+await figma.setCurrentPageAsync(target);
+```
+
+Also call `figma_navigate` with the target file/page URL after any session break, before your first `figma_execute`.
 
 ## Execution strategy
 
