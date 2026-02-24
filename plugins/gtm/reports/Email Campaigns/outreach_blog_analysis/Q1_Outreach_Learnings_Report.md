@@ -151,6 +151,103 @@ This report analyzes 8 outreach sequences targeting B2B support and CX personas,
 | "deflection" | "manual ticket" | +2pp CTR |
 | Generic article link | Specific case study | +4pp CTR |
 
+### CTA URL Performance by Role Title
+
+#### Subject Line → CTA URL Mapping
+
+| Subject Line | CTA URL | Content Type |
+|--------------|---------|--------------|
+| One platform to scale your technical support | [go.inkeep.com/VDhW1X3](https://go.inkeep.com/VDhW1X3) | B2B Support Leaders Guide |
+| Automate support manual work in 5 min | [go.inkeep.com/K3Yju0T](https://go.inkeep.com/K3Yju0T) | Manual Ticket Automation |
+| Your technical support is wasting time on manual work | [go.inkeep.com/K3Yju0T](https://go.inkeep.com/K3Yju0T) | Manual Ticket Automation |
+| The problem with fragmented Support AI | [go.inkeep.com/XS4OvKR](https://go.inkeep.com/XS4OvKR) | Fragmented AI Problem |
+| fragmented AI increases AHT | [go.inkeep.com/XS4OvKR](https://go.inkeep.com/XS4OvKR) | Fragmented AI Problem |
+| Ask AI that increases CSAT | [go.inkeep.com/oFEQG4h](https://go.inkeep.com/oFEQG4h) | Ask AI Article |
+| Ask AI that reduces AHT | [go.inkeep.com/oFEQG4h](https://go.inkeep.com/oFEQG4h) | Ask AI Article |
+| Ask AI that goes beyond T1 deflection | [go.inkeep.com/DqaJSmZ](https://go.inkeep.com/DqaJSmZ) | CX Outcomes/Deflection |
+| AI Support beyond T1 deflection | [go.inkeep.com/DqaJSmZ](https://go.inkeep.com/DqaJSmZ) | CX Outcomes/Deflection |
+| Automate manual support work in 5 min | [go.inkeep.com/K3Yju0T](https://go.inkeep.com/K3Yju0T) | Manual Ticket Automation |
+
+#### CTA Clicks by Role Title (with Links)
+
+| Rank | Role Title | Total Clicks | Top CTA Content | CTA Link | Archetype |
+|------|------------|--------------|-----------------|----------|-----------|
+| 1 | Customer Success Manager | 78 | B2B Support Leaders | [go.inkeep.com/VDhW1X3](https://go.inkeep.com/VDhW1X3) | Customer Success Leaders |
+| 2 | Technical Support Manager | 32 | Fragmented AI Problem | [go.inkeep.com/XS4OvKR](https://go.inkeep.com/XS4OvKR) | Support Leaders (Manager+) |
+| 3 | Client Experience Manager | 17 | B2B Support Leaders | [go.inkeep.com/VDhW1X3](https://go.inkeep.com/VDhW1X3) | Customer Success Leaders |
+| 4 | Customer Success Team Lead | 12 | B2B Support Leaders | [go.inkeep.com/VDhW1X3](https://go.inkeep.com/VDhW1X3) | Customer Success Leaders |
+| 5 | Customer Experience Manager | 11 | Ask AI Article | [go.inkeep.com/oFEQG4h](https://go.inkeep.com/oFEQG4h) | VP of Customer Experience |
+| 6 | Client Service Manager | 11 | Manual Ticket Automation | [go.inkeep.com/K3Yju0T](https://go.inkeep.com/K3Yju0T) | Customer Success Leaders |
+| 7 | Enterprise Customer Success Manager | 8 | B2B Support Leaders | [go.inkeep.com/VDhW1X3](https://go.inkeep.com/VDhW1X3) | Customer Success Leaders |
+| 8 | Senior Technical Support Manager | 7 | Fragmented AI Problem | [go.inkeep.com/XS4OvKR](https://go.inkeep.com/XS4OvKR) | Support Leaders (Manager+) |
+| 9 | IT Support Manager | 6 | Manual Ticket Automation | [go.inkeep.com/K3Yju0T](https://go.inkeep.com/K3Yju0T) | Support Leaders (Manager+) |
+| 10 | Manager of Customer Success | 4 | B2B Support Leaders | [go.inkeep.com/VDhW1X3](https://go.inkeep.com/VDhW1X3) | Customer Success Leaders |
+
+#### Recommended CTA by Role Title (with Links)
+
+| Role Archetype | Top Performing CTA | Link | CTR | Alternative CTA | Link |
+|----------------|-------------------|------|-----|-----------------|------|
+| **Support Leaders (Manager+)** | Fragmented AI Problem | [go.inkeep.com/XS4OvKR](https://go.inkeep.com/XS4OvKR) | 30.4% | Manual Ticket Automation | [go.inkeep.com/K3Yju0T](https://go.inkeep.com/K3Yju0T) |
+| **Customer Success Leaders** | B2B Support Leaders | [go.inkeep.com/VDhW1X3](https://go.inkeep.com/VDhW1X3) | 23.9% | Ask AI Article | [go.inkeep.com/oFEQG4h](https://go.inkeep.com/oFEQG4h) |
+| **VP of Customer Experience** | Ask AI Article | [go.inkeep.com/oFEQG4h](https://go.inkeep.com/oFEQG4h) | 28.5% | CX Outcomes | [go.inkeep.com/DqaJSmZ](https://go.inkeep.com/DqaJSmZ) |
+| **Support/CX Ops Leaders** | Manual Ticket Automation | [go.inkeep.com/K3Yju0T](https://go.inkeep.com/K3Yju0T) | 27.5% | Fragmented AI Problem | [go.inkeep.com/XS4OvKR](https://go.inkeep.com/XS4OvKR) |
+
+#### CTA Performance Summary by Link
+
+| CTA Link | Total Clicks | CTR | Best Performing Archetype |
+|----------|--------------|-----|---------------------------|
+| [go.inkeep.com/fRJNpg8](https://go.inkeep.com/fRJNpg8) (Build vs Buy) | 38 | **31.9%** | Support Leaders (Manager+) |
+| [go.inkeep.com/XS4OvKR](https://go.inkeep.com/XS4OvKR) (Fragmented AI) | 179 | **30.4%** | Support Leaders (Manager+) |
+| [go.inkeep.com/urKffTV](https://go.inkeep.com/urKffTV) (Case Studies) | 28 | 29.2% | VP of Customer Experience |
+| [go.inkeep.com/aO2fBTh](https://go.inkeep.com/aO2fBTh) (Structured Pilot) | 9 | 29.0% | Support/CX Ops Leaders |
+| [go.inkeep.com/oFEQG4h](https://go.inkeep.com/oFEQG4h) (Ask AI) | 93 | 28.5% | Customer Success Leaders |
+| [go.inkeep.com/K3Yju0T](https://go.inkeep.com/K3Yju0T) (Manual Ticket) | 130 | 27.5% | Support Leaders (Manager+) |
+| [go.inkeep.com/mjN5ccQ](https://go.inkeep.com/mjN5ccQ) (Groundhog Day) | 100 | 25.6% | Customer Success Leaders |
+| [go.inkeep.com/DqaJSmZ](https://go.inkeep.com/DqaJSmZ) (CX Outcomes) | 38 | 25.3% | VP of Customer Experience |
+| [go.inkeep.com/VDhW1X3](https://go.inkeep.com/VDhW1X3) (B2B Support Leaders) | 198 | 23.9% | Customer Success Leaders |
+
+#### Key Insights: CTA URL by Role Title
+
+1. **Support Leaders respond to problem-diagnosis content** — "Fragmented AI" (30.4% CTR) resonates with Technical Support Managers and Senior Technical Support Managers
+2. **Customer Success Leaders prefer thought leadership** — B2B Support Leaders guide drives highest volume clicks despite lower CTR
+3. **"Client" title holders click action-oriented CTAs** — Client Service Manager and Client Experience Manager respond to "Manual Ticket Automation"
+4. **VP-level personas engage with outcome-focused content** — Ask AI Article (28.5% CTR) performs well for Customer Experience Managers
+
+### CTA URL Performance by Sequence
+
+#### Top CTA Link by Sequence
+
+| Sequence | Best CTA Link | CTA Text | CTR | Clicks | Step |
+|----------|---------------|----------|-----|--------|------|
+| **VP of Support** | [go.inkeep.com/fRJNpg8](https://go.inkeep.com/fRJNpg8) | platform decisions | **65.0%** | 13 | Step 3 |
+| **VP of Support** | [go.inkeep.com/DqaJSmZ](https://go.inkeep.com/DqaJSmZ) | deflection | **46.4%** | 13 | Step 1 |
+| **B2B VP of Support** | [go.inkeep.com/fRJNpg8](https://go.inkeep.com/fRJNpg8) | platform decisions | **40.0%** | 2 | Step 3 |
+| **Support Engineering** | [go.inkeep.com/XS4OvKR](https://go.inkeep.com/XS4OvKR) | point AI tools stall | **39.4%** | 67 | Step 2 |
+| **VP of CX** | [go.inkeep.com/urKffTV](https://go.inkeep.com/urKffTV) | PostHog (case study) | **32.1%** | 26 | Step 2 |
+| **B2B Ops & Tech Support** | [go.inkeep.com/XS4OvKR](https://go.inkeep.com/XS4OvKR) | point AI tools stall | **30.8%** | 16 | Step 2 |
+| **B2B CS** | [go.inkeep.com/oFEQG4h](https://go.inkeep.com/oFEQG4h) | Ask AI | **28.5%** | 93 | Step 1 |
+| **B2B CS** | [go.inkeep.com/XS4OvKR](https://go.inkeep.com/XS4OvKR) | breakdown | **28.5%** | 63 | Step 2 |
+| **Support Operations** | [go.inkeep.com/K3Yju0T](https://go.inkeep.com/K3Yju0T) | manual ticket | **26.7%** | 8 | Step 1 |
+| **B2B VP of CX** | [go.inkeep.com/fRJNpg8](https://go.inkeep.com/fRJNpg8) | build-vs-buy | **25.0%** | 3 | Step 3 |
+
+#### Best CTA Pattern by Sequence Type
+
+| Sequence Type | Top CTA Pattern | Best Link |
+|---------------|-----------------|-----------|
+| **VP-level (Support)** | Decision guides (platform decisions, build-vs-buy) | [go.inkeep.com/fRJNpg8](https://go.inkeep.com/fRJNpg8) |
+| **VP-level (CX)** | Case studies (PostHog, Fingerprint) | [go.inkeep.com/urKffTV](https://go.inkeep.com/urKffTV) |
+| **Technical (Engineering)** | Problem diagnosis (fragmented AI) | [go.inkeep.com/XS4OvKR](https://go.inkeep.com/XS4OvKR) |
+| **Operations** | How-to guides (manual ticket) | [go.inkeep.com/K3Yju0T](https://go.inkeep.com/K3Yju0T) |
+| **Customer Success** | Outcome-focused (Ask AI, CSAT) | [go.inkeep.com/oFEQG4h](https://go.inkeep.com/oFEQG4h) |
+
+#### Key Insights: CTA URL by Sequence
+
+1. **"Platform decisions" dominates VP of Support** — [go.inkeep.com/fRJNpg8](https://go.inkeep.com/fRJNpg8) achieves **65% CTR** in Step 3, the highest in the entire dataset
+2. **Case studies convert VP of CX** — PostHog case study ([go.inkeep.com/urKffTV](https://go.inkeep.com/urKffTV)) hits 32.1% CTR in Step 2
+3. **"Fragmented AI" scales for technical audiences** — [go.inkeep.com/XS4OvKR](https://go.inkeep.com/XS4OvKR) performs consistently (30-39% CTR) across Support Engineering and B2B Ops sequences
+4. **Step 2 and Step 3 outperform Step 1** — Decision-stage CTAs in later steps convert better than awareness CTAs in Step 1
+5. **B2B non-technical sequences need optimization** — Lower CTRs across the board suggest messaging/CTA mismatch for non-technical personas
+
 ---
 
 ## 4. Sequence Performance Ranking
