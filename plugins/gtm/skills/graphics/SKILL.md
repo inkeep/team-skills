@@ -123,6 +123,7 @@ For diagrams: plan the nodes, edges, groupings, and flow direction.
 - **Flow direction** (clockwise vs counter-clockwise, left-to-right vs top-to-bottom)
 - **Element ordering** (which item goes where in a sequence or cycle)
 - **Spatial arrangement** (grid vs radial vs freeform; which elements are adjacent)
+- **Containment vs connection** — for architecture diagrams, explicitly ask: *"Is X inside Y, or does X connect to Y from outside?"* Getting this wrong requires tearing down and rebuilding the entire composition. Example: "Are delivery channels part of the platform zone, or separate boxes that connect to it?"
 
 Don't infer these from ambiguous language — describe your interpretation and confirm before committing.
 
@@ -260,7 +261,7 @@ Fix any issues now — it's much easier to fix individual atoms than after compo
 - [ ] Visual hierarchy reads correctly
 - [ ] Text is readable at intended display size (see output medium table in Step 1)
 - [ ] No content overflow or collapsed spacing from dimensional changes
-- [ ] **Bounds check:** every child element fits within the root frame (x + width ≤ frame width, y + height ≤ frame height). Run a programmatic check when the layout has many positioned elements — don't rely on visual inspection alone for edge clipping.
+- [ ] **Bounds check:** every child element fits within its parent frame. Run a programmatic check — don't rely on visual inspection alone for edge clipping. See `references/figma-console-tools.md` → "Container sizing from content bounds" for the code pattern. This is the #1 cause of text cutoff and content clipping.
 - [ ] **Sibling consistency:** for repeating elements (card grids, icon rows, tag lists), verify that siblings have matching visual weight — equal heights, same number of text lines, consistent padding. A single-line label next to a two-line label misaligns everything below it. Fix content or equalize container sizes before moving on.
 - [ ] **If adapting an existing asset:** screenshot the original reference AND your output — compare element-by-element. "The original" means the source Figma file, not any derived copy (not your HTML mockup, not your plan description). Check arrow directions, element ordering, label placement, and logo usage against the actual source.
 

@@ -190,6 +190,8 @@ vector.vectorNetwork = { ...network, vertices };
 
 Build connection arrows **after** all elements are in their final positions. If layout changes later, rebuild all arrows from scratch (see SKILL.md Phase D).
 
+**Z-ordering:** In Figma, z-order = child insertion order. The last child appended renders on top. Always `appendChild()` connectors as the very last step. If you add elements to a frame after connectors, the connectors will be hidden behind them.
+
 ### Pattern: Hero graphic with text overlay
 
 1. Create background frame at target dimensions
@@ -198,6 +200,61 @@ Build connection arrows **after** all elements are in their final positions. If 
 4. Add heading text (large, brand font)
 5. Add supporting text (smaller, secondary color)
 6. Add decorative elements (shapes, icons)
+
+### Pattern: Container sizing from content bounds
+
+After placing children in a fixed-size frame, **always verify** the parent is tall/wide enough. Never hardcode container dimensions without measuring content — this is the #1 cause of text cutoff and clipped elements.
+
+```javascript
+// After placing all children in a container frame:
+const parent = await figma.getNodeByIdAsync('PARENT_ID');
+let maxBottom = 0;
+for (const child of parent.children) {
+  const bottom = child.y + child.height;
+  if (bottom > maxBottom) maxBottom = bottom;
+}
+const requiredHeight = maxBottom + 24; // 24px bottom padding
+if (parent.height < requiredHeight) {
+  parent.resize(parent.width, requiredHeight);
+}
+return { was: parent.height, needed: requiredHeight };
+```
+
+Run this check after every batch of child placements — especially after text elements, which may be taller than expected depending on font size and line count.
+
+### Pattern: Element reorder (safe swap)
+
+When the user asks to reorder elements within a container (flip rows, swap cards), follow this sequence:
+
+1. **List all children** with IDs, names, and positions — never assume names match expectations
+2. **Operate on verified IDs** from `getNodeByIdAsync`, not name-based `.find()` (names are mutable and may not match what you set earlier)
+3. **Compute new positions** as simple coordinate swaps between the elements
+
+```javascript
+// Safe reorder: list first, then swap by ID
+const parent = await figma.getNodeByIdAsync('PARENT_ID');
+const children = parent.children.map(n => ({
+  id: n.id, name: n.name, x: n.x, y: n.y
+}));
+// Now use the verified IDs to swap positions
+```
+
+### Pattern: Defensive node access
+
+Before operating on a node by ID, **always verify** it exists and is the expected type. Wrong or stale node IDs are the #1 cause of `TypeError` and `cannot read property of undefined` in multi-step sessions.
+
+```javascript
+const node = await figma.getNodeByIdAsync('5025:518');
+if (!node) {
+  return { error: 'Node 5025:518 not found — listing parent children to find correct ID' };
+}
+if (node.type !== 'FRAME') {
+  return { error: `Expected FRAME, got ${node.type} (${node.name})` };
+}
+// Safe to proceed
+```
+
+When referencing IDs from earlier operations across many turns, **list the parent's children first** to confirm IDs haven't shifted — especially after creating or deleting siblings.
 
 ## Troubleshooting
 
@@ -268,6 +325,27 @@ await instance.getMainComponentAsync();
 ```
 
 **Rule:** If a Figma Plugin API method has an `Async` variant, always use it inside `figma_execute`.
+
+### Batch-removing nodes throws "node does not exist"
+
+When removing multiple nodes in a loop, removing a parent automatically removes all its children. If you then try to `.remove()` a child that was already removed via its parent, Figma throws `Error: The node with id "X" does not exist`.
+
+**Workaround:** Wrap each `.remove()` in a try-catch, or collect only leaf nodes and remove bottom-up:
+
+```javascript
+// Safe batch removal
+const toRemove = [...nodesToDelete]; // collect IDs first
+for (const node of toRemove) {
+  try {
+    const n = await figma.getNodeByIdAsync(node.id);
+    if (n) n.remove();
+  } catch (e) {
+    // Already removed (parent was deleted first) — safe to skip
+  }
+}
+```
+
+Also be careful with cleanup operations that remove by name prefix (e.g., all nodes starting with "Arrow —") — they can accidentally delete nodes you just created in the same operation.
 
 ### `findAll()` on large files crashes the plugin
 
