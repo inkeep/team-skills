@@ -94,6 +94,14 @@ git push origin feat/improve-research-skill
 
 After your PR is merged, consumers with auto-update receive the changes on their next Claude Code session. Contributors with local clones need to `git pull`.
 
+### Pushing Secrets to 1Password
+
+To create/update 1Password items for skill secrets (one item per skill, as defined in `secrets/secrets.json`):
+
+```bash
+~/.claude/plugins/marketplaces/inkeep-team-skills/secrets/push.sh --account inkeep.1password.com
+```
+
 ### Version Bumping
 
 Plugin versions are tracked in two places:
