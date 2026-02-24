@@ -323,23 +323,24 @@ When you are mid-spec, structure your response like this:
 #### §1) Current state (what we believe now)
 - 3-8 bullets max, enriched by autonomous investigation.
 
-#### §2) Decisions needed from the user (numbered batch)
-For each decision:
-- Options + practical effect (grounded in investigation findings)
-- Recommendation (if any) + evidence basis
-- Confidence + what would increase it
+#### §2) Items needing your input (numbered batch)
+Everything the user needs to respond to this turn — decisions with formed options AND judgment calls where the agent needs human input (product vision, priority, risk tolerance, scope). Each item appears in §2 or §3, never both. If it needs user input, it belongs here.
 
-#### §3) Open threads (remaining unknowns — numbered)
+- **Decisions** (formed options): format per `references/decision-protocol.md` — confidence level determines presentation depth (HIGH = stated intention, MEDIUM = full options, LOW = full context).
+- **Judgment calls** (no formed options yet): investigation findings so far + why the agent can't narrow further + ask directly + what the answer unlocks.
+
+#### §3) Tracked threads (○ items only — numbered)
+Items the agent is tracking that don't need user input this turn. Only **○ Can investigate further** items belong here — the agent stopped (diminishing returns, lower priority, or time cost) but could go deeper if directed.
+
 For each thread:
 - The question (tagged: type, priority, blocking?)
 - **Investigation status:** What the agent already checked + what it found (brief — substance, not mechanics).
-- One of two markers:
-  - **● Needs your input** — requires human judgment (product vision, priority, risk tolerance, scope). The agent can't resolve this with more investigation.
-  - **○ Can investigate further** — the agent stopped (diminishing returns, lower priority, or time cost) but could go deeper if directed. Say "go deeper on N."
 - Unlocks: what decision or downstream clarity this enables once resolved.
 
-At the bottom of §3:
-> Reply with decisions (§2) and/or "go deeper on N" for any threads you want investigated further.
+§3 may be omitted if there are no ○ threads.
+
+At the bottom of §3 (if present):
+> Say "go deeper on N" for any threads you want investigated further.
 
 #### §4) What evolved
 - 2-5 bullets: what shifted in understanding this turn and why it matters for the spec's direction.
@@ -408,7 +409,7 @@ Recommendation: B (high confidence)
    or build a new one for streaming endpoints.
 ```
 
-### Correct (open thread requiring human judgment)
+### Correct (judgment call in §2 — needs user vision)
 
 ```txt
 5. [Product, P0, blocks Phase 1] Which persona is the primary target

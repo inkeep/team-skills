@@ -38,22 +38,44 @@ When it's time for user input, present:
   - Recommendation (if evidence supports it)
   - Confidence + what increases it
 
-Ask the user explicitly:
-> "Reply with a numbered list (1..., 2..., 3...) with your decisions or where you want research."
+Close every batch with a **"What I need from you"** block that differentiates the ask by confidence:
+- For HIGH-confidence items (stated intentions): "I'll proceed with [X, Y] unless you object."
+- For MEDIUM-confidence items (genuine choices): "I need your call on [D3, D5]."
+- For items needing user vision: "These need your product judgment: [D7]."
+- For tracked threads (§3): "Say 'go deeper on N' to direct further investigation."
 
-This is designed to support high decision velocity.
+This tells the user their **minimum viable response** — they see immediately whether they need to evaluate 1 hard decision or 5.
 
 ## Decision velocity calibration
 In your batch:
 - Put "easy/clear" items first (so the user can clear them quickly).
 - Put the "hard/uncertain" items next with more context, investigation findings so far, and what further evidence would clarify.
 - Keep batches small enough to answer in one reply (usually 3-8 items).
+- **Dependency ordering trumps velocity ordering.** If one decision's outcome would materially change the options, relevance, or framing of other decisions in the batch — present it first, even if it's harder. The user shouldn't spend effort evaluating items that an upstream decision might invalidate.
 
 ## Confidence-weighted presentation (don't pretend all items are equally open)
 For each item, signal:
 - **Ready to decide now:** evidence is strong; recommendation included.
 - **Needs more evidence:** the agent investigated but couldn't reach high confidence; present with current findings and what further investigation would clarify (open thread).
 - **Needs user vision:** requires product strategy/positioning choice; ask directly.
+
+### Format by confidence level
+
+Match presentation depth to how open the decision actually is:
+
+**HIGH confidence (ready to decide):**
+State your recommendation as an intention. One sentence. No option grid.
+> "I'll use three-dot diff to match GitHub PR semantics, with configurable target branch defaulting to main."
+
+Include: what you'll do, why (brief), and what would change your mind. The user can object, redirect, or approve by not objecting.
+
+**MEDIUM confidence (genuine choice):**
+Present 2-3 options with tradeoffs. This is where the full decision format applies — options, practical effect, recommendation, evidence basis, confidence, what would increase it.
+
+**LOW confidence / needs user vision:**
+Full context: investigation findings so far, what's still unclear, what the options are and why you can't narrow them. Ask directly for the user's judgment.
+
+**Exception:** 1-way doors always get the MEDIUM format (explicit options + confirmation) regardless of confidence — the cost of getting them wrong is too high to present as a stated intention.
 
 ## Uncertainty as an investigation trigger
 Treat any of these as a signal to **investigate**:
