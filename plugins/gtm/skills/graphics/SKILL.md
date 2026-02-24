@@ -51,7 +51,7 @@ Before creating from scratch, search for existing assets to build from. **Always
 
 **a) Check the Brand Assets page first**
 
-The Inkeep Design Assets file (`D7NDSM2peo1iLhkjLxmGP5`) has a curated **Brand Assets** page (node `5003:63`) with 96 atomic graphical elements organized into 7 sections. Search here first for logos, icons, illustrations, backgrounds, and third-party logos.
+The Inkeep Design Assets file (`D7NDSM2peo1iLhkjLxmGP5`) has a curated **Brand Assets** page (node `5003:63`) with 148 atomic graphical elements organized into 8 sections. Search here first for logos, icons, illustrations, backgrounds, and third-party logos.
 
 Use `figma_execute` to search by hierarchical name:
 ```javascript
@@ -77,7 +77,7 @@ Use the Figma MCP to systematically search for relevant existing assets:
 
 The Figma file has many pages organized by section (COVER, BRAND, COMPLETE, POST LAUNCH, ARCHIVE, Graphics). Pages contain frames with design assets — logos, social graphics, banners, templates, marketing visuals, etc.
 
-**c) Present options to the user**
+**d) Present options to the user**
 
 | What was found | Default action |
 |---|---|
@@ -156,7 +156,7 @@ Follow the five-phase workflow below. Do NOT try to build the entire graphic in 
 From the composition plan (Step 4), list every visual element the graphic requires — logos, icons, components, typography styles, color values, decorative elements. Then search for each one:
 
 1. **Logo first — never approximate.** If the graphic includes the brand mark, clone the real logo from the design system before doing anything else. Search the Brand Assets page (node `5003:63`) for `logo/full-color`, `logo/black`, `logo/white`, `logo/icon/*`, `logo/wordmark/*`, `logo/favicon/*`. Never substitute the logo with a colored shape, text, or approximation — if you can't find or clone it, stop and ask the user.
-2. **Search Brand Assets page** — the Inkeep Design Assets file has a curated Brand Assets page (node `5003:63`) with 96 assets organized by path prefix (`logo/`, `icon/`, `illustration/`, `background/`, `third-party/`, `ui/`, `mascot/`). Search here before looking elsewhere.
+2. **Search Brand Assets page** — the Inkeep Design Assets file has a curated Brand Assets page (node `5003:63`) with 148 assets organized by path prefix (`logo/`, `icon/`, `illustration/`, `background/`, `third-party/`, `ui/`, `mascot/`). Search here before looking elsewhere.
 3. **Icons** — `icon/nav/*` (14 variants), `icon/homepage/*`, `icon/customer/*`
 4. **Illustrations** — `illustration/use-case/*`, `illustration/abstract/*`, `illustration/dev-page/*`, `illustration/homepage/*`
 5. **Backgrounds** — `background/gradient/*`, `background/footer/*`, `background/polygon/*`, `background/grid`
@@ -230,7 +230,7 @@ For each element in the build plan:
 1. **Create it** using the appropriate figma-console tool
 2. **Style it** — apply brand colors, fonts, corner radius, shadows
 3. **Name it** — descriptive layer name immediately (`figma_rename_node`)
-4. **Screenshot it** — `figma_take_screenshot` to verify it looks correct
+4. **Screenshot it** — `figma_capture_screenshot` to verify it looks correct
 5. **Fix issues** — if the screenshot shows problems, fix before continuing
 
 Once simple atoms are verified, compose them into compound elements (group into auto-layout frames, set spacing/padding, screenshot and verify).
@@ -316,7 +316,7 @@ After generating, verify the graphic matches the brand:
 - [ ] Visual style is consistent with existing brand assets
 - [ ] Appropriate use of gradients, shadows, or effects
 
-For Figma designs: take a screenshot (`figma_take_screenshot`) and visually verify. Check that layers are well-named and organized.
+For Figma designs: take a screenshot (`figma_capture_screenshot`) and visually verify. Check that layers are well-named and organized.
 
 For SVGs: validate the code is clean and renders correctly.
 
@@ -374,11 +374,9 @@ Should have:
 
 - **One-shot generation**: Never try to build the entire graphic in one pass. Follow the bottom-up workflow: collect assets, build atoms individually, verify each one, then compose.
 - **Placeholder content**: Never leave "Icon here", empty shapes, or "TODO" labels in the design. If an asset is missing, find it (Phase A) or create it (Phase C).
-- **Building connectors before elements (or keeping stale connectors)**: Lines, arrows, and connection elements depend on final positions. Build them last, and rebuild them from scratch whenever layout changes — don't try to nudge individual connectors after cards move.
 - **Skipping visual checkpoints**: Every phase must end with a screenshot verification. Don't assume it looks right — verify. Screenshot after every dimensional change too — resizing elements cascades (text reflows, heights change, spacing collapses).
 - **Creating from scratch when a Figma component exists**: Always check master designs and the design system first
 - **Generating SVG when Figma-native is better**: Default to Figma designs for slide/marketing assets — they're editable and reusable. Use SVG only when code output is specifically needed.
-- **Approximating the logo**: Never substitute the brand mark with a colored shape, gradient circle, or text. Clone the real logo from the design system — it should be the first asset collected.
 - **Approximate colors**: Use exact hex values from the brand, not "close enough" colors
 - **Unnamed layers**: Every Figma layer should have a descriptive name, not "Frame 47" or "Rectangle 12"
 - **Flat structure without auto-layout**: Use auto-layout frames for sections so the design is easy to edit and resize

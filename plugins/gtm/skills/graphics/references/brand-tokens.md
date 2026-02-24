@@ -11,7 +11,7 @@ Impact: Off-brand visuals with wrong colors, fonts, or styling
 | Source | File | What it provides | Use for |
 |---|---|---|---|
 | BABCO Design Assets | https://www.figma.com/design/by048nPGeK3c6FKMvlmPCz/BABCO-Design-Assetts | Brand tokens — colors, typography, spacing, gradients | Color palette, font styles, spacing rules |
-| Inkeep Design Assets — Brand Assets page | https://www.figma.com/design/D7NDSM2peo1iLhkjLxmGP5/Inkeep-Design-Assetts?node-id=5003:63 | Atomic graphical elements — 96 curated assets | Logos, icons, illustrations, backgrounds, third-party logos |
+| Inkeep Design Assets — Brand Assets page | https://www.figma.com/design/D7NDSM2peo1iLhkjLxmGP5/Inkeep-Design-Assetts?node-id=5003:63 | Atomic graphical elements — 148 curated assets | Logos, icons, illustrations, backgrounds, third-party logos |
 
 ## Figma Design System
 
