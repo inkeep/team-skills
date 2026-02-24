@@ -53,7 +53,10 @@ If the plugin disconnects (e.g., after tab refresh), it must be re-launched manu
 | `figma_get_file_data` | Read file structure |
 | `figma_get_selection` | Get current selection |
 | `figma_navigate` | Open a Figma URL |
-| `figma_take_screenshot` | Capture current view |
+| `figma_capture_screenshot` | Screenshot via plugin runtime — **guaranteed current state**. Use this after modifying designs via `figma_execute`. |
+| `figma_take_screenshot` | Screenshot via REST API — may show stale/cached state after recent changes. Use for initial reads or when the plugin bridge is unavailable. |
+
+**Screenshot rule of thumb:** After any `figma_execute` modification, always verify with `figma_capture_screenshot` (plugin), not `figma_take_screenshot` (REST API). The REST API can lag behind plugin changes, causing false negatives where you think a change didn't apply.
 
 ### The power tool: `figma_execute`
 
@@ -71,6 +74,9 @@ frame.paddingBottom = 24;
 frame.paddingLeft = 24;
 frame.paddingRight = 24;
 frame.itemSpacing = 16;
+// IMPORTANT: Always set sizing mode explicitly. The default is "FIXED",
+// which silently clips content that exceeds the frame's dimensions.
+// Use "AUTO" (hug contents) unless you specifically need fixed sizing.
 frame.primaryAxisSizingMode = "AUTO";
 frame.counterAxisSizingMode = "AUTO";
 ```
@@ -203,6 +209,8 @@ Build connection arrows **after** all elements are in their final positions. If 
 | Lost track of what's been built | Screenshot the working frame → compare against the build plan → identify gaps |
 | Design looks incoherent after composition | Compare to composition plan → check if element sizes/positions match → adjust individual elements |
 | Plugin not responding | Check `figma_get_status` → if disconnected, ask user to re-launch the Desktop Bridge plugin |
+| Frame appears empty but nodes exist | Check `clipsContent` — it defaults to `true`, which hides anything positioned outside the frame bounds. Set `frame.clipsContent = false` to debug, then reposition elements within bounds before re-enabling. Consider building with clipping off during construction and enabling it at the end. |
+| Screenshot shows old state after changes | You're likely using `figma_take_screenshot` (REST API, may cache). Switch to `figma_capture_screenshot` (plugin runtime, guaranteed current). See the screenshot tools table above. |
 
 ## Known Issues & Workarounds
 
@@ -218,19 +226,31 @@ When the active file changes (switching between files, or after the user navigat
 
 **Pattern:** Always call `figma_navigate` before your first `figma_execute` in a file, and again whenever you suspect the active file may have changed.
 
-### Use `getNodeByIdAsync`, not `getNodeById`
+### Always use async API variants in `figma_execute`
 
-The synchronous `figma.getNodeById()` fails with a `documentAccess: dynamic-page` error in the plugin bridge environment. Always use the async version:
+The plugin bridge runs in `documentAccess: dynamic-page` mode, which means **all synchronous node access APIs fail**. This is not just `getNodeById` — it affects multiple APIs:
 
 ```javascript
-// Wrong — will throw documentAccess error
-const node = figma.getNodeById('123:456');
+// All of these FAIL with documentAccess error:
+figma.getNodeById('123:456');
+node.vectorNetwork = { ... };
+figma.currentPage = somePage;
+instance.mainComponent;
 
-// Correct
-const node = await figma.getNodeByIdAsync('123:456');
+// Use the async versions instead:
+await figma.getNodeByIdAsync('123:456');
+await node.setVectorNetworkAsync({ ... });
+await figma.setCurrentPageAsync(somePage);
+await instance.getMainComponentAsync();
 ```
 
-This applies to all node lookups inside `figma_execute`.
+**Rule:** If a Figma Plugin API method has an `Async` variant, always use it inside `figma_execute`.
+
+## Execution strategy
+
+**Execute figma-console tool calls sequentially, not in parallel.** When multiple tool calls are batched in parallel and one fails, all sibling calls are cancelled. This is a Claude Code platform behavior — one failed `figma_execute` call can cascade and cancel 3-5 other valid operations. Run figma-console operations one at a time.
+
+**Metadata queries can overflow.** `get_metadata` and `get_design_context` on complex files can produce responses exceeding the MCP result size limit (72K-232K characters). When this happens, the output is saved to a temp file. Prefer targeted node-level queries (specific node IDs) over full-file metadata dumps.
 
 ## Limitations
 

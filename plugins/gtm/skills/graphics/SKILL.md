@@ -29,6 +29,17 @@ For figma-console, also ensure `FIGMA_ACCESS_TOKEN` is set in the MCP config.
 Identify:
 - **Graphic type**: diagram, illustration, icon, social image, chart, infographic, hero image, badge
 - **Purpose**: where it will be used (slide deck, docs, website, social media, email)
+- **Output medium**: how it will be displayed — this determines minimum text sizes and visual weight
+
+| Medium | Min body text | Min label text | Notes |
+|---|---|---|---|
+| Slide deck (projected) | 18px | 14px | Will be viewed from distance; err on the side of larger |
+| Social media image | 16px | 12px | Viewed on mobile; needs to be legible at small sizes |
+| Website / docs | 14px | 11px | Viewed at screen distance |
+| Print (poster, handout) | 12pt | 9pt | Physical media; point sizes, not pixels |
+
+If the user doesn't specify the medium, **ask** — text sizing is the most common source of iteration waste. Default to slide deck sizing when the purpose is "presentation" or "deck."
+
 - **Dimensions**: target size and aspect ratio (infer from purpose if not specified)
 - **Output format**: Figma design (default — editable native objects), SVG (when code output specifically needed), or D2/Mermaid (for technical diagrams)
 - **Existing asset**: if user provides a Figma URL or file reference, use it as the starting point (skip step 2)
@@ -103,6 +114,13 @@ Before generating, plan the composition:
 
 For diagrams: plan the nodes, edges, groupings, and flow direction.
 
+**Confirm high-cost decisions explicitly.** Some choices are expensive to reverse once built — especially connection elements (arrows, lines) that depend on positions of other elements. Before building, get explicit user confirmation on:
+- **Flow direction** (clockwise vs counter-clockwise, left-to-right vs top-to-bottom)
+- **Element ordering** (which item goes where in a sequence or cycle)
+- **Spatial arrangement** (grid vs radial vs freeform; which elements are adjacent)
+
+Don't infer these from ambiguous language — describe your interpretation and confirm before committing.
+
 **When the graphic is visually novel** (no existing asset to adapt, no established pattern to follow): default to proposing **2–3 variations** of the composition rather than committing to a single direction. Variations can differ in layout structure, visual metaphor, information hierarchy, or stylistic approach. Present them as lightweight sketches or descriptions — enough for the user to pick a direction before you invest in full execution. This front-loads the biggest design decision and avoids multiple full rebuilds.
 
 If the graphic is adapting an existing asset or following an established pattern, a single plan with user confirmation is sufficient.
@@ -131,8 +149,8 @@ Follow the five-phase workflow below. Do NOT try to build the entire graphic in 
 
 From the composition plan (Step 4), list every visual element the graphic requires — logos, icons, components, typography styles, color values, decorative elements. Then search for each one:
 
-1. **Search Brand Assets page first** — the Inkeep Design Assets file has a curated Brand Assets page (node `5003:63`) with 96 assets organized by path prefix (`logo/`, `icon/`, `illustration/`, `background/`, `third-party/`, `ui/`, `mascot/`). Search here before looking elsewhere.
-2. **Logos** — `logo/full-color`, `logo/black`, `logo/white`, `logo/icon/*`, `logo/wordmark/*`, `logo/favicon/*`
+1. **Logo first — never approximate.** If the graphic includes the brand mark, clone the real logo from the design system before doing anything else. Search the Brand Assets page (node `5003:63`) for `logo/full-color`, `logo/black`, `logo/white`, `logo/icon/*`, `logo/wordmark/*`, `logo/favicon/*`. Never substitute the logo with a colored shape, text, or approximation — if you can't find or clone it, stop and ask the user.
+2. **Search Brand Assets page** — the Inkeep Design Assets file has a curated Brand Assets page (node `5003:63`) with 96 assets organized by path prefix (`logo/`, `icon/`, `illustration/`, `background/`, `third-party/`, `ui/`, `mascot/`). Search here before looking elsewhere.
 3. **Icons** — `icon/nav/*` (14 variants), `icon/homepage/*`, `icon/customer/*`
 4. **Illustrations** — `illustration/use-case/*`, `illustration/abstract/*`, `illustration/dev-page/*`, `illustration/homepage/*`
 5. **Backgrounds** — `background/gradient/*`, `background/footer/*`, `background/polygon/*`, `background/grid`
@@ -142,6 +160,16 @@ From the composition plan (Step 4), list every visual element the graphic requir
 9. **Colors** — pull exact hex values from the Brand Guide page
 
 For each asset found, record what it is, where it is (file key + node ID), and how you'll use it (clone, export, extract style values). For assets you'll incorporate, stage them: clone nodes into your working page, or note exact style values.
+
+**Cross-file asset transfer:** When source assets live in a different Figma file than your target, choose a strategy:
+
+| Situation | Strategy |
+|---|---|
+| Simple shapes or components | Clone within Figma (same file), or recreate in the target file |
+| Complex icons/illustrations | Do NOT try to SVG-export and re-import — complex Figma vectors produce 100-500KB SVGs that are impractical to transfer. Instead, screenshot the original for reference and recreate a simplified version in the target file using basic shapes and vector paths. |
+| Style values (colors, fonts, spacing) | Extract the values and apply them directly — no need to transfer nodes |
+
+Always call `figma_navigate` to switch active file context before accessing nodes in a different file.
 
 **Checkpoint:** List all assets collected and mark what's missing:
 ```
@@ -217,8 +245,9 @@ Fix any issues now — it's much easier to fix individual atoms than after compo
 - [ ] Layout matches the composition plan
 - [ ] Connection elements actually connect to their targets
 - [ ] Visual hierarchy reads correctly
-- [ ] Text is readable at intended display size
+- [ ] Text is readable at intended display size (see output medium table in Step 1)
 - [ ] No content overflow or collapsed spacing from dimensional changes
+- [ ] **If adapting an existing asset:** screenshot the original reference AND your output — compare element-by-element. "The original" means the source Figma file, not any derived copy (not your HTML mockup, not your plan description). Check arrow directions, element ordering, label placement, and logo usage against the actual source.
 
 #### Phase E: Polish and verify
 
@@ -228,7 +257,7 @@ Fix any issues now — it's much easier to fix individual atoms than after compo
 
 1. **Alignment and spacing** — consistent spacing, proper alignment, visual balance
 2. **Layer organization** — descriptive names on all layers, logical layer order (background → structure → content → decorative)
-3. **Final screenshot** — verify brand colors exact, typography correct, no placeholders, connections attached, design looks intentional
+3. **Final screenshot** — verify brand colors exact, typography correct, no placeholders, connections attached, design looks intentional. If adapting an existing asset, do a final A/B comparison with the original source file.
 4. **Clean up** — delete the "Working — Atoms" frame, remove stray elements
 
 #### Iteration is expected
@@ -324,6 +353,7 @@ Should have:
 - **Skipping visual checkpoints**: Every phase must end with a screenshot verification. Don't assume it looks right — verify. Screenshot after every dimensional change too — resizing elements cascades (text reflows, heights change, spacing collapses).
 - **Creating from scratch when a Figma component exists**: Always check master designs and the design system first
 - **Generating SVG when Figma-native is better**: Default to Figma designs for slide/marketing assets — they're editable and reusable. Use SVG only when code output is specifically needed.
+- **Approximating the logo**: Never substitute the brand mark with a colored shape, gradient circle, or text. Clone the real logo from the design system — it should be the first asset collected.
 - **Approximate colors**: Use exact hex values from the brand, not "close enough" colors
 - **Unnamed layers**: Every Figma layer should have a descriptive name, not "Frame 47" or "Rectangle 12"
 - **Flat structure without auto-layout**: Use auto-layout frames for sections so the design is easy to edit and resize
