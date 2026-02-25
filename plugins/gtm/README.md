@@ -17,16 +17,12 @@ claude plugin install gtm@inkeep-team-skills
 ```
 
 <details>
-<summary>Alternative: Skills CLI (any agent, not just Claude Code)</summary>
+<summary>Alternative: Install for Cursor or other coding agents</summary>
+
+Works with any agent that supports [Agent Skills](https://agentskills.io) (Cursor, Cline, Codex, etc.). Note: skills do **not** auto-update — you'll need to run `npx skills update` manually to get the latest.
 
 ```bash
 npx skills add inkeep/team-skills/plugins/gtm -y
-```
-
-To manually update:
-
-```bash
-npx skills update
 ```
 
 </details>

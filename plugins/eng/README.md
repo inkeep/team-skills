@@ -7,6 +7,17 @@ Plugin for the Inkeep engineering team. Includes all [shared skills](../shared/)
 
 Run this once to install the plugin, dependencies, and companion tools:
 
+<details>
+<summary>Alternative: Install for Cursor or other coding agents</summary>
+
+Works with any agent that supports [Agent Skills](https://agentskills.io) (Cursor, Cline, Codex, etc.). Note: skills do **not** auto-update — you'll need to run `npx skills update` manually to get the latest.
+
+```bash
+npx skills add inkeep/team-skills/plugins/eng -y
+```
+
+</details>
+
 **Step 1:** Add the marketplace (one-time):
 
 ```bash
@@ -88,21 +99,6 @@ These are generally useful skills for investigating things and aiding in **decis
 | Skill | Purpose |
 |---|---|
 | `/browser` | Playwright automation — write and run scripts for testing, screenshots, form filling, accessibility audits, network inspection. Works in CI/Docker. |
-
-<details>
-<summary>Alternative: Skills CLI (any agent, not just Claude Code)</summary>
-
-```bash
-npx skills add inkeep/team-skills/plugins/eng -y
-```
-
-To manually update:
-
-```bash
-npx skills update
-```
-
-</details>
 
 ---
 
