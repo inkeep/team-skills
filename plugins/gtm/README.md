@@ -27,8 +27,6 @@ npx skills add inkeep/team-skills/plugins/gtm -y
 
 </details>
 
----
-
 ## Skill inventory
 
 ### GTM-specific

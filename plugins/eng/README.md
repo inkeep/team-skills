@@ -7,17 +7,6 @@ Plugin for the Inkeep engineering team. Includes all [shared skills](../shared/)
 
 Run this once to install the plugin, dependencies, and companion tools:
 
-<details>
-<summary>Alternative: Install for Cursor or other coding agents</summary>
-
-Works with any agent that supports [Agent Skills](https://agentskills.io) (Cursor, Cline, Codex, etc.). Note: skills do **not** auto-update — you'll need to run `npx skills update` manually to get the latest.
-
-```bash
-npx skills add inkeep/team-skills/plugins/eng -y
-```
-
-</details>
-
 **Step 1:** Add the marketplace (one-time):
 
 ```bash
@@ -45,6 +34,17 @@ claude plugin marketplace add anthropics/claude-plugins-official
 ```bash
 claude plugin install typescript-lsp@claude-plugins-official
 ```
+
+<details>
+<summary>Alternative: Install for Cursor or other coding agents</summary>
+
+Works with any agent that supports [Agent Skills](https://agentskills.io) (Cursor, Cline, Codex, etc.). Note: skills do **not** auto-update — you'll need to run `npx skills update` manually to get the latest.
+
+```bash
+npx skills add inkeep/team-skills/plugins/eng -y
+```
+
+</details>
 
 ## E2E Feature Development Skills
 
