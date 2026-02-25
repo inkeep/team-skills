@@ -1,12 +1,19 @@
 // generate-catalogue.ts
 //
-// Scans ~/.claude/reports/*/REPORT.md, validates structure,
+// Scans <reports-dir>/*/REPORT.md, validates structure,
 // extracts YAML frontmatter via gray-matter, and writes CATALOGUE.md.
+//
+// Resolution priority:
+//   1. --reports-dir flag
+//   2. CLAUDE_REPORTS_DIR env var
+//   3. <git-root>/reports/ (if in a repo and directory exists)
+//   4. ~/reports/
 //
 // Usage: bun run generate-catalogue.ts [--reports-dir <path>]
 
 import fs from "node:fs";
 import path from "node:path";
+import { execSync } from "node:child_process";
 import matter from "gray-matter";
 import os from "node:os";
 
@@ -427,16 +434,46 @@ function printValidation(allIssues: ValidationIssue[], validCount: number) {
 // Main
 // ---------------------------------------------------------------------------
 
-function main() {
-  const args = process.argv.slice(2);
-  let reportsDir =
-    process.env.CLAUDE_REPORTS_DIR ||
-    path.join(os.homedir(), ".claude", "reports");
-
+/**
+ * Resolve the reports directory using the priority chain:
+ *   1. --reports-dir flag
+ *   2. CLAUDE_REPORTS_DIR env var
+ *   3. <git-root>/reports/ (if in a repo and directory exists)
+ *   4. ~/reports/
+ */
+function resolveReportsDir(args: string[]): string {
+  // Priority 1: --reports-dir flag
   const dirIdx = args.indexOf("--reports-dir");
   if (dirIdx !== -1 && args[dirIdx + 1]) {
-    reportsDir = path.resolve(args[dirIdx + 1]);
+    return path.resolve(args[dirIdx + 1]);
   }
+
+  // Priority 2: env var
+  if (process.env.CLAUDE_REPORTS_DIR) {
+    return path.resolve(process.env.CLAUDE_REPORTS_DIR);
+  }
+
+  // Priority 3: repo-local reports/ (if in a git repo and directory exists)
+  try {
+    const gitRoot = execSync("git rev-parse --show-toplevel", {
+      encoding: "utf-8",
+      stdio: ["pipe", "pipe", "pipe"],
+    }).trim();
+    const repoReports = path.join(gitRoot, "reports");
+    if (fs.existsSync(repoReports)) {
+      return repoReports;
+    }
+  } catch {
+    // Not in a git repo — fall through
+  }
+
+  // Priority 4: user-level ~/reports
+  return path.join(os.homedir(), "reports");
+}
+
+function main() {
+  const args = process.argv.slice(2);
+  const reportsDir = resolveReportsDir(args);
 
   if (!fs.existsSync(reportsDir)) {
     console.error(`Reports directory not found: ${reportsDir}`);

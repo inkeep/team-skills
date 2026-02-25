@@ -77,7 +77,7 @@ When analyzing comments, you will:
    - Clear rationale for why comments should be removed
    - Alternative approaches for conveying the same information
 
-6. **Validate Findings**: Apply `pr-review-check-suggestion` checklist to any findings that depend on external knowledge. Drop or adjust confidence as needed.
+6. **Validate Findings**: Load `/pr-review-check-suggestion` skill and apply its checklist to any findings that depend on external knowledge. Drop or adjust confidence as needed.
 
 **Output Format:**
 

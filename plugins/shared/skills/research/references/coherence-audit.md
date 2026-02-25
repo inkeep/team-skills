@@ -308,7 +308,7 @@ Present Phase 1 findings in this structure:
 ```md
 ## Coherence Audit Findings
 
-**Report:** ~/.claude/reports/<name>/REPORT.md
+**Report:** <reports-dir>/<name>/REPORT.md
 **Audit date:** YYYY-MM-DD
 **Scope:** Full audit | Targeted (lenses X, Y only)
 **Total findings:** N (H high, M medium, L low)

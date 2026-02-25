@@ -20,7 +20,7 @@ Examples: `claude-skills-architecture`, `devops-practices`, `mcp-host-patterns`,
 ## Directory structure
 
 ```
-~/.claude/reports/<scope>-<aspect>/
+<reports-dir>/<scope>-<aspect>/
 ├── REPORT.md              # Required — the report itself (with YAML frontmatter)
 ├── evidence/              # Required — primary-source proof files
 │   ├── <dimension-1>.md

@@ -1,7 +1,7 @@
 Use when: Need deeper guidance on cold email effectiveness
 Priority: P2
 Impact: Emails that violate best practices and get low response rates
-Source: ~/.claude/reports/b2b-outbound-email-effectiveness/REPORT.md
+Source: ~/reports/b2b-outbound-email-effectiveness/REPORT.md
 
 ---
 

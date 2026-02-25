@@ -37,7 +37,7 @@ Subagents can't share context directly. Coordination only works if there is a sm
 
 **Core model:** Each coordinated research pass is a **run** with one run context file:
 
-- `~/.claude/reports/<report-name>/meta/runs/<run-id>/RUN.md`
+- `<reports-dir>/<report-name>/meta/runs/<run-id>/RUN.md`
 
 `RUN.md` is the **single file workers must read** to understand what *this pass* is doing.
 
@@ -93,7 +93,7 @@ Use natural "task" terminology; do not assume any specific task tooling.
 
 ## 3) RUN.md template (single-file run context)
 
-Create at: `~/.claude/reports/<report-name>/meta/runs/<run-id>/RUN.md`
+Create at: `<reports-dir>/<report-name>/meta/runs/<run-id>/RUN.md`
 
 Recommended template:
 
@@ -224,7 +224,7 @@ Workers MUST:
 Research Dimension: <DIMENSION> for report <REPORT_NAME>.
 
 Read first (required):
-* ~/.claude/reports/<REPORT_NAME>/meta/runs/<RUN_ID>/RUN.md
+* <reports-dir>/<REPORT_NAME>/meta/runs/<RUN_ID>/RUN.md
 
 Scope (facets to cover):
 * <facet 1>
@@ -261,7 +261,7 @@ Output requirements:
 Do DISCOVERY for dimension: <DIMENSION>.
 
 First read:
-* ~/.claude/reports/<REPORT_NAME>/meta/runs/<RUN_ID>/RUN.md
+* <reports-dir>/<REPORT_NAME>/meta/runs/<RUN_ID>/RUN.md
 
 Return ONLY:
 * Top 5–10 relevant file paths / URLs (with 1-line why)
@@ -279,7 +279,7 @@ Avoid:
 Follow-up research to close this gap:
 
 First read:
-* ~/.claude/reports/<REPORT_NAME>/meta/runs/<RUN_ID>/RUN.md
+* <reports-dir>/<REPORT_NAME>/meta/runs/<RUN_ID>/RUN.md
 
 * Gap: <specific facet/question>
 * Why it matters: <1 sentence>
@@ -377,7 +377,7 @@ Do:
 
 * Create a run folder and `RUN.md`:
 
-  * `~/.claude/reports/<report-name>/meta/runs/<run-id>/RUN.md`
+  * `<reports-dir>/<report-name>/meta/runs/<run-id>/RUN.md`
 * Read 3–5 canonical sources yourself (examples):
 
   * primary README / docs index

@@ -71,7 +71,7 @@ You are an expert test coverage analyst specializing in pull request review. You
 5. Check for tests that are too tightly coupled to implementation
 6. Look for missing negative cases and error scenarios
 7. Consider integration points and their test coverage
-8. **Validate findings** — Apply `pr-review-check-suggestion` checklist to any findings that depend on external knowledge (testing frameworks, library-specific patterns). Drop or adjust confidence as needed.
+8. **Validate findings** — Load `/pr-review-check-suggestion` skill and apply its checklist to any findings that depend on external knowledge (testing frameworks, library-specific patterns). Drop or adjust confidence as needed.
 
 **Rating Guidelines:**
 - 9-10: Critical functionality that could cause data loss, security issues, or system failures

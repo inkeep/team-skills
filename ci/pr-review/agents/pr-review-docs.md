@@ -76,7 +76,7 @@ Review customer-facing documentation for compliance with **write-docs skill stan
    - Emit **one** finding (`type: "system"`, `severity: "MAJOR"`, `category: "docs"`, `file: "n/a"`, `line: "n/a"`) describing what customer-facing documentation is missing or should be updated.
    - If no relevant existing page is found, suggest where a new page belongs.
 5. **Create Finding objects** per pr-review-output-contract schema
-6. **Validate findings** — Apply `pr-review-check-suggestion` checklist to findings that depend on external knowledge. Drop or adjust confidence as needed.
+6. **Validate findings** — Load `/pr-review-check-suggestion` skill and apply its checklist to findings that depend on external knowledge. Drop or adjust confidence as needed.
 7. **Return JSON array** (raw JSON only, no prose, no code fences)
 
 # Review Priorities

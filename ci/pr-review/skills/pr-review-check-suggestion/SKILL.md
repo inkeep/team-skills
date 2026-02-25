@@ -59,6 +59,26 @@ Apply when proposing a fix that depends on **current best practices**:
 - Codebase-internal patterns (follow existing conventions)
 - Simple refactors (extract function, rename variable)
 
+### For Pattern Currency (proactive)
+
+Apply when the PR **introduces or changes a pattern** for using a third-party library or framework — even when the code looks correct. The goal is to catch outdated or superseded approaches before they become established codebase precedent.
+
+**Trigger:** The PR establishes a new way of using a library/framework in the codebase — a new import, a new configuration approach, a first-of-kind usage pattern, or a change from one approach to another. This includes cases where no reviewer finding exists yet — the PR's own code choice is the thing to verify.
+
+| Signal | Example | Why Check |
+|--------|---------|-----------|
+| **First usage of a library API** | First `useOptimistic()` call in the codebase | May be superseded or have caveats in current version |
+| **New integration pattern** | New approach to data fetching, caching, or auth | Frameworks evolve recommended patterns across versions |
+| **Changing an established pattern** | Switching from `getServerSideProps` to server actions | Verify the new approach is the current recommendation, not just an alternative |
+| **New dependency introduced** | PR adds a library not previously in `package.json` | Check if the library is actively maintained and if the chosen API surface is current |
+
+**When detected:** Confirm the relevant library/framework version from `package.json` or lockfile, then apply the same web search verification workflow (Steps 1–2) to check if the approach matches current documentation for that version. If the pattern is outdated or superseded, generate a finding. If current, no action needed — do not generate a finding for patterns that are verified as current.
+
+**Skip pattern currency checks for:**
+- Usage that follows an existing codebase pattern (already established — consistency reviewer's domain)
+- Internal utilities and abstractions (no external source of truth)
+- Standard language features (not library-specific)
+
 ---
 
 ## Validation Workflow

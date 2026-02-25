@@ -73,7 +73,7 @@ fi
 
 **Clone location:** `~/.claude/oss-repos/` — a shared, persistent location outside any project directory. Repos persist across sessions and are reusable from any working directory.
 
-Don't bloat `~/.claude/reports/` with cloned repos.
+Don't bloat `<reports-dir>/` with cloned repos.
 
 ### Step 2: Guard against shallow/partial sources
 

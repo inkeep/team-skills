@@ -1046,9 +1046,9 @@ For deeper research beyond the skill references, consult these reports:
 
 | Report | Path | Use For |
 |--------|------|---------|
-| **B2B Persona Messaging Playbook** | `~/.claude/reports/b2b-persona-messaging-playbook/REPORT.md` | Full persona research: 19 archetypes, pain points, buying behavior, anti-patterns, compensation data |
-| **Blog-to-Persona Mapping** | `~/.claude/reports/blog-persona-mapping/REPORT.md` | Article CTAs by persona and buying stage, case study mappings |
-| **Customer Social Proof** | `~/.claude/reports/customer-social-proof/REPORT.md` | Customer logos by industry, size, and persona for social proof |
+| **B2B Persona Messaging Playbook** | `~/reports/b2b-persona-messaging-playbook/REPORT.md` | Full persona research: 19 archetypes, pain points, buying behavior, anti-patterns, compensation data |
+| **Blog-to-Persona Mapping** | `~/reports/blog-persona-mapping/REPORT.md` | Article CTAs by persona and buying stage, case study mappings |
+| **Customer Social Proof** | `~/reports/customer-social-proof/REPORT.md` | Customer logos by industry, size, and persona for social proof |
 
 ## Skill References
 

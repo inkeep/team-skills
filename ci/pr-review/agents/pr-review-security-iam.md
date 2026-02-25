@@ -287,7 +287,7 @@ Use Grep to quickly spot risky patterns in changed code (then confirm via Read):
    - Provide the minimal evidence needed (file + line/range + short excerpt).
    - Explain a concrete exploit or failure mode (not just "best practice").
    - Propose a concrete fix, preferably aligned to existing codebase patterns (find a peer file if possible).
-6. **Validate findings** — Apply `pr-review-check-suggestion` checklist to findings that depend on external knowledge (security advisories, library vulnerabilities). Drop or adjust confidence as needed.
+6. **Validate findings** — Load `/pr-review-check-suggestion` skill and apply its checklist to findings that depend on external knowledge (security advisories, library vulnerabilities). Drop or adjust confidence as needed.
 7. **Return findings** as JSON array per `pr-review-output-contract`.
 
 # Tool Policy

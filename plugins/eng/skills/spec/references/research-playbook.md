@@ -99,7 +99,7 @@ When the spec depends on packages, libraries, frameworks, or external software o
 Dispatch as **Task subagents** (one per dependency or dependency cluster) that load the `/research` skill for its methodology, evidence standards, and source code analysis patterns. This gives each subagent research-grade rigor without the overhead of creating standalone reports.
 
 Each subagent should be instructed to:
-1. **Load `/research` skill** and run its routing gate — check if an existing report on this 3P system already exists in `~/.claude/reports/`.
+1. **Load `/research` skill** and run its routing gate — check if an existing report on this 3P system already exists in the resolved reports directory.
 2. **If an existing report exists** → use Path C (update/append) to add findings relevant to the spec's scenario. This enriches shared knowledge.
 3. **If no existing report exists** → use Path B (direct answer). Do **not** create a new standalone report. Return full findings in the response.
 4. **In both cases**, return complete findings inline to the spec agent — the spec agent needs the results in-context to inform design decisions.

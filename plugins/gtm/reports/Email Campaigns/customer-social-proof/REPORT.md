@@ -4,8 +4,8 @@ description: "Quick reference for matching Inkeep customer names to prospects by
 createdAt: 2026-02-12
 updatedAt: 2026-02-12
 relatedReports:
-  - ~/.claude/reports/blog-persona-mapping/REPORT.md
-  - ~/.claude/reports/b2b-persona-messaging-playbook/REPORT.md
+  - ../blog-persona-mapping/REPORT.md
+  - ../b2b-persona-messaging-playbook/REPORT.md
 ---
 
 # Customer Social Proof Reference
@@ -267,5 +267,5 @@ For maximum impact, pair a customer name with a case study metric:
 
 ## Related Resources
 
-- [Blog-to-Persona Mapping](~/.claude/reports/blog-persona-mapping/REPORT.md) — Article CTAs by persona
-- [B2B Persona Messaging Playbook](~/.claude/reports/b2b-persona-messaging-playbook/REPORT.md) — Full persona research
+- [Blog-to-Persona Mapping](../blog-persona-mapping/REPORT.md) — Article CTAs by persona
+- [B2B Persona Messaging Playbook](../b2b-persona-messaging-playbook/REPORT.md) — Full persona research

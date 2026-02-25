@@ -30,7 +30,7 @@ Identify:
 - **Content scope**: what topics/sections to cover
 - **Length target**: approximate slide count (default: 8-12 slides)
 - **Existing deck**: if user provides a Google Slides URL, use it as the starting point (skip step 2)
-- **Content sources**: reports in `~/.claude/reports/`, documents, URLs, or inline instructions
+- **Content sources**: reports in `~/reports/`, documents, URLs, or inline instructions
 
 ### 2. Find a starting point
 

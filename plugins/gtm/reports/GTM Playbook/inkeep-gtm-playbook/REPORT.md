@@ -4,12 +4,12 @@ description: "Comprehensive go-to-market playbook synthesizing learnings from AI
 createdAt: 2026-02-13
 updatedAt: 2026-02-13
 sources:
-  - ~/.claude/reports/ai-startup-gtm-playbooks/REPORT.md
-  - ~/.claude/reports/competitor-gtm-strategies/REPORT.md
-  - ~/.claude/reports/b2b-outbound-email-effectiveness/REPORT.md
-  - ~/.claude/reports/inkeep-painpoint-messaging/REPORT.md
-  - ~/.claude/reports/b2b-persona-messaging-playbook/REPORT.md
-  - ~/.claude/reports/blog-persona-mapping/REPORT.md
+  - ../ai-startup-gtm-playbooks/REPORT.md
+  - ../competitor-gtm-strategies/REPORT.md
+  - ../b2b-outbound-email-effectiveness/REPORT.md
+  - ../inkeep-painpoint-messaging/REPORT.md
+  - ../b2b-persona-messaging-playbook/REPORT.md
+  - ../blog-persona-mapping/REPORT.md
 ---
 
 # Inkeep GTM Playbook: Enterprise Demo & Deal Acceleration

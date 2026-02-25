@@ -181,25 +181,22 @@ Invoke by typing `/research <topic>` within Claude Code or Cursor.
 
 Conducts evidence-driven research and produces one of three outputs:
 
-- **Formal report** — persistent artifact in `~/.claude/reports/<name>/` with evidence files. **Default** for non-trivial research.
+- **Formal report** — persistent artifact in the resolved reports directory with evidence files. **Default** for non-trivial research. Reports default to `<repo-root>/reports/` when in a git repo, or `~/reports/` otherwise.
 - **Report update** — refinement or additions to an existing report. Triggered when you're iterating on an existing report or mention it e.g. `update X report with new research on XYZ`. Automatically figures out best way to update the report.
 - **Direct answer** — findings delivered in conversation. Used when you say "just tell me" or it's a quick question.
 
 ### Report structure
 
-Reports live in `~/.claude/reports/<name>/` with:
+Reports live in `<reports-dir>/<name>/` with:
 - `REPORT.md` — synthesized findings with executive summary, rubric, detailed sections
 - `evidence/*.md` — primary-source proof files (one per dimension)
 - `meta/_changelog.md` — append-only history of updates
 
-To open the directory of reports in Cursor:
-`cursor ~/.claude/reports` or simply navigate to it.
-
-In macOS, while in a home directory (e.g. `your-username/`), press `Cmd + Shift + .` to see the hidden `.claude` folder.
+Reports resolve to `<repo-root>/reports/` when in a git repo, or `~/reports/` when not. Override with `CLAUDE_REPORTS_DIR` env var.
 
 ### Key behaviors
 
-- **Checks existing reports first.** Before starting new research, it scans `~/.claude/reports/` for overlap. If prior research covers a topic, it surfaces those findings and asks whether to reuse, extend, or start fresh.
+- **Checks existing reports first.** Before starting new research, it scans the resolved reports directory for overlap. If prior research covers a topic, it surfaces those findings and asks whether to reuse, extend, or start fresh.
 - **Scopes before researching.** It proposes a research rubric (dimensions, depth, stance) and waits for a confirmation before diving in. You can adjust scope, add/remove dimensions, or change the output format.
 - **Evidence-backed.** Every finding links to an evidence file with primary sources (code snippets for OSS repos, doc quotes, research studies, etc.). Claims are labeled CONFIRMED / INFERRED / UNCERTAIN / NOT FOUND. **Auto-prioritizes by time and authority**.
 - **Recaps and suggests follow-ups.** After delivering findings, it summarizes key results and offers 2-4 natural next directions.

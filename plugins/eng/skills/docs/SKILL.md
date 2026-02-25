@@ -35,6 +35,8 @@ Map the **full blast radius** of the changes onto documentation surfaces. Do not
 
 Two lenses, evaluated together:
 
+Before mapping surfaces, identify the distinct user types who interact with this product. A single change can require different documentation for different users — e.g., SDK reference updates for developers, a UI walkthrough for no-code admins, an upgrade runbook for self-hosting operators. Common user types (vary by product): developers (API/SDK/CLI consumers), no-code or self-serve users (UI/dashboard), operators/admins (infrastructure, permissions, deployments), integration partners (building on top of the platform). Identify which exist here, then consider each as you map surfaces below.
+
 #### Product surface areas (what users see)
 
 Which customer-facing surfaces does this change touch? Enumerate concretely:
@@ -89,7 +91,7 @@ Before writing anything, understand how this repo handles documentation. Check i
    - Cross-referencing patterns (how pages link to each other)
    - Template or boilerplate patterns
 
-4. **Changelog conventions.** Check for `CHANGELOG.md`, `CHANGES.md`, release notes templates, or conventional-commits patterns in git history.
+4. **Changelog and release-notes conventions.** Check for `CHANGELOG.md`, `CHANGES.md`, release notes templates, or conventional-commits patterns in git history. Also check for changeset tooling: `.changeset/config.json`, `@changesets/cli` in `package.json` devDependencies, or repo-specific changeset helper scripts (e.g., `pnpm bump`, `pnpm changeset`). If found, note the command, valid package names, and semver conventions — these are how this repo generates release notes.
 
 **If a documentation skill is found:** Defer to it for format, structure, and workflow decisions. Your job becomes: identify *what* needs documentation (Step 2), then delegate *how* to write it to the skill.
 
@@ -142,6 +144,8 @@ For each item in the plan:
 Documentation ships with the code in the same PR. Do not defer docs to a follow-up.
 
 Stage all documentation files you created or modified (`git add <paths>`) and commit them with a clear message (e.g., `docs: add API reference for <feature>`). Verify the commit succeeded before proceeding — documentation that is written but not committed will not appear in the PR.
+
+If the repo uses changeset-based release notes (discovered in Step 3) and the changes touch a published package, create a changeset following the repo's conventions — use the repo's changeset command, appropriate semver level, and message style. This replaces manual `CHANGELOG.md` editing for repos that use this pattern. If no changeset tooling was found, skip this.
 
 If no PR exists, the documentation files are ready for the user to commit — tell them which files were created or modified.
 

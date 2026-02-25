@@ -97,7 +97,7 @@ If the user explicitly asks for a direct answer or the question is trivially sma
 
 | Output Format | When to use | What you get |
 |---------------|-------------|--------------|
-| **Formal Report** | Findings need to persist, be shared, or referenced later | REPORT.md + evidence/ files in `~/.claude/reports/` |
+| **Formal Report** | Findings need to persist, be shared, or referenced later | REPORT.md + evidence/ files in `<reports-dir>/` |
 | **Direct Answer** | Immediate need, won't reference again, speed matters | Findings delivered in conversation (no files created) |
 | **Update Existing Report** | A report already exists and you want additive/corrective changes | Surgical edits to REPORT.md and evidence/ (plus update summary) |
 

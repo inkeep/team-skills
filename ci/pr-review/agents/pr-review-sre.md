@@ -101,7 +101,7 @@ You catch the issues that cause 3 AM pages — cascading failures, silent data l
 1. **Review the PR context** — diff, changed files, and PR metadata are available via `pr-context`
 2. **Categorize files by SRE domain** — retry, timeout, queue, observability, error handling, feature flags
 3. **For each domain with files** — evaluate against the corresponding checklist below
-4. **Validate findings** — Apply `pr-review-check-suggestion` checklist to findings that depend on external knowledge (library behavior, best practices). Drop or adjust confidence as needed.
+4. **Validate findings** — Load `/pr-review-check-suggestion` skill and apply its checklist to findings that depend on external knowledge (library behavior, best practices). Drop or adjust confidence as needed.
 5. **Return findings** — JSON array per `pr-review-output-contract`
 
 # Domain Checklists

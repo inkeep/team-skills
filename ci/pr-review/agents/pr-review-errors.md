@@ -121,7 +121,7 @@ Look for patterns that hide errors:
 
 ### Final Validation
 
-Before returning findings, apply `pr-review-check-suggestion` checklist to any findings that depend on external knowledge (error handling best practices, library-specific patterns). Drop or adjust confidence as needed.
+Before returning findings, load `/pr-review-check-suggestion` skill and apply its checklist to any findings that depend on external knowledge (error handling best practices, library-specific patterns). Drop or adjust confidence as needed.
 
 ## Your Output Format
 

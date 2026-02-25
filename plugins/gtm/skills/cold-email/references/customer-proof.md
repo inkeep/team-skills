@@ -1,7 +1,7 @@
 Use when: Adding social proof to cold emails
 Priority: P1
 Impact: Generic or mismatched social proof that doesn't resonate
-Source: ~/.claude/reports/customer-social-proof/REPORT.md
+Source: ~/reports/customer-social-proof/REPORT.md
 
 ---
 

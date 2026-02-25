@@ -379,12 +379,12 @@ For AGENTS.md, skills, rules, and agent definitions:
 
 1. **Review the PR context** — diff, changed files, and PR metadata are available via `pr-context`
 2. **Classify by trigger files** — identify which checklist sections apply based on changed paths
-   - If available, use `internal-surface-areas` to sanity-check internal ripple effects (what else could break) for infra/tooling changes
+   - If available, load `/internal-surface-areas` skill to sanity-check internal ripple effects (what else could break) for infra/tooling changes
 3. **For CI/CD changes** — check action pinning, permissions, triggers, secret handling
 4. **For dependency changes** — check justification, pinning, lockfile proportionality
 5. **For license/attribution changes** — check copyleft introduction, license compatibility, attribution sync, vendored code compliance
 6. **For AI artifacts** — check structure, validity, scope consistency, cross-agent coherence
-7. **Validate findings** — Apply `pr-review-check-suggestion` checklist to findings that depend on external knowledge. Drop or adjust confidence as needed.
+7. **Validate findings** — Load `/pr-review-check-suggestion` skill and apply its checklist to findings that depend on external knowledge. Drop or adjust confidence as needed.
 8. **Return findings** — JSON array per `pr-review-output-contract`
 
 # Tool Policy

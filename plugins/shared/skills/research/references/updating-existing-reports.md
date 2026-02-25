@@ -1,4 +1,4 @@
-Use when: The user wants to update/refresh/extend an existing report in ~/.claude/reports/ (add new dimensions, answer follow-up questions, correct facts, or incorporate new evidence).
+Use when: The user wants to update/refresh/extend an existing report in <reports-dir>/ (add new dimensions, answer follow-up questions, correct facts, or incorporate new evidence).
 Priority: P0
 Impact: Without this, updates tend to (a) restart research from scratch, (b) overfit to new info, (c) rewrite unrelated sections, and/or (d) break fidelity to the original report's scope/stance.
 
@@ -51,7 +51,7 @@ All reader-facing artifacts should be readable as **coherent current-state snaps
 
 To preserve historical context without cluttering the report itself:
 
-- Maintain a changelog artifact at: `~/.claude/reports/<report-name>/meta/_changelog.md`
+- Maintain a changelog artifact at: `<reports-dir>/<report-name>/meta/_changelog.md`
 - **Ownership:** Only the parent/orchestrating agent maintains this file. Subagents do **not** write to it.
 - **Purpose:** Process/history documentation (what changed, what was searched, what was updated), not a reader-facing "current state" narrative.
 
@@ -60,7 +60,7 @@ To preserve historical context without cluttering the report itself:
 Create `meta/` to hold `_changelog.md`:
 
 ```bash
-mkdir -p ~/.claude/reports/<report-name>/meta
+mkdir -p <reports-dir>/<report-name>/meta
 ```
 
 ### Minimal template (append an entry per research pass)
@@ -95,7 +95,7 @@ Keep entries short. Do not paste raw evidence here.
 If an update pass uses subagents or requires explicit coordination, treat the pass as a **run** with a single run context file:
 
 ```
-~/.claude/reports/<report-name>/
+<reports-dir>/<report-name>/
   meta/
     _changelog.md
     runs/
@@ -234,16 +234,16 @@ Use this to decide what you can do by default vs what needs explicit user confir
 ### Step 1: Identify the target report and inventory baseline artifacts
 
 Find and read:
-- `~/.claude/reports/<report-name>/REPORT.md`
-- `~/.claude/reports/<report-name>/evidence/` files referenced by REPORT.md
-- `~/.claude/reports/<report-name>/meta/_changelog.md` (if it exists)
+- `<reports-dir>/<report-name>/REPORT.md`
+- `<reports-dir>/<report-name>/evidence/` files referenced by REPORT.md
+- `<reports-dir>/<report-name>/meta/_changelog.md` (if it exists)
 - any other coordination artifacts (if present)
 - any existing `meta/runs/<run-id>/RUN.md` files (if present)
 
-**Coordination artifact location:** `~/.claude/reports/<report-name>/meta/` (e.g., `runs/<run-id>/RUN.md`)
+**Coordination artifact location:** `<reports-dir>/<report-name>/meta/` (e.g., `runs/<run-id>/RUN.md`)
 
 If the report name/path is not provided, ask a targeted question:
-- "Which report directory should I update (exact `~/.claude/reports/<name>/`)?"
+- "Which report directory should I update (exact `<reports-dir>/<name>/`)?"
 
 ### Step 2: Capture a Baseline Snapshot (BEFORE)
 
@@ -252,7 +252,7 @@ This is the anti-drift anchor. Keep it compact.
 ```md
 ## Baseline Snapshot (Existing Report)
 
-- Report: ~/.claude/reports/<report-name>/
+- Report: <reports-dir>/<report-name>/
 - Frontmatter: createdAt: <date> | updatedAt: <date>
 - Primary question / purpose:
 - Reader cares most about: [2-4 priorities from rubric — guides what additional research is most valuable]
@@ -272,7 +272,7 @@ Goal: determine **what is being added or corrected**, map it to the existing rep
 
 If coordinating (subagents / multi-session / high-stakes), create:
 
-* `~/.claude/reports/<report-name>/meta/runs/<run-id>/RUN.md`
+* `<reports-dir>/<report-name>/meta/runs/<run-id>/RUN.md`
 
 Populate it with:
 

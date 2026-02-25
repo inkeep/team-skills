@@ -1,7 +1,7 @@
 Use when: Selecting content CTAs for cold emails
 Priority: P1
 Impact: Generic CTAs without relevant content offers
-Source: ~/.claude/reports/blog-persona-mapping/REPORT.md
+Source: ~/reports/blog-persona-mapping/REPORT.md
 
 ---
 

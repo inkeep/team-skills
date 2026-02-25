@@ -1463,7 +1463,7 @@ When mapping personas to Inkeep's value proposition, anchor on these two core pa
 - [evidence/growth-ai-content-personas.md](evidence/growth-ai-content-personas.md) - Growth, AI, content creator research
 
 ### Related Research
-- [~/.claude/reports/b2b-outbound-email-effectiveness/](~/.claude/reports/b2b-outbound-email-effectiveness/) - B2B Cold Email Copywriting & Sales Effectiveness Playbook (general cold email principles)
+- [../b2b-outbound-email-effectiveness/](../b2b-outbound-email-effectiveness/) - B2B Cold Email Copywriting & Sales Effectiveness Playbook (general cold email principles)
 
 ### Key External Sources
 - [State of Developer Relations 2024](https://www.stateofdeveloperrelations.com/2024devrelreport)

@@ -15,8 +15,10 @@ pr-review (orchestrator, opus)
 ├── pr-review-errors              (opus)   — Error handling, logging, observability
 ├── pr-review-frontend            (opus)   — React/Next.js patterns, UX, accessibility
 ├── pr-review-llm                 (opus)   — LLM integration patterns, prompting, streaming
+├── pr-review-precision            (opus)   — Fix targeting, root cause analysis, enforcement placement
 ├── pr-review-product             (opus)   — Product-level thinking, user impact, surface areas
 ├── pr-review-security-iam        (opus)   — Auth, tenant isolation, IAM, credential handling
+├── pr-review-3p-specs     (opus)   — External spec/protocol fidelity, schema alignment, forward-compat
 ├── pr-review-sre                 (opus)   — Reliability, performance, scaling, monitoring
 ├── pr-review-standards           (opus)   — Code style, linting, Biome conventions
 ├── pr-review-tests               (opus)   — Test coverage, quality, patterns
@@ -93,6 +95,7 @@ Detect fault classes and anti-patterns using domain expertise. No external skill
 | Reviewer | Detects |
 |----------|---------|
 | `pr-review-standards` | Bugs, security, performance, AGENTS.md compliance |
+| `pr-review-precision` | Root cause vs symptom, redundant guards, enforcement placement, over-engineering |
 | `pr-review-errors` | Silent failures, swallowed errors, broad catches |
 | `pr-review-tests` | Missing test coverage, test quality issues |
 | `pr-review-types` | Type safety gaps, missing invariants |
@@ -101,6 +104,7 @@ Detect fault classes and anti-patterns using domain expertise. No external skill
 | `pr-review-consistency` | Convention drift across APIs, SDKs, CLI, config, telemetry |
 | `pr-review-product` | Customer mental-model clarity, concept economy, product debt |
 | `pr-review-security-iam` | Auth bypass, tenant isolation, access control, credential handling |
+| `pr-review-3p-specs` | External spec drift, schema misalignment, forward-compat breakage |
 
 ## Files
 
@@ -112,7 +116,7 @@ Detect fault classes and anti-patterns using domain expertise. No external skill
 | [`pr-review-output-contract`](../../../.agents/skills/pr-review-output-contract/SKILL.md) | Output schema |
 | [`product-surface-areas`](../../../.agents/skills/product-surface-areas/SKILL.md) | Customer-facing surface dependency graph |
 | [`internal-surface-areas`](../../../.agents/skills/internal-surface-areas/SKILL.md) | Internal subsystem dependency graph |
-| [`find-similar`](../../../.agents/skills/find-similar/SKILL.md) | Peer/pattern discovery |
+| `explore` (plugin skill) | Codebase exploration — pattern inspection, system tracing, surface mapping |
 | [`pr-tldr`](../../../.agents/skills/pr-tldr/SKILL.md) | PR context brief template (filled at review time) |
 
 ## Shared Skills
@@ -125,14 +129,15 @@ Detect fault classes and anti-patterns using domain expertise. No external skill
 
 **Written by:** The orchestrator during Phase 1.5 (the only file it writes).
 
-### find-similar
+### explore
 
-`find-similar` provides a systematic framework for finding analogous code patterns in the codebase — peer implementations, sibling modules, existing helpers, and convention precedents.
+`explore` provides systematic codebase exploration through three lenses: pattern inspection (sibling discovery, reference tracing, convention comparison), system tracing (call chains, dependency graphs, data flows), and surface mapping (blast radius, cross-surface impact). Subsumes the earlier `find-similar` skill.
 
 **Loaded by:**
-- `pr-review` (orchestrator) — general-purpose pattern lookup
-- `pr-review-architecture` — locate related modules and peer implementations before assessing consistency
+- `pr-review` (orchestrator) — general-purpose codebase investigation
+- `pr-review-architecture` — locate related modules, trace cross-module dependencies, assess design patterns
 - `pr-review-consistency` — sibling discovery and convention comparison across surfaces
+- `pr-review-precision` — check for duplicated logic, existing utilities, and trace data flow to root causes
 
 ### product-surface-areas
 
@@ -150,6 +155,7 @@ Detect fault classes and anti-patterns using domain expertise. No external skill
 - `pr-review-types` — type safety across surfaces
 - `pr-review-docs` — documentation coverage
 - `pr-review-devops` — self-hosting artifact and env contract consistency
+- `pr-review-3p-specs` — identifies external protocol surfaces and spec artifact touchpoints
 
 ### internal-surface-areas
 
@@ -164,6 +170,7 @@ Detect fault classes and anti-patterns using domain expertise. No external skill
 - `pr-review-security-iam` — maps auth/authz infrastructure surfaces
 - `pr-review-sre` — traces observability and runtime engine dependencies
 - `pr-review-llm` — navigates runtime engine internals (streaming, tools, sandboxes)
+- `pr-review-3p-specs` — traces protocol adapter and schema translation dependencies
 
 **Not loaded (context cost outweighs benefit):**
 - `pr-review-comments` — focused on comment accuracy, not internal architecture
@@ -259,7 +266,7 @@ A `--full-review` comment will **not** cancel an in-progress automatic `pull_req
 
 ### Agents (`.claude/agents/pr-review*.md`)
 
-Agents are **only loaded when explicitly invoked** — either via `/pr-review` in a Claude Code conversation or via `claude --agent pr-review` in CI. During normal development sessions, these 16 files consume **zero tokens** in the context window. They are never auto-loaded, auto-discovered, or auto-triggered.
+Agents are **only loaded when explicitly invoked** — either via `/pr-review` in a Claude Code conversation or via `claude --agent pr-review` in CI. During normal development sessions, these 17 files consume **zero tokens** in the context window. They are never auto-loaded, auto-discovered, or auto-triggered.
 
 ### Skills (`.agents/skills/pr-review-*/SKILL.md`)
 
@@ -280,12 +287,12 @@ At startup, Claude Code only reads the **frontmatter metadata** (~100 tokens per
 | Component | Files | Tokens at startup | Auto-triggered? |
 |---|---|---|---|
 | Orchestrator agent | 1 | 0 | No — explicit invocation only |
-| Subagent agents | 15 | 0 | No — spawned by orchestrator only |
+| Subagent agents | 17 | 0 | No — spawned by orchestrator only |
 | `pr-review-output-contract` | 1 | ~100 (metadata only) | No — `disable-model-invocation: true` |
 | `pr-review-check-suggestion` | 1 | ~100 (metadata only) | No — `disable-model-invocation: true` |
-| `find-similar` | 1 | ~100 (metadata only) | No — `disable-model-invocation: true` |
+| `explore` | 1 | ~100 (metadata only) | No — loaded by agents on demand |
 | `pr-tldr` | 1 | ~100 (metadata only) | No — `disable-model-invocation: true` |
-| **Total** | **20 files** | **~400 tokens** | **No** |
+| **Total** | **22 files** | **~400 tokens** | **No** |
 
 For comparison, `AGENTS.md` alone is ~12,000+ tokens and is always loaded. The PR review system's ~400 token metadata footprint is negligible.
 

@@ -3,7 +3,7 @@ name: pr-review
 description: |
   PR review orchestrator. Dispatches domain-specific reviewer subagents, aggregates findings, submits batched PR review via GitHub Pending Review API.
 tools: Task, Read, Write, Grep, Glob, Bash, mcp__exa__web_search_exa, mcp__github__create_pending_pull_request_review, mcp__github__add_comment_to_pending_review, mcp__github__submit_pending_pull_request_review
-skills: [pr-context, pr-tldr, product-surface-areas, internal-surface-areas, find-similar, pr-review-output-contract]
+skills: [pr-context, pr-tldr, product-surface-areas, internal-surface-areas, explore, pr-review-output-contract]
 model: opus
 ---
 
@@ -129,6 +129,7 @@ These address risks that apply to *most* surface changes but have well-defined c
 |----------|-------------|---------------------|-----------------------|
 | `pr-review-tests` | Test coverage, test quality, and testing patterns. | Regressions slipping through CI; brittle suites that increase maintenance and flakiness. | Docs-only, config-only, or pure markdown/asset changes. |
 | `pr-review-types` | Type design, invariants, and type safety. | Type holes and unsound APIs that lead to runtime errors and harder refactors. | No TypeScript type/interface/schema changes (docs-only, UI-only styling with no arguments/function calls involved, copy changes). |
+| `pr-review-precision` | Fix precision: root cause vs symptom patching, unnecessary/tangled changes, over-engineering, defensive code masking bugs, and plausible-but-incorrect patches. | Imprecise fixes that mask bugs instead of fixing them, shotgun changes that bloat diffs, and AI-generated patches that pass tests without addressing root causes. | Docs-only, config-only, or pure markdown/asset changes. |
 
 ### Critical Domain — select when domain is touched; bias strongly toward including
 
@@ -140,6 +141,7 @@ These catch **irreversible or catastrophic risks**. When their domain is touched
 | `pr-review-security-iam` | Auth, tenant isolation, authorization, token/session security, and credential handling. | Authz bypass, tenant data leakage, and credential exposure/security incidents. | Auth, authz, tenant boundaries, credentials, user data, or new endpoints/actions that need access control. |
 | `pr-review-sre` | Site reliability patterns: retries, timeouts, circuit breakers, queues, observability, and error handling. | Cascading failures, 3 AM pages, cardinality explosions, and undebuggable incidents. | Reliability patterns: retries, timeouts, queues, circuit breakers, observability. |
 | `pr-review-devops` | CI/CD workflows, dependencies, release engineering, build/container artifacts, self-hosting, devex infra, and AI artifact quality (AGENTS.md, skills, rules, agents). Also fires when internal tooling changes without accompanying artifact updates. | Supply chain attacks, broken builds, secret leaks, and silent AI infra degradation. | CI/CD, dependencies, build configs, containers, internal documentation, or internal productivity AI coding artifacts (AGENTS.md, skills, rules, etc.). |
+| `pr-review-3p-specs` | External spec/protocol compliance: schema alignment, translation fidelity, forward-compatibility, and spec artifact compliance. | Silent drift from external contracts that breaks deployed consumers or violates protocol specs. | Code that implements or adapts an external protocol/SDK/standard; adapter functions; webhook handlers; linked SPEC.md with protocol decisions. |
 
 ### Domain-Specific — select based on domain overlap
 

@@ -221,7 +221,7 @@ Use this checklist as a lens. Only generate a finding when you can tie it to con
    - cite the changed file + line/range whenever possible
    - use `Grep` to find related docs/templates/usages (lightweight, targeted searches)
 5. **Write high-signal findings only** (default ≤6, never more than 10).
-6. **Validate findings** — Apply `pr-review-check-suggestion` checklist to findings that depend on external knowledge. Drop or adjust confidence as needed.
+6. **Validate findings** — Load `/pr-review-check-suggestion` skill and apply its checklist to findings that depend on external knowledge. Drop or adjust confidence as needed.
 7. **Return JSON** per `pr-review-output-contract`.
 
 # Tool Policy

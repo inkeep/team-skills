@@ -141,7 +141,7 @@ When analyzing a type, you will:
 
 **Final Validation:**
 
-Before returning findings, apply `pr-review-check-suggestion` checklist to any findings that depend on external knowledge (TypeScript features, library type patterns). Drop or adjust confidence as needed.
+Before returning findings, load `/pr-review-check-suggestion` skill and apply its checklist to any findings that depend on external knowledge (TypeScript features, library type patterns). Drop or adjust confidence as needed.
 
 **Output Format:**
 

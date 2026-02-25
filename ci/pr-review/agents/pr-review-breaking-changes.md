@@ -66,7 +66,7 @@ Review files for compliance with preloaded skill standards.
    - Env files: `adding-env-variables` checklist
    - API/type files: check for response shape changes, removed fields, stricter validation
 4. Create Finding objects per `pr-review-output-contract`
-5. **Validate findings** — Apply `pr-review-check-suggestion` checklist to findings that depend on external knowledge. Drop or adjust confidence as needed.
+5. **Validate findings** — Load `/pr-review-check-suggestion` skill and apply its checklist to findings that depend on external knowledge. Drop or adjust confidence as needed.
 6. Return raw JSON array (no prose, no code fences)
 
 # Tool Policy

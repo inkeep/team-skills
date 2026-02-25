@@ -49,7 +49,7 @@ Questions, discussions, and product decisions aren't reviewer feedback. The agen
 
 tools: Read, Grep, Glob, Edit, Write, Bash
 skills:
-  - find-similar
+  - explore
   - pr-review-subagents-available
   - pr-review-subagents-guidelines
 model: opus
@@ -301,7 +301,7 @@ For patterns with `HIGH` or `MEDIUM-HIGH` generalizability:
 
 1. **Identify target reviewer(s)** — Use the `pr-review-subagents-available` skill to determine which agent(s) should have caught this
 
-2. **Find examples of the pattern** — Use `find-similar` to see how the codebase handles this pattern elsewhere:
+2. **Find examples of the pattern** — Load `/explore` skill (pattern inspection lens) to see how the codebase handles this pattern elsewhere:
    - Search for the "good" version of what the human was suggesting (e.g., if human said "derive types from schemas," find places that use `z.infer`)
    - **Use judgment:** You may find good examples, bad examples, mixed examples, or nothing at all
      - *Good examples exist* → Use as inspiration for phrasing; include as positive examples in reviewer guidance
@@ -349,7 +349,7 @@ If your proposed addition doesn't directly answer that core question, it belongs
 
 ### Step 3: Duplication Check
 
-Use the **`find-similar`** skill (conceptual + lexical search) to search the target file for:
+Load **`/explore`** skill (conceptual + lexical search) and search the target file for:
 - Similar concepts (even if phrased differently)
 - Related checklist items
 - Overlapping failure modes
@@ -639,7 +639,7 @@ When you complete analysis, output a JSON summary:
 | Tool | Use For |
 |------|---------|
 | **Read** | **(1) Gather context**: Read files referenced in comments to understand the full picture. **(2) Before editing**: Read existing pr-review-*.md agents to match their style. |
-| **Grep** | **(1) Find related code**: Search for schemas, types, patterns mentioned in comments. **(2) Find conventions**: Use `find-similar` methodology to see how the codebase handles similar situations. |
+| **Grep** | **(1) Find related code**: Search for schemas, types, patterns mentioned in comments. **(2) Find conventions**: Load `/explore` skill to see how the codebase handles similar situations. |
 | **Glob** | Find files by pattern (e.g., `**/types/*.ts`, `**/schemas/*.ts`) |
 | **Edit** | Modify `ci/pr-review/agents/pr-review-*.md` files ONLY |
 | **Write** | NEVER use — do not create new files |

@@ -1,13 +1,13 @@
 ---
 name: research
-description: "Conduct technical research and optionally produce formal reports, deliver findings directly, or update/extend an existing report in ~/.claude/reports/. Use when investigating technologies, comparing systems, analyzing codebases, documenting architectures, gathering context for decisions, or when asked to refresh/update prior research. Ask if unclear whether to produce a report or a direct answer."
+description: "Conduct technical research and optionally produce formal reports, deliver findings directly, or update/extend an existing report. Reports default to <repo-root>/reports/ when in a git repo, or ~/reports/ otherwise. Use when investigating technologies, comparing systems, analyzing codebases, documenting architectures, gathering context for decisions, or when asked to refresh/update prior research. Ask if unclear whether to produce a report or a direct answer."
 argument-hint: "[research topic OR existing report] (optional: specific questions, scope constraints, output format)"
 ---
 
 # Technical Research (with Optional Report Output)
 
 Conduct **evidence-driven technical research** with flexible output options. Research can produce:
-- **Formal Report:** Persistent artifact in `~/.claude/reports/` with evidence files
+- **Formal Report:** Persistent artifact in the resolved reports directory with evidence files
 - **Direct Answer:** Findings delivered in conversation without creating files
 - **Update Existing Report:** Surgical additions/corrections to an existing report + evidence (when a report already exists)
 
@@ -19,11 +19,21 @@ Reports are stored in a configurable directory. Resolution priority:
 
 | Priority | Source | Example |
 |----------|--------|---------|
-| 1 | **`--reports-dir` flag** on catalogue/normalize scripts | `--reports-dir ./my-reports` |
-| 2 | **Env var `CLAUDE_REPORTS_DIR`** | `CLAUDE_REPORTS_DIR=~/research/reports` |
-| 3 | **Default** | `~/.claude/reports/` |
+| 1 | **User says so** in the current session | "Put the report in `docs/research/`" |
+| 2 | **Env var `CLAUDE_REPORTS_DIR`** (set in `.env` or shell) | `CLAUDE_REPORTS_DIR=./my-reports` → `./my-reports/<report-name>/REPORT.md` |
+| 3 | **AI repo config** (`CLAUDE.md`, `AGENTS.md`, `.cursor/rules/`, etc.) declares a reports directory | `reports-dir: .ai-dev/reports` |
+| 4 | **Default (in a repo)** | `<repo-root>/reports/<report-name>/REPORT.md` |
+| 5 | **Default (no repo)** | `~/reports/<report-name>/REPORT.md` |
 
-Throughout this skill, `~/.claude/reports/` refers to the resolved reports directory. If `CLAUDE_REPORTS_DIR` is set, use that path instead.
+Resolution rules:
+- If `CLAUDE_REPORTS_DIR` is set, treat it as the parent directory (create `<report-name>/REPORT.md` inside it).
+- Relative paths resolve from the **repo root** (or cwd if no repo).
+- When inside a git repo, reports default to the repo-local `reports/` directory. When **not** inside a git repo, fall back to `~/reports/`.
+- Do **not** scan for existing directories automatically — only use them when explicitly configured via one of the sources above.
+- When in doubt, use the default and tell the user where the report landed.
+- The routing gate should check **both** project-level and user-level catalogues when scanning for existing research.
+
+Throughout this skill, `<reports-dir>` refers to the resolved reports directory. The `--reports-dir` flag on catalogue/normalize scripts also overrides all of the above.
 
 ---
 
@@ -55,7 +65,7 @@ Throughout this skill, `~/.claude/reports/` refers to the resolved reports direc
 - Speed matters more than persistence
 
 **When to update an existing report:**
-- User says "update/refresh/extend/add to the report" or references an existing `~/.claude/reports/<report-name>/`
+- User says "update/refresh/extend/add to the report" or references an existing `<reports-dir>/<report-name>/`
 - New questions/dimensions need to be added without redoing everything
 - Corrections are needed (new evidence changes prior findings)
 
@@ -74,9 +84,9 @@ Before scoping new research, scan what already exists.
 
 1. Regenerate the catalogue (fast — takes seconds):
    ```bash
-   bun ~/.claude/skills/research/scripts/generate-catalogue.ts --reports-dir ~/.claude/reports
+   bun ~/.claude/skills/research/scripts/generate-catalogue.ts
    ```
-2. Read `~/.claude/reports/CATALOGUE.md`. This is a structured index of all reports with title, description, topics, subjects, evidence count, and last-updated date.
+2. Read `<reports-dir>/CATALOGUE.md`. This is a structured index of all reports with title, description, topics, subjects, evidence count, and last-updated date.
 3. Scan the summary table and detail cards for **semantic overlap** with the user's topic — match on title, description, topics, and subjects. You are looking for conceptual relevance, not just keyword matches.
 4. For the **1–3 most promising candidates**, read the `REPORT.md` Executive Summary and Research Rubric sections to assess actual coverage depth and relevance.
 
@@ -105,7 +115,7 @@ Let the user choose. Do not start new research when existing research already an
 
 **Partially covered →** Surface the overlap and propose how to build on it:
 
-> "We have related research in `~/.claude/reports/<name>/` that covers [what it covers]. Your question about [topic] isn't directly answered, but it's a natural extension.
+> "We have related research in `<reports-dir>/<name>/` that covers [what it covers]. Your question about [topic] isn't directly answered, but it's a natural extension.
 >
 > **Options:**
 > 1. **Extend the existing report** (Path C) — add [new dimension/facet] to `<name>/`. Makes sense if the topics are coherent together.
@@ -149,7 +159,7 @@ Default to **Path A** (formal report, Steps 1–6) unless the user explicitly as
 ## Step 2: Create the Report Directory
 
 ```bash
-mkdir -p ~/.claude/reports/<report-name>/evidence
+mkdir -p <reports-dir>/<report-name>/evidence
 ```
 
 **Load:** `references/report-directory-conventions.md` for naming rules, directory structure, and frontmatter schema.
@@ -178,12 +188,12 @@ This prevents stale coordination context from one pass bleeding into the next.
 #### Placement (proof vs process separation)
 
 * `evidence/` is **proof only** — primary-source snippets, citations, negative searches
-* Run coordination lives in: `~/.claude/reports/<report-name>/meta/runs/<run-id>/RUN.md`
+* Run coordination lives in: `<reports-dir>/<report-name>/meta/runs/<run-id>/RUN.md`
 
 Create directories only when needed:
 
 ```bash
-mkdir -p ~/.claude/reports/<report-name>/meta/runs/<run-id>
+mkdir -p <reports-dir>/<report-name>/meta/runs/<run-id>
 ```
 
 #### Run ID convention
@@ -229,7 +239,7 @@ Some artifacts are not run-scoped:
 Create `meta/` only if you need it:
 
 ```bash
-mkdir -p ~/.claude/reports/<report-name>/meta
+mkdir -p <reports-dir>/<report-name>/meta
 ```
 
 #### What not to create (new model)
@@ -247,7 +257,7 @@ Do **not** create these as part of the current coordination model:
 
 **Cross-references to other reports are allowed as navigation aids only.** When a dimension in report A is covered in more depth by a different report B, and repeating that depth wouldn't fit naturally in report A's scope, you may include a "Related Research" pointer. These are "see also" links for the reader's benefit — not evidence citations. The current report must not depend on the cross-referenced report for any of its claims.
 
-**If prior `~/.claude/reports/` research exists on similar topics** (during the research process):
+**If prior research exists on similar topics in the resolved reports directory** (during the research process):
 
 * Extract only what is still relevant to the rubric.
 * Treat prior reports as **secondary** unless you can re-verify key claims.
@@ -298,7 +308,7 @@ This mode uses a 5-phase pattern to reduce redundant discovery, control verbosit
 
 For each coordinated pass, create a run folder and run file:
 
-* `~/.claude/reports/<report-name>/meta/runs/<run-id>/RUN.md`
+* `<reports-dir>/<report-name>/meta/runs/<run-id>/RUN.md`
 
 `RUN.md` should contain everything workers need to understand what *this pass* is doing (purpose, delta rubric, source anchors, canonical sources + owners).
 
@@ -490,7 +500,7 @@ topics:         # optional — qualitative areas, <=3 words each
 - [Title](URL) - [Brief description]
 
 ### Related Research (optional)
-- [~/.claude/reports/<report-name>/](~/.claude/reports/<report-name>/) - [What it covers that goes deeper on a relevant topic]
+- [<reports-dir>/<report-name>/](<reports-dir>/<report-name>/) - [What it covers that goes deeper on a relevant topic]
 ```
 
 **Inline source citations:** When a specific claim maps cleanly to 1–2 identifiable sources, cite inline using named references: `[Proper Noun](URL)`. Link text is just the proper noun — sample sizes and caveats go in surrounding prose. Claims drawing on 3+ sources are synthesis — omit inline refs and let the `**Evidence:**` link carry attribution. Most sentences need no inline citation. See `report-synthesis-patterns.md` §5.5.
@@ -517,7 +527,7 @@ Before delivering:
 * [ ] Stats cited in multiple sections use consistent values (exec summary, detail sections, tables)
 * [ ] Prose certainty matches evidence confidence — no "clearly" or "definitively" for INFERRED findings
 * [ ] External Sources are hyperlinks; inline citations use named refs (`[Proper Noun](URL)`) selectively (1–2 source claims only; 3+ sources = synthesis, no inline refs)
-* [ ] Report is in `~/.claude/reports/<report-name>/`
+* [ ] Report is in `<reports-dir>/<report-name>/`
 
 If validation fails, fix and re-check.
 
@@ -625,7 +635,7 @@ Use consistently throughout:
 * **Generic follow-ups**: offering "want to learn more?" without tying options to specific findings or gaps from the research
 * **Deliverable follow-ups instead of research follow-ups**: suggesting checklists, templates, scorecards, style guides, audits-of-user-assets, or other productized outputs as "where we could go from here" — follow-ups must be further research directions (deeper dives, adjacent dimensions, unexplored angles), not downstream deliverables that belong to other skills
 * **Skipping the recap**: dumping a report and going silent — always close with a recap + natural follow-up options unless the user explicitly signals they're done
-* **Ignoring existing reports**: starting new research without scanning `~/.claude/reports/` first — the user may not know what prior research exists, and duplicate work wastes time
+* **Ignoring existing reports**: starting new research without scanning the resolved reports directory first — the user may not know what prior research exists, and duplicate work wastes time
 
 ---
 
@@ -643,4 +653,4 @@ Use consistently throughout:
 * **Analytical synthesis patterns:** `references/report-synthesis-patterns.md`
 * **Coherence audit protocol:** `references/coherence-audit.md`
 * **Report directory conventions (naming, structure, frontmatter):** `references/report-directory-conventions.md`
-* **Catalogue generator:** `scripts/generate-catalogue.ts` — run with `bun run generate-catalogue.ts` to regenerate `~/.claude/reports/CATALOGUE.md` from report frontmatter
+* **Catalogue generator:** `scripts/generate-catalogue.ts` — run with `bun run generate-catalogue.ts` to regenerate `<reports-dir>/CATALOGUE.md` from report frontmatter

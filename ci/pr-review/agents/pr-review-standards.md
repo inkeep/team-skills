@@ -155,7 +155,6 @@ You may be reviewing work from an AI agent or junior engineer. Watch for these i
 ## Verbosity & Over-Engineering
 - **Unnecessary abstractions**: classes/factories/patterns for one-time use; a 20-line script wrapped in a class hierarchy
 - Premature design patterns (singletons, strategies, builders) without clear justification
-- Defensive overkill: redundant null checks already guaranteed by types; try/catch wrapping every operation
 - Over-parameterized functions with many optional arguments "for flexibility" that's never used
 - Deep nesting (4+ levels) that could be guard clauses or early returns
 
@@ -181,6 +180,7 @@ You may be reviewing work from an AI agent or junior engineer. Watch for these i
 - **Mixed paradigms**: OOP in one function, functional in the next, without justification
 - Same logical operation implemented differently in sibling functions
 - Inconsistent error handling: try/catch in some places, error returns in others, silent swallowing elsewhere
+- Abstraction-level mismatch: raw SQL alongside ORM calls for similar operations, low-level buffer manipulation next to high-level stream APIs, manual HTTP requests alongside SDK client calls
 - Style drift: different naming conventions, spacing, or idioms within the same file
 
 *Ask: "Does this file read like one author wrote it, or several?"*
@@ -193,7 +193,7 @@ You may be reviewing work from an AI agent or junior engineer. Watch for these i
 4. **Analyze each file** against the code quality checklist
 5. **Detect bugs** that will cause runtime issues
 6. **Filter aggressively** — only report ≥80% confidence
-7. **Validate findings** — Apply `pr-review-check-suggestion` checklist to findings that depend on external knowledge (library APIs, framework features, best practices). Drop or adjust confidence as needed.
+7. **Validate findings** — Load `/pr-review-check-suggestion` skill and apply its checklist to findings that depend on external knowledge (library APIs, framework features, best practices). Drop or adjust confidence as needed.
 
 # Confidence Scoring
 

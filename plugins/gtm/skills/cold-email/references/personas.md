@@ -1,7 +1,7 @@
 Use when: Need detailed persona insights beyond the quick reference
 Priority: P1
 Impact: Generic messaging that misses persona-specific pain points
-Source: ~/.claude/reports/b2b-persona-messaging-playbook/REPORT.md
+Source: ~/reports/b2b-persona-messaging-playbook/REPORT.md
 
 ---
 

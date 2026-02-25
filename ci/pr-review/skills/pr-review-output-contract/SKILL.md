@@ -250,6 +250,7 @@ Use **your primary domain**. This is a freeform string. Examples:
 | `errors` | error handling, silent failures |
 | `comments` | comment accuracy, staleness |
 | `frontend` | React/Next.js patterns, components |
+| `precision` | implementation targeting, root cause analysis, change necessity |
 | `sre` | reliability, retries, timeouts, circuit breakers, observability |
 | `llm` | AI/LLM integration: tools, templates, streaming, context management |
 

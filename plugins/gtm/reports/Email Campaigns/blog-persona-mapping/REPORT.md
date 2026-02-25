@@ -4,8 +4,8 @@ description: "Maps 78 Inkeep blog posts and 4 case studies to 19 B2B persona arc
 createdAt: 2026-02-10
 updatedAt: 2026-02-12
 relatedReports:
-  - ~/.claude/reports/b2b-persona-messaging-playbook/REPORT.md
-  - ~/.claude/reports/customer-social-proof/REPORT.md
+  - ../b2b-persona-messaging-playbook/REPORT.md
+  - ../customer-social-proof/REPORT.md
 ---
 
 # Blog-to-Persona Mapping for Cold Email CTAs
@@ -615,7 +615,7 @@ Case studies are the highest-converting content for decision-stage leads. Use th
 
 ## Part 11: Customer Social Proof
 
-**See dedicated report:** [Customer Social Proof Reference](~/.claude/reports/customer-social-proof/REPORT.md)
+**See dedicated report:** [Customer Social Proof Reference](../customer-social-proof/REPORT.md)
 
 Quick reference for matching customer names to prospects by:
 - Industry/vertical (Developer Tools, Fintech, Crypto, AI/ML, etc.)
@@ -698,8 +698,8 @@ Includes social proof + case study combos for maximum impact.
 
 ## Related Resources
 
-- [B2B Persona Messaging Playbook](~/.claude/reports/b2b-persona-messaging-playbook/REPORT.md) — Full persona research with pain points, buying behavior, anti-patterns
-- [Customer Social Proof Reference](~/.claude/reports/customer-social-proof/REPORT.md) — Customer logos by industry, size, and persona
+- [B2B Persona Messaging Playbook](../b2b-persona-messaging-playbook/REPORT.md) — Full persona research with pain points, buying behavior, anti-patterns
+- [Customer Social Proof Reference](../customer-social-proof/REPORT.md) — Customer logos by industry, size, and persona
 - Blog posts: https://inkeep.com/blog
 
 ---

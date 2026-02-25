@@ -1,20 +1,65 @@
 #!/usr/bin/env bun
 /**
- * Batch normalizer for research reports in ~/.claude/reports/
+ * Batch normalizer for research reports.
  * Adds YAML frontmatter, renames directories (drops "best-" filler),
  * creates meta/_changelog.md, removes stray files.
  *
  * NEVER changes report substance — only structural/metadata fixes.
  *
- * Usage: bun run normalize-reports.ts [--dry-run]
+ * Resolution priority:
+ *   1. --reports-dir flag
+ *   2. CLAUDE_REPORTS_DIR env var
+ *   3. <git-root>/reports/ (if in a repo and directory exists)
+ *   4. ~/reports/
+ *
+ * Usage: bun run normalize-reports.ts [--reports-dir <path>] [--dry-run]
  */
 
 import { readdir, readFile, writeFile, mkdir, rename, unlink, stat } from "fs/promises";
-import { join, basename } from "path";
+import { join, basename, resolve } from "path";
 import { existsSync } from "fs";
 import { execSync } from "child_process";
+import { homedir } from "os";
 
-const REPORTS_DIR = process.env.CLAUDE_REPORTS_DIR || join(process.env.HOME!, ".claude", "reports");
+/**
+ * Resolve the reports directory using the priority chain:
+ *   1. --reports-dir flag
+ *   2. CLAUDE_REPORTS_DIR env var
+ *   3. <git-root>/reports/ (if in a repo and directory exists)
+ *   4. ~/reports/
+ */
+function resolveReportsDir(): string {
+  // Priority 1: --reports-dir flag
+  const args = process.argv.slice(2);
+  const dirIdx = args.indexOf("--reports-dir");
+  if (dirIdx !== -1 && args[dirIdx + 1]) {
+    return resolve(args[dirIdx + 1]);
+  }
+
+  // Priority 2: env var
+  if (process.env.CLAUDE_REPORTS_DIR) {
+    return resolve(process.env.CLAUDE_REPORTS_DIR);
+  }
+
+  // Priority 3: repo-local reports/ (if in a git repo and directory exists)
+  try {
+    const gitRoot = execSync("git rev-parse --show-toplevel", {
+      encoding: "utf-8",
+      stdio: ["pipe", "pipe", "pipe"],
+    }).trim();
+    const repoReports = join(gitRoot, "reports");
+    if (existsSync(repoReports)) {
+      return repoReports;
+    }
+  } catch {
+    // Not in a git repo — fall through
+  }
+
+  // Priority 4: user-level ~/reports
+  return join(homedir(), "reports");
+}
+
+const REPORTS_DIR = resolveReportsDir();
 const DRY_RUN = process.argv.includes("--dry-run");
 const TODAY = new Date().toISOString().split("T")[0]; // YYYY-MM-DD
 

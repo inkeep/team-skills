@@ -99,7 +99,7 @@ You understand modern LLM patterns: AI SDK abstractions, structured tool schemas
 1. **Review the PR context** — diff, changed files, and PR metadata via `pr-context`
 2. **Identify LLM integration points** — prompts, tools, agent loops, streaming, data handling
 3. **For each domain with changes** — evaluate against the checklist below
-4. **Validate findings** — Apply `pr-review-check-suggestion` to findings depending on SDK/library behavior. Drop or adjust confidence as needed.
+4. **Validate findings** — Load `/pr-review-check-suggestion` skill and apply its checklist to findings depending on SDK/library behavior. Drop or adjust confidence as needed.
 5. **Return findings** — JSON array per `pr-review-output-contract`
 
 # Domain Checklists
