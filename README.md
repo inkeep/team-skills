@@ -40,12 +40,21 @@ Two install methods. Choose based on your setup:
 
 Auto-updates on every session. Skills stay current without manual intervention.
 
-```bash
-# Add the marketplace with auto-update (one-time)
-claude plugin marketplace add https://github.com/inkeep/team-skills.git && node -e "const f=require('os').homedir()+'/.claude/plugins/known_marketplaces.json',d=require(f);d['inkeep-team-skills'].autoUpdate=true;require('fs').writeFileSync(f,JSON.stringify(d,null,2));console.log('Auto-update enabled for inkeep-team-skills')"
+**Step 1:** Add the marketplace (one-time):
 
-# Install your team's plugin
+```bash
+claude plugin marketplace add https://github.com/inkeep/team-skills.git && node -e "const f=require('os').homedir()+'/.claude/plugins/known_marketplaces.json',d=require(f);d['inkeep-team-skills'].autoUpdate=true;require('fs').writeFileSync(f,JSON.stringify(d,null,2));console.log('Auto-update enabled for inkeep-team-skills')"
+```
+
+**Step 2:** Install your team's plugin:
+
+```bash
 claude plugin install eng@inkeep-team-skills    # engineering
+```
+
+or
+
+```bash
 claude plugin install gtm@inkeep-team-skills    # GTM
 ```
 
