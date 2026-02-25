@@ -35,16 +35,13 @@ claude plugin marketplace add anthropics/claude-plugins-official
 claude plugin install typescript-lsp@claude-plugins-official
 ```
 
-<details>
-<summary>Alternative: Install for Cursor or other coding agents</summary>
+**Alternative:** Install for Cursor or other coding agents:
 
 Works with any agent that supports [Agent Skills](https://agentskills.io) (Cursor, Cline, Codex, etc.). Note: skills do **not** auto-update — you'll need to run `npx skills update` manually to get the latest.
 
 ```bash
 npx skills add inkeep/team-skills/plugins/eng -y
 ```
-
-</details>
 
 ## E2E Feature Development Skills
 
