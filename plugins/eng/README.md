@@ -5,7 +5,7 @@ Plugin for the Inkeep engineering team. Includes all [shared skills](../shared/)
 
 ## Quick setup (Claude Code)
 
-Run this once to install the plugin, dependencies, and companion tools. Skills auto-update every session.
+Run this once to install the Inkeep team-skills marketplace, along with the `eng` plugin and its skills. Skills added this way for Claude Code added **auto-update every CC session**.
 
 **Step 1:** Add the marketplace (one-time):
 
@@ -35,9 +35,9 @@ claude plugin marketplace add anthropics/claude-plugins-official
 claude plugin install typescript-lsp@claude-plugins-official
 ```
 
-## (Optional) Quick setup for Cursor
+## Quick setup for Cursor (Optional)
 
-Works with any agent that supports [Agent Skills](https://agentskills.io) (Cursor, Cline, Codex, etc.). Skills do **not** auto-update.
+If you use other Coding Agents (Cursor, Cline, Codex, etc.), use the below. Only caveat here is that using this method does **not** have an auto-update. 
 
 **Step 1:** Install:
 
@@ -50,6 +50,8 @@ npx skills add inkeep/team-skills/plugins/eng -y
 ```bash
 npx skills update
 ```
+
+With the above, the skill will be available to any coding agent globally (just type `/ship`). For Claude Code, the original marketplace one will be available via `/eng:ship` -- that one will be the always auto-up to date.
 
 ## E2E Feature Development Skills
 
