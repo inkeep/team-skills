@@ -4,9 +4,15 @@ Plugin for the Inkeep GTM team. Includes all [shared skills](../shared/) plus GT
 
 ## Quick setup
 
+**Step 1:** Add the marketplace (one-time):
+
 ```bash
-# Install the plugin (auto-updates every session)
 claude plugin marketplace add https://github.com/inkeep/team-skills.git && node -e "const f=require('os').homedir()+'/.claude/plugins/known_marketplaces.json',d=require(f);d['inkeep-team-skills'].autoUpdate=true;require('fs').writeFileSync(f,JSON.stringify(d,null,2));console.log('Auto-update enabled for inkeep-team-skills')"
+```
+
+**Step 2:** Install the GTM plugin:
+
+```bash
 claude plugin install gtm@inkeep-team-skills
 ```
 

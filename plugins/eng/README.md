@@ -7,16 +7,31 @@ Plugin for the Inkeep engineering team. Includes all [shared skills](../shared/)
 
 Run this once to install the plugin, dependencies, and companion tools:
 
+**Step 1:** Add the marketplace (one-time):
+
 ```bash
-# 1. Install the plugin (auto-updates every session)
 claude plugin marketplace add https://github.com/inkeep/team-skills.git && node -e "const f=require('os').homedir()+'/.claude/plugins/known_marketplaces.json',d=require(f);d['inkeep-team-skills'].autoUpdate=true;require('fs').writeFileSync(f,JSON.stringify(d,null,2));console.log('Auto-update enabled for inkeep-team-skills')"
+```
+
+**Step 2:** Install the eng plugin:
+
+```bash
 claude plugin install eng@inkeep-team-skills
+```
 
-# 2. Global deps
+**Step 3:** Global deps:
+
+```bash
 npm install -g typescript-language-server typescript
+```
 
-# 3. TypeScript LSP companion plugin
+**Step 4:** TypeScript LSP companion plugin:
+
+```bash
 claude plugin marketplace add anthropics/claude-plugins-official
+```
+
+```bash
 claude plugin install typescript-lsp@claude-plugins-official
 ```
 
