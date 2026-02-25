@@ -2,7 +2,9 @@
 
 Plugin for the Inkeep GTM team. Includes all [shared skills](../shared/) plus GTM-specific ones.
 
-## Quick setup
+## Quick setup (Claude Code)
+
+Skills auto-update every session.
 
 **Step 1:** Add the marketplace (one-time):
 
@@ -16,9 +18,9 @@ claude plugin marketplace add https://github.com/inkeep/team-skills.git && node 
 claude plugin install gtm@inkeep-team-skills
 ```
 
-**Alternative:** Install for Cursor or other coding agents:
+## (Optional) Quick setup for Cursor & others
 
-Works with any agent that supports [Agent Skills](https://agentskills.io) (Cursor, Cline, Codex, etc.). Note: skills do **not** auto-update — you'll need to run `npx skills update` manually to get the latest.
+Works with any agent that supports [Agent Skills](https://agentskills.io) (Cursor, Cline, Codex, etc.). Skills do **not** auto-update — run `npx skills update` manually to get the latest.
 
 ```bash
 npx skills add inkeep/team-skills/plugins/gtm -y
