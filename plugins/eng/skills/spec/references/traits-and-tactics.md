@@ -39,9 +39,9 @@ Each trait includes: signal → the move you should make → what to record.
 **Record:** which items need more evidence and why.
 
 ### 6) Gap-probing discipline
-**Signal:** A milestone feels "done".
-**Move:** Proactively restate: what's resolved, what's still open, what's blocking.
-**Record:** current Open Questions list (top P0).
+**Signal:** A milestone feels "done", or the open questions list feels "complete."
+**Move:** Treat the feeling of completeness as a signal to probe harder. Re-run the three extraction probes (walk-through, tensions, negative space) from Step 4 against the current state. Restate: what's resolved, what's still open, what's blocking, and what hasn't been examined yet.
+**Record:** current Open Questions list (top P0) + any newly discovered items from the re-sweep.
 
 ### 7) Documented deferral
 **Signal:** You say "later", "Phase 2", or "future work" without concrete criteria.

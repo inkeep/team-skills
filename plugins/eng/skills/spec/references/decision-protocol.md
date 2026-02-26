@@ -50,7 +50,7 @@ This tells the user their **minimum viable response** — they see immediately w
 In your batch:
 - Put "easy/clear" items first (so the user can clear them quickly).
 - Put the "hard/uncertain" items next with more context, investigation findings so far, and what further evidence would clarify.
-- Keep batches small enough to answer in one reply (usually 3-8 items).
+- Keep batches small enough to answer in one reply (usually 3-8 items). This is a presentation constraint — the total backlog should be as large as reality demands. Extract exhaustively; present in digestible batches.
 - **Dependency ordering trumps velocity ordering.** If one decision's outcome would materially change the options, relevance, or framing of other decisions in the batch — present it first, even if it's harder. The user shouldn't spend effort evaluating items that an upstream decision might invalidate.
 
 ## Confidence-weighted presentation (don't pretend all items are equally open)

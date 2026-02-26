@@ -92,6 +92,8 @@ If a change touches core primitives:
 - list indirect dependencies
 - list "likely unaffected" areas with reasoning (don't guess silently)
 
+**Load:** `/audience-impact` skill if available. Use it to map blast radius by persona — which roles are affected, impact propagation timing (immediate, next-publish, next-deploy, silent), and what deliverables each affected audience needs.
+
 ## Options and tradeoffs
 For each viable option:
 - performance

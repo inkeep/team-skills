@@ -72,6 +72,8 @@ For each surface:
 - why it matters to the user
 - what must be consistent (naming, mental model)
 
+**Then:** Load `/audience-impact` skill if available. Use it to identify which roles are affected by the change and how fast impacts propagate to each — especially silent impacts that reach audiences without obvious signal. This complements the surface-area map (which catalogs what exists) with the audience dimension (who cares and when they're affected).
+
 ## Naming is a product decision
 Treat naming as:
 - a user mental-model contract

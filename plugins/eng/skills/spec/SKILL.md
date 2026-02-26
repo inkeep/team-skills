@@ -99,20 +99,22 @@ Do:
 
 #### Where to save the spec
 
-**Default:** `<repo-root>/specs/<spec-name>/SPEC.md`
+**Default:** `<repo-root>/specs/<YYYY-MM-DD>-<spec-name>/SPEC.md`
+
+The directory name is prefixed with the **current date** (when the spec is first created) in `YYYY-MM-DD` format. This makes specs sort chronologically in file browsers. Example: `specs/2026-02-25-bundle-template-in-create-agents/SPEC.md`.
 
 Always use the default **unless** an override is active (checked in this order):
 
 | Priority | Source | Example |
 |----------|--------|---------|
 | 1 | **User says so** in the current session | "Put the spec in `docs/rfcs/`" |
-| 2 | **Env var `CLAUDE_SPECS_DIR`** (set in `.env` or shell) | `CLAUDE_SPECS_DIR=./my-specs` → `./my-specs/<spec-name>/SPEC.md` |
+| 2 | **Env var `CLAUDE_SPECS_DIR`** (set in `.env` or shell) | `CLAUDE_SPECS_DIR=./my-specs` → `./my-specs/<YYYY-MM-DD>-<spec-name>/SPEC.md` |
 | 3 | **AI repo config** (`CLAUDE.md`, `AGENTS.md`, `.cursor/rules/`, etc.) declares a specs directory | `specs-dir: .ai-dev/specs` |
-| 4 | **Default (in a repo)** | `<repo-root>/specs/<spec-name>/SPEC.md` |
-| 5 | **Default (no repo)** | `~/.claude/specs/<spec-name>/SPEC.md` |
+| 4 | **Default (in a repo)** | `<repo-root>/specs/<YYYY-MM-DD>-<spec-name>/SPEC.md` |
+| 5 | **Default (no repo)** | `~/.claude/specs/<YYYY-MM-DD>-<spec-name>/SPEC.md` |
 
 Resolution rules:
-- If `CLAUDE_SPECS_DIR` is set, treat it as the parent directory (create `<spec-name>/SPEC.md` inside it).
+- If `CLAUDE_SPECS_DIR` is set, treat it as the parent directory (create `<YYYY-MM-DD>-<spec-name>/SPEC.md` inside it).
 - Relative paths resolve from the **repo root** (or cwd if no repo).
 - When inside a git repo, specs default to the repo-local `specs/` directory. When **not** inside a git repo, fall back to `~/.claude/specs/`.
 - Do **not** scan for existing `docs/`, `rfcs/` directories automatically — only use them when explicitly configured via one of the sources above.
@@ -150,7 +152,18 @@ Output:
 **Load:** `references/decision-protocol.md`
 
 Do:
-- Extract all uncertainties into a single backlog:
+- **Systematic extraction (not free recall):**
+  Do not generate open questions from memory. Audit the world model from Step 3 through three probes:
+
+  1. **Walk-through:** For each element in the world model — each requirement, goal, persona, surface, dependency, and assumption — ask: *What's uncertain? What's assumed but unverified? What edge cases or failure modes haven't been addressed?*
+  2. **Tensions:** Where do different dimensions create conflicting requirements or constraints? Where does the product need and the technical reality diverge?
+  3. **Negative space:** What's conspicuously absent from the world model? What hasn't been discussed? What would a skeptical reviewer, SRE, or security engineer flag?
+
+  **Extraction discipline:** List every candidate without filtering for importance. Do not evaluate "is this significant enough?" during extraction — that happens during tagging (below). A thin or absent area in the world model is itself an open question. If the initial backlog feels tidy and balanced, you are filtering during extraction.
+
+  This is the first pass, not the final inventory. The backlog grows throughout the process — through investigation, user context, and decision cascades. A backlog that only shrinks is a red flag.
+
+- Classify every extracted item into the backlog:
   - **Open Questions** (need research/clarification)
   - **Decisions** (need a call)
   - **Assumptions** (temporary scaffolding; must have confidence + verification plan + expiry)
@@ -208,6 +221,7 @@ Loop steps:
      - Append new cascading questions to Open Questions (SPEC.md §11)
      - Update evidence files if the decision changes factual understanding
    - Re-prioritize the backlog
+   - **Completeness re-sweep** (every 2-3 loop iterations, or after a cluster of decisions resolves): Re-run the three extraction probes from Step 4 against the current state of the spec. Decisions change the shape of the problem; new dimensions may now be relevant that weren't before. A backlog that only shrinks is a signal you're not probing deeply enough.
    - **Goto step 1** with newly unlocked items.
 7. **Artifact sync checkpoint** (before responding to the user):
    Verify all changes from this turn have been persisted:
@@ -365,6 +379,7 @@ When the user says "finalize":
 - **Proposing investigation instead of doing it.** If information is accessible (code, dependencies, web, prior art), investigate autonomously — don't stop to ask permission. Match tool to scope: a function name lookup doesn't need `/research`; a multi-system trace does. But in both cases, do it rather than proposing it. Stop only for genuine judgment gaps (product vision, priority, risk tolerance, scope decisions).
 - **Letting the user skip problem framing.** Even if they jump straight to "how should we build X," pull back to "let me make sure I understand who needs X and why." Step 1 is not optional.
 - **Letting insights accumulate only in conversation without persisting to files.** If you learned something factual (code trace, dependency behavior, current state), it belongs in an evidence file now — not "later" or "when we finalize." Conversation context compresses; artifacts survive.
+- **Under-extracting open questions (balance fallacy).** The agent generates open questions and silently filters for importance during extraction — listing only items that feel "significant enough." The result is a comfortable handful that looks balanced but reflects the agent's significance threshold, not reality. Fix: separate extraction from prioritization. List every candidate uncertainty; use the tagging step (P0/P1/P2) to prioritize, not the extraction step to filter.
 
 ---
 

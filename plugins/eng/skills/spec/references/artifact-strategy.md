@@ -44,17 +44,19 @@ Optional supporting artifacts (only if they reduce friction):
 
 ## Where to store artifacts
 
-**Default:** `<repo-root>/specs/<spec-name>/SPEC.md`
+**Default:** `<repo-root>/specs/<YYYY-MM-DD>-<spec-name>/SPEC.md`
+
+The directory name is prefixed with the **current date** (when the spec is first created) in `YYYY-MM-DD` format. This makes specs sort chronologically in file browsers. Example: `specs/2026-02-25-bundle-template-in-create-agents/SPEC.md`.
 
 Override sources (checked in priority order):
 
 | Priority | Source | Example |
 |----------|--------|---------|
 | 1 | User says so in the current session | "Put the spec in `docs/rfcs/`" |
-| 2 | Env var `CLAUDE_SPECS_DIR` | `CLAUDE_SPECS_DIR=./my-specs` → `./my-specs/<spec-name>/SPEC.md` |
+| 2 | Env var `CLAUDE_SPECS_DIR` | `CLAUDE_SPECS_DIR=./my-specs` → `./my-specs/<YYYY-MM-DD>-<spec-name>/SPEC.md` |
 | 3 | AI repo config (`CLAUDE.md`, `AGENTS.md`, etc.) | `specs-dir: .ai-dev/specs` |
-| 4 | Default (in a repo) | `<repo-root>/specs/<spec-name>/SPEC.md` |
-| 5 | Default (no repo) | `~/.claude/specs/<spec-name>/SPEC.md` |
+| 4 | Default (in a repo) | `<repo-root>/specs/<YYYY-MM-DD>-<spec-name>/SPEC.md` |
+| 5 | Default (no repo) | `~/.claude/specs/<YYYY-MM-DD>-<spec-name>/SPEC.md` |
 
 Do **not** auto-detect repo directories (`docs/`, `rfcs/`) — only use them when explicitly configured. When inside a git repo, specs default to the repo-local `specs/` directory. When not inside a git repo, fall back to `~/.claude/specs/`.
 
@@ -99,7 +101,7 @@ When a substantive finding emerges during spec work, route it to the right place
 **Spec-local evidence** lives alongside the spec:
 
 ```
-~/.claude/specs/<spec-name>/
+~/.claude/specs/<YYYY-MM-DD>-<spec-name>/
 ├── SPEC.md
 ├── evidence/                  # Spec-local findings (granular, with frontmatter)
 │   ├── auth-middleware-flow.md

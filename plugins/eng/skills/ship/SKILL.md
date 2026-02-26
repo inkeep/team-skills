@@ -58,6 +58,7 @@ All execution state lives in `tmp/ship/` (gitignored). The only committed artifa
 | `tmp/ship/last-prompt.md` | Last re-injection prompt — the full prompt the stop hook constructed on its most recent re-entry, for debugging | Stop hook | Each re-entry (overwritten) | Debugging only |
 | `tmp/ship/spec.json` | User stories — acceptance criteria, priority, pass/fail status | Phase 2 (/implement) | Each iteration (sets `passes: true`) | implement.sh, iterations, Ship |
 | `tmp/ship/progress.txt` | Iteration log — what was done, learnings, blockers | Phase 2 start (implement.sh) | Each iteration (append) | Iterations, Ship |
+| `tmp/ship/qa-progress.json` | QA test plan and results — scenarios, status, notes | Phase 3 (/qa) | Each scenario execution (/qa) | /pr (renders Test plan), Ship (phase gate) |
 | SPEC.md *(committed)* | Product + tech spec — requirements, design, decisions, non-goals | Phase 1 (/spec or user) | Phase 1 only | All phases, iterations |
 
 ### When to update what
@@ -70,6 +71,7 @@ All execution state lives in `tmp/ship/` (gitignored). The only committed artifa
 | **User amendment** (any phase) | Append to `amendments[]`: `{"description": "...", "status": "pending"}` | — |
 | **Iteration completes a story** | — | `tmp/ship/spec.json`: set story `passes: true`. `tmp/ship/progress.txt`: append iteration log. |
 | **PR created** (after Phase 2) | Set `prNumber` | Draft PR created on GitHub |
+| **Phase 3 QA execution** | — | `/qa` creates `tmp/ship/qa-progress.json` with planned scenarios, then updates status incrementally during execution |
 | **Phase 6 → completed** | Set `currentPhase: "completed"` | Stop hook deletes `loop.md` |
 | **Stop hook re-entry** | — | `loop.md`: iteration incremented. Prompt re-injected from `state.json` + SKILL.md. |
 | **`/cancel-ship`** | Preserved for inspection | Delete `loop.md` |

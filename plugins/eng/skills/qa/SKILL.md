@@ -48,7 +48,16 @@ Determine what to test from whatever input is available. Check these sources in 
 | **Feature description provided** | Use it as-is. Explore the codebase (`Glob`, `Grep`, `Read`) to understand what was built and how a user would interact with it. |
 | **"Test what changed"** (or no input) | Run `git diff main...HEAD --stat` to see what files changed. Read the changed files. Infer the feature surface area and user-facing impact. |
 
-**Output of this step:** A mental model of what was built, who uses it, and how they interact with it.
+**Enrich with structured domain knowledge (if available):**
+After gathering context from the sources above, check whether the repo provides catalog skills that map surfaces and audiences:
+
+- **Load:** `/product-surface-areas` if available — identify which customer-facing surfaces (APIs, SDKs, CLI, UI, docs) the change touches.
+- **Load:** `/internal-surface-areas` if available — identify which internal subsystems (build, CI, database, auth, runtime) are affected.
+- **Load:** `/audience-impact` if available — identify which roles are affected and how fast the change reaches them. Pay special attention to **silent** impacts — these need explicit test scenarios because they won't produce obvious failures.
+
+These catalogs transform "what files changed" into "what surfaces and audiences are affected" — which directly drives more comprehensive test scenarios in Step 3.
+
+**Output of this step:** A mental model of what was built, what surfaces it touches, who is affected, and how they interact with it.
 
 ### Step 3: Derive the test plan
 
@@ -76,11 +85,69 @@ Write each scenario as a discrete test case:
 
 Create these as task list items to track execution progress.
 
-### Step 4: Persist the QA checklist
+### Step 3b: Write the QA plan to qa-progress.json
+
+When running within `/ship` (i.e., `tmp/ship/` exists), write all planned scenarios to `tmp/ship/qa-progress.json`. This file is the structured source of truth for QA results — the PR body is a rendered view of it, not the other way around.
+
+**Create the file with all scenarios in `planned` status:**
+
+```json
+{
+  "specPath": "specs/feature-name/SPEC.md",
+  "prNumber": 1234,
+  "scenarios": [
+    {
+      "id": "QA-001",
+      "category": "visual",
+      "name": "settings page renders at mobile viewport",
+      "verifies": "layout, spacing, and alignment are correct at 375px width",
+      "whyManual": "requires visual inspection of responsive layout",
+      "tracesTo": "US-002",
+      "status": "planned",
+      "notes": ""
+    }
+  ]
+}
+```
+
+**Field definitions:**
+
+| Field | Required | Description |
+|---|---|---|
+| `specPath` | Yes | Path to the SPEC.md this QA plan was derived from. `null` if no spec. |
+| `prNumber` | Yes | PR number the results apply to. `null` if no PR exists yet. |
+| `scenarios[]` | Yes | Array of test scenarios. |
+| `scenarios[].id` | Yes | Sequential ID: `QA-001`, `QA-002`, etc. |
+| `scenarios[].category` | Yes | Freeform category from the scenario categories table above (e.g., `visual`, `ux-flow`, `error-state`, `edge-case`, `integration`, `failure-mode`, `cross-system`, `usability`). |
+| `scenarios[].name` | Yes | Short scenario name. |
+| `scenarios[].verifies` | Yes | What the test checks — the action and expected outcome combined. |
+| `scenarios[].whyManual` | Yes | Why this resists automation (the formalization gate justification). |
+| `scenarios[].tracesTo` | No | User story ID from `spec.json` (e.g., `US-003`) when the mapping is clear. Omit when the relationship is fuzzy or many-to-many. |
+| `scenarios[].status` | Yes | One of: `planned`, `validated`, `failed`, `blocked`, `skipped`. |
+| `scenarios[].notes` | Yes | Empty string when `planned`. Populated on status change — see Status values table below. |
+
+**Status values:**
+
+| Status | Meaning | What to put in `notes` |
+|---|---|---|
+| `planned` | Scenario identified, not yet executed | Empty string |
+| `validated` | Passed. If a bug was found and fixed, describe the bug and fix. | `""` for clean pass, or `"found stale cache; added cache-bust on logout"` for fix-and-pass |
+| `failed` | Failed and could not be resolved | What failed and why it's unresolvable: `"second tab still shows authenticated state after logout"` |
+| `blocked` | Could not execute due to environment or tooling | What prevented execution: `"dev env uses non-expiring tokens; no way to force expiry"` |
+| `skipped` | Deliberately skipped | Why: `"no browser automation available"` or `"low priority given available time"` |
+
+When not running within `/ship` (no `tmp/ship/` directory), skip this step — use only the PR body checklist (Step 4) or task list items.
+
+### Step 4: Persist the QA checklist to the PR body
 
 If a PR exists, write the QA checklist to the `## Test plan` section of the PR body. **Always update via `gh pr edit --body` — never post QA results as PR comments.**
 
-**Update mechanism:**
+**When `tmp/ship/qa-progress.json` exists:** Render the PR body checklist from the JSON file. The file is the source of truth; the PR body is a human-readable view. For each scenario in `scenarios[]`, render as:
+```
+- [ ] **<category>: <name>** — <verifies> · _Why not a test: <whyManual>_
+```
+
+**When no qa-progress.json exists (standalone QA without `/ship`):**
 
 1. Read the current PR body: `gh pr view <number> --json body -q '.body'`
 2. If a `## Test plan` section already exists, replace its content with the updated checklist.
@@ -174,7 +241,9 @@ Changes touch more of the system than what's visible to the user. After exercisi
 
 ### Step 6: Record results
 
-After each scenario (or batch of related scenarios), update the `## Test plan` section in the PR body using the same read → modify → write mechanism from Step 4. **The checklist in the PR body is the single source of truth — do not post results as PR comments.**
+**When `tmp/ship/qa-progress.json` exists:** After each scenario (or batch), update the scenario's `status` and `notes` in the JSON file. Then re-render the PR body's `## Test plan` section from the updated file. The JSON file is the source of truth; the PR body is kept in sync as a human-readable view.
+
+**When no qa-progress.json exists:** Update the `## Test plan` section in the PR body directly using the same read → modify → write mechanism from Step 4.
 
 | Result | How to record |
 |---|---|
@@ -189,6 +258,10 @@ First, assess: do you see the root cause, or just the symptom?
 
 - **Root cause is obvious** (wrong variable, missing class, off-by-one visible in the code) — fix it directly. Write a test if possible, verify, document.
 - **Root cause is unclear** (unexpected behavior, cause not visible from the symptom) — load `/debug` for systematic root cause investigation before attempting a fix. QA resumes after the fix is verified.
+
+After fixing a bug, record it: update the scenario's `status` to `validated` and put the bug description + fix in `notes` (e.g., `"found stale cache; added cache-bust on logout"`). If the bug was discovered **outside any planned scenario** — while navigating between tests or doing exploratory poking — add a new scenario to `scenarios[]` with the next sequential ID, describe what you found and fixed, and mark it `validated` with the fix in `notes`.
+
+**Test suite gap discovery:** During execution, you may discover behaviors that should have formal test coverage but don't — an edge case with no unit test, a behavior path with no integration test, an untested but easily testable integration point. When this happens: write the test (following the repo's testing patterns and `/tdd` conventions), then record it in the scenario's `notes` alongside any bug fix notes (e.g., `"also wrote unit test for session invalidation — no existing coverage"`). This is the same posture as bug fixing — QA finds it, QA fixes it, QA records it in the scenario where it was discovered.
 
 ### Step 7: Report
 

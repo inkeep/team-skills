@@ -61,9 +61,18 @@ Steps a reviewer can follow to manually verify the behavior. **Omit if changes a
 
 #### Test plan
 
-Manual QA, smoke tests, and verification done **outside** the automated test suite. Do not restate what the test suite covers — reviewers can read the test files. Examples: browser testing, curl/API checks, edge case verification, error state inspection.
+Manual QA, smoke tests, and verification done **outside** the automated test suite. Do not restate what the test suite covers — reviewers can read the test files.
 
-**When `/qa` has already written a `## Test plan` section on the PR body:** Read the existing PR body before writing. Incorporate the QA checklist items (with their pass/fail/blocked status) into this section — do not discard them. The QA checklist is evidence of testing done; your job is to integrate it into the full PR body, not replace it.
+**Source of truth — read in this order:**
+1. **`tmp/ship/qa-progress.json`** (when it exists): Read the file. Group scenarios by `category`. Render each as a checklist item with status:
+   - `validated` → `- [x]`
+   - `validated` with `notes` → `- [x]` + ` — Fixed: <notes>`
+   - `failed` → `- [ ]` + ` — FAILED: <notes>`
+   - `blocked` → `- [ ]` + ` — BLOCKED: <notes>`
+   - `skipped` → `- [ ]` + ` — Skipped: <notes>`
+   - `planned` → `- [ ]`
+2. **Existing `## Test plan` section on the PR body** (when no JSON file exists): Read the existing PR body before writing. Incorporate the QA checklist items (with their pass/fail/blocked status) into this section — do not discard them.
+3. **Neither exists**: Write "No manual QA performed." Do not generate speculative test scenarios. If you believe QA should be run, note: "Consider running `/qa` to generate and execute a test plan."
 
 #### Related issues
 

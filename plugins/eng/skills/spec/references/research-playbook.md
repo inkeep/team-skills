@@ -134,6 +134,7 @@ Before original investigation, check whether the repo provides pre-built domain 
    - **Product surface-area catalogs** — customer-facing surfaces (UIs, APIs, SDKs, CLIs, docs, config formats)
    - **Internal surface-area catalogs** — infrastructure, shared code, CI/CD, database, auth, runtime, observability
    - **Dependency graphs** or **impact matrices** — what breaks when X changes
+   - **Audience/persona impact catalogs** — who is affected by changes and how fast impacts propagate to them
    - **Domain glossaries** or **system architecture maps**
 3. Load the relevant skills (e.g., `Load /product-surface-areas`, `Load /internal-surface-areas`). They replace from-scratch enumeration for the areas they cover.
 4. Identify gaps — surfaces or system areas the loaded skills don't cover — and flag those for original investigation (types B, C, E, F).
