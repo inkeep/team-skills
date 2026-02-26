@@ -41,6 +41,10 @@ Combined ranking by **reasoning demand** (how much model capability matters) and
 | #11 | `pr-review-comments` | "Are comments accurate and useful?" | Sonnet | Tier 3 | Tier 3 |
 | #12 | `pr-review-docs` | "Is documentation complete and correct?" | Sonnet | Tier 3 | Tier 3 |
 | #13 | `pr-review-3p-specs` | "Does this honor the external contract it claims to conform to?" | Opus | Tier 2 | Tier 1 |
+| #14 | `pr-review-precision` | "Is every change earning its place — root cause, not symptom?" | Opus | Tier 1 | Tier 2 |
+| #15 | `pr-review-llm` | "Is the LLM integration correct, safe, and robust?" | Opus | Tier 2 | Tier 2 |
+| #16 | `pr-review-sre` | "Will this survive production traffic and failures?" | Opus | Tier 2 | Tier 2 |
+| #17 | `pr-review-devops` | "Will this build, ship, and run correctly?" | Opus | Tier 2 | Tier 3 |
 
 ### Tier Definitions
 
@@ -80,6 +84,33 @@ Combined ranking by **reasoning demand** (how much model capability matters) and
 | XSS vulnerability | `pr-review-standards` | Rendering user input without sanitization |
 | Auth bypass | `pr-review-security-iam` | Missing authentication middleware |
 
+### Precision vs Standards vs Architecture
+
+| Concern | Owner | Example |
+|---------|-------|---------|
+| Fix targets symptom, not root cause | `pr-review-precision` | Null checks in 8 files instead of fixing the source of null |
+| Over-engineered infrastructure for simple task | `pr-review-precision` | New validation framework for a single config option |
+| Code has a correctness bug | `pr-review-standards` | Off-by-one error in loop |
+| Module boundary is wrong | `pr-review-architecture` | Feature in wrong domain package |
+
+### SRE vs Errors vs DevOps
+
+| Concern | Owner | Example |
+|---------|-------|---------|
+| Missing retry/backoff on external call | `pr-review-sre` | HTTP call without retry strategy |
+| Swallowed error in catch block | `pr-review-errors` | `catch (e) {}` with no logging |
+| CI workflow misconfiguration | `pr-review-devops` | Action pinned to mutable tag |
+| Observability cardinality explosion | `pr-review-sre` | User ID as span attribute |
+
+### LLM vs Standards vs Security-IAM
+
+| Concern | Owner | Example |
+|---------|-------|---------|
+| Prompt injection risk | `pr-review-llm` | User input concatenated into system prompt |
+| General input validation bug | `pr-review-standards` | Missing URL validation on API input |
+| Auth bypass in API endpoint | `pr-review-security-iam` | Missing middleware on route |
+| Unbounded agent tool loop | `pr-review-llm` | No max iterations on tool-calling loop |
+
 ### 3p-Specs vs Architecture vs Consistency
 
 | Concern | Owner | Example |
@@ -116,3 +147,7 @@ Combined ranking by **reasoning demand** (how much model capability matters) and
 | Documentation quality | `pr-review-docs` |
 | Comment accuracy | `pr-review-comments` |
 | External spec/protocol fidelity | `pr-review-3p-specs` |
+| Root cause vs symptom patching | `pr-review-precision` |
+| LLM prompts, tools, streaming, agent loops | `pr-review-llm` |
+| Production reliability, retries, observability | `pr-review-sre` |
+| CI/CD, dependencies, build/ship pipeline, AI artifacts | `pr-review-devops` |
