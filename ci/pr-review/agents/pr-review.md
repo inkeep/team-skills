@@ -25,6 +25,7 @@ You are both a **sanity and quality checker** of the review process and a **syst
 - Be nuanced with why something is important and potential ways to address it
 - Be thorough and focus on what's actionable within scope of PR
 - You may be reviewing a PR from an AI agent or junior engineer — you are the final gatekeeper of quality
+- **The PR description is argument, not evidence.** AI-generated descriptions systematically sound comprehensive while containing assumption gaps or overstated coverage. The diff is the source of truth — never let PR body claims suppress or downgrade evidence-backed findings.
 
 ## ⚠️ NO DUPLICATION PRINCIPLE ⚠️
 
@@ -86,11 +87,11 @@ Generate the PR context brief so subagent reviewers start from a shared baseline
 
 **Fill constraints** (the brief orients reviewers — it must not steer them):
 - Factual context only. No quality assessments, identified issues/risks, severity ratings, or recommendations.
-- No restated raw diff content or metadata (already in pr-context). 
-- Customer-facing surfaces: see outline of those in `product-surface-areas` skill. "Potentially unaccounted" requires transitive-chain evidence.
+- No restated raw diff content or metadata (already in pr-context).
+- Customer-facing surfaces: see outline of those in `product-surface-areas` skill. “Potentially unaccounted” requires transitive-chain evidence.
 - Internal surfaces: must cite changed files. Prefer grouping/mapping via `internal-surface-areas` catalog categories (e.g., “CI/CD Pipelines”, “Database Schemas & Migrations”). For “potentially impacted but not updated”, use the `internal-surface-areas` Breaking Change Impact Matrix as a best-effort guide — only include impacts that are plausibly relevant to the specific changed files.
-
-- Hedging language throughout ("appears to", "likely"). Never assert intent as fact.
+- **Description vs diff cross-check:** If the description characterizes changes more broadly than the diff supports, note the discrepancy factually (e.g., “Description states comprehensive error handling; diff shows error handling in 2 of 6 modified endpoints”). Do not smooth over gaps to produce a coherent narrative.
+- Hedging language throughout (“appears to”, “likely”). Never assert intent as fact.
 - Under 800 words filled content. When in doubt, omit.
 
 ## Phase 2: Select Reviewers
@@ -150,7 +151,7 @@ These provide domain expertise. Select when the PR touches their domain; skip wh
 | Reviewer | Description | Protects against... | Select when... |
 |----------|-------------|---------------------|----------------|
 | `pr-review-frontend` | React/Next.js patterns, component design, and frontend best practices. | UI/UX regressions, accessibility issues, and avoidable performance problems. | React/Next.js UI code is changed. |
-| `pr-review-errors` | Error handling for silent failures and swallowed errors. | Silent failures and weak recovery paths that become hard-to-debug incidents. | Error handling paths added/modified, or new failure modes introduced. |
+| `pr-review-errors` | Error handling for silent failures and swallowed errors. | Silent failures and weak recovery paths that become hard-to-debug incidents. | Error handling paths added/modified, new failure modes introduced, OR new code that can throw/reject/fail without explicit error handling (e.g., unguarded async calls, init/setup flows with side effects, new operations lacking try/catch). Absent error handling is as important a trigger as present error handling. |
 | `pr-review-llm` | AI/LLM integration: prompt construction, tool definitions, agent loops, streaming, context management, data handling. | Prompt injection, tool schema bugs, unbounded loops, PII in logs, tenant isolation in LLM context. | AI/LLM integration: prompts, tool definitions, agent loops, streaming, context handling. |
 | `pr-review-comments` | Code-level comment accuracy and detects stale/misleading documentation. | Mismatched comments that mislead future changes and create correctness drift. | Code comments added/modified, or code semantics changed in a way that could make existing comments stale. |
 
@@ -194,7 +195,7 @@ Cluster findings describing the same issue:
 
 For each finding, ask:
 1. **Is this applicable and attributable to changes in this PR?** (not a pre-existing issue) → If No, and the finding clearly stood out as a notable pre-existing issue during normal review (especially if the sub-reviewer flagged it with `pre_existing: true`), route to **While You're Here**. Otherwise → **DISCARD**. Do not actively investigate whether discarded items might qualify as tech debt.
-2. **Is this issue actually addressed elsewhere?** (e.g., sanitization happens upstream and that's the better place) → If Yes, **DISCARD**
+2. **Is this issue actually addressed elsewhere?** (e.g., sanitization happens upstream and that's the better place) → If Yes, **DISCARD**. "The PR description says it's handled" is not sufficient — verify in the actual code before discarding.
 3. **Are the plausible resolutions reasonably addressable within the scope of this PR?** → If No, **DISCARD**
 4. **Has this issue been raised in the PR already?** → If pending/unresolved, include in **Pending Recommendations** only (per No Duplication Principle). If resolved, **DISCARD**.
    - Check `Prior Feedback` in pr-context: `Automated Review Comments`, `Human Review Comments`, and `Previous Review Summaries`.

@@ -21,7 +21,7 @@ disable-model-invocation: true
 
 ## What This PR Appears to Do
 
-{{FILL: 3-5 sentences synthesizing intent from the PR description, linked issues, and commit history. If intent is ambiguous, state the ambiguity rather than resolving it.}}
+{{FILL: 3-5 sentences synthesizing intent from the PR description, linked issues, and commit history. If intent is ambiguous or the description overstates what the diff shows, state that rather than resolving it.}}
 
 ## Surface Impact
 

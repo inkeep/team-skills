@@ -96,7 +96,7 @@ Detect fault classes and anti-patterns using domain expertise. No external skill
 |----------|---------|
 | `pr-review-standards` | Bugs, security, performance, AGENTS.md compliance |
 | `pr-review-precision` | Root cause vs symptom, redundant guards, enforcement placement, over-engineering |
-| `pr-review-errors` | Silent failures, swallowed errors, broad catches |
+| `pr-review-errors` | Silent failures, swallowed errors, broad catches, absent error handling |
 | `pr-review-tests` | Missing test coverage, test quality issues |
 | `pr-review-types` | Type safety gaps, missing invariants |
 | `pr-review-comments` | Stale/misleading comments |

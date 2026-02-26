@@ -2,7 +2,9 @@
 name: pr-review-errors
 description: |
   Reviews code for silent failures, inadequate error handling, and inappropriate fallback behavior.
-  Spawned by pr-review orchestrator for files with try/catch blocks, .catch(), or error handling patterns.
+  Spawned by pr-review orchestrator for files with try/catch blocks, .catch(), error handling patterns,
+  or new code that can throw/reject/fail without explicit error handling (e.g., unguarded async calls,
+  init/setup flows with side effects, new operations lacking try/catch).
 
   <example>
   Context: PR adds try/catch blocks or error handling logic
