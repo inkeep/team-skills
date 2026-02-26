@@ -106,10 +106,17 @@ If the user explicitly asks for a direct answer or the question is trivially sma
 - "another agent will use this", "for the team"
 - Complex multi-day research
 
-**Signals that suggest Direct Answer:**
+**Signals that suggest Direct Answer (require EXPLICIT user opt-in — do not infer from tone):**
+- "just tell me", "quick answer", "don't write a report", "no report needed"
+- "I don't need a full report, just..."
+- User explicitly says they want findings in conversation only
+
+**These are NOT signals for Direct Answer (use Path A by default):**
+- Conversational tone or informal phrasing
 - "what does X do?", "how does Y work?", "can Z do W?"
 - "I need to understand...", "help me figure out..."
-- Conversational tone, immediate decision context
+- "research this for me", "look into X", "can you /research..."
+- Invoking the skill via `/research` (this IS the signal for formal research)
 
 **Signals that suggest Update Existing Report:**
 - "update/refresh/extend the report"

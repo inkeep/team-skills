@@ -1,17 +1,31 @@
 ---
 name: research
-description: "Conduct technical research and optionally produce formal reports, deliver findings directly, or update/extend an existing report. Reports default to <repo-root>/reports/ when in a git repo, or ~/reports/ otherwise. Use when investigating technologies, comparing systems, analyzing codebases, documenting architectures, gathering context for decisions, or when asked to refresh/update prior research. Ask if unclear whether to produce a report or a direct answer."
+description: "Conduct technical research and produce formal reports by default. Can also deliver findings directly or update/extend an existing report. Reports default to <repo-root>/reports/ when in a git repo, or ~/reports/ otherwise. Use when investigating technologies, comparing systems, analyzing codebases, documenting architectures, gathering context for decisions, or when asked to refresh/update prior research."
 argument-hint: "[research topic OR existing report] (optional: specific questions, scope constraints, output format)"
 ---
 
-# Technical Research (with Optional Report Output)
+# Technical Research
 
-Conduct **evidence-driven technical research** with flexible output options. Research can produce:
-- **Formal Report:** Persistent artifact in the resolved reports directory with evidence files
-- **Direct Answer:** Findings delivered in conversation without creating files
-- **Update Existing Report:** Surgical additions/corrections to an existing report + evidence (when a report already exists)
+Conduct **evidence-driven technical research**. Default output is a **Formal Report** (Path A) — a persistent artifact with evidence files. Other paths require explicit user signals:
 
-Choose based on whether the knowledge needs to be persistent/shareable, is for immediate use, or is an incremental update to prior work.
+- **Path A — Formal Report (DEFAULT):** Persistent artifact in the resolved reports directory with evidence files. This is the default unless the user explicitly opts out.
+- **Path B — Direct Answer:** Findings delivered in conversation only. **Requires explicit user request** (e.g., "just tell me", "no report needed", "quick answer").
+- **Path C — Update Existing Report:** Surgical additions/corrections to an existing report. Triggered when the user references an existing report or says "update/refresh/extend."
+
+## Mandatory Execution Order
+
+When this skill is invoked, execute these steps **in order**. Steps marked ⛔ are **hard gates** — you MUST complete each one before proceeding to the next. Do NOT skip ahead.
+
+1. **Step 0: Create workflow checkpoint tasks** — Immediately create tasks for each step below (see Step 0 section). This is always the first action.
+2. ⛔ **Routing Gate** — Check existing research. Do NOT start any web searches or research before completing this step.
+3. ⛔ **Step 1: Collaborative Scoping** — Propose a research rubric. **STOP and WAIT for user confirmation.** Do NOT proceed to research until the user explicitly confirms the rubric.
+4. **Step 2: Create Report Directory** — Set up the report structure (Path A only).
+5. **Step 3: Research + Evidence Capture** — Conduct research and capture evidence.
+6. **Step 4: Write REPORT.md** — Synthesize findings (Path A only).
+7. **Step 5: Validate** — Run the validation checklist.
+8. **Step 6: Recap + Follow-up** — Present findings and offer follow-up directions.
+
+**Path B shortcut:** If the user explicitly requests a direct answer (Step 1 determines this), skip Steps 2, 4, 5 — but the Routing Gate and Scoping are still mandatory.
 
 ### Reports directory
 
@@ -71,7 +85,34 @@ Throughout this skill, `<reports-dir>` refers to the resolved reports directory.
 
 ---
 
+## Step 0: Create Workflow Checkpoint Tasks
+
+⛔ **ALWAYS THE FIRST ACTION.** Before doing anything else, create workflow checkpoint tasks. These provide structural enforcement, persist across context compaction, and are visible to the user.
+
+Create these tasks immediately upon invocation:
+
+```
+TaskCreate: "Research: Routing Gate — check existing research"          → start as in_progress
+TaskCreate: "Research: Scoping — propose rubric + get confirmation"     → pending, blocked by #1
+TaskCreate: "Research: Conduct research + capture evidence"             → pending, blocked by #2
+TaskCreate: "Research: Write REPORT.md"                                 → pending, blocked by #3
+TaskCreate: "Research: Validate"                                        → pending, blocked by #4
+TaskCreate: "Research: Recap + follow-up"                               → pending, blocked by #5
+```
+
+Use `addBlockedBy` to enforce ordering. As you complete each step, mark its task `completed` and mark the next task `in_progress`.
+
+**Path B variant:** If scoping determines Path B (direct answer), mark tasks #4 and #5 as `deleted` (they don't apply).
+
+**Path C variant:** If the routing gate sends you to Path C (update existing), mark tasks #2-#6 as `deleted` and create Path C-specific tasks per `references/updating-existing-reports.md`.
+
+> **Why tasks?** The observed failure mode is the agent skipping the routing gate and scoping, jumping straight to web searches. Tasks provide a persistent, user-visible structural enforcement layer that survives context compaction and makes skipped steps immediately obvious.
+
+---
+
 ## Routing Gate
+
+⛔ **MANDATORY FIRST STEP.** Before any web searches, before any research, before any analysis — complete this routing gate. If you find yourself about to run a web search or read a codebase, STOP — you have skipped this step.
 
 ### Phase 1: Check existing knowledge
 
@@ -143,11 +184,9 @@ Default to **Path A** (formal report, Steps 1–6) unless the user explicitly as
 
 ## Step 1: Collaborative Scoping (for Path A/B)
 
+⛔ **HARD GATE.** Do NOT start any research (web searches, code analysis, evidence gathering) until the user explicitly confirms the rubric. After proposing the rubric, **STOP and WAIT for user response.** Mark the Scoping task as `completed` only after receiving user confirmation.
+
 **Load:** `references/scoping-protocol.md`
-
-**Core rule:** Do not start research until scope is explicit and confirmed.
-
-⚠️ **Avoid:** Starting research before rubric confirmation. This causes drift and wasted effort.
 
 - For **Formal Report (Path A):** Output a complete research rubric and get explicit user confirmation before proceeding.
 - For **Direct Answer (Path B):** Scoping is still required; keep it appropriately sized, but make dimensions/stance explicit and confirm.
@@ -157,6 +196,8 @@ Default to **Path A** (formal report, Steps 1–6) unless the user explicitly as
 ---
 
 ## Step 2: Create the Report Directory
+
+Mark the "Conduct research" task as `in_progress` after completing this step.
 
 ```bash
 mkdir -p <reports-dir>/<report-name>/evidence
@@ -266,6 +307,8 @@ Do **not** create these as part of the current coordination model:
 ---
 
 ## Step 3: Conduct Research + Capture Evidence
+
+Mark the "Conduct research" task as `in_progress` (if not already). Mark it `completed` when all P0 dimensions have evidence.
 
 **Load:** `references/citation-formats.md` for evidence substantiation standards
 **Load:** `references/web-search-guidance.md` for web source quality standards (applies to all research)
@@ -400,6 +443,8 @@ Evidence capture rules:
 
 ## Step 4: Write REPORT.md
 
+Mark the "Write REPORT.md" task as `in_progress`. Mark it `completed` when REPORT.md is written.
+
 **Load:** `references/section-templates.md` for report structure patterns
 **Load:** `references/diagram-patterns.md` if architecture diagrams are needed
 
@@ -511,6 +556,8 @@ topics:         # optional — qualitative areas, <=3 words each
 
 ## Step 5: Validate
 
+Mark the "Validate" task as `in_progress`. Mark it `completed` when all checklist items pass.
+
 **Load:** `references/citation-formats.md` to verify evidence citations meet standards
 
 Before delivering:
@@ -534,6 +581,8 @@ If validation fails, fix and re-check.
 ---
 
 ## Step 6: Research Recap & Follow-up
+
+Mark the "Recap + follow-up" task as `in_progress`. Mark it `completed` after presenting the recap and follow-up options.
 
 After delivering findings (any path), present a concise recap and naturally surface opportunities to go deeper. The goal is a **collaborative research conversation**, not a one-shot dump.
 
@@ -636,6 +685,8 @@ Use consistently throughout:
 * **Deliverable follow-ups instead of research follow-ups**: suggesting checklists, templates, scorecards, style guides, audits-of-user-assets, or other productized outputs as "where we could go from here" — follow-ups must be further research directions (deeper dives, adjacent dimensions, unexplored angles), not downstream deliverables that belong to other skills
 * **Skipping the recap**: dumping a report and going silent — always close with a recap + natural follow-up options unless the user explicitly signals they're done
 * **Ignoring existing reports**: starting new research without scanning the resolved reports directory first — the user may not know what prior research exists, and duplicate work wastes time
+* **Skipping the routing gate and scoping to jump straight to research**: The most common failure mode. When invoked, the agent immediately starts web searching and delivers informal findings without completing the routing gate or getting rubric confirmation. This bypasses the entire protocol. The routing gate and scoping confirmation are hard gates — not optional steps. If you catch yourself about to run a web search before the routing gate is complete, STOP.
+* **Defaulting to Path B without explicit user signal**: Treating conversational phrasing ("I need to understand...", "what does X do?") as a signal for direct answer delivery. These are normal research requests — Path A is the default unless the user explicitly says "just tell me", "no report needed", or similar.
 
 ---
 
