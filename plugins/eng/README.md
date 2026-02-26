@@ -7,25 +7,25 @@ Plugin for the Inkeep engineering team. Includes all [shared skills](../shared/)
 
 Run this once to install the Inkeep team-skills marketplace, along with the `eng` plugin and its skills. Skills added this way for Claude Code added **auto-update every CC session**.
 
-**Step 1:** Add the marketplace (one-time):
+Add the marketplace:
 
 ```bash
 claude plugin marketplace add https://github.com/inkeep/team-skills.git && node -e "const f=require('os').homedir()+'/.claude/plugins/known_marketplaces.json',d=require(f);d['inkeep-team-skills'].autoUpdate=true;require('fs').writeFileSync(f,JSON.stringify(d,null,2));console.log('Auto-update enabled for inkeep-team-skills')"
 ```
 
-**Step 2:** Install the eng plugin:
+Install the eng plugin:
 
 ```bash
 claude plugin install eng@inkeep-team-skills
 ```
 
-**Step 3:** Global deps:
+Global deps:
 
 ```bash
 npm install -g typescript-language-server typescript
 ```
 
-**Step 4:** TypeScript LSP companion plugin:
+TS LSP companion plugin:
 
 ```bash
 claude plugin marketplace add anthropics/claude-plugins-official
@@ -39,13 +39,13 @@ claude plugin install typescript-lsp@claude-plugins-official
 
 If you use other Coding Agents (Cursor, Cline, Codex, etc.), use the below. Only caveat here is that using this method does **not** have an auto-update. 
 
-**Step 1:** Install:
+Install:
 
 ```bash
 npx skills add inkeep/team-skills/plugins/eng -y
 ```
 
-**Step 2:** Update (run manually when you want the latest):
+Update (run manually to get latest):
 
 ```bash
 npx skills update
