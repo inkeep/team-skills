@@ -40,38 +40,50 @@ Fill in each section of the template below. Omit sections that don't apply (note
 
 What this PR does + what problem this solves, why now, who benefits. 1-3 sentences if brief, if multiple pronged, can use numbered list to describe key scenarios/problems being solved. Keep it to the point.
 
-#### Architectural decisions
-Brief narrative of how the implementation works at a high level — the architecture, key patterns, and flow.
+#### Key decisions
 
-Key technical decisions what was chosen, why, and what was considered. Flag gray areas where reasonable engineers might disagree or where the decision could be revisited. If the implementation diverged from the spec, capture the divergence here as a decision with rationale.
+Technical decisions worth scrutinizing: what was chosen, why, and what alternatives were considered. Flag gray areas where reasonable engineers might disagree or where the decision could be revisited. If the implementation diverged from the spec, capture the divergence here with rationale. **Omit if the change is straightforward with no meaningful decision points.**
 
-#### Changes
+#### Recordings
 
-Bullet list of what changed, organized by area.
+Video recordings of QA test execution. **Omit if no scenarios have `evidence[]` URLs.**
 
-#### Screenshots / recordings
+When `tmp/ship/qa-progress.json` exists, check scenarios for `evidence[]` arrays containing video URLs. Embed each as a collapsible section:
 
-Visual evidence of UI or behavioral changes. **Omit if no visual changes.**
+```md
+<details>
+<summary>QA-001: settings page renders at mobile viewport</summary>
 
-When the diff touches UI files (components, pages, styles, layouts) and `/screengrabs` is available, invoke it to capture before/after screenshots of affected routes. This automates the most common visual evidence and ensures screenshots are consistent and up-to-date with the actual PR state. Add manual screenshots only for interactions or states that `/screengrabs` cannot capture (e.g., hover states, mid-animation frames, error modals triggered by specific sequences).
+[Video recording](https://video.bunnycdn.com/play/...)
 
-#### How to verify
+</details>
+```
 
-Steps a reviewer can follow to manually verify the behavior. **Omit if changes are purely internal.**
+When no qa-progress.json exists, omit this section. Video capture is QA's responsibility during execution.
 
-#### Test plan
+#### Review setup
 
-Manual QA, smoke tests, and verification done **outside** the automated test suite. Do not restate what the test suite covers — reviewers can read the test files.
+Minimal steps to see the change running — env vars, seed data, feature flags, or commands needed to get into a reviewable state. Not a test plan; just how to get the reviewer to a point where they can see the change. **Omit if standard `dev` workflow is sufficient.**
+
+#### Manual QA
+
+What QA verified manually and what still needs human eyes. This section covers **only** scenarios that resist automation — visual correctness, UX flows, integration reality, edge cases, failure modes. Do not restate what the automated test suite covers — reviewers can read the test files.
 
 **Source of truth — read in this order:**
-1. **`tmp/ship/qa-progress.json`** (when it exists): Read the file. Group scenarios by `category`. Render each as a checklist item with status:
-   - `validated` → `- [x]`
-   - `validated` with `notes` → `- [x]` + ` — Fixed: <notes>`
-   - `failed` → `- [ ]` + ` — FAILED: <notes>`
-   - `blocked` → `- [ ]` + ` — BLOCKED: <notes>`
-   - `skipped` → `- [ ]` + ` — Skipped: <notes>`
-   - `planned` → `- [ ]`
-2. **Existing `## Test plan` section on the PR body** (when no JSON file exists): Read the existing PR body before writing. Incorporate the QA checklist items (with their pass/fail/blocked status) into this section — do not discard them.
+1. **`tmp/ship/qa-progress.json`** (when it exists): Read the file. Render in two groups:
+
+   **Verified by QA (N/M)** — scenarios with `status: "validated"`. Group by `category`. For each:
+   - Clean pass (notes empty) → `- [x] **<name>** — <verifies>`
+   - Pass with notes → `- [x] **<name>** — <verifies> · <notes>`
+
+   **Needs human verification (K/M)** — scenarios with `status: "failed"`, `"blocked"`, or `"skipped"`. No category grouping — list flat with the reason prominent:
+   - `failed` → `- [ ] **<category>: <name>** — FAILED: <notes>`
+   - `blocked` → `- [ ] **<category>: <name>** — BLOCKED: <notes>`
+   - `skipped` → `- [ ] **<category>: <name>** — Skipped: <notes>`
+
+   Omit scenarios still in `planned` status (QA didn't get to them). If any exist, add a note: "_N scenarios not yet executed._"
+
+2. **Existing `## Manual QA` section on the PR body** (when no JSON file exists): Read the existing PR body before writing. Incorporate the QA checklist items (with their pass/fail/blocked status) into this section — do not discard them.
 3. **Neither exists**: Write "No manual QA performed." Do not generate speculative test scenarios. If you believe QA should be run, note: "Consider running `/qa` to generate and execute a test plan."
 
 #### Related issues
@@ -81,12 +93,6 @@ Links to GitHub issues this PR closes or relates to. Use `Closes #123` syntax wh
 #### Future considerations
 
 Items surfaced during review that are out of scope for this PR but worth tracking. Updated during the review loop as reviewers raise pre-existing or tangential issues. **Omit if none.**
-
-#### Footer
-
-```
-Generated with [Claude Code](https://claude.com/claude-code)
-```
 
 ### Step 3: Apply
 
@@ -132,7 +138,7 @@ Match PR body depth to what changed:
 
 | What changed | PR body depth |
 |---|---|
-| New feature (multi-file, user-facing) | All sections — full narrative, architectural decisions, screenshots, test plan |
-| Enhancement to existing feature | Summary, motivation, approach, changes, test plan. Architectural decisions if design choices were made. |
-| Bug fix | Summary, changes, test plan. Motivation if the bug's impact warrants explanation. |
-| Config / infra / refactor | Summary, changes. Approach if the refactor strategy matters. |
+| New feature (multi-file, user-facing) | All sections — summary, key decisions, recordings, review setup, manual QA |
+| Enhancement to existing feature | Summary, manual QA. Key decisions if design choices were made. |
+| Bug fix | Summary, manual QA. |
+| Config / infra / refactor | Summary only. |

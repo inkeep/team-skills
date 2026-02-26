@@ -87,7 +87,7 @@ Create these as task list items to track execution progress.
 
 ### Step 3b: Write the QA plan to qa-progress.json
 
-When running within `/ship` (i.e., `tmp/ship/` exists), write all planned scenarios to `tmp/ship/qa-progress.json`. This file is the structured source of truth for QA results — the PR body is a rendered view of it, not the other way around.
+When `tmp/ship/` exists, write all planned scenarios to `tmp/ship/qa-progress.json`. This file is the structured source of truth for QA results — downstream consumers render it to the PR body.
 
 **Create the file with all scenarios in `planned` status:**
 
@@ -104,7 +104,8 @@ When running within `/ship` (i.e., `tmp/ship/` exists), write all planned scenar
       "whyManual": "requires visual inspection of responsive layout",
       "tracesTo": "US-002",
       "status": "planned",
-      "notes": ""
+      "notes": "",
+      "evidence": []
     }
   ]
 }
@@ -125,6 +126,7 @@ When running within `/ship` (i.e., `tmp/ship/` exists), write all planned scenar
 | `scenarios[].tracesTo` | No | User story ID from `spec.json` (e.g., `US-003`) when the mapping is clear. Omit when the relationship is fuzzy or many-to-many. |
 | `scenarios[].status` | Yes | One of: `planned`, `validated`, `failed`, `blocked`, `skipped`. |
 | `scenarios[].notes` | Yes | Empty string when `planned`. Populated on status change — see Status values table below. |
+| `scenarios[].evidence` | No | Array of CDN URLs for video recordings captured during this scenario via `/browser` helpers. Omit or `[]` when scenario doesn't involve browser automation. |
 
 **Status values:**
 
@@ -136,30 +138,27 @@ When running within `/ship` (i.e., `tmp/ship/` exists), write all planned scenar
 | `blocked` | Could not execute due to environment or tooling | What prevented execution: `"dev env uses non-expiring tokens; no way to force expiry"` |
 | `skipped` | Deliberately skipped | Why: `"no browser automation available"` or `"low priority given available time"` |
 
-When not running within `/ship` (no `tmp/ship/` directory), skip this step — use only the PR body checklist (Step 4) or task list items.
+When `tmp/ship/` does not exist, skip this step — use only the PR body checklist (Step 4) or task list items.
 
-### Step 4: Persist the QA checklist to the PR body
+### Step 4: Persist the QA checklist to the PR body (standalone only)
 
-If a PR exists, write the QA checklist to the `## Test plan` section of the PR body. **Always update via `gh pr edit --body` — never post QA results as PR comments.**
+**When `tmp/ship/` exists:** Skip this step. You already wrote `qa-progress.json` in Step 3b — a downstream consumer will render it to the PR body.
 
-**When `tmp/ship/qa-progress.json` exists:** Render the PR body checklist from the JSON file. The file is the source of truth; the PR body is a human-readable view. For each scenario in `scenarios[]`, render as:
-```
-- [ ] **<category>: <name>** — <verifies> · _Why not a test: <whyManual>_
-```
+**When `tmp/ship/` does not exist:**
 
-**When no qa-progress.json exists (standalone QA without `/ship`):**
+If a PR exists, write the QA checklist to the `## Manual QA` section of the PR body. **Always update via `gh pr edit --body` — never post QA results as PR comments.**
 
 1. Read the current PR body: `gh pr view <number> --json body -q '.body'`
-2. If a `## Test plan` section already exists, replace its content with the updated checklist.
+2. If a `## Manual QA` section already exists, replace its content with the updated checklist.
 3. If no such section exists, append it to the end of the body.
 4. Write the updated body back: `gh pr edit <number> --body "<updated body>"`
 
 Section format:
 
 ```md
-## Test plan
+## Manual QA
 
-_Manual QA scenarios that resist automation. Updated as tests complete._
+_Scenarios that resist automation — verified by QA or flagged for human review._
 
 - [ ] **<category>: <scenario name>** — <what you'll verify> · _Why not a test: <reason>_
 ```
@@ -187,7 +186,13 @@ Work through each scenario. Use the strongest tool available for each.
 - Test error states — submit invalid data, disconnect, trigger edge cases.
 - Test at different viewport sizes if the feature is responsive.
 - Test keyboard navigation and focus management.
-- Record a GIF of multi-step flows when it helps demonstrate the result.
+
+**Video recording (default for all browser scenarios):** For every scenario that uses browser automation, create a video context before starting the scenario using `/browser`'s `helpers.createVideoContext(browser, { outputDir: '/tmp/playwright-videos' })`. This records everything automatically — no pre-planning needed. After the scenario completes (pass or fail):
+1. Close the page to finalize the recording: `const videoPath = await page.video().path(); await page.close();`
+2. Upload to Bunny Stream: `const result = await helpers.uploadToBunny(videoPath, { name: '<scenario-id>-<scenario-name>' });`
+3. Record the URL in the scenario's `evidence[]` field in `qa-progress.json`.
+
+Video evidence is valuable for both passing and failing scenarios — it shows reviewers exactly what QA tested and helps debug failures.
 
 **With browser inspection (use alongside browser automation — not instead of):**
 - **Console monitoring (non-negotiable — do this on every flow):** Start capture BEFORE navigating (`startConsoleCapture`), then check for errors after each major action (`getConsoleErrors`). A page that looks correct but throws JS errors is not correct. Filter logs for specific patterns (`getConsoleLogs` with string/RegExp/function filter) when diagnosing issues.
@@ -241,16 +246,9 @@ Changes touch more of the system than what's visible to the user. After exercisi
 
 ### Step 6: Record results
 
-**When `tmp/ship/qa-progress.json` exists:** After each scenario (or batch), update the scenario's `status` and `notes` in the JSON file. Then re-render the PR body's `## Test plan` section from the updated file. The JSON file is the source of truth; the PR body is kept in sync as a human-readable view.
+**When `tmp/ship/` exists:** After each scenario (or batch), update the scenario's `status` and `notes` in `qa-progress.json`. Do not touch the PR body — a downstream consumer will render it.
 
-**When no qa-progress.json exists:** Update the `## Test plan` section in the PR body directly using the same read → modify → write mechanism from Step 4.
-
-| Result | How to record |
-|---|---|
-| **Pass** | Check the box: `- [x]` |
-| **Fail → fixed** | Check the box, append: `— Fixed: <what was wrong and how>` |
-| **Fail → blocked** | Leave unchecked, append: `— BLOCKED: <what went wrong, why unresolvable>` |
-| **Skipped (tool limitation)** | Leave unchecked, append: `— Skipped: <reason, e.g., no browser automation>` |
+**When `tmp/ship/` does not exist:** Update the `## Manual QA` section in the PR body directly using the same read → modify → write mechanism from Step 4.
 
 **When you find a bug:**
 
@@ -265,16 +263,18 @@ After fixing a bug, record it: update the scenario's `status` to `validated` and
 
 ### Step 7: Report
 
-**If a PR exists:** The `## Test plan` section in the PR body is your primary report. Ensure it's up-to-date with all results (pass/fail/fixed/blocked/skipped). Do not add a separate PR comment — the PR body section is the report.
+**When `tmp/ship/` exists:** The JSON file is your report. A downstream consumer will render it to the PR body. Report completion to the invoker.
 
-**If no PR exists:** Report directly to the user with:
+**When `tmp/ship/` does not exist and a PR exists:** The `## Manual QA` section in the PR body is your report. Ensure it's up-to-date with all results. Do not add a separate PR comment.
+
+**No PR exists:** Report directly to the user with:
 
 - Total scenarios tested vs. passed vs. failed vs. skipped
 - Bugs found and fixed (with brief description of each)
 - Gaps — what could NOT be tested due to tool limitations or environment constraints
 - Judgment call — your honest assessment: is this feature ready for human review?
 
-The skill's job is to fix what it can, document what it found, and hand back a clear picture. Unresolvable issues and gaps are documented, not silently swallowed — but they do not block forward progress. The invoker (user or /ship) decides what to do about remaining items.
+The skill's job is to fix what it can, document what it found, and hand back a clear picture. Unresolvable issues and gaps are documented, not silently swallowed — but they do not block forward progress. The invoker decides what to do about remaining items.
 
 ---
 

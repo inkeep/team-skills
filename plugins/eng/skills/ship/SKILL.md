@@ -58,7 +58,7 @@ All execution state lives in `tmp/ship/` (gitignored). The only committed artifa
 | `tmp/ship/last-prompt.md` | Last re-injection prompt — the full prompt the stop hook constructed on its most recent re-entry, for debugging | Stop hook | Each re-entry (overwritten) | Debugging only |
 | `tmp/ship/spec.json` | User stories — acceptance criteria, priority, pass/fail status | Phase 2 (/implement) | Each iteration (sets `passes: true`) | implement.sh, iterations, Ship |
 | `tmp/ship/progress.txt` | Iteration log — what was done, learnings, blockers | Phase 2 start (implement.sh) | Each iteration (append) | Iterations, Ship |
-| `tmp/ship/qa-progress.json` | QA test plan and results — scenarios, status, notes | Phase 3 (/qa) | Each scenario execution (/qa) | /pr (renders Test plan), Ship (phase gate) |
+| `tmp/ship/qa-progress.json` | QA scenarios and results — status, notes | Phase 3 (/qa) | Each scenario execution (/qa) | /pr (renders Manual QA), Ship (phase gate) |
 | SPEC.md *(committed)* | Product + tech spec — requirements, design, decisions, non-goals | Phase 1 (/spec or user) | Phase 1 only | All phases, iterations |
 
 ### When to update what
@@ -309,7 +309,7 @@ After Phase 3's exit gate and before entering Phase 4. Do not update `currentPha
 
 If the implementation includes UI changes and `/screengrabs` is available, invoke it before writing the PR body — capture screenshots of affected routes so the PR body's "Screenshots / recordings" section has visual evidence ready. `/screengrabs` supports `--pre-script` for interaction before capture (dismissing modals, navigating tabs, logging in).
 
-Load `/pr` skill with the PR number and `--spec <path/to/SPEC.md>` to write the full PR body. Implementation and testing are now complete — the body can cover approach, changes, architectural decisions, and test plan comprehensively.
+Load `/pr` skill with the PR number and `--spec <path/to/SPEC.md>` to write the full PR body. Implementation and testing are now complete — the body can cover approach, changes, architectural decisions, and manual QA results comprehensively.
 
 If no PR exists (`prNumber: null` — GitHub CLI was unavailable during draft PR creation), load `/pr` with `new --spec <path/to/SPEC.md>` to create the PR and write the body in one step. Update `prNumber` in `tmp/ship/state.json`. If `gh` is still unavailable, `/pr` will output the body for manual use — skip Phase 5.
 
