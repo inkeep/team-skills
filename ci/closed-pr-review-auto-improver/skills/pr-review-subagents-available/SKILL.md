@@ -40,6 +40,7 @@ Combined ranking by **reasoning demand** (how much model capability matters) and
 | #10 | `pr-review-frontend` | "Does this follow React/Next.js patterns?" | Sonnet | Tier 3 | Tier 3 |
 | #11 | `pr-review-comments` | "Are comments accurate and useful?" | Sonnet | Tier 3 | Tier 3 |
 | #12 | `pr-review-docs` | "Is documentation complete and correct?" | Sonnet | Tier 3 | Tier 3 |
+| #13 | `pr-review-3p-specs` | "Does this honor the external contract it claims to conform to?" | Opus | Tier 2 | Tier 1 |
 
 ### Tier Definitions
 
@@ -79,6 +80,14 @@ Combined ranking by **reasoning demand** (how much model capability matters) and
 | XSS vulnerability | `pr-review-standards` | Rendering user input without sanitization |
 | Auth bypass | `pr-review-security-iam` | Missing authentication middleware |
 
+### 3p-Specs vs Architecture vs Consistency
+
+| Concern | Owner | Example |
+|---------|-------|---------|
+| Implementation diverges from external protocol spec | `pr-review-3p-specs` | SDK wrapper drops required field from external schema |
+| Internal module boundary is wrong | `pr-review-architecture` | Feature in wrong domain package |
+| Internal naming doesn't match peers | `pr-review-consistency` | Handler not following sibling naming convention |
+
 ### Architecture vs Consistency
 
 | Concern | Owner | Example |
@@ -106,3 +115,4 @@ Combined ranking by **reasoning demand** (how much model capability matters) and
 | React/Next.js patterns | `pr-review-frontend` |
 | Documentation quality | `pr-review-docs` |
 | Comment accuracy | `pr-review-comments` |
+| External spec/protocol fidelity | `pr-review-3p-specs` |
