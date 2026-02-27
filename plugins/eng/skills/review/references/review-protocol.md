@@ -45,7 +45,7 @@ Thread node IDs (`thread_id`) are included in the "Review Threads" section of `f
 
 ## PR body
 
-Load `/pr` skill for all PR body work — it owns the template, section guidance, and principles (self-contained, stateless). When the PR body needs updating during the review loop (e.g., after implementing review feedback), re-load `/pr` with the PR number to rewrite it.
+Load `/pr` skill for all PR body work — it owns the template, section guidance, and principles (self-contained, stateless). When the PR body needs updating during the review loop (e.g., after implementing review feedback), re-load `/pr` skill with the PR number to rewrite it.
 
 ---
 

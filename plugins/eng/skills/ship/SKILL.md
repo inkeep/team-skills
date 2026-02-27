@@ -82,7 +82,7 @@ The PR body is a living document — not write-once. A draft PR with a stub body
 
 Load `/pr` skill for all PR body work — writing the full body and updating it after subsequent phases. The skill owns the template, section guidance, and principles (self-contained, stateless).
 
-**Update rule:** After any phase that changes code or documentation, check whether the PR description is now stale and re-load `/pr` to update it. Phase 6 verifies the description is comprehensive and current.
+**Update rule:** After any phase that changes code or documentation, check whether the PR description is now stale and re-load `/pr` skill to update it. Phase 6 verifies the description is comprehensive and current.
 
 ---
 
@@ -123,13 +123,13 @@ Before starting Phase 0, create a task for every phase using `TaskCreate`. This 
 Create these tasks in order:
 
 1. **Phase 0: Detect context and starting point** — Recovery check, feature name, worktree, capability detection, scope calibration
-2. **Phase 1: Spec authoring and handoff** — Scaffold spec, investigate, refine with /spec, validate, activate state
-3. **Phase 2: Implementation** — Build understanding, invoke /implement, post-implementation review
+2. **Phase 1: Spec authoring and handoff** — Scaffold spec, investigate, Load /spec skill, validate, activate state
+3. **Phase 2: Implementation** — Build understanding, Load /implement skill, post-implementation review
 4. **Create draft PR** — Push branch, create draft PR, set prNumber in state.json
-5. **Phase 3: Testing** — Load /qa, run test plan, verify exit gate
-6. **Write PR body** — Capture screenshots if applicable, load /pr to write full body
-7. **Phase 4: Documentation** — Load /docs, write/update all affected documentation surfaces
-8. **Phase 5: Review iteration loop** — Mark PR ready, load /review, iterate until all threads resolved and CI green
+5. **Phase 3: Testing** — Load /qa skill, run test plan, verify exit gate
+6. **Write PR body** — Capture screenshots if applicable, Load /pr skill to write full body
+7. **Phase 4: Documentation** — Load /docs skill, write/update all affected documentation surfaces
+8. **Phase 5: Review iteration loop** — Mark PR ready, Load /review skill, iterate until all threads resolved and CI green
 9. **Phase 6: Completion** — Run completion checklist, report to user, output completion promise
 
 As each phase begins, mark its task `in_progress`. When the phase completes, mark it `completed`.
@@ -206,8 +206,8 @@ The scaffold doesn't need to be complete — it needs to exist on disk so it sur
 
 **After the scaffold exists — investigate.** Now that the scaffold anchors the conversation, do the deep investigation that informs the spec:
 
-1. **Trace the existing system.** Load `/explore` to understand how the relevant area works today — patterns, shared abstractions, data flow, blast radius. For bug fixes, use the system tracing lens to follow execution from entry point to where the error occurs and identify the root cause (not just the symptom).
-2. **Research third-party dependencies.** If the feature involves third-party libraries, frameworks, packages, APIs, or external services, load `/research` to verify their capabilities, constraints, and correct usage *before* designing the solution. Do this every time — not just when the dependency feels unfamiliar. Even dependencies you've used before may have changed, have undocumented constraints, or behave differently in this context. Do not spec against assumed API shapes — verify them.
+1. **Trace the existing system.** Load `/explore` skill to understand how the relevant area works today — patterns, shared abstractions, data flow, blast radius. For bug fixes, use the system tracing lens to follow execution from entry point to where the error occurs and identify the root cause (not just the symptom).
+2. **Research third-party dependencies.** If the feature involves third-party libraries, frameworks, packages, APIs, or external services, load `/research` skill to verify their capabilities, constraints, and correct usage *before* designing the solution. Do this every time — not just when the dependency feels unfamiliar. Even dependencies you've used before may have changed, have undocumented constraints, or behave differently in this context. Do not spec against assumed API shapes — verify them.
 3. **Update the scaffold.** Revise the SPEC.md with findings: root cause (for bugs), system constraints, API shapes, dependency capabilities, and refined acceptance criteria grounded in what you learned.
 
 This investigation is not optional — it's what separates a spec grounded in reality from one built on assumptions. A spec that assumes an API works a certain way, or that a module has a certain interface, leads to implementation surprises that cost more to fix later.
@@ -258,11 +258,11 @@ The script activates the stop hook for autonomous execution. The loop runs until
 
 #### Step 1: Build codebase understanding
 
-Verify that you genuinely understand the feature — not just that the spec has the right sections. Test yourself: can you articulate what this feature does, why it matters, how it works technically, what the riskiest parts are, and what you would test first? If not, re-read the spec and investigate the codebase until you can. Use `/explore` on the target area (purpose: implementing) to understand the patterns, conventions, and shared abstractions you'll need to work with. Build your understanding from `/explore` findings and the SPEC.md — do not aimlessly browse implementation files; let `/explore` structure your exploration. If you need deeper understanding of a specific subsystem, delegate a targeted question to a subagent (e.g., "How does the auth middleware chain work in src/middleware/? What conventions does it follow?"). Your understanding should be architectural, not line-by-line. This understanding is what you will use to evaluate the implementation output and reviewer feedback later.
+Verify that you genuinely understand the feature — not just that the spec has the right sections. Test yourself: can you articulate what this feature does, why it matters, how it works technically, what the riskiest parts are, and what you would test first? If not, re-read the spec and investigate the codebase until you can. Load `/explore` skill on the target area (purpose: implementing) to understand the patterns, conventions, and shared abstractions you'll need to work with. Build your understanding from `/explore` findings and the SPEC.md — do not aimlessly browse implementation files; let `/explore` structure your exploration. If you need deeper understanding of a specific subsystem, delegate a targeted question to a subagent (e.g., "How does the auth middleware chain work in src/middleware/? What conventions does it follow?"). Your understanding should be architectural, not line-by-line. This understanding is what you will use to evaluate the implementation output and reviewer feedback later.
 
-#### Step 2: Invoke /implement
+#### Step 2: Load /implement skill
 
-Always invoke `/implement` — it owns spec.json conversion, prompt crafting, and the iteration loop regardless of scope. `/implement` calibrates its own depth internally. The only exception: changes so trivial they don't warrant a SPEC.md at all (a one-line typo fix, a config value change) — but those wouldn't go through `/ship` in the first place.
+Always load `/implement` skill — it owns spec.json conversion, prompt crafting, and the iteration loop regardless of scope. `/implement` calibrates its own depth internally. The only exception: changes so trivial they don't warrant a SPEC.md at all (a one-line typo fix, a config value change) — but those wouldn't go through `/ship` in the first place.
 
 Load `/implement` skill to handle the full implementation lifecycle — from spec conversion (SPEC.md → spec.json) through prompt crafting and execution. Provide it with:
 - Path to the SPEC.md — this is the highest-priority input. Do not omit it.
@@ -275,7 +275,7 @@ Wait for `/implement` to complete. If it reports that automated execution is una
 
 #### Step 3: Post-implementation review
 
-After implementation completes, verify that you are satisfied with the output before proceeding. You are responsible for this code — the implementation output is your starting point, not your endpoint. Do not review the output by reading every changed file yourself — delegate targeted verification to a subagent: "Does the implementation match the SPEC.md acceptance criteria? Are there gaps, dead code, or unresolved TODOs? Does every acceptance criterion have a corresponding test?" Act on the findings. Fix issues directly for small, obvious problems. For issues where the root cause isn't immediately clear, load `/debug` to diagnose before fixing. For larger rework that requires re-implementing a story, re-invoke `/implement` with specific feedback.
+After implementation completes, verify that you are satisfied with the output before proceeding. You are responsible for this code — the implementation output is your starting point, not your endpoint. Do not review the output by reading every changed file yourself — delegate targeted verification to a subagent: "Does the implementation match the SPEC.md acceptance criteria? Are there gaps, dead code, or unresolved TODOs? Does every acceptance criterion have a corresponding test?" Act on the findings. Fix issues directly for small, obvious problems. For issues where the root cause isn't immediately clear, load `/debug` skill with `--delegated` to diagnose — `/debug` will return structured findings (root cause, recommended fix, blast radius) without implementing the fix itself. Apply the fix based on its findings. For larger rework that requires re-implementing a story, re-load `/implement` skill with specific feedback.
 
 **If you made any code changes** (whether direct fixes or by re-invoking `/implement`): re-run quality gates (test suite, typecheck, lint) and verify green before proceeding. `/implement` exits green, but post-implementation fixes happen outside its loop — you own verification of your own changes.
 
@@ -293,7 +293,7 @@ After Phase 2 completes and before entering Phase 3. Do not update `currentPhase
 
 Load `/qa` skill with the SPEC.md path (or PR number if no spec). `/qa` handles the full manual QA lifecycle: tool detection, test plan derivation, execution with available tools (browser, macOS, bash), result recording, and gap documentation.
 
-If scope calibration indicated a lightweight scope (bug fix / config change), pass that context so `/qa` calibrates depth accordingly.
+If scope calibration indicated a lightweight scope (bug fix / config change), pass that context so `/qa` calibrates depth accordingly. If ship is running in a worktree or container (isolated environment), pass `--delegated` so `/qa` skips tool-availability negotiation checkpoints and operates autonomously.
 
 **Phase 3 exit gate — verify before proceeding to Phase 4:**
 
@@ -307,11 +307,11 @@ If scope calibration indicated a lightweight scope (bug fix / config change), pa
 
 After Phase 3's exit gate and before entering Phase 4. Do not update `currentPhase` until Phase 4 begins.
 
-If the implementation includes UI changes and `/screengrabs` is available, invoke it before writing the PR body — capture screenshots of affected routes so the PR body's "Screenshots / recordings" section has visual evidence ready. `/screengrabs` supports `--pre-script` for interaction before capture (dismissing modals, navigating tabs, logging in).
+If the implementation includes UI changes and `/screengrabs` is available, Load `/screengrabs` skill before writing the PR body — capture screenshots of affected routes so the PR body's "Screenshots / recordings" section has visual evidence ready. `/screengrabs` supports `--pre-script` for interaction before capture (dismissing modals, navigating tabs, logging in).
 
 Load `/pr` skill with the PR number and `--spec <path/to/SPEC.md>` to write the full PR body. Implementation and testing are now complete — the body can cover approach, changes, architectural decisions, and manual QA results comprehensively.
 
-If no PR exists (`prNumber: null` — GitHub CLI was unavailable during draft PR creation), load `/pr` with `new --spec <path/to/SPEC.md>` to create the PR and write the body in one step. Update `prNumber` in `tmp/ship/state.json`. If `gh` is still unavailable, `/pr` will output the body for manual use — skip Phase 5.
+If no PR exists (`prNumber: null` — GitHub CLI was unavailable during draft PR creation), load `/pr` skill with `new --spec <path/to/SPEC.md>` to create the PR and write the body in one step. Update `prNumber` in `tmp/ship/state.json`. If `gh` is still unavailable, `/pr` will output the body for manual use — skip Phase 5.
 
 ---
 
@@ -347,7 +347,7 @@ gh pr ready <pr-number>
 
 **Do not self-review the PR.** Your job in this phase is to load `/review` skill and iterate on *external* reviewer feedback — not to generate review feedback yourself. Do not run pr-review agents or subagents to review the code.
 
-**Load `/review` at the top level — not in a subagent.** `/review` is a pipeline skill that runs an extended loop (poll → assess → fix → push → repeat). It needs your context: state files, spec path, phase awareness, and the ability to escalate back to you. Delegating it to a subagent strips all of that. Use the Skill tool directly.
+**Load `/review` skill at the top level — not in a subagent.** `/review` is a pipeline skill that runs an extended loop (poll → assess → fix → push → repeat). It needs your context: state files, spec path, phase awareness, and the ability to escalate back to you. Delegating it to a subagent strips all of that. Use the Skill tool directly.
 
 Load `/review` skill with the PR number, the path to the SPEC.md, and the quality gate commands from Phase 0:
 
@@ -357,9 +357,9 @@ Load `/review` skill with the PR number, the path to the SPEC.md, and the qualit
 
 `/review` manages the full review lifecycle autonomously — resolving all reviewer feedback threads and driving CI/CD to green.
 
-**When `/review` escalates back to you:** If a reviewer requests new functionality or scope expansion, do not implement it directly — pause and consult the user. Only humans can approve scope changes. If approved, record as an amendment in `tmp/ship/state.json` before acting. Phase 5 does not add new stories to `tmp/ship/spec.json` or re-invoke `/implement`.
+**When `/review` escalates back to you:** If a reviewer requests new functionality or scope expansion, do not implement it directly — pause and consult the user. Only humans can approve scope changes. If approved, record as an amendment in `tmp/ship/state.json` before acting. Phase 5 does not add new stories to `tmp/ship/spec.json` or re-load `/implement` skill.
 
-**Re-trigger rule:** Any new commits pushed after `/review` completes — from escalated feedback, user-requested changes, or fixes discovered in later phases — require re-invoking `/review`. Do not proceed past this point until `/review` reports completion (all threads resolved, CI/CD green or documented).
+**Re-trigger rule:** Any new commits pushed after `/review` completes — from escalated feedback, user-requested changes, or fixes discovered in later phases — require re-loading `/review` skill. Do not proceed past this point until `/review` reports completion (all threads resolved, CI/CD green or documented).
 
 ---
 

@@ -16,6 +16,22 @@ A feature can pass every unit test and still have a broken layout, a confusing f
 
 ---
 
+## Autonomy
+
+This skill supports the cross-skill autonomy convention:
+
+| Level | Behavior | How entered |
+|---|---|---|
+| **Supervised** (default) | Pause at tool-availability negotiation checkpoints; inform user of gaps before proceeding | Default when standalone |
+| **Delegated** | Proceed through all gates autonomously; document gaps in final report instead of pausing | `--delegated` flag from orchestrator, or container environment detected |
+
+**Delegated mode adjustments:**
+- Tool gaps are documented, not negotiated — proceed with available tools
+- Bug discovery with unclear root cause: load `/debug` skill with `--delegated` — it returns structured findings without human gates
+- Test suite gap discovery: write tests autonomously without asking
+
+---
+
 ## Workflow
 
 ### Step 1: Detect available tools
@@ -29,7 +45,11 @@ Probe what testing tools are available. This determines your testing surface are
 | **Browser inspection** (network, console, JS execution, page text) | Available when `/browser` (Playwright) is available — these are Playwright helpers, not Chrome extension tools | Monitoring network requests during UI flows, catching JS errors/warnings in the console, running programmatic assertions in the page, extracting and verifying rendered text | Substitute with shell-based API verification. Document the gap. |
 | **macOS desktop automation** (Peekaboo) | Check if `mcp__peekaboo__*` tools are available | OS-level scenarios **only**: native app automation, file dialogs, clipboard, multi-app workflows, desktop screenshots. **Not for web page testing** — use `/browser` for that. | Skip OS-level testing. Document the gap. |
 
-Record what's available. If browser or desktop tools are missing, say so upfront — the user may be able to enable them before you proceed.
+Record what's available.
+
+**Supervised mode (default):** If browser or desktop tools are missing, say so upfront as a negotiation checkpoint — the user may be able to enable them before you proceed.
+
+**Delegated mode** (when invoked with `--delegated`): Record tool gaps but proceed without waiting. Use available tools fully; document unavailable tools in the final report. Do not pause for the user to enable missing tools.
 
 **Probe aggressively.** Don't stop at "browser automation is available." Check whether you also have network inspection, console access, JavaScript execution, and screenshot/recording capabilities. Each expands your testing surface area. The more tools you have, the more you should use.
 
@@ -51,9 +71,9 @@ Determine what to test from whatever input is available. Check these sources in 
 **Enrich with structured domain knowledge (if available):**
 After gathering context from the sources above, check whether the repo provides catalog skills that map surfaces and audiences:
 
-- **Load:** `/product-surface-areas` if available — identify which customer-facing surfaces (APIs, SDKs, CLI, UI, docs) the change touches.
-- **Load:** `/internal-surface-areas` if available — identify which internal subsystems (build, CI, database, auth, runtime) are affected.
-- **Load:** `/audience-impact` if available — identify which roles are affected and how fast the change reaches them. Pay special attention to **silent** impacts — these need explicit test scenarios because they won't produce obvious failures.
+- Load `/product-surface-areas` skill if available — identify which customer-facing surfaces (APIs, SDKs, CLI, UI, docs) the change touches.
+- Load `/internal-surface-areas` skill if available — identify which internal subsystems (build, CI, database, auth, runtime) are affected.
+- Load `/audience-impact` skill if available — identify which roles are affected and how fast the change reaches them. Pay special attention to **silent** impacts — these need explicit test scenarios because they won't produce obvious failures.
 
 These catalogs transform "what files changed" into "what surfaces and audiences are affected" — which directly drives more comprehensive test scenarios in Step 3.
 
@@ -255,7 +275,7 @@ Changes touch more of the system than what's visible to the user. After exercisi
 First, assess: do you see the root cause, or just the symptom?
 
 - **Root cause is obvious** (wrong variable, missing class, off-by-one visible in the code) — fix it directly. Write a test if possible, verify, document.
-- **Root cause is unclear** (unexpected behavior, cause not visible from the symptom) — load `/debug` for systematic root cause investigation before attempting a fix. QA resumes after the fix is verified.
+- **Root cause is unclear** (unexpected behavior, cause not visible from the symptom) — load `/debug` skill for systematic root cause investigation before attempting a fix. If QA is running in delegated mode, pass `--delegated` to `/debug` so it iterates freely without per-action permission gates. `/debug` returns structured findings (root cause, recommended fix, blast radius) — apply the fix based on its findings, then resume QA.
 
 After fixing a bug, record it: update the scenario's `status` to `validated` and put the bug description + fix in `notes` (e.g., `"found stale cache; added cache-bust on logout"`). If the bug was discovered **outside any planned scenario** — while navigating between tests or doing exploratory poking — add a new scenario to `scenarios[]` with the next sequential ID, describe what you found and fixed, and mark it `validated` with the fix in `notes`.
 

@@ -206,7 +206,7 @@ START
 [If CODE is wrong (regression)]
   |-> git diff main -- <files_under_test>
   |-> Find which change broke it
-  |-> Does the expected value still make sense? If so, fix the code
+  |-> Does the expected value still make sense? If so, the code needs fixing (report to implementer)
   |
   v
 [If TEST is wrong]
@@ -294,7 +294,7 @@ START
   |     v
   |   [Examine the identified commit]
   |     |-> git show <commit>
-  |     |-> Read the diff — the fix is usually obvious once you know
+  |     |-> Read the diff — the root cause is usually clear once you know
   |     |   which commit introduced the bug
   |
   +-- [MANUAL INVESTIGATION PATH]
@@ -306,7 +306,7 @@ START
         |    git stash && git checkout <commit> && test && git checkout -
         |
         v
-      [Identify the breaking change and fix]
+      [Identify the breaking change — root cause located]
 ```
 
 **Bisect script heuristic — a good bisect test script should:**

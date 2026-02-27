@@ -1,4 +1,4 @@
-Use when: Phase 3 (Investigate) or Phase 5 (Resolve) needs specific tool sequences.
+Use when: Phase 3 (Investigate) or Phase 5 (Report & Recommend) needs specific tool sequences.
 Priority: P0
 Impact: Without concrete tool patterns, the agent uses ad-hoc tool sequences and misses efficient investigation shortcuts.
 
@@ -212,13 +212,13 @@ WHERE TO INSERT LOGS (priority order):
 
 **Logging heuristic:** Place logs at BOUNDARIES, not in the middle of logic. Boundaries are: function entry/exit, loop start/end, conditional branch points, external calls. Maximum information, minimum noise.
 
-**Cleanup:** Always remove diagnostic logging after the bug is fixed. It's temporary investigation infrastructure, not permanent code.
+**Cleanup:** Always remove diagnostic logging after diagnosis is complete. It's temporary investigation infrastructure, not permanent code.
 
 ---
 
 ## §5 Searching for Similar Patterns / Bugs
 
-**When:** You found a bug and want to check if the same pattern exists elsewhere. Also useful in Phase 5 (Harden) to prevent recurrence.
+**When:** You found a bug and want to check if the same pattern exists elsewhere. Also useful during Phase 5 (Report & Recommend) to identify additional fix targets for the implementer.
 
 ```
 SEQUENCE:
@@ -261,7 +261,9 @@ SEQUENCE:
 
 ## §6 Targeted Fix Verification
 
-**When:** You've made a fix and want to verify it works before running the full suite. This is the verification sequence for Phase 4.
+> **Note:** This section is not referenced by the debug skill (which never implements fixes). It is retained as general reference material for implementers who receive debug's findings.
+
+**When:** You've made a fix and want to verify it works before running the full suite.
 
 ```
 VERIFICATION SEQUENCE:
@@ -384,3 +386,74 @@ Logs & Output:
 3. The innermost "Caused by" exception is usually more diagnostic than the outer exception
 4. If the error is in framework code with no user frames: the bug is in how you CALL the framework
 5. If the error location doesn't match the code you see: verify the build is fresh and source maps are correct
+
+---
+
+## §9 Browser-Based Diagnostic Investigation
+
+**When:** The bug involves UI/frontend behavior and code-level investigation (Observe + Diagnose tiers) is insufficient to confirm or refute your hypothesis. This is an **Escalate-investigate** pattern — use it only when escalation triggers are met (see §Action tiers in SKILL.md).
+
+**Routing gate:** Use `/browser` (Playwright) for all web page interaction. Do NOT use `mcp__peekaboo__*` or `mcp__claude-in-chrome__*` for web content — those are for OS-level automation only.
+
+```
+SEQUENCE:
+
+1. LOAD THE BROWSER SKILL
+   Invoke /browser to get Playwright primitives
+   -> This gives you: navigation, screenshots, console capture,
+      network inspection, JavaScript execution, DOM queries
+
+2. NAVIGATE TO THE BUG
+   Open the page/route where the bug manifests
+   Take a baseline screenshot before attempting reproduction
+   -> If the app isn't running, start it first (Phase 2, Step 0)
+
+3. CAPTURE CONSOLE ERRORS DURING REPRODUCTION
+   Start console capture -> perform the reproduction steps -> collect errors
+   Compare console errors against your code-level hypothesis:
+   - Do the errors match what you predicted from reading code?
+   - Are there unexpected errors revealing a different root cause?
+   - Are there warnings that suggest configuration/environment issues?
+
+4. INSPECT NETWORK REQUESTS DURING REPRODUCTION
+   Start network capture -> reproduce -> collect failed/unexpected requests
+   Verify API behavior matches code expectations:
+   - Request URL, method, headers — does the frontend send what the code constructs?
+   - Response status, body — does the backend return what the code expects?
+   - Timing — are requests firing in the expected order?
+   - Missing requests — is a request that should fire not being sent?
+
+5. VISUAL VERIFICATION (for layout/rendering bugs)
+   Take screenshots at each step of reproduction
+   Compare against expected layout:
+   - Element visibility, positioning, overlap
+   - Responsive behavior at different viewport sizes
+   - State-dependent rendering (loading, error, empty, populated)
+
+6. BROWSER STATE INSPECTION (for state-related bugs)
+   Use JavaScript execution to query:
+   - localStorage / sessionStorage values
+   - Cookie values and attributes
+   - In-memory application state (framework devtools, window.__store__, etc.)
+   - DOM attributes and computed styles
+   Compare actual browser state against what the code writes/reads
+
+7. CORRELATE WITH CODE-LEVEL FINDINGS
+   Every browser observation must tie back to a code location:
+   - Console error → which code path produces it?
+   - Failed request → which fetch/axios call? What data does it send?
+   - Wrong visual state → which component renders it? What props/state?
+   - Stale browser state → which code writes it? When is it cleared?
+   -> If browser evidence CONFIRMS your hypothesis: raise confidence to HIGH
+   -> If browser evidence CONTRADICTS your hypothesis: reject it, form a new one
+```
+
+**Exit criteria:**
+
+- You have runtime evidence that either confirms or refutes your code-level hypothesis
+- Every browser observation is mapped to a specific code location
+- You can explain the bug's mechanism end-to-end (code → runtime behavior → user-visible symptom)
+
+**Heuristic:** Browser investigation is confirmation, not exploration. Have a specific hypothesis before opening the browser. "Let me see what happens" is not a valid reason — that's exploration, and you should do more code reading first.
+
+**Cleanup:** Close browser sessions when investigation is complete. Do not leave browsers running.

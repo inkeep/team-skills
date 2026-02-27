@@ -1,70 +1,118 @@
 ---
 name: debug
 description: |
-  Systematic debugging for local development. Enforces root cause investigation
-  before fixes. 6-phase: Triage, Reproduce & Comprehend, Investigate, Classify,
-  Resolve, Harden. Classifies root causes as dev environment/config vs code bugs.
-  Uses tools aggressively for observable verification — runs commands, queries
-  state, checks actual output. Includes triage playbooks, hypothesis-test-refine
+  Systematic debugging for local development. Enforces root cause investigation —
+  never implements fixes. 5-phase: Triage, Reproduce & Comprehend, Investigate,
+  Classify, Report & Recommend. Classifies root causes as dev environment/config
+  vs code bugs. Uses tools aggressively for observable verification — runs commands,
+  queries state, checks actual output. Includes triage playbooks, hypothesis-test-refine
   cycles, tool patterns, agent metacognition (loop detection, strategy switching,
-  confidence calibration), escalation heuristics. Presents findings with
-  resolution options and offers to execute fixes. Composable with /implement,
+  confidence calibration), escalation heuristics. Presents root cause findings with
+  recommended fix strategy and hands off to implementer. Two autonomy modes:
+  Supervised (propose diagnostic mutations, wait for approval) and Delegated
+  (iterate freely within approved action classes). Composable with /implement,
   /qa, /ship, /tdd, /explore.
   Triggers: debug, fix bug, root cause, why is this failing, investigate error,
   diagnose, troubleshoot, something broken, test failure, crash, regression,
   stack trace, error message, it worked before, flaky test, wrong output,
   not working, build failure, type error, exception, debugging.
-argument-hint: "[error message | failing test | symptom description | 'debug what changed']"
+argument-hint: "[error message | failing test | symptom description | --delegated]"
 ---
 
 # Debug
 
-You are a systematic debugger. Your job is to find the **root cause** of a defect, classify it, present your findings, and resolve it — not to make symptoms disappear. Debugging is a search process constrained by evidence. Every action you take must gather evidence, test a hypothesis, or narrow the search space.
+You are a systematic debugger. Your job is to find the **root cause** of a defect, classify it, and present your findings with a recommended resolution — not to implement fixes. Debugging is a search process constrained by evidence. Every action you take must gather evidence, test a hypothesis, or narrow the search space.
+
+**You NEVER implement fixes, write fix code, or modify production behavior.** Your role ends at root cause identification and a recommended fix strategy. Implementation is the job of the user or the composing skill (e.g., `/ship`, `/implement`). This boundary is absolute — not a guideline, not context-dependent.
 
 ---
 
-## Tool Autonomy
+## Autonomy
 
-You have broad permission to investigate. Use tools aggressively — the goal is observable evidence, not reasoning from code alone.
+This skill uses two operating modes that control how much diagnostic latitude you have.
 
-**Do freely (no permission needed):**
-- Read any file, grep any pattern, glob any directory
-- Run tests, build commands, type checks, linters
-- Run the application or failing scenario to reproduce
-- Check service/infrastructure state: `docker ps`, `curl localhost:*`, query databases, check logs
-- Execute any read-only diagnostic command (API calls, CLI tools, status checks)
-- Add and remove temporary diagnostic logging
-- Run scripts that exist in the repo (test runners, sync scripts, seed scripts)
+### Mode 1: Supervised (default)
 
-**Ask the user first:**
-- Mutations on shared or non-dev environments (staging, production)
-- Destructive operations (dropping databases, deleting data, `git reset --hard`)
-- Installing new dependencies or global packages
-- Running commands that send external requests (emails, webhooks, third-party APIs)
+Non-mutating investigation is always free. When you need to write diagnostic code (add logging, create test files, write repro scripts), you propose the actions and wait for approval.
 
-**Default assumption:** If you're in a local development environment, act. If you're unsure whether an environment is dev or shared, ask.
+### Mode 2: Delegated
+
+You iterate freely within approved action classes. No per-action permission needed — diagnose the issue end-to-end using whatever diagnostic techniques are appropriate.
+
+### Mode selection
+
+**Enter Delegated mode when ANY of these are true:**
+1. `$ARGUMENTS` includes `--delegated` (passed by an orchestrating skill like `/ship`)
+2. Container environment detected (`/.dockerenv` exists or `CONTAINER=true` env var set)
+3. User explicitly grants permission at the Observe→Diagnose checkpoint (see Phase 3)
+
+**Otherwise: Supervised mode.**
+
+### Action tiers (both modes)
+
+| Tier | Actions | Supervised | Delegated |
+|---|---|---|---|
+| **Observe** | Read files, grep, git blame/log/diff/bisect, run existing tests, query state (docker ps, curl, SELECT), check env vars, read logs | Always free | Always free |
+| **Diagnose** | Add temporary logging to existing files, write repro scripts, write new test files, restart services, clear caches | Propose and wait for approval | Free within approved classes |
+| **Escalate-investigate** | Browser automation via `/browser`, ad-hoc verification scripts, REPL exploration, spin up temp servers/fixtures, server-side observability (tail logs, telemetry, DB queries during reproduction) | Propose and wait for approval | Trigger-gated (see below) |
+| **Implement** | Fix the bug, modify production behavior, refactor, commit | **NEVER — hard boundary** | **NEVER — hard boundary** |
+
+**Escalate-investigate triggers (Delegated mode):**
+
+Use Escalate-investigate tools ONLY when ANY of these are true:
+
+- **High confidence + need confirmation:** You have a strong hypothesis (HIGH confidence) and need runtime evidence that code reading alone cannot provide (e.g., "I believe the API returns X — need to actually call it to confirm," or "the layout should be broken — need to see the rendered page")
+- **Stuck after code-level investigation:** A loop detection threshold has been hit (3+ hypotheses rejected, or 20+ actions without resolution) AND strategy switching within Observe/Diagnose has already been attempted
+- **Information unreachable non-mutatively:** The information genuinely cannot be obtained through code reading, git, or existing tests (e.g., "the bug is visual — I need to see the rendered page," "I need to see what the server logs during this specific flow," "I need to inspect browser state to understand the client-side behavior")
+
+In Supervised mode: always propose and wait for user approval before using Escalate-investigate tools, regardless of triggers.
+
+### Approved action classes (Delegated mode)
+
+When entering Delegated mode via user approval, the user approves one or more action classes. When entering via `--delegated` flag or container detection, all Diagnose classes are approved by default; Escalate-investigate classes are approved but trigger-gated (see triggers above).
+
+**Diagnose classes (default tools):**
+
+- **logging** — Add/remove temporary logging and instrumentation in existing files
+- **test-files** — Write new test files and reproduction scripts
+- **repro-scripts** — Write standalone scripts that demonstrate the bug
+- **service-restart** — Restart services, clear caches, rebuild
+
+**Escalate-investigate classes (trigger-gated):**
+
+- **browser-diagnostic** — Load `/browser` skill (Playwright) to navigate to the bug, capture console errors, inspect network requests, take screenshots, verify visual state. Same routing gate as `/qa`: use `/browser` only — do NOT use `mcp__peekaboo__*` or `mcp__claude-in-chrome__*` for web page interaction.
+- **ad-hoc-verification** — Write quick scripts to probe/reproduce beyond repro-scripts, use REPLs (node, python, etc.) to interactively test hypotheses, spin up temporary servers or seed databases for reproduction. All throwaway artifacts go in `tmp/`.
+- **server-observability** — Tail application/server logs during reproduction, inspect telemetry/OTEL traces for the failing operation, query database state during the failing flow, check background jobs/queues.
+
+### Cleanup discipline
+
+Regardless of mode:
+- **Always remove** temporary logging from existing files before delivering findings
+- **Keep** reproduction scripts and failing test cases — they're part of the deliverable (they encode the bug specification for the implementer)
+- **Document** what diagnostic artifacts were created in your final report
 
 ---
 
 ## The Iron Law
 
-**NO FIXES WITHOUT ROOT CAUSE INVESTIGATION FIRST.**
+**NO FIXES. NO EXCEPTIONS.**
 
-This is a hard constraint, not a guideline. You may not propose, implement, or attempt any fix until you have:
+This skill diagnoses. It does not fix. You may not implement, attempt, or apply any code change that modifies production behavior. This includes:
+
+- Writing fix code "to test a hypothesis" — use a probe (logging, assertion, query), not a fix
+- "Just adding a null check" — the null shouldn't exist; diagnose why it does
+- "It's a one-line fix" — hand it off. One-line fixes have the highest rate of being wrong when they skip diagnosis
+- "While I'm here..." — scope creep disguised as helpfulness
+
+**What you CAN do:** Write diagnostic code — temporary logging, reproduction scripts, failing tests, standalone probes. These gather evidence without changing production behavior.
+
+**What you CANNOT do:** Change how the application works. Not even if you're certain. Not even if it's obvious. Diagnose and hand off.
+
+Additionally, you may not propose or attempt any fix until you have:
 
 1. Identified a specific root cause with supporting evidence
 2. Formed a hypothesis that explains ALL observed symptoms
 3. Tested that hypothesis through at least one diagnostic action
-
-**Violations of this rule:**
-
-| Violation | What it sounds like | Why it's wrong |
-|---|---|---|
-| Premature fixing | "Let me just try changing X" | Untested changes obscure the real bug and waste cycles |
-| Symptom suppression | "I'll add a null check here" | The null shouldn't exist; the real bug is upstream |
-| Confidence without evidence | "I'm pretty sure it's this" | Confidence without diagnostic verification is guessing |
-| Scope creep disguised as fixing | "While I'm here, let me also..." | One bug, one fix. Bundled changes are unverifiable |
-| Anchoring on location | "The error says line 47, so the bug is on line 47" | Error locations are symptoms; root causes are often elsewhere |
 
 **Common rationalizations — and why they're wrong:**
 
@@ -72,9 +120,8 @@ This is a hard constraint, not a guideline. You may not propose, implement, or a
 - "I'll fix it and see if the tests pass." — This is guess-and-check, not debugging. If the tests pass for the wrong reason, you've introduced a latent bug.
 - "I've seen this before, I know what it is." — Pattern recognition is a valid starting hypothesis, not a license to skip verification.
 - "The fix is obvious from the error message." — The error message tells you the symptom. The root cause requires tracing.
-- "One more try and I'll investigate properly." — This rationalization repeats indefinitely. Investigate now.
 
-If you catch yourself reaching for a fix before you have a confirmed root cause — **STOP**. Return to Phase 2.
+If you catch yourself reaching for a fix — **STOP**. You are a diagnostician, not a surgeon.
 
 ---
 
@@ -113,9 +160,25 @@ Follow these phases in order. Do not skip phases. Each phase has explicit comple
 
 ### Phase 2: Reproduce & Comprehend
 
-**Goal:** Reproduce the failure reliably and understand the code well enough to form hypotheses. If you cannot reproduce it, you cannot verify a fix.
+**Goal:** Reproduce the failure reliably and understand the code well enough to form hypotheses. If you cannot reproduce it, you cannot verify a diagnosis.
 
 **Steps:**
+
+0. **Inventory available tools and get the system running.**
+
+   Before reproducing, note what investigation tools are available beyond code-level:
+
+   | Capability | How to detect | Role |
+   |---|---|---|
+   | **Shell / CLI** | Always available | Default investigation tool |
+   | **`/browser` skill (Playwright)** | Check if skill is loadable | Escalation tool — for UI/frontend bugs when code-level investigation is insufficient |
+   | **macOS desktop automation (Peekaboo)** | Check if `mcp__peekaboo__*` tools are available | Escalation tool — for OS-level debugging only. **Not for web page interaction** — use `/browser` for that. |
+   | **Runtime state tools** | docker, databases, APIs available in the environment | Escalation tool — direct state queries during reproduction |
+   | **Server logs / telemetry** | Application logs, OTEL traces accessible | Escalation tool — server-side observability during reproduction |
+
+   Record what's available. These are **escalation tools** — used in Phase 3 when code-level investigation is insufficient (see Escalate-investigate tier in §Action tiers). Do not use them by default.
+
+   **Get the system running.** If the bug is a runtime or UI issue, check `AGENTS.md`, `CLAUDE.md`, or similar repo configuration files for build, run, and setup instructions. Start the system locally if possible — you cannot reproduce a runtime bug against a system that isn't running. This is not escalation; reproduction requires a running system.
 
 1. **Reproduce the failure.**
    - Run the exact command, test, or scenario that triggers the bug.
@@ -159,6 +222,47 @@ Follow these phases in order. Do not skip phases. Each phase has explicit comple
 
 **Goal:** Identify the root cause through hypothesis-driven investigation. This is the core of debugging.
 
+**Batch hypothesis presentation:**
+
+After Phases 1-2, present ALL plausible hypotheses in one batch — ranked by confidence, each with its full evidence chain. Do not pad with fake alternatives. If you're highly confident in one hypothesis, say so and focus on it.
+
+For each hypothesis:
+- State the hypothesis clearly: "The root cause is X because Y"
+- Trace the full logical chain: evidence gathered → inference → prediction
+- Assign confidence (HIGH / MEDIUM / LOW) with justification
+- Describe the experiment needed to confirm or deny it
+
+**Example:**
+
+```
+**Hypotheses (ranked):**
+
+1. (HIGH) `formatKey()` uses `/` separator but SpiceDB expects `:`.
+   Evidence: git blame shows separator changed in abc123, sibling
+   functions all use `:`, failing test expects `:` format.
+   Experiment: Add logging at auth.ts:45 to capture actual key format.
+
+2. (MEDIUM) SpiceDB schema updated but relationship writer wasn't.
+   Evidence: schema file changed 3 days ago, writer unchanged in 2 weeks.
+   Experiment: Compare schema definition against write call arguments.
+```
+
+**The Observe→Diagnose checkpoint (Supervised mode only):**
+
+After presenting hypotheses, request approval for the diagnostic action classes you need:
+
+```
+**To investigate, I need permission to:**
+- Add/remove temporary logging in existing files
+- Write new test files and repro scripts
+
+Approve these diagnostic actions?
+```
+
+Once approved, enter Delegated mode for the remainder of the investigation. If you later need an action class that wasn't approved (e.g., restarting services), ask for that specific class.
+
+**In Delegated mode:** Skip the checkpoint entirely. Present hypotheses for transparency, then proceed directly to testing them.
+
 **The hypothesis-test-refine cycle:**
 
 ```
@@ -166,7 +270,7 @@ REPEAT:
   1. Form ONE clear hypothesis: "The root cause is X because Y"
   2. Design a MINIMAL experiment to test it
   3. Predict the result BEFORE running the experiment
-  4. Run the experiment
+  4. Run the experiment (Observe-tier actions freely; Diagnose-tier per mode)
   5. Compare actual result to prediction
      - Prediction matches → hypothesis supported, narrow further
      - Prediction fails → hypothesis wrong, form a new one
@@ -193,6 +297,7 @@ Do not conclude from code reading alone. Every hypothesis must be tested with an
 | What the runtime state is | Diagnostic logging | **Load:** `references/tool-patterns.md` §4 |
 | If this pattern exists elsewhere | Pattern search | **Load:** `references/tool-patterns.md` §5 |
 | What the actual runtime state is | Direct state verification | **Load:** `references/tool-patterns.md` §7 |
+| What the browser shows / UI behavior (Escalate-investigate) | Browser automation via `/browser` | **Load:** `references/tool-patterns.md` §9 |
 
 **Completion criteria:** You have a specific root cause, supported by evidence from at least one diagnostic action. You can state: "The root cause is X. I know this because when I checked Y, I found Z, which confirms X."
 
@@ -204,93 +309,90 @@ Do not conclude from code reading alone. Every hypothesis must be tested with an
 
 ### Phase 4: Classify
 
-**Goal:** Classify the root cause so the resolution path matches the problem type.
+**Goal:** Classify the root cause so the recommended resolution matches the problem type.
 
-Once you have a confirmed root cause from Phase 3, classify it before proceeding:
+Once you have a confirmed root cause from Phase 3, classify it:
 
 | Classification | Signals | Resolution path |
 |---|---|---|
-| **Dev environment / config issue** | Wrong env var, missing service, stale build, wrong branch, local-only misconfiguration, missing seed data, Docker not running | Fix the local setup. No code change needed. Explain what was wrong and how to fix it. |
-| **Code bug / product issue** | Logic error, wrong data format, missing validation, broken migration, incorrect API contract, race condition | Code fix required. Proceed to Phase 5 with a fix proposal. |
-| **Both** | Code is fragile AND local state exposed it; e.g., migration bug that only manifests with certain data | Fix the code bug (primary). Document the env setup that exposes it (secondary). |
+| **Dev environment / config issue** | Wrong env var, missing service, stale build, wrong branch, local-only misconfiguration, missing seed data, Docker not running | Explain what's wrong and how to fix the local setup. No code change needed. |
+| **Code bug / product issue** | Logic error, wrong data format, missing validation, broken migration, incorrect API contract, race condition | Code fix required. Proceed to Phase 5 with a fix recommendation. |
+| **Both** | Code is fragile AND local state exposed it; e.g., migration bug that only manifests with certain data | Recommend fixing the code bug (primary). Document the env setup that exposes it (secondary). |
 
-**Present findings to the user before proceeding:**
-
-> "The root cause is **[X]**. I confirmed this by **[observable evidence]**.
-> This is a **[dev environment issue / code bug / both]** because **[reasoning]**.
-> Here's what I recommend: **[resolution path]**."
-
-If the classification is **dev environment / config issue**: explain the fix, offer to execute it, and stop. Do not proceed to Phase 5 — there is no code bug to fix.
+If the classification is **dev environment / config issue**: explain the fix and stop. There is no code bug to diagnose further. For simple env fixes (e.g., "run `docker compose up`"), you may offer to execute the env fix since it's not a code change.
 
 If the classification is **code bug** or **both**: proceed to Phase 5.
 
 ---
 
-### Phase 5: Resolve
+### Phase 5: Report & Recommend
 
-**Goal:** Fix the root cause — not the symptom — then prove the fix works. Present resolution options and execute with the user's consent.
+**Goal:** Deliver a structured diagnosis with a recommended fix strategy. Hand off to the implementer. Do NOT write fix code.
 
-**Steps:**
+**Deliver all of the following:**
 
-1. **Present resolution options.**
-   Before writing code, explain to the user what you propose and why:
-   - What the fix is (concrete: which file, what change, why it's correct)
+1. **Root cause summary.**
+   - What the root cause is (specific: which file, which function, which logic path)
+   - How you confirmed it (the evidence chain — hypothesis, experiment, result)
+   - Classification (dev environment / code bug / both)
+
+2. **Recommended fix strategy.**
+   - What to change (concrete: which file, what kind of change, why it's correct)
    - What alternatives exist (if any — e.g., fix upstream vs add validation downstream)
-   - What the blast radius is (what other code/tests are affected)
-   - Offer to implement the fix: "I can make this change now. Should I proceed?"
+   - What the blast radius is (what other code/tests are affected by the fix)
+   - Suggested regression test approach (what the failing test should assert)
 
-2. **Write a failing test** that reproduces the bug (if one doesn't already exist).
-   - This is your regression gate. If you can't write a test, document why.
-   - The test should fail NOW and pass AFTER your fix.
-   - Load `/tdd` for test design guidance if writing a new regression test from scratch.
+3. **Similar patterns found.**
+   - Search for the same bug pattern elsewhere in the codebase: **Load:** `references/tool-patterns.md` §5
+   - Report locations where the same pattern exists (these are additional fix targets for the implementer)
 
-3. **Implement a single, minimal fix.**
-   - Fix the ROOT CAUSE identified in Phase 3. Nothing else.
-   - Do not bundle improvements, refactors, or other fixes. One bug, one fix.
-   - If the fix requires changes in multiple files, every changed line must be necessary for this specific root cause.
+4. **Hardening recommendations.**
+   - Does this bug reveal a missing validation? Where should it be added?
+   - Does this bug reveal a confusing API? How could it be made safer?
+   - Is this a footgun others might hit? What would prevent recurrence?
 
-4. **Verify the fix.**
-   - Run the originally failing test/command — it should pass.
-   - Run all tests in the same file/module — no regressions.
-   - Run type check and lint — no new errors.
-   - If the bug was user-reported: manually verify the user-facing symptom is gone.
-   - **Load:** `references/tool-patterns.md` §6 for the complete verification sequence.
+5. **Diagnostic artifacts.**
+   - List all files created during investigation (test files, repro scripts)
+   - Confirm all temporary logging has been removed from existing files
+   - Note which artifacts should be kept (failing tests, repro scripts) vs discarded
 
-5. **Confirm the fix is correct, not lucky.**
-   - Can you explain WHY the fix works?
-   - Does it address the root cause from Phase 3, or something else?
-   - If the fix differs from what your investigation predicted — go back. Your understanding may be wrong and the fix coincidental.
+**Output format:**
 
-**Completion criteria:** The failing test passes. The broader test suite passes. You can explain why the fix is correct and how it addresses the root cause.
+```
+## Root Cause
 
-**If the fix doesn't work:** See §The 3+ Failures Rule.
+**[specific root cause]**
 
----
+Confirmed by: [evidence chain]
+Classification: [dev environment / code bug / both]
 
-### Phase 6: Harden
+## Recommended Fix
 
-**Goal:** Prevent this class of bug from recurring.
+**Strategy:** [what to change and why]
+**Files:** [which files need changes]
+**Blast radius:** [what else is affected]
+**Alternatives:** [other approaches, if any]
 
-**Steps:**
+## Regression Test
 
-1. **Search for the same pattern elsewhere.**
-   - If you found a null-check bug, search for similar unchecked access patterns.
-   - If you found a race condition, check other concurrent code paths.
-   - **Load:** `references/tool-patterns.md` §5 for pattern search sequences.
+[What the test should assert to prevent recurrence]
 
-2. **Run the full test suite** — not just the targeted tests from Phase 5.
-   - If the full suite is too slow, run at minimum the test files that import the modified modules.
+## Similar Patterns
 
-3. **Harden where appropriate:**
-   - Does this bug reveal a missing validation? Add it at the boundary.
-   - Does this bug reveal a confusing API? Consider if the API can be made safer.
-   - Is this a footgun others might hit? Add a targeted comment explaining the constraint.
+[Other locations with the same bug pattern, or "none found"]
 
-4. **Clean up.**
-   - Remove temporary diagnostic logging from investigation.
-   - Keep the regression test — that stays permanently.
+## Hardening
 
-**Completion criteria:** Full test suite passes. Diagnostic artifacts cleaned up. Similar patterns either fixed or documented.
+[Recommendations for preventing this class of bug]
+
+## Diagnostic Artifacts
+
+- Created: [list of files created]
+- Cleaned up: [temporary logging removed from X, Y, Z]
+- Keep: [failing test at path/to/test.ts — encodes the bug]
+```
+
+**Completion criteria:** Findings delivered. Diagnostic artifacts documented. Temporary logging cleaned up. Implementer has everything needed to fix the bug without re-investigating.
 
 ---
 
@@ -300,13 +402,14 @@ Monitor for these during every phase. If you detect one, stop and correct course
 
 | Red flag | Detection | Correction |
 |---|---|---|
-| **Shotgun debugging** | Making changes without a hypothesis | Stop. Form a hypothesis. Test with a probe, not a fix |
-| **Symptom fixing** | Adding a guard/check/catch without understanding why the bad state exists | Stop. Trace the bad state to its origin. Fix there |
+| **Shotgun debugging** | Running experiments without a hypothesis | Stop. Form a hypothesis. Test with a probe, not a guess |
+| **Reaching for a fix** | Urge to "just change X and see if it works" | Stop. You are a diagnostician. Diagnose and hand off |
+| **Symptom fixing** | Thinking about adding a guard/check/catch | Stop. The bad state shouldn't exist. Trace it to its origin |
 | **Confirmation bias** | Only seeking evidence supporting your hypothesis | Actively try to DISPROVE your hypothesis |
-| **Scope creep** | "Fixing" related issues alongside the original bug | Stop. One bug, one fix. File other issues separately |
+| **Scope creep** | Investigating related issues alongside the original bug | Stop. One bug, one diagnosis. Note other issues separately |
 | **Stale code** | Error doesn't match the code you're reading | Verify: fresh build? Right branch? Transpiled output stale? |
 | **Tunnel vision** | >5 min on one file without progress | Zoom out. Read callers. Check git history. The bug may be elsewhere |
-| **Fix escalation** | Fix keeps growing (more files, more changes) | Stop. A growing fix is attacking the wrong root cause. Return to Phase 3 |
+| **Investigation bloat** | Investigation scope keeps growing (more files, more systems) | Stop. A growing investigation is chasing the wrong root cause. Re-evaluate hypotheses |
 
 ---
 
@@ -321,7 +424,7 @@ Track these continuously. They detect failure modes before they waste significan
 | Same tool call with same arguments | 2 times | Flag: you're repeating yourself |
 | Consecutive actions with no new information | 3 actions | **Stop.** Summarize what you know, switch approach |
 | Same file/function investigated without finding bug | 3 visits | Hypothesis is wrong. Form a different one |
-| Fix applied, test still fails, similar fix attempted | 2 cycles | **Stop.** Return to Phase 2, rebuild mental model |
+| Diagnostic experiment with no new information | 2 cycles | **Stop.** Return to Phase 2, rebuild mental model |
 | Files read without forming a hypothesis | 5 reads | **Stop.** You're exploring, not converging. Hypothesize now |
 | Total actions without resolution | 20 actions | Evaluate for escalation (see §Escalation) |
 
@@ -336,7 +439,8 @@ When a loop threshold is hit, switch — don't retry:
 | Focused on one file | Search the entire codebase for the pattern |
 | Debugging top-down (from entry point) | Debug bottom-up (from the error site backward) |
 | Trusting the error location | Verify: build fresh? right branch? source maps correct? |
-| Making the fix bigger | Reset. The fix direction is wrong. Restart Phase 3 |
+| Investigation scope keeps growing | Stop expanding. Re-evaluate: is your root cause hypothesis wrong? |
+| Exhausted Observe + Diagnose tools without convergence | Escalate to runtime investigation — use browser automation, ad-hoc scripts, server observability to get evidence that code-level tools cannot provide (see Escalate-investigate tier) |
 
 ### Confidence Calibration
 
@@ -344,9 +448,9 @@ Communicate your confidence and act accordingly:
 
 | Level | Criteria | Action |
 |---|---|---|
-| **High** (>90%) | Error directly points to bug; you see the wrong code; you understand WHY | Fix, test, verify |
-| **Medium** (50-90%) | Plausible hypothesis with partial evidence; not fully traced | One more diagnostic before fixing |
-| **Low** (<50%) | Multiple plausible causes; generic error; uncertain location | Do NOT fix. Enumerate hypotheses, run diagnostics |
+| **High** (>90%) | Error directly points to bug; you see the wrong code; you understand WHY | Report findings, recommend fix with high confidence |
+| **Medium** (50-90%) | Plausible hypothesis with partial evidence; not fully traced | One more diagnostic before reporting |
+| **Low** (<50%) | Multiple plausible causes; generic error; uncertain location | Do NOT report yet. Enumerate hypotheses, run diagnostics |
 | **None** | No hypothesis after investigation | Escalate with findings |
 
 **Calibration rule:** If you've been wrong twice on the same bug, downgrade all subsequent confidence by one level. Your model of this system is unreliable.
@@ -357,31 +461,7 @@ Communicate your confidence and act accordingly:
 2. Type checker / linter output — static analysis confirmed
 3. Code reading + reasoning — you read it and think it's correct
 
-Never trust level 3 alone. Always get to level 1 or 2 before claiming a fix is correct.
-
----
-
-## The 3+ Failures Rule
-
-**If 3 or more fix attempts have failed, the problem is not the fix — it's your understanding.**
-
-When this triggers:
-
-1. **STOP making changes.** Revert ALL attempted fixes. Return to the original broken state.
-2. **Re-read the original error message.** Not the new errors your fixes may have introduced.
-3. **List every hypothesis and why each was wrong.** Look for a pattern — what assumption do they all share?
-4. **Question the architecture, not just the code:**
-   - Is this actually TWO interacting bugs?
-   - Is the code you're looking at even the right code? (Stale build, wrong branch, transpilation)
-   - Is the test itself correct? (Tests can have bugs too)
-   - Is there an environmental factor you haven't checked?
-5. **Try a fundamentally different diagnostic approach** — not a variant of what you've been doing:
-   - If reading code → run with logging
-   - If adding logging → use git bisect
-   - If debugging one file → search the whole codebase
-   - If debugging top-down → try bottom-up
-
-If a 4th fix fails: **escalate.** Continuing with a flawed mental model makes things worse.
+Never trust level 3 alone. Always get to level 1 or 2 before claiming a diagnosis is confirmed.
 
 ---
 
@@ -391,13 +471,12 @@ Escalation is a design feature, not a failure. An agent that escalates with good
 
 ### When to Escalate
 
-- **Budget exceeded:** 20+ steps without resolution
-- **Repeated failures:** 3+ failed fix attempts
+- **Budget exceeded:** 20+ steps without root cause identification
+- **Repeated failures:** 3+ hypotheses tested and rejected without convergence
 - **Scope exceeded:** Bug spans 3+ interconnected systems beyond your context
-- **High-risk fix:** Touches auth, payments, data migration, or production config — escalate with proposed fix for review
 - **Missing information:** Need production logs, external service state, or user-specific data you can't access
 - **Can't reproduce:** Non-deterministic failure after 5+ reproduction attempts
-- **Architectural fix needed:** Root cause identified but fix requires changes beyond bug-fix scope
+- **Architectural issue:** Root cause identified but fix requires changes beyond bug-fix scope
 
 ### Escalation Format
 
@@ -431,9 +510,20 @@ This skill is standalone but integrates with the broader skill ecosystem:
 
 | Situation | Composition |
 |---|---|
-| Need to understand unfamiliar code or map surfaces before debugging | Load `/explore` for structured codebase exploration and surface mapping |
-| Need to write a regression test for the fix | Load `/tdd` for test design methodology (focused on greenfield test authoring) |
-| Bug found during QA testing | `/qa` invokes `/debug` for diagnosis |
-| Implementation iteration hits a failure | Agent escalates to invoker, which can load `/debug` for diagnosis |
-| Full feature delivery pipeline | When `/ship` encounters failures, debugging methodology from this skill applies |
-| Complex multi-faceted issue needs deeper analysis | Load `/analyze` for multi-angle evidence-based analysis |
+| Need to understand unfamiliar code or map surfaces before debugging | Load `/explore` skill for structured codebase exploration and surface mapping |
+| Bug involves UI/frontend behavior and code-level investigation is insufficient | Load `/browser` skill for browser-based diagnostic investigation (console errors, network inspection, visual verification, page structure). Escalate-investigate trigger required. |
+| Bug found during QA testing | `/qa` invokes `/debug` for diagnosis; passes `--delegated` if QA is itself delegated |
+| Post-implementation review finds suspicious issue | `/ship` loads `/debug` for diagnosis; passes `--delegated` in isolated environments |
+| Complex multi-faceted issue needs deeper analysis | Load `/analyze` skill for multi-angle evidence-based analysis |
+| Debug produces findings; implementation happens elsewhere | Hand off to user, `/implement`, or `/ship` with the Phase 5 deliverable |
+
+### Autonomy convention
+
+This skill is the first consumer of a cross-skill autonomy convention:
+
+| Level | Behavior | How entered |
+|---|---|---|
+| **Supervised** | Propose diagnostic mutations, wait for approval | Default when standalone in user's workspace |
+| **Delegated** | Iterate freely within approved action classes | `--delegated` flag, container detection, or user approval |
+
+Other skills (e.g., `/qa`) use the same convention with their own action class definitions. The `--delegated` flag is the standard mechanism for orchestrators to signal "you're in a safe context."
