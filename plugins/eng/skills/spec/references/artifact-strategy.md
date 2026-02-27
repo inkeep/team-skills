@@ -130,6 +130,17 @@ last-updated: YYYY-MM-DD
 
 **Format:** Same structure as `/research` evidence files — with findings, confidence levels (CONFIRMED / INFERRED / UNCERTAIN / NOT FOUND), and source references. See the research skill's conventions.
 
+**Confidence ceilings:** Certain claim types have a maximum confidence regardless of how sure the agent feels. Apply these caps when writing findings:
+
+| Claim type | Max confidence | Why |
+|---|---|---|
+| Recalled best practices (not verified this session) | INFERRED | Memory is not evidence |
+| Version-specific behavior (API, library, framework) | UNCERTAIN unless verified against current source/types | Versions change; docs lag |
+| Predictions about runtime behavior at scale | INFERRED | Estimates, not measurements |
+| Analogical claims ("X works like Y") | INFERRED | Analogies break at boundaries |
+
+If a finding would be marked CONFIRMED but falls into one of these categories, cap it and note what verification would raise confidence.
+
 ### meta/_changelog.md format
 
 Append-only. Never edit past entries. Each session appends a dated entry:

@@ -11,6 +11,8 @@ argument-hint: "[feature/product] (optional: context, constraints, target users,
 - The user is the ultimate decision-maker and vision-holder. Create explicit space for their domain knowledge — product vision, customer conversations, internal politics, aesthetic preferences.
 - You enforce rigor: validate assumptions, check prior art, trace blast radius, probe for completeness. This is your job even when the user doesn't ask.
 - Product and technical are intermixed (not "PRD then tech spec"). Always evaluate both dimensions together.
+- This is a synchronous, sit-down thinking session. You do the investigative legwork — reading code, checking docs, searching the web, running analysis. The human brings domain knowledge, judgment, and decision authority. Everything is resolved in the room; never direct the human to do async work (run experiments, talk to other teams, validate with customers).
+- Treat the human as the domain authority who already has their context. Ask about what they know, think, and want ("Do you need real-time here, or is eventual consistency acceptable?"). Never probe their process ("Have you talked to the infrastructure team?" "Have you validated this with users?"). Propose options and alternatives for them to react to.
 - Default output format is **Markdown** and must be **standalone** (a first-time reader can understand it).
 
 ---
@@ -24,6 +26,7 @@ argument-hint: "[feature/product] (optional: context, constraints, target users,
 
 3. **Investigate evidence gaps autonomously; stop for judgment gaps.**
    - When uncertainty can be resolved by investigation (code traces, dependency checks, prior art, blast radius), do it — don't propose it.
+   - Before asking the human anything, check whether the answer is findable through code, web, or docs. Only surface questions that genuinely require human judgment or domain knowledge that exists only in their head — product intent, priority, risk appetite, scope.
    - Stop and present findings when you reach genuine judgment calls: product vision, priority, risk tolerance, scope, 1-way-door confirmations.
    - Use `/research` for deep evidence trails; use `/explore` for codebase understanding and surface mapping. Dispatch these autonomously — they are investigation tools, not user-approval gates.
    - Priority modulates depth: P0 blocking items get deep investigation; P2 non-blocking items get surface-level checks at most.
@@ -146,6 +149,13 @@ Output:
 - An **internal surface-area map** (which internal subsystems this feature touches)
 - A list of key constraints (internal + external)
 
+**After building the world model**, sketch the system for shared understanding:
+- Generate a **system context diagram** (Mermaid or D2) showing boundaries, consumers, and key dependencies.
+- Generate **sequence diagrams** for the primary happy path and the most important failure path.
+- Present these to the human: "Here's my understanding of the system — what's wrong or missing?" Update based on their corrections.
+
+These are conversation tools, not deliverables. Generate them when the design involves multiple components or services — not for trivial single-surface changes.
+
 ---
 
 ### 4) Convert uncertainty into a prioritized backlog
@@ -188,6 +198,7 @@ This is the core of the skill. Repeat until Phase N is fully scoped.
 **Load (before presenting decisions):** `references/evaluation-facets.md`
 **Load (for behavioral patterns):** `references/traits-and-tactics.md`
 **Load (for investigation approach):** `references/research-playbook.md`
+**Load (for challenge calibration):** `references/challenge-protocol.md`
 
 Loop steps:
 1. **Identify what needs investigation** — extract from the OQ backlog + cascade from prior decisions. Prioritize: P0 blocking items first.
@@ -210,10 +221,15 @@ Loop steps:
      - **What options remain viable**
      - **Recommendation + confidence + what would change it**
      (Use the format in `references/research-playbook.md`.)
+   **When investigation surfaces architectural or scale-relevant decisions**, generate supporting artifacts to sharpen the conversation:
+   - **Napkin math** when scale, performance, or cost is a factor — order-of-magnitude estimates (requests/sec, storage growth, latency budget, cost at 10x) that test whether the proposed design holds.
+   - **Failure mode inventory** when the design involves distributed systems or critical paths — what fails, how it's detected, what users experience, what the mitigation is.
+   - **At least one counterproposal** for major architectural decisions — a simpler or different approach that the human must engage with ("Here's a simpler approach that gives up X but avoids Y. Why is the extra complexity worth it?"). Only when your investigation genuinely surfaces a viable alternative, not as a checkbox.
 4. **Present findings + decisions + open threads** using the output format (§1-§4 below).
 5. **User responds** — with decisions (§2), "go deeper on N" (§3), or new context.
 6. **Cascade decisions → update artifacts → identify newly unlocked items:**
    - **Cascade analysis:** Trace what the decision affects — assumptions, requirements, design, phases. Default to full transitive cascade; flag genuinely gray areas to user; treat uncertainty about whether a section is affected as a signal to investigate more, not to skip it.
+     Scan these implication categories to catch non-obvious effects: **incentive** (does this change what behavior the system rewards?), **precedent** (does this set a pattern future work will follow?), **constraint** (does this foreclose options elsewhere?), **resource** (does this compete for budget, capacity, or attention?), **information** (does this change what's observable or debuggable?), **timing** (does this create sequencing dependencies?), **trust** (does this shift security or permission boundaries?), **reversibility** (does this make a future change harder?).
    - **Persist all confirmed changes** per the write trigger protocol (`references/artifact-strategy.md`):
      - Append to Decision Log (SPEC.md §10)
      - Surgical edit all affected SPEC.md sections (requirements, design, phases, assumptions, risks)
@@ -221,7 +237,13 @@ Loop steps:
      - Append new cascading questions to Open Questions (SPEC.md §11)
      - Update evidence files if the decision changes factual understanding
    - Re-prioritize the backlog
-   - **Completeness re-sweep** (every 2-3 loop iterations, or after a cluster of decisions resolves): Re-run the three extraction probes from Step 4 against the current state of the spec. Decisions change the shape of the problem; new dimensions may now be relevant that weren't before. A backlog that only shrinks is a signal you're not probing deeply enough.
+   - **Completeness re-sweep** (every 2-3 loop iterations, or after a cluster of decisions resolves): Re-run the three extraction probes from Step 4 against the current state of the spec. Decisions change the shape of the problem; new dimensions may now be relevant that weren't before. A backlog that only shrinks is a signal you're not probing deeply enough. For each major decision made this round, reverse the question — what *should* be affected but hasn't been traced? What areas are suspiciously untouched?
+   - **Introspective checkpoint** (same cadence as completeness re-sweep): Before presenting the next batch, run these self-checks silently — they're agent discipline, not user-facing output. Flag any that fire:
+     - **Convergence:** Are options narrowing because evidence supports it, or because the agent stopped looking?
+     - **Confirmation bias:** Is the agent seeking evidence for its preferred direction while under-investigating alternatives?
+     - **Anchoring:** Is the first option considered getting disproportionate weight? Has the agent genuinely evaluated alternatives on their merits?
+     - **Known unknowns:** What questions has the agent *not* asked yet? What dimensions of the problem remain unexplored?
+     - **Defensibility:** If a skeptical reviewer saw the current recommendation, what's the strongest objection — and has the agent addressed it?
    - **Goto step 1** with newly unlocked items.
 7. **Artifact sync checkpoint** (before responding to the user):
    Verify all changes from this turn have been persisted:
@@ -380,6 +402,8 @@ When the user says "finalize":
 - **Letting the user skip problem framing.** Even if they jump straight to "how should we build X," pull back to "let me make sure I understand who needs X and why." Step 1 is not optional.
 - **Letting insights accumulate only in conversation without persisting to files.** If you learned something factual (code trace, dependency behavior, current state), it belongs in an evidence file now — not "later" or "when we finalize." Conversation context compresses; artifacts survive.
 - **Under-extracting open questions (balance fallacy).** The agent generates open questions and silently filters for importance during extraction — listing only items that feel "significant enough." The result is a comfortable handful that looks balanced but reflects the agent's significance threshold, not reality. Fix: separate extraction from prioritization. List every candidate uncertainty; use the tagging step (P0/P1/P2) to prioritize, not the extraction step to filter.
+- **Directing the human to do async work.** Never say "go check with team X," "run an experiment," "talk to customers about this." If you need information the human might have, ask about what they know or think. If you need external information, investigate it yourself using code, web, and docs.
+- **Questioning the human's process instead of probing their thinking.** Don't ask "Have you talked to customers?" or "Have you validated this with users?" Instead, propose options and ask about intent: "Do you want customers to be able to do X? One alternative is Y, which might satisfy the need because Z."
 
 ---
 

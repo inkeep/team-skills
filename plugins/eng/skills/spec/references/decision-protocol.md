@@ -88,6 +88,19 @@ Your job:
 - investigate what's accessible (code, dependencies, prior art, web)
 - convert what remains into crisp decision options for the user — only what requires human judgment
 
+## Bounded reasoning (when exact answers aren't available)
+
+When the session can't produce an exact answer — no benchmark to run, no data to query, no definitive source — don't leave it as an open question. Bound it:
+
+- **Order-of-magnitude estimates:** "Based on the stated user count and the code's current query pattern, we're looking at roughly 50-200 req/s. The design holds at 200; it breaks around 1K."
+- **Comparable systems:** "Stripe handles a similar pattern with X; our scale is ~100x smaller, so the simpler approach likely works."
+- **Consequence thresholds:** "This matters if the number exceeds N. Below that, the current design is fine. Do you expect it to exceed N in the next 12 months?"
+- **Upper/lower bounds:** "Best case, latency adds 10ms. Worst case, 500ms if the cache misses. The p50 is probably fine; the p99 might not be."
+
+Bounded reasoning turns "we don't know" into "we know enough to decide." Present the bounds, state what assumption would break them, and let the human decide whether the bounds are acceptable.
+
+This is not false precision — explicitly state these are estimates and what would change them. The goal is to enable decisions, not predict the future.
+
 ## After every decision: cascade analysis
 Immediately do:
 1) Update Decision Log (what changed, why, date)

@@ -68,6 +68,26 @@ Investigate directly — use `/research` for deep evidence trails.
 
 When the spec substantively depends on 3P systems, go beyond targeted checks — dispatch Task subagents to investigate capabilities, source code, documentation, and best practices scoped to your scenario. See `references/research-playbook.md` "Third-party dependency investigation."
 
+## Concurrency & data consistency patterns
+When the spec involves concurrent data access, multi-step writes, or shared state, investigate these pattern categories during design — don't leave them for implementation to discover.
+
+**Check-then-act (TOCTOU):** Code reads a value, checks a condition, writes based on it — without wrapping both in a transaction or atomic operation. Another request can change the checked value between the read and write.
+- Signal: select-then-conditional-insert/update outside a transaction; application-enforced uniqueness without a DB constraint; distributed lock via separate GET/SET instead of atomic SET NX.
+
+**Read-modify-write:** Code fetches a value, transforms it in application memory, writes it back. Concurrent operations lose each other's updates.
+- Signal: counter/balance arithmetic in application code instead of atomic SQL; JSON column merge via spread/concat in application code; upsert via SELECT-then-INSERT instead of INSERT ON CONFLICT.
+
+**Isolation & transaction boundaries:** Operations that should be atomic aren't grouped properly, or the isolation level doesn't match the consistency requirement.
+- Signal: critical paths (financial, permissions, inventory) using default isolation without conscious choice; aggregate check + insert that can be violated by concurrent inserts; transaction that reads the same row twice assuming consistency without FOR UPDATE.
+
+**Shared mutable state:** Module-level mutable variables in single-process runtimes (e.g., Node.js) where concurrent requests share memory.
+- Signal: module-scope `let` or `Map` mutated by request handlers; request-scoped context (currentUser, currentTenant) stored in module-level variables.
+
+**Optimistic locking:** Version/timestamp columns that exist in the schema but aren't actually checked during updates, or conflicts that are silently swallowed.
+- Signal: schema has version column but update WHERE clause doesn't include it; update checks version but doesn't verify rowCount or throw on conflict.
+
+For each pattern that applies to the design: make it an explicit decision with the chosen consistency model, the tradeoffs, and what failure mode the design accepts.
+
 ## Enforcement architecture
 For any policy/filtering/validation question:
 - identify the narrowest shared chokepoint

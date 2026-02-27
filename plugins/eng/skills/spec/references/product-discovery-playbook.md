@@ -83,3 +83,12 @@ If naming is uncertain:
 - propose 2-4 options
 - show how each appears across surfaces (UI label, API field, CLI command)
 - pick the simplest consistent mental model
+
+## First-contact legibility
+Design for someone encountering this feature for the first time with no prior context:
+- Would a customer understand what a new field, flag, or method does from the name alone?
+- Are defaults tuned for the common case — does it work out-of-the-box without configuration?
+- Are errors actionable — do they tell the customer what happened AND what to do next?
+- Can the customer discover and use this without reading source code?
+
+First-contact legibility applies to every customer-facing surface: API fields, config keys, CLI flags, error messages, docs headings, log output. If the design requires explanation to use correctly, the design should change — not the docs.

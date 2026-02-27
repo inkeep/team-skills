@@ -88,9 +88,9 @@ Each trait includes: signal → the move you should make → what to record.
 **Record:** what was investigated, what remains uncertain, what needs user input.
 
 ### 15) User as domain knowledge contributor
-**Signal:** User has internal context not in the code.
-**Move:** Ask for internal patterns, constraints, surface maps; treat them as evidence.
-**Record:** user-provided constraints (with caveats).
+**Signal:** A question requires domain knowledge that isn't in the code, docs, or web — product intent, user behavior, organizational context, strategic priorities.
+**Move:** Ask about what they know or think, and propose options for them to react to. Frame as intent/preference questions ("Do you need X, or would Y satisfy the need?"), not process questions ("Have you checked with...?"). Treat their answers as evidence.
+**Record:** user-provided constraints and domain knowledge (with caveats where the agent's investigation suggests a different picture).
 
 ### 16) Constraint propagation
 **Signal:** A decision impacts many downstream areas.
@@ -101,6 +101,11 @@ Each trait includes: signal → the move you should make → what to record.
 **Signal:** Research for one question surfaces something unexpected — a bug, a race condition, an inconsistency, a gap in another area.
 **Move:** Don't bury it. Flag it immediately ("While researching X, I found Y"), assess whether it affects the current design, and add it to the backlog.
 **Record:** the issue, its impact assessment, and whether it changes any prior decisions.
+
+### 18) Product-technical tension surfacing
+**Signal:** Investigation reveals that a product goal and a technical constraint pull in different directions, or that the design optimizes for one dimension at disproportionate cost to the other.
+**Move:** Surface the tension explicitly with evidence on both sides. Don't bury it in individual decisions — name it directly: "Your product goal is zero-configuration setup, but the technical design requires three environment variables. Either the goal softens or we need a different technical approach." Present both directions with their costs. See `references/challenge-protocol.md` for calibration.
+**Record:** The tension, which direction was chosen, and why — in the Decision Log with cross-cutting type.
 
 ---
 
