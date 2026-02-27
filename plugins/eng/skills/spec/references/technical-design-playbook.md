@@ -37,7 +37,9 @@ Then explicitly say:
 ## Internal surface-area map
 Map which internal subsystems this feature touches. This is the internal counterpart to the product surface-area impact map.
 
-**First:** Load `/internal-surface-areas` skill if available. Use it as the baseline and identify which internal surfaces this feature touches — including transitive dependencies via the catalog's dependency graph or impact matrix. Fill gaps only for areas the catalog doesn't cover.
+**Load (in parallel, if available):** `/internal-surface-areas` and `/audience-impact`. These are complementary dimensions — the surface-area skill catalogs *what internal subsystems are touched*, while audience-impact identifies *who is affected and how fast impacts propagate* (especially silent impacts). Load both together; synthesize their outputs into the surface-area map and blast radius analysis below.
+
+Use `/internal-surface-areas` as the baseline and identify which internal surfaces this feature touches — including transitive dependencies via the catalog's dependency graph or impact matrix. Fill gaps only for areas the catalog doesn't cover.
 
 **If the skill is not available**, enumerate from investigation:
 - build & package graph
@@ -112,7 +114,7 @@ If a change touches core primitives:
 - list indirect dependencies
 - list "likely unaffected" areas with reasoning (don't guess silently)
 
-**Load:** `/audience-impact` skill if available. Use it to map blast radius by persona — which roles are affected, impact propagation timing (immediate, next-publish, next-deploy, silent), and what deliverables each affected audience needs.
+Use `/audience-impact` output (loaded above with the surface-area map) to map blast radius by persona — which roles are affected, impact propagation timing (immediate, next-publish, next-deploy, silent), and what deliverables each affected audience needs.
 
 ## Options and tradeoffs
 For each viable option:

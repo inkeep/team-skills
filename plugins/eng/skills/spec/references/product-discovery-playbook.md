@@ -55,9 +55,11 @@ Turn prior art into:
 - pitfalls we should avoid
 
 ## Product surface-area impact
-**First:** Load `/product-surface-areas` skill if available. Use it as the baseline map and identify which surfaces this feature touches — including transitive dependencies via the catalog's impact matrix or dependency graph. Fill gaps only for surfaces the catalog doesn't cover.
+**Load (in parallel, if available):** `/product-surface-areas` and `/audience-impact`. These are complementary dimensions — the surface-area skill catalogs *what changes*, while audience-impact identifies *who is affected and how fast impacts propagate* (especially silent impacts that reach audiences without obvious signal). Load both together; synthesize their outputs into a unified view.
 
-**If the skill is not available**, create a map of surfaces impacted:
+Use `/product-surface-areas` as the baseline map and identify which surfaces this feature touches — including transitive dependencies via the catalog's impact matrix or dependency graph. Fill gaps only for surfaces the catalog doesn't cover.
+
+**If `/product-surface-areas` is not available**, create a map of surfaces impacted:
 - dashboard/admin UI
 - API endpoints
 - SDK methods
@@ -71,8 +73,6 @@ For each surface:
 - what changes
 - why it matters to the user
 - what must be consistent (naming, mental model)
-
-**Then:** Load `/audience-impact` skill if available. Use it to identify which roles are affected by the change and how fast impacts propagate to each — especially silent impacts that reach audiences without obvious signal. This complements the surface-area map (which catalogs what exists) with the audience dimension (who cares and when they're affected).
 
 ## Naming is a product decision
 Treat naming as:
