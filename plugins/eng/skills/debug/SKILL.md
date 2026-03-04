@@ -212,7 +212,20 @@ Follow these phases in order. Do not skip phases. Each phase has explicit comple
    - What is it ACTUALLY doing? (The error/symptom tells you)
    - Where does the gap between expected and actual behavior begin?
 
-**Completion criteria:** You can reproduce the failure on demand (or have documented why you can't). You understand the relevant code well enough to explain what it does. You have identified the gap between expected and actual behavior.
+**Completion criteria:** You can reproduce the failure on demand (or have documented why you can't). You understand the relevant code well enough to explain what it does. You have identified the gap between expected and actual behavior. You have stated your premises (step 6).
+
+6. **State your premises.**
+   Before moving to Phase 3, document your key beliefs about the code in the error path. Each premise must cite a specific file:line where you verified it. This surfaces wrong assumptions before you build hypotheses on top of them.
+
+   ```
+   Premises (from code reading):
+   P1: format() at dateformat.py:340 is a module-level function
+       that shadows Python's builtin — verified at dateformat.py:340
+   P2: test_year_before_1000 passes integer 476 to format() — verified at tests.py:89
+   P3: Patch 1 calls format(476, '04d') — verified at patch1.diff:12
+   ```
+
+   Keep it proportional to the bug: document premises for the functions and data flows in the error path, not everything you read. If a premise is based on a function name or signature rather than reading the implementation, flag it: `(ASSUMED from name — not yet verified)`.
 
 **Self-check:** If you've read >10 files without a clear picture of expected vs. actual behavior, stop reading and summarize what you know. You may be looking in the wrong place, not lacking information.
 
@@ -224,10 +237,11 @@ Follow these phases in order. Do not skip phases. Each phase has explicit comple
 
 **Batch hypothesis presentation:**
 
-After Phases 1-2, present ALL plausible hypotheses in one batch — ranked by confidence, each with its full evidence chain. Do not pad with fake alternatives. If you're highly confident in one hypothesis, say so and focus on it.
+After Phases 1-2, present your premises (from Phase 2 step 6) followed by ALL plausible hypotheses in one batch — ranked by confidence, each with its full evidence chain. Do not pad with fake alternatives. If you're highly confident in one hypothesis, say so and focus on it.
 
 For each hypothesis:
 - State the hypothesis clearly: "The root cause is X because Y"
+- Reference the premises it depends on (e.g., "Based on P1 and P3...")
 - Trace the full logical chain: evidence gathered → inference → prediction
 - Assign confidence (HIGH / MEDIUM / LOW) with justification
 - Describe the experiment needed to confirm or deny it
@@ -235,16 +249,22 @@ For each hypothesis:
 **Example:**
 
 ```
+**Premises (from code reading):**
+P1: formatKey() at utils.ts:30 uses "/" separator — verified at utils.ts:30
+P2: SpiceDB expects ":" separator in keys — verified at schema.zed:12
+P3: Relationship writer calls formatKey() — verified at auth.ts:42
+
 **Hypotheses (ranked):**
 
-1. (HIGH) `formatKey()` uses `/` separator but SpiceDB expects `:`.
-   Evidence: git blame shows separator changed in abc123, sibling
-   functions all use `:`, failing test expects `:` format.
-   Experiment: Add logging at auth.ts:45 to capture actual key format.
+H1: (HIGH) formatKey() uses `/` separator but SpiceDB expects `:`.
+    Based on P1, P2, P3.
+    Evidence: git blame shows separator changed in abc123, sibling
+    functions all use `:`, failing test expects `:` format.
+    Experiment: Add logging at auth.ts:45 to capture actual key format.
 
-2. (MEDIUM) SpiceDB schema updated but relationship writer wasn't.
-   Evidence: schema file changed 3 days ago, writer unchanged in 2 weeks.
-   Experiment: Compare schema definition against write call arguments.
+H2: (MEDIUM) SpiceDB schema updated but relationship writer wasn't.
+    Evidence: schema file changed 3 days ago, writer unchanged in 2 weeks.
+    Experiment: Compare schema definition against write call arguments.
 ```
 
 **The Observe→Diagnose checkpoint (Supervised mode only):**
@@ -267,13 +287,15 @@ Once approved, enter Delegated mode for the remainder of the investigation. If y
 
 ```
 REPEAT:
-  1. Form ONE clear hypothesis: "The root cause is X because Y"
-  2. Design a MINIMAL experiment to test it
-  3. Predict the result BEFORE running the experiment
-  4. Run the experiment (Observe-tier actions freely; Diagnose-tier per mode)
-  5. Compare actual result to prediction
-     - Prediction matches → hypothesis supported, narrow further
-     - Prediction fails → hypothesis wrong, form a new one
+  1. Form ONE clear hypothesis with an ID: "H[N]: The root cause is X because Y"
+  2. Reference which premises (P1, P2...) this hypothesis depends on
+  3. Design a MINIMAL experiment to test it
+  4. Predict the result BEFORE running the experiment
+  5. Run the experiment (Observe-tier actions freely; Diagnose-tier per mode)
+  6. Compare actual result to prediction
+     - Prediction matches → H[N]: CONFIRMED — narrow further
+     - Prediction fails completely → H[N]: REFUTED — form a new one
+     - Partially right but needs adjustment → H[N]: REFINED into H[N+1] — [what changed and why]
 ```
 
 **Core principle: Observable verification over code reasoning.**
@@ -287,7 +309,7 @@ Do not conclude from code reading alone. Every hypothesis must be tested with an
 - **One change at a time.** Each experiment should change exactly one variable. If you change two things, you can't attribute the result.
 - **Prefer probes over fixes.** Add logging or read code to test your hypothesis. Do NOT implement a fix as your "experiment" — that violates the Iron Law.
 - **Predict before you run.** If you can't predict what the experiment will show, your hypothesis is too vague. Refine it.
-- **Record each hypothesis and its verdict.** "Hypothesis: X. Test: Y. Result: Z. Verdict: confirmed/denied." This prevents re-testing and provides an audit trail.
+- **Record each hypothesis and its verdict.** `"H1: [hypothesis]. Experiment: [test]. Prediction: [expected]. Result: [actual]. Status: CONFIRMED | REFUTED | REFINED — [explanation]."` This prevents re-testing and provides an audit trail. Use REFINED when a hypothesis was on the right track but needs adjustment — refine into a new labeled hypothesis (e.g., "H1 REFINED into H2") rather than forcing a binary confirm/deny.
 - **Escalate fidelity.** After each experiment, assess the verification boundary. If the component under suspicion was not directly exercised by a real system, identify what it would take to test against the real thing (full production path first, isolated real component second). In Delegated mode: execute the higher-fidelity test. In Supervised mode: propose it.
 
 **Investigation tools** — choose based on the hypothesis you're testing:
