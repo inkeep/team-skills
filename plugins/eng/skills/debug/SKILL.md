@@ -323,6 +323,7 @@ Do not conclude from code reading alone. Every hypothesis must be tested with an
 | If this pattern exists elsewhere | Pattern search | **Load:** `references/tool-patterns.md` §5 |
 | What the actual runtime state is | Direct state verification | **Load:** `references/tool-patterns.md` §7 |
 | What the browser shows / UI behavior (Escalate-investigate) | Browser automation via `/browser` | **Load:** `references/tool-patterns.md` §9 |
+| Whether a 3P dependency issue is known, has workarounds, or a fix in progress | Web search — GitHub issues, PRs, changelogs for the specific library+version. Context that source code can't provide: community experience, known limitations, in-progress fixes. Supplements observation and code reading; never replaces either. | — |
 
 **Completion criteria:** You have a specific root cause, supported by evidence from at least one diagnostic action. You can state: "The root cause is X. I know this because when I checked Y, I found Z, which confirms X."
 
@@ -469,6 +470,7 @@ When a loop threshold is hit, switch — don't retry:
 | Trusting the error location | Verify: build fresh? right branch? source maps correct? |
 | Investigation scope keeps growing | Stop expanding. Re-evaluate: is your root cause hypothesis wrong? |
 | Exhausted Observe + Diagnose tools without convergence | Escalate to runtime investigation — use browser automation, ad-hoc scripts, server observability to get evidence that code-level tools cannot provide (see Escalate-investigate tier) |
+| Stuck at a 3P dependency boundary | Check GitHub issues, PRs, and changelogs for the specific library+version — someone may have already reported the same behavior, and workarounds or fixes may exist |
 
 ### Confidence Calibration
 
@@ -546,7 +548,7 @@ This skill is standalone but integrates with the broader skill ecosystem:
 | Bug found during QA testing | `/qa` invokes `/debug` for diagnosis; passes `--delegated` if QA is itself delegated |
 | Post-implementation review finds suspicious issue | `/ship` loads `/debug` for diagnosis; passes `--delegated` in isolated environments |
 | Complex multi-faceted issue needs deeper analysis | Load `/analyze` skill for multi-angle evidence-based analysis |
-| Call chain enters a 3P library and installed source is insufficient (compiled/minified, or need git history for version-to-version changes) | Clone OSS repo to `~/.claude/oss-repos/` for readable source and commit history (see `/research` skill's `references/source-code-research.md`). Reading library source is Level 4 — always confirm with observable evidence. |
+| Call chain enters a 3P library and installed source is insufficient (compiled/minified, or need git history for version-to-version changes) | Clone OSS repo to `~/.claude/oss-repos/` for readable source and commit history (see `/research` skill's `references/source-code-research.md`). Also check GitHub issues/PRs for the specific library+version — community context on known problems, workarounds, and in-progress fixes supplements what you find in source. Reading library source is Level 4 — always confirm with observable evidence. |
 | Debug produces findings; implementation happens elsewhere | Hand off to user, `/implement`, or `/ship` with the Phase 5 deliverable |
 
 ### Autonomy convention
