@@ -205,10 +205,14 @@ For each finding, ask:
 
 When sub-reviewers you invoked disagree on the same code, use your best judgement on which is likely correct or include both perspectives. Take into account your own understanding of the code base, the PR, and the points made by the subagents.
 
-### 4.4 Additional research (OPTIONAL)
+### 4.4 Web Search Compliance Check
+
+Verify each surviving finding has a non-empty `web_search_queries` array and at least one external URL in `references`. For findings missing either, run a quick web search yourself (`mcp__exa__web_search_exa`) to validate — keep, adjust confidence, or drop based on results. If many findings lack web search evidence, flag subagent compliance as a systemic issue.
+
+### 4.5 Additional research (OPTIONAL)
 If you are split on items that seem plausibly important but are gray area or you don't have full confidence on, feel free to spin up additional Explore subagents, inspect the codebase yourself, or search the web (library docs, changelogs, best practice references) to the minimum extent needed. This should be reserved for any high stakes, complex, and grayarea items you want to increase your own understanding of a problem space to get full clarity and judgement. Keep additional research scoped/targeted, if any (optional).
 
-### 4.5 Final Categorizations
+### 4.6 Final Categorizations
 
 Feel free to make your own determination about the confidence and severity levels of the issues. Prioritize by what's most actionable, applicable, and of note.
 

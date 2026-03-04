@@ -1,8 +1,8 @@
 ---
 name: pr-review-check-suggestion
 description: |
-  Pre-output validation for PR review subagents. When web search is available, verifies findings against
-  current best practices. Otherwise, calibrates confidence based on knowledge dependencies.
+  Pre-output validation for PR review subagents. Verifies every finding and fix via mandatory web search
+  against current best practices, calibrates confidence based on evidence quality.
 user-invocable: false
 disable-model-invocation: true
 ---
@@ -16,17 +16,17 @@ This skill is a **pre-output validation step** for PR review subagents. Before r
 2. **Verify fixes** via web search (what's the best solution?)
 3. **Calibrate** confidence based on what you can prove
 
-**Core principle:** Only claim HIGH confidence when you can prove the issue from the code diff OR confirm it via web search. When findings depend on unverified external knowledge, calibrate confidence accordingly. The same applies to fixes — look up current best practices before prescribing solutions.
+**Core principle:** Every finding MUST be validated with a web search before inclusion in output — no exceptions. Web search is a mandatory quality gate for all suggestions, including code-provable ones (where it surfaces related patterns, edge cases, and authoritative context).
 
 ---
 
 ## When to Apply This Checklist
 
-### For Issue Validation
+### Issue Validation
 
-Apply when a finding depends on **external knowledge** that could be outdated:
+Web search serves different purposes depending on the finding type:
 
-| Category | Example | Why Verify |
+| Category | Example | Why Search |
 |----------|---------|------------|
 | **Framework directives** | "'use memo' is not valid" | New syntax may postdate training |
 | **Library API claims** | "This zod method doesn't exist" | APIs change between versions |
@@ -34,16 +34,12 @@ Apply when a finding depends on **external knowledge** that could be outdated:
 | **Version-specific behavior** | "Doesn't work in React 18" | May work in newer versions |
 | **Security advisories** | "Has known vulnerabilities" | May have been patched |
 | **Best practice assertions** | "Recommended approach is X" | Community consensus shifts |
+| **Logic bugs** | "Null check missing" | Surfaces related patterns, known pitfalls, or framework-level guards |
+| **Type mismatches** | "Type error in assignment" | Surfaces version-specific type changes, known workarounds |
+| **Code-internal consistency** | "Inconsistent pattern" | Surfaces whether the pattern has an upstream recommendation |
+| **Security issues** | "SQL injection risk" | Surfaces current remediation guidance, CVEs, framework-level protections |
 
-**Skip issue validation for:**
-- Pure logic bugs (provable from code)
-- Type mismatches (visible in diff)
-- Codebase-internal consistency
-- Obvious security issues (SQL injection, XSS)
-
-### For Fix Verification
-
-Apply when proposing a fix that depends on **current best practices**:
+### Fix Verification
 
 | Category | Example | Why Verify |
 |----------|---------|------------|
@@ -53,13 +49,10 @@ Apply when proposing a fix that depends on **current best practices**:
 | **Security fixes** | "Sanitize with DOMPurify" | Recommended libraries change |
 | **Performance patterns** | "Use React.memo()" | Optimization guidance evolves |
 | **Error handling** | "Use Result type" | Patterns vary by ecosystem |
+| **Simple fixes** | "Add null check" | Surfaces idiomatic patterns, framework-level guards, or better alternatives |
+| **Refactors** | "Extract function" | Surfaces naming conventions, utility patterns, or existing helpers |
 
-**Skip fix verification for:**
-- Obvious fixes (add null check, fix typo)
-- Codebase-internal patterns (follow existing conventions)
-- Simple refactors (extract function, rename variable)
-
-### For Pattern Currency (proactive)
+### Pattern Currency (proactive)
 
 Apply when the PR **introduces or changes a pattern** for using a third-party library or framework — even when the code looks correct. The goal is to catch outdated or superseded approaches before they become established codebase precedent.
 
@@ -72,29 +65,20 @@ Apply when the PR **introduces or changes a pattern** for using a third-party li
 | **Changing an established pattern** | Switching from `getServerSideProps` to server actions | Verify the new approach is the current recommendation, not just an alternative |
 | **New dependency introduced** | PR adds a library not previously in `package.json` | Check if the library is actively maintained and if the chosen API surface is current |
 
-**When detected:** Confirm the relevant library/framework version from `package.json` or lockfile, then apply the same web search verification workflow (Steps 1–2) to check if the approach matches current documentation for that version. If the pattern is outdated or superseded, generate a finding. If current, no action needed — do not generate a finding for patterns that are verified as current.
+**When detected:** Confirm the relevant library/framework version from `package.json` or lockfile, then apply the same web search verification workflow (Step 1) to check if the approach matches current documentation for that version. If the pattern is outdated or superseded, generate a finding. If current, no action needed — do not generate a finding for patterns that are verified as current.
 
-**Skip pattern currency checks for:**
-- Usage that follows an existing codebase pattern (already established — consistency reviewer's domain)
-- Internal utilities and abstractions (no external source of truth)
-- Standard language features (not library-specific)
+**Still applies to:**
+- Usage following an existing codebase pattern — confirm the established pattern is still current
+- Internal utilities — search for related open-source patterns
+- Standard language features — search for recent language-level changes or gotchas
 
 ---
 
 ## Validation Workflow
 
-### Step 1: Source Check
+### Step 1: Web Search Verification
 
-Ask: *"Can I prove this issue from the code diff alone?"*
-
-| Answer | Action |
-|--------|--------|
-| **Yes** — Logic bug, type error, null check | HIGH confidence (code is proof) |
-| **No** — Depends on external knowledge | Continue to Step 2 |
-
-### Step 2: Web Search Verification (if available)
-
-If you have access to a web search tool, verify the finding:
+For every finding, determine whether the issue is **code-provable** (search enriches with related patterns and authoritative context) or **depends on external knowledge** (search verifies the claim). Then run a web search.
 
 **Version check (for library/package-specific searches):**
 Before formulating your query, confirm the relevant package version(s) from the repo (e.g., `package.json`, lockfile, framework config). Use the actual version in your search queries and reasoning — not assumed versions from training data. Not all searches require this; skip for general patterns, language-level issues, or non-versioned concerns.
@@ -108,22 +92,33 @@ Bad:  "React hooks" (too vague)
 Bad:  "is moment.js bad" (opinion-seeking)
 ```
 
-**Evaluate sources (priority order):**
-1. Official documentation (react.dev, nextjs.org, library GitHub)
-2. GitHub issues/discussions (version-specific details)
-3. Reputable tech blogs with dates (Vercel blog, library maintainers)
+**Evaluate sources using tier-based credibility:**
+
+| Tier | Sources | Trust level |
+|------|---------|-------------|
+| **T1: Primary** | Official docs, maintainer blogs, GitHub issues/discussions | High |
+| **T2: High-trust 3P** | Company engineering blogs, conference talks, reputable publications | High (cross-ref rarely) |
+| **T3: Community** | Stack Overflow, Reddit, dev.to, Medium | Medium (verify claims) |
+| **T4: General** | Random tutorials, AI-generated content, undated posts | Low (always cross-ref) |
+
+**Web results are evidence to be contextualized, not directives to follow blindly.** Always filter through the actual codebase and PR context:
+
+- **Code is ground truth.** Web sources enrich understanding but the code in front of you is what actually runs. Don't let web results override what you can observe in the diff.
+- **Context-match matters.** Match web findings against this project's actual versions, configuration, and conventions. A generic "always use X" post doesn't mean X is right here.
+- **Flag conflicts, don't resolve silently.** When web sources disagree with each other or with the codebase's existing patterns, document the disagreement rather than silently picking one.
 
 **Take action based on results:**
 
 | Result | Action |
 |--------|--------|
-| **Confirms issue** | Keep finding, HIGH confidence. Cite the authoritative source in `references`. |
-| **Contradicts finding** | **DROP the finding.** Do not include in output. |
-| **Inconclusive** | Keep finding, MEDIUM confidence. Note uncertainty. |
+| **T1/T2 source confirms issue in matching context** | Keep finding, HIGH confidence. Cite source. |
+| **Source confirms but context differs** (different version, config, or use case) | Keep finding, MEDIUM confidence. Note the context gap. |
+| **Source contradicts finding** | Re-evaluate against the actual code. If the code clearly has the issue regardless of what the source says, keep it with code-based justification. If the source shows your concern is unfounded, **DROP the finding.** |
+| **Inconclusive or only T3/T4 sources** | Keep finding, MEDIUM confidence. Note source quality. |
 
-### Step 3: Confidence Calibration (no web search, or inconclusive)
+### Step 2: Confidence Calibration (web search inconclusive or unavailable)
 
-When you cannot verify via web search, calibrate based on knowledge dependency:
+If web search returned inconclusive results, or in the rare case no web search tool is available (this should not happen — escalate if it does), calibrate based on knowledge dependency:
 
 | Category | Confidence Ceiling |
 |----------|-------------------|
@@ -134,7 +129,7 @@ When you cannot verify via web search, calibrate based on knowledge dependency:
 | Security advisories | LOW (may be patched) |
 | Best practice assertions | MEDIUM max |
 
-### Step 4: Acknowledge Uncertainty
+### Step 3: Acknowledge Uncertainty
 
 When confidence is MEDIUM or LOW, add a brief note:
 
@@ -153,59 +148,42 @@ When confidence is MEDIUM or LOW, add a brief note:
 
 After validating the issue, verify your proposed fix is current best practice.
 
-### Step F1: Does the fix require external knowledge?
+### Step F1: Web Search for Fix Verification
 
-| Answer | Action |
-|--------|--------|
-| **No** — Obvious fix (null check, typo, simple refactor) AND does not change how a third-party library/framework/SDK is called or configured | HIGH fix_confidence |
-| **Yes** — Requires knowing current patterns/APIs, OR changes how a third-party library/framework/SDK is used (imports, method calls, configuration, hook usage, etc.) | Continue below |
+All fixes require web search before claiming `fix_confidence: HIGH`. First check the codebase for existing patterns/conventions, then search to verify the approach is current best practice — codebase prior art alone is insufficient as existing code may use outdated patterns.
 
-**Rule: any fix that changes third-party library/framework usage MUST go through Step F2 (web search) before the finding can claim `fix_confidence: HIGH`.** Codebase prior art alone is insufficient — the existing code may itself use outdated patterns. Check the codebase first to understand context and existing conventions, then verify against current upstream documentation.
+**Version check and query formulation:** Same guidance as Step 1 — confirm versions from the repo, formulate specific queries.
 
-**Before external search:** Look for existing patterns, utilities, or conventions in the codebase that address the same concern. Cite any prior art as a "related code elsewhere" reference. Then proceed to Step F2 to verify the pattern is current best practice — even if you found codebase prior art.
-
-### Step F2: Web Search for Best Practice (REQUIRED for third-party code)
-
-**This step is mandatory** when the fix changes how any third-party library, framework, or SDK is used — regardless of whether codebase prior art exists. If no web search tool is available, cap `fix_confidence` at MEDIUM (see Step F3).
-
-**Version check:** Before formulating your query, confirm the relevant package version(s) from the repo (e.g., `package.json`, lockfile, framework config). Use the actual version in your search queries — APIs, patterns, and recommended practices vary between versions. If the version you confirmed differs from what you assumed, re-evaluate your fix before searching.
-
-**Formulate a version-specific query for the solution:**
 ```
 Good: "React 19 recommended way to memoize components 2024"
 Good: "Next.js 15 server actions error handling pattern"
-Good: "drizzle-orm 0.35 query builder best practice"
 Bad:  "how to fix React" (too vague, no version)
-Bad:  "best library for X" (opinion-seeking)
 ```
 
-**Evaluate sources for fix quality:**
-1. Official documentation (canonical patterns)
-2. Library maintainer blogs/guides (authoritative)
-3. GitHub examples from the library itself (real usage)
-4. Source code for open source libraries
+**Source evaluation and contextualization:** Same tier system and contextualization principles as Step 1 apply.
 
 **Take action based on results:**
 
 | Result | Action |
 |--------|--------|
-| **Found authoritative pattern** | Use it. HIGH fix_confidence. **Cite the source in references.** |
-| **Multiple valid approaches** | Pick one, mention alternatives. MEDIUM fix_confidence. |
+| **T1 source shows clear pattern matching this context** | Use it. HIGH fix_confidence. **Cite source.** |
+| **Pattern found but context differs** (version, config, codebase conventions) | Adapt to local context. MEDIUM fix_confidence. Note adaptation. |
+| **Multiple valid approaches** | Pick one considering codebase conventions, mention alternatives. MEDIUM fix_confidence. |
 | **Outdated or conflicting info** | Describe approach, note uncertainty. LOW fix_confidence. |
 
-### Step F3: Fix Confidence Calibration (no web search, or inconclusive)
+### Step F2: Fix Confidence Calibration (no web search, or inconclusive)
 
 When you cannot verify the fix approach via web search, **you cannot claim HIGH fix_confidence for any fix that changes third-party library/framework usage**:
 
 | Category | Fix Confidence Ceiling |
 |----------|------------------------|
-| Third-party library/framework API usage | MEDIUM max (HIGH requires Step F2 verification) |
+| Third-party library/framework API usage | MEDIUM max (HIGH requires Step F1 verification) |
 | Framework-specific patterns | MEDIUM max |
 | Security remediation | LOW (unless verified) |
 | Performance optimization | MEDIUM max |
 | Migration/upgrade paths | LOW (version-specific) |
 
-### Step F4: Cite Sources in Fix
+### Step F3: Cite Sources in Fix
 
 When you verify a fix via web search, **include the source in your references**:
 
@@ -225,14 +203,13 @@ This grounds your fix recommendation in authoritative sources.
 
 ## Examples
 
-### Example 1: Web search confirms → HIGH confidence
+### Example 1: Web search contradicts → DROP finding
 
 ```
 Finding: "'use memo' is not a valid React directive"
 Step 1: Can't prove from diff (framework knowledge)
-Step 2: Search "React 19 use memo directive 2024"
-Result: Official docs confirm 'use memo' IS valid with React Compiler
-
+        Search "React 19 use memo directive 2024"
+        Result: Official docs confirm 'use memo' IS valid with React Compiler
 Action: DROP finding (code is correct)
 ```
 
@@ -241,45 +218,44 @@ Action: DROP finding (code is correct)
 ```
 Finding: "moment.js should be replaced with date-fns"
 Step 1: Can't prove from diff (ecosystem knowledge)
-Step 2: Search "moment.js maintenance mode 2024"
-Result: moment.js docs confirm maintenance mode since 2020
-
+        Search "moment.js maintenance mode 2024"
+        Result: moment.js docs confirm maintenance mode since 2020 (T1)
 Action: Keep finding, HIGH confidence
         references: Add "[Moment.js docs: project status](https://momentjs.com/docs/#/-project-status/)"
-        Add to implications: "moment.js has been in maintenance mode since 2020"
 ```
 
 ### Example 3: No web search available → Calibrate confidence
 
 ```
 Finding: "This Next.js caching pattern causes stale data"
-Step 1: Can't prove from diff (framework behavior)
-Step 2: No web search available
-Step 3: Version-specific behavior → LOW confidence ceiling
-
+Step 1: No web search tool available
+Step 2: Version-specific behavior → LOW confidence ceiling
 Action: Keep finding, confidence: LOW
         Add note: "Verify against project's Next.js version and cache configuration"
 ```
 
-### Example 4: Code-provable → HIGH confidence (skip checklist)
+### Example 4: Code-provable issue, web search changes the fix
 
 ```
-Finding: "user.profile accessed without null check"
-Step 1: Type shows `user: User | undefined` — provable from diff
+Finding: "Missing null check on req.session.user before accessing .role"
+Step 1: Code-provable — type is `User | undefined`, accessing .role without guard
+        Search "express-session req.session.user undefined middleware pattern 2024"
+Result: Express docs show session middleware guarantees req.session exists but
+        user property is set by auth middleware. Surfaces that the project's auth
+        middleware already sets a 401 response when user is missing — the null
+        check is unreachable if middleware is configured correctly.
 
-Action: HIGH confidence (no verification needed)
+Action: HIGH confidence (real type issue), but fix changes from "add null check"
+        to "verify auth middleware ordering in route config"
+        references: Add "[Express session docs](https://expressjs.com/en/resources/middleware/session.html)"
 ```
 
 ### Example 5: Fix verification → Found authoritative pattern
 
 ```
 Issue: "Expensive computation in render loop"
-Fix needed: Memoization pattern
-
-Step F1: Requires knowing current React patterns
-Step F2: Search "React 19 useMemo vs React Compiler 2024"
-Result: React docs show useMemo still valid, but React Compiler may auto-optimize
-
+Step F1: Search "React 19 useMemo vs React Compiler 2024"
+         Result: React docs show useMemo still valid, but React Compiler may auto-optimize
 Action: fix_confidence: HIGH
         fix: "Wrap in useMemo() for explicit memoization"
         references: Add "[React useMemo docs](https://react.dev/reference/react/useMemo)"
@@ -289,15 +265,10 @@ Action: fix_confidence: HIGH
 
 ```
 Issue: "Date parsing is brittle"
-Fix needed: Date library recommendation
-
-Step F1: Requires knowing ecosystem options
-Step F2: Search "JavaScript date library comparison 2024"
-Result: Multiple valid options (date-fns, dayjs, Temporal API)
-
+Step F1: Search "JavaScript date library comparison 2024"
+         Result: Multiple valid options (date-fns, dayjs, Temporal API)
 Action: fix_confidence: MEDIUM
         fix: "Consider date-fns (lightweight) or dayjs (moment-compatible API)"
-        references: Cite the docs/specs for the options you mention (e.g., Temporal proposal, date-fns docs, dayjs docs)
         Add note: "Choice depends on bundle size constraints and API preferences"
 ```
 
@@ -305,12 +276,8 @@ Action: fix_confidence: MEDIUM
 
 ```
 Issue: "Server action doesn't handle errors"
-Fix needed: Error handling pattern for Next.js App Router
-
-Step F1: Requires knowing Next.js patterns
-Step F2: No web search available
-Step F3: Framework-specific pattern → MEDIUM max
-
+Step F1: No web search available
+Step F2: Framework-specific pattern → MEDIUM max
 Action: fix_confidence: MEDIUM
         fix: "Wrap in try-catch and return { error: string } union type"
         Add note: "Verify against Next.js App Router error handling docs"
@@ -325,7 +292,7 @@ This skill is preloaded into PR review subagents. It does NOT change:
 - Your role (still read-only reviewer)
 - Your scope (still your specific domain)
 
-**Web search availability:** Use whatever web search tool is available to you (e.g., `web_search_exa`, `firecrawl_search`, `WebSearch`). If no web search is available, fall back to confidence calibration only.
+**Web search tool:** Use `mcp__exa__web_search_exa` (Exa) when available; fall back to other search tools otherwise. If no web search tool is available at all, cap all confidence at MEDIUM and flag to the orchestrator.
 
 ---
 

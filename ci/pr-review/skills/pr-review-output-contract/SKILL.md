@@ -95,11 +95,12 @@ These fields are **required on all finding types**.
 | 7 | `confidence` | `"HIGH"` \| `"MEDIUM"` \| `"LOW"` | How certain are you this is a real issue? (rate AFTER citing evidence) |
 | 8 | `fix` | string | Suggestion[s] for how to address it. If simple, give the full solution as a code block. If bigger-scoped, interweave brief code examples into the explanation. Don't over-engineer — give a starting point/direction. |
 | 9 | `fix_confidence` | `"HIGH"` \| `"MEDIUM"` \| `"LOW"` | How confident are you in the proposed fix? |
-| 10 | `pre_existing` | boolean | **(Optional.)** Set to `true` if this issue existed before this PR — it was NOT introduced by the PR's changes. Omit or set `false` for issues introduced by the PR. See guidance below. |
+| 10 | `web_search_queries` | string[] | **Required.** The actual web search queries you ran to validate this finding and/or its fix. Every finding must have at least one. Documents what was searched for auditability. |
+| 11 | `pre_existing` | boolean | **(Optional.)** Set to `true` if this issue existed before this PR — it was NOT introduced by the PR's changes. Omit or set `false` for issues introduced by the PR. See guidance below. |
 
 ### Reference Types
 
-Every finding **must** include at least one reference (outside of the line numbers a suggestion applies to). References ground and justify both the issue and the proposed fix in verifiable sources, and prevent hallucinated recommendations.
+Every finding **must** include at least one reference (outside of the line numbers a suggestion applies to), and **at least one must be an external URL** from web search (official docs, GitHub issues, authoritative blogs, etc.). References ground and justify both the issue and the proposed fix in verifiable sources, and prevent hallucinated recommendations.
 
 **Important:** References are **not** for pointing to the file or lines where the finding is located — the finding's own `file` and `line` fields already capture that. Instead, references cite **other sources** that justify *why* the finding is valid and *why* the fix is appropriate: related code elsewhere in the codebase, project standards (skills, AGENTS.md), reviewer-defined rules, or external documentation.
 
@@ -317,7 +318,11 @@ Never use absolute paths. Always use paths relative to the repository root.
     "severity": "CRITICAL",
     "confidence": "HIGH",
     "fix": "Use parameterized queries:\n```typescript\nconst result = await db.query('SELECT * FROM users WHERE id = $1', [userId]);\n```",
-    "fix_confidence": "HIGH"
+    "fix_confidence": "HIGH",
+    "web_search_queries": [
+      "SQL injection parameterized queries node.js postgres 2024",
+      "OWASP SQL injection prevention cheat sheet"
+    ]
   },
   {
     "type": "file",
@@ -326,19 +331,23 @@ Never use absolute paths. Always use paths relative to the repository root.
     "issue": "Logger utility swallows errors silently — catch block is empty. This predates this PR but is in the same module being modified.",
     "references": [
       "[AGENTS.md:L97 — error handling must be explicit](https://github.com/org/repo/blob/abc123/AGENTS.md#L97)",
-      "[src/utils/logger.ts:15-18 — empty catch block](https://github.com/org/repo/blob/abc123/src/utils/logger.ts#L15-L18)"
+      "[src/utils/logger.ts:15-18 — empty catch block](https://github.com/org/repo/blob/abc123/src/utils/logger.ts#L15-L18)",
+      "[Node.js error handling best practices](https://nodejs.org/en/learn/error-handling)"
     ],
     "implications": "Silent error swallowing can mask bugs and make debugging difficult. Since this file is being modified in this PR, it's a natural cleanup opportunity.",
     "severity": "MINOR",
     "confidence": "HIGH",
     "fix": "Add explicit error handling or re-throw:\n```typescript\ncatch (error) {\n  console.error('Logger failed:', error);\n}\n```",
     "fix_confidence": "HIGH",
+    "web_search_queries": [
+      "Node.js empty catch block error handling best practices"
+    ],
     "pre_existing": true
   }
 ]
 ```
 
-**Note the order:** type → location → category → issue → references → implications → severity → confidence → fix → fix_confidence → pre_existing (optional)
+**Note the order:** type → location → category → issue → references → implications → severity → confidence → fix → fix_confidence → web_search_queries → pre_existing (optional)
 
 ---
 
@@ -348,7 +357,7 @@ Before returning, verify:
 
 - [ ] Output is valid JSON (no prose, no code fences, no markdown)
 - [ ] Output is an array of Finding objects
-- [ ] **Field order is correct:** type → location → category → issue → references → implications → severity → confidence → fix → fix_confidence → pre_existing (if applicable)
+- [ ] **Field order is correct:** type → location → category → issue → references → implications → severity → confidence → fix → fix_confidence → web_search_queries → pre_existing (if applicable)
 - [ ] Every finding has a `type` field with valid value
 - [ ] Every finding has all required fields for its type
 - [ ] `severity`, `confidence`, and `fix_confidence` use allowed enum values
@@ -359,4 +368,6 @@ Before returning, verify:
 - [ ] `system` findings have a descriptive `scope` string
 - [ ] No duplicate findings for the same issue
 - [ ] Every finding has at least one reference as markdown hyperlink `[text](url)`
+- [ ] Every finding has at least one **external URL** reference from web search (not just in-repo references)
+- [ ] Every finding has a non-empty `web_search_queries` array documenting what was searched
 - [ ] In-repo references (code, skills, AGENTS.md, agents) include specific line number(s) and a brief description of what's there
