@@ -546,6 +546,7 @@ This skill is standalone but integrates with the broader skill ecosystem:
 | Bug found during QA testing | `/qa` invokes `/debug` for diagnosis; passes `--delegated` if QA is itself delegated |
 | Post-implementation review finds suspicious issue | `/ship` loads `/debug` for diagnosis; passes `--delegated` in isolated environments |
 | Complex multi-faceted issue needs deeper analysis | Load `/analyze` skill for multi-angle evidence-based analysis |
+| Call chain enters a 3P library and installed source is insufficient (compiled/minified, or need git history for version-to-version changes) | Clone OSS repo to `~/.claude/oss-repos/` for readable source and commit history (see `/research` skill's `references/source-code-research.md`). Reading library source is Level 4 — always confirm with observable evidence. |
 | Debug produces findings; implementation happens elsewhere | Hand off to user, `/implement`, or `/ship` with the Phase 5 deliverable |
 
 ### Autonomy convention

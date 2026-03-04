@@ -32,6 +32,15 @@ SEQUENCE:
    Read the function body, find its return statements
    -> The return value IS the bad data's source
 
+   NOTE: If the function is in a 3P library and the installed source is
+   insufficient — unreadable (compiled/minified/bundled, common in
+   node_modules/), or you need git history to trace when behavior changed
+   between versions — clone the OSS repo to ~/.claude/oss-repos/<repo-name>
+   to access original source and full commit history. See /research skill's
+   references/source-code-research.md for the cloning protocol. Check if
+   already cloned before cloning again. Reading library source is Level 4
+   evidence; always confirm findings by running the actual system.
+
 5. If the value comes from an IMPORT:
    Grep for the export in the source module
    Read the exported definition
