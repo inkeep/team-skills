@@ -277,7 +277,9 @@ REPEAT:
 ```
 
 **Core principle: Observable verification over code reasoning.**
-Do not conclude from code reading alone. Every hypothesis must be tested with an observable action — run the code, query the state, check the output, add logging. If your only evidence is "I read the code and it looks like X," you have not tested the hypothesis. Code tells you what SHOULD happen; observable evidence tells you what DOES happen.
+Do not conclude from code reading alone. Every hypothesis must be tested with an observable action that exercises **real system components** — run the actual application or service, query the real database, hit the real API, trigger the real code path. If your only evidence is "I read the code and it looks like X," you have not tested the hypothesis. Code tells you what SHOULD happen; observable evidence tells you what DOES happen.
+
+**Verification boundary rule.** Every experiment has a **verification boundary**: which real system components were actually exercised vs. which were modeled or assumed. When presenting evidence, always state this boundary. The default preference is to test through the **full production path** (run the actual app/system end-to-end). Fall back to testing an isolated real component (e.g., querying the database directly) only when the full path isn't feasible — and state why. **Never** write a script that models/emulates what you *think* a system does based on source code reading and present its output as evidence. Such a script exercises zero real components — it only proves your interpretation of source code, which is Level 4 evidence (code reading + reasoning) regardless of whether you "ran" the script.
 
 **Rules for this phase:**
 
@@ -286,6 +288,7 @@ Do not conclude from code reading alone. Every hypothesis must be tested with an
 - **Prefer probes over fixes.** Add logging or read code to test your hypothesis. Do NOT implement a fix as your "experiment" — that violates the Iron Law.
 - **Predict before you run.** If you can't predict what the experiment will show, your hypothesis is too vague. Refine it.
 - **Record each hypothesis and its verdict.** "Hypothesis: X. Test: Y. Result: Z. Verdict: confirmed/denied." This prevents re-testing and provides an audit trail.
+- **Escalate fidelity.** After each experiment, assess the verification boundary. If the component under suspicion was not directly exercised by a real system, identify what it would take to test against the real thing (full production path first, isolated real component second). In Delegated mode: execute the higher-fidelity test. In Supervised mode: propose it.
 
 **Investigation tools** — choose based on the hypothesis you're testing:
 
@@ -363,7 +366,9 @@ If the classification is **code bug** or **both**: proceed to Phase 5.
 
 **[specific root cause]**
 
-Confirmed by: [evidence chain]
+Confirmed by: [evidence chain — for each piece of evidence, state the verification boundary:
+  which real system components were exercised vs. modeled/assumed]
+Verification level: [Level 1: full production path | Level 2: isolated real component | Level 3: static analysis | Level 4: code reading only]
 Classification: [dev environment / code bug / both]
 
 ## Recommended Fix
@@ -410,6 +415,7 @@ Monitor for these during every phase. If you detect one, stop and correct course
 | **Stale code** | Error doesn't match the code you're reading | Verify: fresh build? Right branch? Transpiled output stale? |
 | **Tunnel vision** | >5 min on one file without progress | Zoom out. Read callers. Check git history. The bug may be elsewhere |
 | **Investigation bloat** | Investigation scope keeps growing (more files, more systems) | Stop. A growing investigation is chasing the wrong root cause. Re-evaluate hypotheses |
+| **Emulation as evidence** | Writing a script that models what you *think* a system does based on source code reading, then presenting script output as proof | Stop. This is code reasoning (Level 4) disguised as observation. The script tests your interpretation of source code, not the real system. State your verification boundary: which real components were exercised? If the answer is "none," you have a hypothesis, not evidence. Test against the real system — full production path preferred, isolated real component as fallback |
 
 ---
 
@@ -457,11 +463,14 @@ Communicate your confidence and act accordingly:
 
 **Verification hierarchy** (higher beats lower):
 
-1. Test execution result — code ran and produced observable output
-2. Type checker / linter output — static analysis confirmed
-3. Code reading + reasoning — you read it and think it's correct
+1. Full production path — the actual app/system ran end-to-end and produced observable output
+2. Isolated real component — a real system component was exercised directly (e.g., querying the real database, calling the real API) but not through the full app path
+3. Type checker / linter output — static analysis confirmed
+4. Code reading + reasoning — you read it and think it's correct
 
-Never trust level 3 alone. Always get to level 1 or 2 before claiming a diagnosis is confirmed.
+A script that models/emulates a system's behavior based on source code reading is **Level 4** — it exercises zero real components and only tests your interpretation. Never present it as Level 1 or 2 evidence.
+
+Never trust level 4 alone. Always get to level 1 or 2 before claiming a diagnosis is confirmed. Prefer level 1 (full path) by default.
 
 ---
 
