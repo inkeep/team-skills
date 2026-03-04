@@ -124,6 +124,7 @@ When `tmp/ship/` exists, write all planned scenarios to `tmp/ship/qa-progress.js
       "whyManual": "requires visual inspection of responsive layout",
       "tracesTo": "US-002",
       "status": "planned",
+      "verifiedVia": null,
       "notes": "",
       "evidence": []
     }
@@ -146,6 +147,7 @@ When `tmp/ship/` exists, write all planned scenarios to `tmp/ship/qa-progress.js
 | `scenarios[].tracesTo` | No | User story ID from `spec.json` (e.g., `US-003`) when the mapping is clear. Omit when the relationship is fuzzy or many-to-many. |
 | `scenarios[].status` | Yes | One of: `planned`, `validated`, `failed`, `blocked`, `skipped`. |
 | `scenarios[].notes` | Yes | Empty string when `planned`. Populated on status change — see Status values table below. |
+| `scenarios[].verifiedVia` | When executed | Fidelity level from Step 5: `browser`, `api`, `shell`, or `inference`. Required for `validated`/`failed` scenarios. `null` for `planned`. If multiple levels were used, record the highest. |
 | `scenarios[].evidence` | No | Array of CDN URLs for video recordings captured during this scenario via `/browser` helpers. Omit or `[]` when scenario doesn't involve browser automation. |
 
 **Status values:**
@@ -190,6 +192,17 @@ If no PR exists, maintain the checklist as task list items only.
 Work through each scenario. Use the strongest tool available for each.
 
 **Testing priority: emulate real users first.** Prefer tools that replicate how a user actually interacts with the system. Browser automation over API calls. SDK/client library calls over raw HTTP. Real user journeys over isolated endpoint checks. Fall back to lower-fidelity tools (curl, direct database queries) for parts of the system that are not user-facing or when higher-fidelity tools are unavailable. For parts of the system touched by the changes but not visible to the customer — use server-side observability (logs, telemetry, database state) to verify correctness beneath the surface.
+
+**Verification fidelity levels** (use these values in `verifiedVia` when recording results):
+
+| Level | Method | Typical use |
+|---|---|---|
+| `browser` | Full user flow through real UI (Playwright) | UI scenarios, visual correctness, end-to-end UX |
+| `api` | Direct API/endpoint calls, skipping UI layer | Backend behavior, response shapes, auth flows |
+| `shell` | CLI, database queries, file/log inspection | State verification, data integrity, process behavior |
+| `inference` | Deduced from code reading, no runtime execution | Only when no runtime path is feasible |
+
+Default to the highest feasible level for each scenario. A scenario about visual layout validated via `api` is materially different from one validated via `browser` — the report consumer needs to know.
 
 **Unblock yourself with ad-hoc scripts.** Do not wait for formal test infrastructure, published packages, or CI pipelines. If you need to verify something, write a quick script and run it. Put all throwaway artifacts — scripts, fixtures, test data, temporary configs — in a `tmp/` directory at the repo root (typically gitignored). These are disposable; they don't need to be production-quality. Specific patterns:
 - **Quick verification scripts:** Write a script that imports a module, calls a function, and asserts the output. Run it. Delete it when done (or leave it in `tmp/`).
@@ -266,9 +279,9 @@ Changes touch more of the system than what's visible to the user. After exercisi
 
 ### Step 6: Record results
 
-**When `tmp/ship/` exists:** After each scenario (or batch), update the scenario's `status` and `notes` in `qa-progress.json`. Do not touch the PR body — a downstream consumer will render it.
+**When `tmp/ship/` exists:** After each scenario (or batch), update the scenario's `status`, `verifiedVia`, and `notes` in `qa-progress.json`. Set `verifiedVia` to the fidelity level from Step 5 (`browser`, `api`, `shell`, or `inference`) that reflects how the scenario was actually executed. If multiple levels were used (e.g., browser flow + database state check), record the highest. Do not touch the PR body — a downstream consumer will render it.
 
-**When `tmp/ship/` does not exist:** Update the `## Manual QA` section in the PR body directly using the same read → modify → write mechanism from Step 4.
+**When `tmp/ship/` does not exist:** Update the `## Manual QA` section in the PR body directly using the same read → modify → write mechanism from Step 4. Include the fidelity level in the checklist item (e.g., `[browser]`, `[api]`).
 
 **When you find a bug:**
 
