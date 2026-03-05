@@ -138,6 +138,19 @@ Skills work across two execution environments. `/ship` detects the context in Ph
 | `CLAUDE_SHIP_DIR` | `tmp/ship` | Where `/ship` and `/implement` store workflow state |
 | `CLAUDE_SPECS_DIR` | `<repo>/specs/` or `~/.claude/specs/` | Where `/spec` stores spec artifacts |
 
+**How to set:** Add to `~/.claude/settings.json` (user-level, applies everywhere) or `<repo>/.claude/settings.json` (per-repo):
+
+```json
+{
+  "env": {
+    "CLAUDE_REPORTS_DIR": "/Users/you/reports",
+    "CLAUDE_SPECS_DIR": "/Users/you/specs"
+  }
+}
+```
+
+A SessionStart hook resolves these values at session start and injects them into the agent's context automatically. If unset, the defaults above apply.
+
 ## Optional: Browser automation
 
 Needed for `/browser`, `/qa`, and any skill that launches a browser.
