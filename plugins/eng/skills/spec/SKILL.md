@@ -111,7 +111,7 @@ Always use the default **unless** an override is active (checked in this order):
 | Priority | Source | Example |
 |----------|--------|---------|
 | 1 | **User says so** in the current session | "Put the spec in `docs/rfcs/`" |
-| 2 | **Env var `CLAUDE_SPECS_DIR`** (set in `.env` or shell) | `CLAUDE_SPECS_DIR=./my-specs` → `./my-specs/<YYYY-MM-DD>-<spec-name>/SPEC.md` |
+| 2 | **Env var `CLAUDE_SPECS_DIR`** (pre-resolved by SessionStart hook — check `resolved-specs-dir` in your context) | `CLAUDE_SPECS_DIR=./my-specs` → `./my-specs/<YYYY-MM-DD>-<spec-name>/SPEC.md` |
 | 3 | **AI repo config** (`CLAUDE.md`, `AGENTS.md`, `.cursor/rules/`, etc.) declares a specs directory | `specs-dir: .ai-dev/specs` |
 | 4 | **Default (in a repo)** | `<repo-root>/specs/<YYYY-MM-DD>-<spec-name>/SPEC.md` |
 | 5 | **Default (no repo)** | `~/.claude/specs/<YYYY-MM-DD>-<spec-name>/SPEC.md` |

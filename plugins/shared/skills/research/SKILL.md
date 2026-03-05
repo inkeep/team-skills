@@ -34,7 +34,7 @@ Reports are stored in a configurable directory. Resolution priority:
 | Priority | Source | Example |
 |----------|--------|---------|
 | 1 | **User says so** in the current session | "Put the report in `docs/research/`" |
-| 2 | **Env var `CLAUDE_REPORTS_DIR`** (set in `.env` or shell) | `CLAUDE_REPORTS_DIR=./my-reports` → `./my-reports/<report-name>/REPORT.md` |
+| 2 | **Env var `CLAUDE_REPORTS_DIR`** (pre-resolved by SessionStart hook — check `resolved-reports-dir` in your context) | `CLAUDE_REPORTS_DIR=./my-reports` → `./my-reports/<report-name>/REPORT.md` |
 | 3 | **AI repo config** (`CLAUDE.md`, `AGENTS.md`, `.cursor/rules/`, etc.) declares a reports directory | `reports-dir: .ai-dev/reports` |
 | 4 | **Default (in a repo)** | `<repo-root>/reports/<report-name>/REPORT.md` |
 | 5 | **Default (no repo)** | `~/reports/<report-name>/REPORT.md` |

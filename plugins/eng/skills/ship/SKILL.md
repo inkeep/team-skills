@@ -42,7 +42,7 @@ All execution state lives in a configurable working directory (gitignored). Reso
 
 | Priority | Source | Default |
 |----------|--------|---------|
-| 1 | **Env var `CLAUDE_SHIP_DIR`** | — |
+| 1 | **Env var `CLAUDE_SHIP_DIR`** (pre-resolved by SessionStart hook — check `resolved-ship-dir` in your context) | — |
 | 2 | **Default** | `tmp/ship` |
 
 Throughout this skill and its child skills (/implement, /cancel-ship), `tmp/ship/` refers to the resolved ship directory. If `CLAUDE_SHIP_DIR` is set, use that path instead. The shell scripts (`ship-init-state.sh`, `implement.sh`) read this env var automatically.
