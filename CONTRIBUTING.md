@@ -55,7 +55,36 @@ After this, Claude Code reads skills from `~/team-skills` (via the plugin cache)
 
 ## Development Workflow
 
-### Making Changes
+### Creating or Updating Skills with `/write-skill`
+
+The recommended way to create and refine skills is with `/write-skill` — not manual editing. It follows an intent-preserving update procedure that prevents accidental semantic drift.
+
+**Creating a new skill:**
+
+```
+# 1. Research the domain (produces a report with evidence)
+/research <topic — e.g. "cold outbound email best practices">
+
+# 2. Distill the research into a skill
+/write-skill Create a skill called '<skill-name>' using the '<report-name>' report and evidence.
+```
+
+**Iterating on an existing skill:**
+
+Use the skill in a real session first. Then, in the same session or a new one in the `~/team-skills` repo:
+
+```
+/write-skill <what went wrong or could be better>.
+Use /write-skill guidance and update procedure to help me assess potential refinements, if any.
+```
+
+`/write-skill` will read the full skill, propose changes, and wait for your approval before editing. It treats the original author's intent as sacred — only making changes you explicitly confirm.
+
+**The loop:** `/research` → `/write-skill` → try it → feedback → `/write-skill` update → try again. Repeat until sharp.
+
+### Making Changes (manual)
+
+For small fixes (typos, config tweaks) where `/write-skill` is overkill:
 
 1. **Edit skills** in your local clone (`~/team-skills/plugins/<team>/skills/<skill-name>/`)
 2. **Restart Claude Code** to pick up changes (the plugin cache refreshes on startup)
