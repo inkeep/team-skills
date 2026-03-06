@@ -67,6 +67,7 @@ env -u CLAUDECODE -u CLAUDE_CODE_ENTRYPOINT claude \
 | `--agent <name>` | Run as a specific agent defined in `.claude/agents/*.md`. The agent's markdown body becomes the session's system prompt. |
 | `--no-session-persistence` | Don't save session to disk. Use for ephemeral children to avoid disk clutter. |
 | `--max-budget-usd N` | Cost cap per child. Prevents expensive runaways. |
+| `--json-schema '{"type":"object",...}'` | Validate child's final response against a JSON Schema. Use with `--output-format json` for typed, parseable results. |
 | `--resume <session-id>` | Continue a previous session with its full context. Use for multi-phase workflows where a child needs to pick up where it left off. |
 
 ---
@@ -186,6 +187,17 @@ The parent reads these files after all children complete. This is more reliable 
 - Files persist even if the child crashes partway through
 - Structured formats (markdown, JSON) are easier to aggregate than free-form text
 - Multiple files can be written (findings, evidence, recommendations)
+- **Files preserve full fidelity.** When a child writes findings to a file, the parent (or next child) reads them verbatim. When results flow through stdout → parent context → LLM reasoning instead, the information passes through LLM summarization at each boundary — meanings shift, details erode, and errors compound. In multi-agent chains this "broken telephone" effect is measurable. Files bypass it entirely.
+
+### Output location strategy
+
+When your examples use `/tmp`, that signals throwaway output. If the child's work product matters beyond this session, use a project-relative path instead.
+
+| Output type | Where | Why |
+|---|---|---|
+| Throwaway (logs, scratch, intermediate) | `/tmp/nested-claude-$$/<child-id>/` | Auto-cleaned, no project clutter, `$$` prevents collisions between runs |
+| Deliverables the parent or user needs after the session | Project-relative path (e.g., `reports/`, `output/`) | Survives session, findable, version-controllable |
+| Source code modifications | Dedicated directory or git worktree per child | Prevents merge conflicts between parallel children (see "Concurrent source code edits" below) |
 
 ---
 
@@ -217,14 +229,75 @@ Always cross-verify. LLMs can output false completion signals.
 - `.claude/settings.local.json` and `~/.claude/settings.json`
 - MCP server configurations (unless `--strict-mcp-config` is used)
 - Git context (branch, status)
-- Skills and agents defined in `.claude/`
+- Skills and agents defined in `.claude/` (discoverable on disk, but skill content is only preloaded into context when declared in an agent's `skills:` field — see "Giving children domain knowledge" below)
 
 **NOT inherited:**
 - Parent's conversation history
-- Parent's accumulated context or loaded skill state
+- Parent's loaded skill content or in-session context
 - Parent's permission approvals
 
 Each child starts completely fresh. The prompt you pass via `-p` is their entire instruction.
+
+---
+
+## Giving children domain knowledge
+
+Children discover skill and agent files from `.claude/` on disk, but that doesn't mean skills are loaded into their context. There are three mechanisms for giving children domain knowledge, each suited to different situations:
+
+### Mechanism 1: `--agent` with preloaded skills (structured, reusable)
+
+Run the child as a specific agent. The agent's markdown body becomes the system prompt, and any `skills:` in the agent's frontmatter are injected into the child's context at spawn time.
+
+```bash
+env -u CLAUDECODE -u CLAUDE_CODE_ENTRYPOINT claude \
+    --agent security-reviewer \
+    -p "Review the auth changes in src/auth.ts" \
+    --dangerously-skip-permissions --max-turns 50 \
+    < /dev/null 2>&1
+```
+
+Where the agent file declares its skills explicitly:
+
+```yaml
+# .claude/agents/security-reviewer.md
+---
+name: security-reviewer
+skills:
+  - security-checklist
+  - repo-context
+tools: Read, Grep, Glob
+---
+You are a security reviewer. Evaluate changes against your loaded skill standards.
+```
+
+**Critical rule:** Children do not inherit skills from the parent. The agent definition must list every skill the child needs. If the parent has `write-docs` loaded and the child needs it, the child's agent must declare `skills: [write-docs]`.
+
+### Mechanism 2: `--append-system-prompt` (lightweight, no files needed)
+
+For one-off children that need specific guidance but don't warrant a full agent definition:
+
+```bash
+env -u CLAUDECODE -u CLAUDE_CODE_ENTRYPOINT claude \
+    -p "Review src/auth.ts for vulnerabilities" \
+    --append-system-prompt "Focus on OWASP top 10. Check for SQL injection, XSS, and CSRF. Return findings as JSON." \
+    --dangerously-skip-permissions --max-turns 50 \
+    < /dev/null 2>&1
+```
+
+This preserves Claude Code's built-in defaults and adds your instructions on top. Less structured than skills, but no file creation needed.
+
+### Mechanism 3: File-based context (large or dynamic context)
+
+Write context to a known path; instruct the child to read it in the prompt. Already covered in "File-based IPC" above. Best for large context (>10KB), context that changes between children, or context shared across children with different roles.
+
+### When to use which
+
+| Situation | Mechanism |
+|---|---|
+| Multiple children need the same role + domain skills | `--agent` with `skills:` — define once, reuse across spawns |
+| One-off child needs a few extra instructions | `--append-system-prompt` — inline, no files |
+| Context is large, dynamic, or per-child | File-based — write to disk, child reads it |
+| Children need different skills for the same task | Multiple agent files, each with their own `skills:` list |
 
 ---
 
@@ -273,6 +346,31 @@ env -u CLAUDECODE -u CLAUDE_CODE_ENTRYPOINT claude \
 
 Most use cases don't need this level of isolation. Use it when children might conflict on config or temp files.
 
+### Concurrent source code edits
+
+When parallel children **read** the same codebase but write to **separate output files** (research, review, analysis), no special isolation is needed — this is the common case.
+
+When parallel children need to **edit the same source files**, they will create conflicts. If two children might edit the same file, don't run them in parallel without isolation. Two mitigations:
+
+1. **Serialize** — run children sequentially instead of in parallel when their edit scopes overlap. Simplest approach; no infrastructure needed.
+2. **Git worktrees** — each child gets its own worktree, edits in isolation, parent merges results:
+
+```bash
+# Create a worktree per child
+git worktree add "/tmp/worktree-child-$i" HEAD
+
+# Spawn child in its own worktree
+env -u CLAUDECODE -u CLAUDE_CODE_ENTRYPOINT claude \
+    -p "Edit src/auth.ts to fix the session bug. Work in $(pwd)." \
+    --dangerously-skip-permissions --max-turns 50 \
+    < /dev/null 2>&1
+
+# After all children finish, merge worktree changes back
+cd /path/to/main/repo
+git merge --no-ff "/tmp/worktree-child-$i"
+git worktree remove "/tmp/worktree-child-$i"
+```
+
 ---
 
 ## Crafting good child prompts
@@ -291,6 +389,7 @@ Each child has zero context from the parent. The prompt must be self-contained.
 - Referencing "the previous conversation" or "what we discussed"
 - Assuming the child knows anything not in its prompt
 - Vague instructions like "continue the work" without specifying what work
+- **First-person context that causes misattribution.** If your prompt includes context from the parent session, reframe it to third-person. A child that reads "I analyzed the auth flow and found a session fixation bug" may believe *it* performed that analysis. Write instead: "A prior analysis found a session fixation bug in the auth flow" — this gives the child the fact without the false ownership.
 
 **Template:**
 
