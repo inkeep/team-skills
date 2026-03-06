@@ -1,6 +1,6 @@
 ---
 name: spec
-description: "Drive an evidence-driven, iterative product+engineering spec process that produces a full PRD + technical spec (often as SPEC.md). Use when scoping a feature or product surface area end-to-end; defining requirements; researching external/internal prior art; mapping current system behavior; comparing design options; making 1-way-door decisions; planning phases; and maintaining a live Decision Log + Open Questions backlog. Triggers: spec, PRD, proposal, technical spec, RFC, scope this, design doc, end-to-end requirements, phase plan, tradeoffs, open questions."
+description: "Drive an evidence-driven, iterative product+engineering spec process that produces a full PRD + technical spec (often as SPEC.md). Use when scoping a feature or product surface area end-to-end; defining requirements; researching external/internal prior art; mapping current system behavior; comparing design options; making 1-way-door decisions; negotiating scope; and maintaining a live Decision Log + Open Questions backlog. Triggers: spec, PRD, proposal, technical spec, RFC, scope this, design doc, end-to-end requirements, scope plan, tradeoffs, open questions."
 argument-hint: "[feature/product] (optional: context, constraints, target users, timelines)"
 ---
 
@@ -40,12 +40,12 @@ argument-hint: "[feature/product] (optional: context, constraints, target users,
 
 6. **Classify decisions by reversibility.**
    - 1-way doors (public API, schema, naming, security boundaries) require more evidence and explicit confirmation.
-   - Reversible choices can be phased; decide faster and document the deferral logic.
+   - Reversible choices can be phased; decide faster and document as Future Work with appropriate context.
 
 7. **Use the scope accordion intentionally.**
    - Expand scope to validate the architecture generalizes.
-   - Contract scope to ship a phase.
-   - Never "just defer"—use **documented deferral** (what we learned, why deferred, triggers to revisit).
+   - Contract scope to define what's In Scope.
+   - Never "just defer"—classify as **Future Work** with the appropriate maturity tier (what we learned, why not in scope, triggers to revisit).
 
 8. **Never foreclose the ideal path.**
    - Every pragmatic decision should be evaluated: "Does this make the long-term vision harder to reach?"
@@ -96,7 +96,7 @@ Do:
   - **Decision Log**
   - **Assumptions**
   - **Risks / Unknowns**
-  - **Deferred (Documented) Items / Appendices**
+  - **Future Work**
 - Create the `evidence/` directory for spec-local findings (see `references/artifact-strategy.md` "Evidence file conventions").
 - Create `meta/_changelog.md` for append-only process history (see `references/artifact-strategy.md`).
 
@@ -156,6 +156,18 @@ Output:
 
 These are conversation tools, not deliverables. Generate them when the design involves multiple components or services — not for trivial single-surface changes.
 
+**Scope hypothesis:** After the world model is built, propose a rough **In Scope** vs. **Out of Scope** picture based on goals and constraints. This is a starting position, not a commitment — scope will evolve as investigation proceeds.
+
+Present it to the user: "Based on the goals and what we've mapped, here's my initial read on what's in scope vs. out. This will sharpen as we investigate."
+
+To form the hypothesis, use these signals:
+- **Scope in** (default): validates a core architectural assumption; completes an end-to-end user journey; is a 1-way door that gets harder later; excluding it creates a split-world problem.
+- **Scope out** (default): goals are met without it; additive to an already-working system; can be added later without rework on In Scope items.
+
+The user confirms, adjusts, or redirects. The hypothesis anchors investigation — In Scope items get deep investigation; Out of Scope items get whatever was learned incidentally.
+
+**Load (for scope detail):** `references/phasing-and-deferral.md`
+
 ---
 
 ### 4) Convert uncertainty into a prioritized backlog
@@ -182,7 +194,7 @@ Do:
   - Type: Product / Technical / Cross-cutting
   - Priority: P0/P1/P2
   - Reversibility: 1-way door vs reversible
-  - Blocking: blocks Phase 1 or not
+  - Blocking: blocks In Scope work or not
   - Confidence: HIGH / MEDIUM / LOW
 
 Then:
@@ -193,7 +205,7 @@ Then:
 ---
 
 ### 5) Run the iterative loop: investigate → present → decide → cascade
-This is the core of the skill. Repeat until Phase N is fully scoped.
+This is the core of the skill. Repeat until In Scope items are fully resolved.
 
 **Load (before presenting decisions):** `references/evaluation-facets.md`
 **Load (for behavioral patterns):** `references/traits-and-tactics.md`
@@ -228,16 +240,17 @@ Loop steps:
 4. **Present findings + decisions + open threads** using the output format (§1-§4 below).
 5. **User responds** — with decisions (§2), "go deeper on N" (§3), or new context.
 6. **Cascade decisions → update artifacts → identify newly unlocked items:**
-   - **Cascade analysis:** Trace what the decision affects — assumptions, requirements, design, phases. Default to full transitive cascade; flag genuinely gray areas to user; treat uncertainty about whether a section is affected as a signal to investigate more, not to skip it.
+   - **Cascade analysis:** Trace what the decision affects — assumptions, requirements, design, scope. Default to full transitive cascade; flag genuinely gray areas to user; treat uncertainty about whether a section is affected as a signal to investigate more, not to skip it.
      Scan these implication categories to catch non-obvious effects: **incentive** (does this change what behavior the system rewards?), **precedent** (does this set a pattern future work will follow?), **constraint** (does this foreclose options elsewhere?), **resource** (does this compete for budget, capacity, or attention?), **information** (does this change what's observable or debuggable?), **timing** (does this create sequencing dependencies?), **trust** (does this shift security or permission boundaries?), **reversibility** (does this make a future change harder?).
    - **Persist all confirmed changes** per the write trigger protocol (`references/artifact-strategy.md`):
      - Append to Decision Log (SPEC.md §10)
-     - Surgical edit all affected SPEC.md sections (requirements, design, phases, assumptions, risks)
+     - Surgical edit all affected SPEC.md sections (requirements, design, scope, assumptions, risks)
      - If an assumption is refuted, trace and edit all dependent sections
      - Append new cascading questions to Open Questions (SPEC.md §11)
      - Update evidence files if the decision changes factual understanding
    - Re-prioritize the backlog
    - **Completeness re-sweep** (every 2-3 loop iterations, or after a cluster of decisions resolves): Re-run the three extraction probes from Step 4 against the current state of the spec. Decisions change the shape of the problem; new dimensions may now be relevant that weren't before. A backlog that only shrinks is a signal you're not probing deeply enough. For each major decision made this round, reverse the question — what *should* be affected but hasn't been traced? What areas are suspiciously untouched?
+   - **Scope checkpoint** (same cadence as completeness re-sweep, or when investigation changes the cost/feasibility of an item): Present the current scope picture — what's In Scope, what's Out of Scope, what's uncertain. If investigation revealed new cost, new dependencies, new risks, or new opportunities, propose scope changes with evidence: "Investigation revealed X. This means [item] should move in/out because [reason]." The user confirms or adjusts. Scope changes are explicit and evidence-driven, never implicit.
    - **Introspective checkpoint** (same cadence as completeness re-sweep): Before presenting the next batch, run these self-checks silently — they're agent discipline, not user-facing output. Flag any that fire:
      - **Convergence:** Are options narrowing because evidence supports it, or because the agent stopped looking?
      - **Confirmation bias:** Is the agent seeking evidence for its preferred direction while under-investigating alternatives?
@@ -255,32 +268,40 @@ Loop steps:
 
 ---
 
-### 6) Phase planning: validate architecture, then ship product
-**Load:** `references/phasing-and-deferral.md`
+### 6) Scope freeze: confirm what's implementable
 
-Do:
-- Define phases by **risk reduction and validation**, not just feature completeness.
-- **Phase 1 is always present. Phase 2+ must earn their way in** — if you can't write concrete acceptance criteria, assign an owner, and state a timeframe, it's a deferral, not a phase. Use the qualification test and decision aid in the reference.
-- Scale to the feature: a small feature with Phase 1 + documented deferrals is often the right shape. Don't manufacture phases.
-- Distinguish:
-  - **Technical milestone** (validates architecture internally)
-  - **Product milestone** (first user value, onboarding, docs, UX)
-- For each phase:
-  - goals and non-goals
-  - scope
-  - acceptance criteria
-  - owners and next actions
-  - blockers + plan to resolve or explicitly defer
-  - biggest risks + mitigations
-  - what gets instrumented/measured
+**Trigger:** All P0 open questions for In Scope items are resolved and the scope has stabilized through the iterative loop. This step finalizes the scope — it doesn't discover it.
 
-After phase decisions are finalized, persist to SPEC.md (phases, Decision Log, deferrals) and log the changes to `meta/_changelog.md`.
+**Resolution completeness gate** — every In Scope item must pass:
+- [ ] All decisions that affect this item have been made (not deferred, not assumed)
+- [ ] 3rd-party dependency selections are named and justified (not "use something that does X")
+- [ ] Architectural viability validated (the recommended path works in the current runtime — confirmed by investigation, not assumed)
+- [ ] Integration feasibility confirmed for key system boundaries (A can actually talk to B)
+- [ ] Acceptance criteria are verifiable (an implementer could write tests from them)
+- [ ] No dependency on an Out of Scope item
+
+If any In Scope item fails the gate, it's a **blocker** — return to Step 5 to resolve it, or move it to Future Work with the user's agreement.
+
+**Future Work classification** — every Out of Scope item gets a maturity tier:
+- **Explored:** Investigated during the spec. Clear picture of what's needed, recommended approach, and why it's not in scope now. Could be promoted with minimal additional work.
+- **Identified:** Known to matter, but not deeply investigated. Needs its own spec pass before implementation.
+- **Noted:** Surfaced during the process but not examined. Brief description and why it might matter later.
+
+**For In Scope items, capture:**
+- goals and non-goals
+- requirements with acceptance criteria
+- proposed solution (vertical slice)
+- owners and next actions
+- biggest risks + mitigations
+- what gets instrumented/measured
+
+After scope freeze, persist to SPEC.md (In Scope, Future Work, Decision Log) and log the changes to `meta/_changelog.md`.
 
 ---
 
 ### 7) Technical accuracy verification (opt-in, after content is stable)
 
-**Trigger:** All P0 open questions are resolved, phase planning is done, and no pending decisions remain. The spec's content is stable — further changes would be corrections, not new design.
+**Trigger:** All P0 open questions are resolved, scope freeze is done, and no pending decisions remain. The spec's content is stable — further changes would be corrections, not new design.
 
 When you reach this point, proactively offer:
 > "All open questions and design decisions are resolved. Before we sign off, would you like me to do a thorough accuracy check — verifying every technical assertion in the spec against the current codebase and dependency state?"
@@ -320,7 +341,7 @@ For each verified assertion, classify:
 
 Present the summary in two tiers:
 
-**Tier 1 — Design-affecting issues:** Any contradiction or staleness that could change a product decision, invalidate a requirement, affect phasing, or alter the recommended architecture. These are not just fact corrections — they may reopen design questions. Present each as a candidate Open Question or Decision using the existing spec format (type, priority, blocking, what it affects).
+**Tier 1 — Design-affecting issues:** Any contradiction or staleness that could change a product decision, invalidate a requirement, affect scope, or alter the recommended architecture. These are not just fact corrections — they may reopen design questions. Present each as a candidate Open Question or Decision using the existing spec format (type, priority, blocking, what it affects).
 
 **Tier 2 — Factual corrections:** Contradictions or staleness that are localized — the fix is updating a detail in the spec without affecting any design decisions. List each with the current (wrong) claim and the correct information.
 
@@ -345,9 +366,9 @@ Do:
   - Every top requirement maps to a design choice and plan
   - Every design decision explains user impact
   - 1-way-door decisions have explicit confirmation + evidence references
-- Ensure deferrals are documented (not just "later" bullets).
+- Ensure Future Work items have maturity tiers and appropriate documentation (not just "later" bullets).
 - Verify artifact completeness: `evidence/` files reflect all factual findings from the spec process, `meta/_changelog.md` captures all decisions and changes, and SPEC.md reads as a clean current-state snapshot with no stale sections.
-- Use the Phase completion gate to decide whether the current phase is ready to implement.
+- Use the Scope freeze gate to confirm In Scope items are ready to implement.
 
 ---
 
@@ -394,9 +415,9 @@ When the user says "finalize":
 ## Anti-patterns
 - Treating product and tech as separate tracks (they must stay interleaved).
 - Giving "confident" answers without verifying current behavior or dependencies.
-- Letting scope drift without documenting the deferral tradeoff.
+- Letting scope drift without explicit evidence and user confirmation. Scope changes during the iterative loop are expected — but they must be presented with evidence, not made silently.
 - Skipping blast-radius analysis (ops, observability, UI impact, migration).
-- Writing a spec that is not executable (no phases, no acceptance criteria, no risks).
+- Writing a spec that is not executable (no acceptance criteria, no risks, In Scope items that fail the resolution completeness gate).
 - **Accepting the user's first framing without validation.** The initial problem statement may be incomplete or biased toward one solution. Push for specificity even when the user seems confident.
 - **Proposing investigation instead of doing it.** If information is accessible (code, dependencies, web, prior art), investigate autonomously — don't stop to ask permission. Match tool to scope: a function name lookup doesn't need `/research`; a multi-system trace does. But in both cases, do it rather than proposing it. Stop only for genuine judgment gaps (product vision, priority, risk tolerance, scope decisions).
 - **Letting the user skip problem framing.** Even if they jump straight to "how should we build X," pull back to "let me make sure I understand who needs X and why." Step 1 is not optional.
@@ -404,6 +425,8 @@ When the user says "finalize":
 - **Under-extracting open questions (balance fallacy).** The agent generates open questions and silently filters for importance during extraction — listing only items that feel "significant enough." The result is a comfortable handful that looks balanced but reflects the agent's significance threshold, not reality. Fix: separate extraction from prioritization. List every candidate uncertainty; use the tagging step (P0/P1/P2) to prioritize, not the extraction step to filter.
 - **Directing the human to do async work.** Never say "go check with team X," "run an experiment," "talk to customers about this." If you need information the human might have, ask about what they know or think. If you need external information, investigate it yourself using code, web, and docs.
 - **Questioning the human's process instead of probing their thinking.** Don't ask "Have you talked to customers?" or "Have you validated this with users?" Instead, propose options and ask about intent: "Do you want customers to be able to do X? One alternative is Y, which might satisfy the need because Z."
+- **Deferring 3P dependency choices or architectural viability to "future work."** Decisions like "which library/server to use" and "does the recommended path actually work in our runtime" determine whether In Scope items are implementable. They look like implementation details but are spec-time concerns. If someone can't implement the spec without re-opening these choices, the item fails the resolution completeness gate and isn't truly In Scope.
+- **Treating scope as fixed after the hypothesis.** The scope hypothesis (Step 3) is a starting position. Investigation will change it. Scope changes are expected — but they go through the user with evidence, not happen silently.
 
 ---
 
@@ -433,7 +456,7 @@ Recommendation: B (high confidence)
 ### Correct (open thread with investigation status)
 
 ```txt
-3. [Technical, P0, blocks Phase 1] How does our auth middleware handle
+3. [Technical, P0, blocks In Scope] How does our auth middleware handle
    token refresh during long-running requests?
 
    Investigation status: Traced the token refresh path through auth
@@ -451,7 +474,7 @@ Recommendation: B (high confidence)
 ### Correct (judgment call in §2 — needs user vision)
 
 ```txt
-5. [Product, P0, blocks Phase 1] Which persona is the primary target
+5. [Product, P0, blocks In Scope] Which persona is the primary target
    for the initial onboarding flow?
 
    Investigation status: Found 3 distinct entry patterns in analytics
@@ -473,4 +496,4 @@ Recommendation: B (high confidence)
    * explicit user confirmation
    * evidence-backed justification (or clearly labeled uncertainty + plan)
 3. Re-run the `references/quality-bar.md` checklists and triggers.
-4. Stop only when Phase 1 is implementable and the remaining unknowns are explicitly recorded (and accepted by the user for this phase).
+4. Stop only when In Scope items are implementable and the remaining unknowns are explicitly recorded (and accepted by the user).

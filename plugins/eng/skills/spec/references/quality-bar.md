@@ -19,7 +19,7 @@ Impact: Specs are not implementable, not testable, or fail to capture user value
 - [ ] Open Questions have statuses and next actions
 - [ ] Spec includes both PRD + technical design (not just one)
 - [ ] Every major assertion is evidence-backed or labeled ASSUMPTION with a verification plan
-- [ ] Deferrals are documented (not vague)
+- [ ] Future Work items have maturity tiers and appropriate documentation (not vague "later" bullets)
 - [ ] Success metrics defined: what to measure, baseline, target, instrumentation plan
 - [ ] Evidence files contain primary source material (not just summaries)
 - [ ] NOT FOUND claims include documented negative searches
@@ -31,19 +31,20 @@ Impact: Specs are not implementable, not testable, or fail to capture user value
 - [ ] If repo-level surface area skills exist, were they consulted and referenced?
 - [ ] Alternatives considered (why not)
 - [ ] Risks and mitigations with owners
-- [ ] Phasing is ordered by architectural risk validation + user value (not just "small chunks")
-- [ ] Phase 2+ sections pass the qualification bar (concrete acceptance criteria, owner, timeframe) — if not, move to documented deferrals
+- [ ] In Scope items are ordered by architectural risk validation + user value (not just "small chunks")
+- [ ] Future Work items have appropriate maturity tiers — Explored items have implementation sketches, Identified items have investigation plans
 
 **Escalation note:** Should-have items become must-have when any "High-stakes stop and verify" trigger applies (below), unless the user explicitly accepts the risk of skipping.
 
-## Phase completion gate
-A phase's spec is complete when:
-- [ ] Phase N goals and non-goals are explicit
-- [ ] All Phase N blockers are resolved OR explicitly deferred with a documented plan
-- [ ] Owners and next actions exist for Phase N execution
-- [ ] The user agrees the remaining uncertainty is acceptable for this phase
+## Scope freeze gate
+The spec's scope is frozen when:
+- [ ] Every In Scope item passes the resolution completeness gate (all decisions made, 3P deps selected, architecture validated, integration confirmed, ACs verifiable, no dependency on Future Work)
+- [ ] All In Scope blockers are resolved
+- [ ] Owners and next actions exist for In Scope execution
+- [ ] Every Out of Scope item has a Future Work maturity tier (Explored / Identified / Noted)
+- [ ] The user agrees the remaining uncertainty is acceptable
 
-Do not declare a phase complete unilaterally. Surface the remaining unknowns and ask the user whether they're comfortable proceeding to implementation.
+Do not declare scope frozen unilaterally. Surface the remaining unknowns and ask the user whether they're comfortable proceeding to implementation.
 
 ## Traceability checks (the "two-way link")
 - [ ] Every top requirement maps to an implementation plan element

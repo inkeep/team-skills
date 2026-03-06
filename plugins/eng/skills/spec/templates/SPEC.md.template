@@ -120,49 +120,48 @@ Assumptions are temporary scaffolding. Every assumption must have confidence, a 
 
 | ID | Assumption | Confidence | Verification plan | Expiry | Status |
 |---|---|---|---|---|---|
-| A1 |  | HIGH/MED/LOW |  | e.g., "Before Phase 2" | Active |
+| A1 |  | HIGH/MED/LOW |  | e.g., "Before scope freeze" | Active |
 
-## 13) Phases & rollout plan
-### Phase 1 (validate the core)
+## 13) In Scope (implement now)
+<!-- Every item here must pass the resolution completeness gate:
+     all decisions made, 3P deps selected, architecture validated,
+     integration confirmed, acceptance criteria verifiable,
+     no dependency on Future Work items. -->
+
 - Goal:
 - Non-goals:
-- In scope:
-- Out of scope:
-- Blockers (must be resolved or explicitly deferred):
+- Requirements with acceptance criteria: (link to §6)
+- Proposed solution: (link to §9)
 - Owner(s)/DRI:
 - Next actions (tickets/tasks):
-- Acceptance criteria:
 - Risks + mitigations:
-
-### Additional phases
-<!-- Add a phase only when it passes the qualification bar: concrete goal,
-     verifiable acceptance criteria, assigned owner, and planned timeframe.
-     If you can't fill these in, the item belongs in Documented Deferrals (section 15).
-     Not every feature needs multiple phases — Phase 1 + deferrals is often right. -->
-
-<!-- For each additional phase, copy this template:
-
-### Phase N
-- Goal:
-- Non-goals:
-- In scope:
-- Out of scope:
-- Blockers:
-- Owner(s)/DRI:
-- Next actions:
-- Acceptance criteria:
-- Risks + mitigations:
-
--->
+- What gets instrumented/measured:
 
 ## 14) Risks & mitigations
 | Risk | Likelihood | Impact | Mitigation | Owner |
 |---|---|---|---|---|
 |  |  |  |  |  |
 
-## 15) Appendices (documented deferrals)
-For each deferred item:
-- What we learned:
-- Why deferred:
-- Trigger to revisit:
-- Implementation sketch:
+## 15) Future Work
+<!-- Each item gets a maturity tier: Explored, Identified, or Noted.
+     The tier describes how much we know, not how committed we are. -->
+
+### Explored
+<!-- Investigated during the spec. Clear picture. Could promote with minimal work. -->
+- **<Item>**
+  - What we learned:
+  - Recommended approach:
+  - Why not in scope now:
+  - Triggers to revisit:
+  - Implementation sketch:
+
+### Identified
+<!-- Known to matter, not deeply investigated. Needs its own spec pass. -->
+- **<Item>**
+  - What we know:
+  - Why it matters:
+  - What investigation is needed:
+
+### Noted
+<!-- Surfaced but not examined. -->
+- **<Item>** — <brief description + why it might matter later>

@@ -31,7 +31,7 @@ Each trait includes: signal → the move you should make → what to record.
 ### 4) Scope accordion
 **Signal:** You're exploring architecture and future directions.
 **Move:** Expand to validate generality; contract to ship; preserve expansion as appendices.
-**Record:** deferrals with "what we learned" + triggers.
+**Record:** Future Work entries with maturity tiers — what we learned + triggers to revisit.
 
 ### 5) Decision velocity calibration
 **Signal:** Some items are easy; one is hard.
@@ -43,10 +43,10 @@ Each trait includes: signal → the move you should make → what to record.
 **Move:** Treat the feeling of completeness as a signal to probe harder. Re-run the three extraction probes (walk-through, tensions, negative space) from Step 4 against the current state. Restate: what's resolved, what's still open, what's blocking, and what hasn't been examined yet.
 **Record:** current Open Questions list (top P0) + any newly discovered items from the re-sweep.
 
-### 7) Documented deferral
-**Signal:** You say "later", "Phase 2", or "future work" without concrete criteria.
-**Move:** Document it properly (learnings, rationale, triggers, sketch). Then decide: does it pass the phase qualification bar (concrete acceptance criteria, owner, timeframe)? If yes, it earns a phase. If not, it stays as a documented deferral.
-**Record:** deferral entry or qualified phase — not a vague bullet.
+### 7) Future Work classification
+**Signal:** You say "later", "not now", or "future work" without classifying maturity.
+**Move:** Classify the maturity tier honestly: Explored (investigated, clear picture), Identified (known to matter, needs investigation), or Noted (surfaced, not examined). Document appropriately for the tier — Explored items get implementation sketches, Identified items get investigation plans, Noted items get a brief description.
+**Record:** Future Work entry with maturity tier — not a vague "later" bullet.
 
 ### 8) Recursive refinement loop
 **Signal:** New findings change old decisions.

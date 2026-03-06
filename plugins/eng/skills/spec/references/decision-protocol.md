@@ -11,7 +11,7 @@ Impact: Conversation drifts; decisions aren't explicit; the user can't drive eff
 - **Decision:** A choice to commit to (even if reversible).
 - **Assumption:** A temporary placeholder to unblock progress; must carry confidence + a verification plan.
 - **Risk:** A known downside with probability/impact and a mitigation plan.
-- **Deferred item:** Out-of-scope for the current phase, but documented with enough detail to pick up later.
+- **Future Work item:** Out of scope for this implementation, documented with a maturity tier (Explored / Identified / Noted) and enough detail to pick up later without re-research.
 
 ## Assumption lifecycle
 Assumptions are temporary scaffolding. Every assumption must carry:
@@ -26,7 +26,7 @@ When an assumption is refuted → cascade: what other decisions relied on this? 
 1) **Type:** Product / Technical / Cross-cutting
 2) **Priority:** P0 (must), P1 (should), P2 (nice)
 3) **Reversibility:** 1-way door / reversible
-4) **Blocking:** blocks Phase 1? yes/no
+4) **Blocking:** blocks In Scope work? yes/no
 5) **Confidence:** HIGH / MEDIUM / LOW (or CONFIRMED / INFERRED / UNCERTAIN)
 
 ## The numbered decision batch (default interaction contract)
@@ -111,7 +111,7 @@ Immediately do:
 3) Identify blast radius:
    - product surfaces touched
    - technical systems touched
-4) Update phases/deferrals if needed
+4) Update scope/Future Work if needed
 
 ## Stop conditions (when to force deeper diligence)
 If any decision is a 1-way door (public API, schema, security boundary, naming):

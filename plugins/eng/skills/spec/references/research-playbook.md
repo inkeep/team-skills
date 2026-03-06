@@ -20,7 +20,7 @@ The user's role is **judgment**: product vision, priority, risk tolerance, scope
 | Internal prior art (codebase patterns) | Risk tolerance decisions |
 | External prior art (web, comparable products) | 1-way door confirmations |
 | Blast radius mapping | Business constraints (timeline, budget, team) |
-| Verifying claims against primary sources | Scope decisions (Phase 1 vs defer) |
+| Verifying claims against primary sources | Scope decisions (In Scope vs Future Work) |
 | Negative searches (documenting NOT FOUND) | Persona / consumer prioritization |
 
 **Gray area** (bias toward investigating):
