@@ -126,8 +126,57 @@ Foundational choices compound — they become the default that everything else b
 - Are indexes justified by actual query patterns? Missing indexes on frequently-queried columns? Redundant indexes that slow writes?
 - Is the schema forward-compatible? Will it be painful to migrate later? Are nullable columns, defaults, and constraints set up for evolution?
 - Is there a strategy for data lifecycle — archival, soft-delete, unbounded growth?
+- Do storage design choices constrain public-facing contracts? (Cardinality, scoping, soft-delete, and denormalization choices propagate into API response shapes, SDK types, and validation rules — treat these as one-way doors once shipped.)
 
-Schema changes are one-way doors. Treat new tables and columns as architectural decisions that deserve the same scrutiny as API shape.
+Schema changes are one-way doors. Treat new tables and columns as architectural decisions that deserve the same scrutiny as API shape. Public-facing types derived from the schema (API responses, SDK types, validation rules) inherit this treatment — the contract customers bind to is harder to change than the storage underneath.
+
+### Security, auth & authorization model
+**Question:** Who can do what, and how is that enforced?
+**Trigger:** Feature involves authentication, authorization, multi-tenancy, credential handling, or trust boundary changes.
+**What to check:**
+- What is the principal model? (User, API key, service account, agent — what identity types can act?)
+- What authorization strategy applies? (RBAC, ABAC, resource-scoped, org-scoped) Is it consistent with existing patterns?
+- Is tenant isolation enforced at the data layer, not just the API layer? Can a query ever return another tenant's data?
+- How are credentials handled? (Storage, rotation, expiry, revocation) Are secrets in transit and at rest protected?
+- Where are the trust boundaries? (Which components trust each other, and where does verification happen?) Can any path bypass authorization?
+- Are there delegation chains? (User → agent → tool, service → service) Does each hop preserve or re-verify authorization?
+
+Auth and tenant isolation are one-way doors — retrofitting them after launch is painful and risky. Resolve the authorization model during spec time, not during implementation.
+
+### Side effects & idempotency
+**Question:** What observable changes does this operation produce, and what happens if it runs twice?
+**Trigger:** Feature has operations that modify external state (database writes, API calls, notifications, billing events, webhook dispatches, file mutations).
+**What to check:**
+- What is the idempotency model? Can the operation be safely retried? What's the idempotency key?
+- Are side effects ordered? If operation A must happen before B, what enforces the ordering? What happens if B runs without A?
+- Are side effects observable and reversible? Can a user or operator see what happened and undo it if needed?
+- What's the partial failure story? If step 3 of 5 fails, what state are steps 1-2 in? Can the operation resume or must it roll back?
+- Are there silent side effects? (Audit logs, analytics events, cache invalidations, background jobs) Are they documented or will they surprise operators?
+
+Idempotency decisions are hard to retrofit — they affect API contracts, data models, and client retry behavior. Design them during spec time.
+
+### External contract fidelity
+**Question:** Does this design correctly implement the external specs and protocols it claims to support?
+**Trigger:** Feature integrates with or implements an external specification (OAuth, OpenAPI, MCP, A2A, SCIM, webhook standards, chat completion API compatibility, etc.).
+**What to check:**
+- Does the design align with the spec's schema requirements? Are required fields, types, and enumerations preserved? Are optional fields handled per spec semantics?
+- Are the spec's constraints preserved? (Size limits, ordering guarantees, encoding requirements, character restrictions) Or does the design silently relax them?
+- Is the design forward-compatible? Will it handle unknown fields, new enum values, or spec version bumps gracefully?
+- Does the design respect the protocol's state machine and lifecycle? (Connection states, session lifecycle, handshake sequences, error recovery flows) Are transitions handled in the correct order?
+
+External contract deviations are expensive to fix post-launch — consumers build against the contract you ship, not the one you intended.
+
+### Operational readiness
+**Question:** Will this feature be operable in production — debuggable, recoverable, and resilient under stress?
+**Trigger:** Feature is on a critical path, has external dependencies, or introduces new failure domains.
+**What to check:**
+- What is the timeout and backpressure strategy? What happens when downstream services are slow? Is there a circuit breaker or load-shedding mechanism?
+- What is the retry strategy? Are retries safe (idempotent)? Is there exponential backoff? Is there a retry budget to prevent cascade failures?
+- Is the observability design sufficient? Can an operator diagnose a failure from logs, metrics, and traces alone — without reading the code? Are correlation IDs propagated end-to-end?
+- Is the feature debuggable during an incident? Can an operator determine whether the feature is healthy, degraded, or broken? Are there admin endpoints, feature flags, or manual overrides for incident response?
+- What is the degraded mode? When a dependency is down, does the feature error, queue, fall back, or silently drop? Is that behavior documented and intentional?
+
+Operability decisions shape the feature's production behavior. Designing them during spec time prevents "we'll add observability later" from becoming permanent ops debt.
 
 ---
 
@@ -136,7 +185,6 @@ Schema changes are one-way doors. Treat new tables and columns as architectural 
 - Internal prior art (codebase patterns)
 - Current system behavior (end-to-end trace)
 - Dependency capabilities (verified from source)
-- Security & trust boundaries
 - Reversibility (1-way door vs phaseable)
 - Blast radius and cascading effects
 - Phased validation strategy
