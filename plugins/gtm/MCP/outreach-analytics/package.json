@@ -1,0 +1,27 @@
+{
+  "name": "outreach-analytics-mcp",
+  "version": "1.0.0",
+  "description": "MCP Server for Outreach.io campaign analytics",
+  "type": "module",
+  "main": "dist/index.js",
+  "bin": {
+    "outreach-analytics-mcp": "./dist/index.js"
+  },
+  "scripts": {
+    "build": "tsc",
+    "start": "node dist/index.js",
+    "auth": "node dist/auth/get-token.js"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.0.0",
+    "dotenv": "^17.3.1",
+    "zod": "^3.25.0"
+  },
+  "devDependencies": {
+    "@types/node": "^20.0.0",
+    "typescript": "^5.0.0"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}
