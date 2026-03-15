@@ -1,7 +1,7 @@
 ---
 name: research
 description: "Conduct technical research and produce formal reports by default. Can also deliver findings directly or update/extend an existing report. Reports default to <repo-root>/reports/ when in a git repo, or ~/reports/ otherwise. Use when investigating technologies, comparing systems, analyzing codebases, documenting architectures, gathering context for decisions, or when asked to refresh/update prior research."
-argument-hint: "[research topic OR existing report] (optional: specific questions, scope constraints, output format)"
+argument-hint: "[research topic OR existing report] (optional: specific questions, scope constraints, output format, --headless)"
 ---
 
 # Technical Research
@@ -11,6 +11,25 @@ Conduct **evidence-driven technical research**. Default output is a **Formal Rep
 - **Path A — Formal Report (DEFAULT):** Persistent artifact in the resolved reports directory with evidence files. This is the default unless the user explicitly opts out.
 - **Path B — Direct Answer:** Findings delivered in conversation only. **Requires explicit user request** (e.g., "just tell me", "no report needed", "quick answer").
 - **Path C — Update Existing Report:** Surgical additions/corrections to an existing report. Triggered when the user references an existing report or says "update/refresh/extend."
+
+## Autonomy Mode
+
+Research supports two execution modes:
+
+| Mode | Behavior | How entered |
+|---|---|---|
+| **Supervised** (default) | Pause at scoping gate for user rubric confirmation; present routing options interactively | Default when invoked by a user in an interactive session |
+| **Headless** | Auto-confirm rubric after proposing it; auto-select routing decisions; skip interactive follow-up prompts. All other quality gates (routing gate scan, validation, evidence standards) remain enforced. | `$ARGUMENTS` includes `--headless`, OR container environment detected (`/.dockerenv` exists or `CONTAINER=true`), OR invoked via `-p` non-interactive mode |
+
+**Headless mode adjustments:**
+- **Routing Gate:** Still mandatory. Scan for existing research. But instead of presenting options to the user, auto-select: fully covered → proceed to new report (assume the caller wants fresh research on this specific angle), partially covered → start new report, not covered → start new report.
+- **Scoping (Step 1):** Propose the rubric AND proceed immediately — do not stop and wait for confirmation. The rubric is derived from the prompt/arguments provided. If the prompt includes explicit dimensions or questions, use those as the rubric.
+- **Step 6 (Recap + Follow-up):** Write the recap into the report or output. Skip the interactive "where we could go from here" prompt — there is no user to respond.
+- **Tasks:** Still created for structural enforcement and progress tracking, but no blocking on user input.
+
+> **The `--headless` flag is the standard mechanism for orchestrating skills (e.g., `/nest-claude`, `/ship`) to signal "you're running non-interactively."** It follows the same convention as `--delegated` in `/debug` and `/qa`.
+
+---
 
 ## Mandatory Execution Order
 
@@ -154,6 +173,8 @@ Classify the user's topic against existing reports:
 
 Let the user choose. Do not start new research when existing research already answers the question.
 
+**Headless mode (fully covered):** Note the existing report's coverage in the routing log, then proceed to a new report — the caller is requesting fresh research on a specific angle even if prior work exists.
+
 **Partially covered →** Surface the overlap and propose how to build on it:
 
 > "We have related research in `<reports-dir>/<name>/` that covers [what it covers]. Your question about [topic] isn't directly answered, but it's a natural extension.
@@ -163,6 +184,8 @@ Let the user choose. Do not start new research when existing research already an
 > 2. **Start a new report** (Path A) — if this is a distinct enough topic that it deserves its own report.
 >
 > I'd recommend [1 or 2] because [reason]."
+
+**Headless mode (partially covered):** Start a new report (Path A). Do not prompt for extend vs. new.
 
 **Not covered →** Proceed to Path A (default) or Path B:
 
@@ -184,12 +207,14 @@ Default to **Path A** (formal report, Steps 1–6) unless the user explicitly as
 
 ## Step 1: Collaborative Scoping (for Path A/B)
 
-⛔ **HARD GATE.** Do NOT start any research (web searches, code analysis, evidence gathering) until the user explicitly confirms the rubric. After proposing the rubric, **STOP and WAIT for user response.** Mark the Scoping task as `completed` only after receiving user confirmation.
+⛔ **HARD GATE (Supervised mode).** Do NOT start any research (web searches, code analysis, evidence gathering) until the user explicitly confirms the rubric. After proposing the rubric, **STOP and WAIT for user response.** Mark the Scoping task as `completed` only after receiving user confirmation.
+
+**Headless mode:** Propose the rubric based on the prompt/arguments provided, then **proceed immediately** without waiting for confirmation. If the prompt includes explicit dimensions, questions, or scope constraints, use those directly as the rubric. If the prompt is open-ended, infer a reasonable rubric from the topic. Mark the Scoping task as `completed` after proposing.
 
 **Load:** `references/scoping-protocol.md`
 
-- For **Formal Report (Path A):** Output a complete research rubric and get explicit user confirmation before proceeding.
-- For **Direct Answer (Path B):** Scoping is still required; keep it appropriately sized, but make dimensions/stance explicit and confirm.
+- For **Formal Report (Path A):** Output a complete research rubric and get explicit user confirmation before proceeding (Supervised) or auto-confirm (Headless).
+- For **Direct Answer (Path B):** Scoping is still required; keep it appropriately sized, but make dimensions/stance explicit and confirm (Supervised) or auto-confirm (Headless).
 
 > If the user is updating an existing report, skip this step. Use Path C and load `references/updating-existing-reports.md`.
 
@@ -685,7 +710,7 @@ Use consistently throughout:
 * **Deliverable follow-ups instead of research follow-ups**: suggesting checklists, templates, scorecards, style guides, audits-of-user-assets, or other productized outputs as "where we could go from here" — follow-ups must be further research directions (deeper dives, adjacent dimensions, unexplored angles), not downstream deliverables that belong to other skills
 * **Skipping the recap**: dumping a report and going silent — always close with a recap + natural follow-up options unless the user explicitly signals they're done
 * **Ignoring existing reports**: starting new research without scanning the resolved reports directory first — the user may not know what prior research exists, and duplicate work wastes time
-* **Skipping the routing gate and scoping to jump straight to research**: The most common failure mode. When invoked, the agent immediately starts web searching and delivers informal findings without completing the routing gate or getting rubric confirmation. This bypasses the entire protocol. The routing gate and scoping confirmation are hard gates — not optional steps. If you catch yourself about to run a web search before the routing gate is complete, STOP.
+* **Skipping the routing gate and scoping to jump straight to research**: The most common failure mode. When invoked, the agent immediately starts web searching and delivers informal findings without completing the routing gate or getting rubric confirmation. This bypasses the entire protocol. The routing gate and scoping confirmation are hard gates — not optional steps (though in headless mode, scoping auto-confirms after proposing the rubric). If you catch yourself about to run a web search before the routing gate is complete, STOP.
 * **Defaulting to Path B without explicit user signal**: Treating conversational phrasing ("I need to understand...", "what does X do?") as a signal for direct answer delivery. These are normal research requests — Path A is the default unless the user explicitly says "just tell me", "no report needed", or similar.
 
 ---
