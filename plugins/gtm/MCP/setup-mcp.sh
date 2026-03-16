@@ -6,7 +6,7 @@
 # Options:
 #   --all           Install all servers (default)
 #   --http          Install HTTP servers only (figma, posthog, crustdata)
-#   --npx           Install NPX servers only (hubspot, playwright)
+#   --npx           Install NPX servers only (apollo-io, hubspot, playwright)
 #   --local         Build and install local servers only
 #   --help          Show this help message
 
@@ -45,6 +45,14 @@ install_http_servers() {
 
 install_npx_servers() {
     print_header "Installing NPX Servers"
+
+    echo "Adding Apollo.io..."
+    if [ -z "$APOLLO_API_KEY" ]; then
+        print_warning "APOLLO_API_KEY not set. Set it and run:"
+        echo "  claude mcp add apollo-io -s user -e APOLLO_API_KEY=\"your-key\" -- npx -y @thevgergroup/apollo-io-mcp@latest"
+    else
+        claude mcp add apollo-io -s user -e APOLLO_API_KEY="$APOLLO_API_KEY" -- npx -y @thevgergroup/apollo-io-mcp@latest && print_status "Apollo.io added" || print_warning "Apollo.io already exists or failed"
+    fi
 
     echo "Adding HubSpot..."
     claude mcp add hubspot -s user -- npx -y hubspot-mcp && print_status "HubSpot added" || print_warning "HubSpot already exists or failed"

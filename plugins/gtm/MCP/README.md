@@ -20,6 +20,9 @@ claude mcp add crustdata -t http -s user -- https://agents-demos-internal.previe
 ### NPX Servers (npm packages)
 
 ```bash
+# Apollo.io - sales intelligence and prospecting
+claude mcp add apollo-io -s user -e APOLLO_API_KEY="your-api-key" -- npx -y @thevgergroup/apollo-io-mcp@latest
+
 # HubSpot - CRM operations
 claude mcp add hubspot -s user -- npx -y hubspot-mcp
 
@@ -75,6 +78,7 @@ claude mcp list
 
 | Server | Description |
 |--------|-------------|
+| **apollo-io** | Sales intelligence - people/company search, enrichment, sequences, deals |
 | **figma** | Read designs, create FigJam diagrams, Code Connect mappings |
 | **posthog** | Query events, dashboards, feature flags, experiments |
 | **crustdata** | Enrich company/person data by domain or LinkedIn |
