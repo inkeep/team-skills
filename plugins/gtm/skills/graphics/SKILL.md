@@ -346,7 +346,8 @@ The script outputs JSON to stdout with the SVG content, source, and metadata. Us
 Import the resulting SVG into Figma via `figma.createNodeFromSvg(svgString)` in `figma_execute`. After import:
 - Name the node with `third-party/` prefix (e.g., `third-party/freshdesk`)
 - Adapt to the graphic's visual treatment — if other logos are monochrome/grey, convert the imported logo to match (replace fills with the target color)
-- Scale to match sibling logo sizes
+- **Preserve the SVG's aspect ratio when resizing.** Extract the viewBox dimensions (e.g., `viewBox="0 0 24 24"` → 1:1 ratio) and calculate target dimensions from that ratio. Never hardcode arbitrary width/height that doesn't match the viewBox. For example, a 24×24 viewBox resized to 60px wide must be 60×60, not 120×60.
+- Scale to match sibling logo sizes (maintaining the aspect ratio above)
 
 If the script returns `"found": false` or SVG import fails, create a styled text pill as a placeholder (brand name in a rounded rectangle) and flag it for the user to replace manually.
 
@@ -382,13 +383,32 @@ Create a temporary working frame to build atoms in isolation:
 const workingFrame = figma.createFrame();
 workingFrame.name = "Working — Atoms";
 workingFrame.resize(2000, 2000);
+workingFrame.layoutMode = 'VERTICAL';
+workingFrame.primaryAxisAlignItems = 'MIN';
+workingFrame.counterAxisAlignItems = 'MIN';
+workingFrame.itemSpacing = 24;
+workingFrame.paddingLeft = workingFrame.paddingRight = workingFrame.paddingTop = workingFrame.paddingBottom = 24;
 workingFrame.fills = [{ type: 'SOLID', color: { r: 0.95, g: 0.95, b: 0.95 } }];
 ```
 
 For each element in the build plan:
 1. **Create it** using the appropriate figma-console tool
 2. **Style it** — apply brand colors, fonts, corner radius, shadows
-3. **Name it** — descriptive layer name immediately (`figma_rename_node`)
+3. **Name it** — descriptive layer name immediately (`figma_rename_node`). Use these conventions:
+
+   | Layer type | Name | Examples |
+   |---|---|---|
+   | Background | `bg` | `bg` |
+   | Content group | `content` | `content` |
+   | Headings | `headline`, `subhead` | `headline` |
+   | Body text | `body` | `body` |
+   | Images | `img-{desc}` | `img-hero`, `img-avatar` |
+   | Icons | `icon/{name}` | `icon/arrow-right` |
+   | Decorative | `deco-{desc}` | `deco-gradient`, `deco-line` |
+   | Logo | `logo-lockup` | `logo-lockup` |
+   | CTA | `cta` | `cta` |
+   | Third-party logos | `third-party/{name}` | `third-party/vercel` |
+
 4. **Screenshot it** — `figma_capture_screenshot` to verify it looks correct
 5. **Fix issues** — if the screenshot shows problems, fix before continuing
 
@@ -397,6 +417,7 @@ Once simple atoms are verified, compose them into compound elements (group into 
 **Checkpoint:** Screenshot the entire working frame. Verify:
 - [ ] Every planned atom exists (nothing left as placeholder)
 - [ ] Brand colors exact, fonts correct
+- [ ] **Aspect ratios preserved:** for every imported SVG, compare the rendered width:height ratio against the source viewBox. A 24×24 viewBox must render square; a 100×25 viewBox must render 4:1. If any element looks stretched or squished, fix it before proceeding.
 - [ ] Compound elements hold together visually
 - [ ] All layers have descriptive names
 
@@ -406,8 +427,19 @@ Fix any issues now — it's much easier to fix individual atoms than after compo
 
 **Goal:** Assemble verified atoms into the final graphic layout.
 
-1. **Create the root frame** at target dimensions with background fill and auto-layout
-2. **Build the layout structure** — section/group frames (header, content, footer, etc.) with auto-layout for editability
+1. **Create the root frame** at target dimensions with background fill and auto-layout. **Every frame must use auto-layout** — the only exception is decorative overlays (badges, background patterns) which use "Ignore auto layout" to float above content. Set sizing on each element using this matrix:
+
+   | Sizing mode | Use for | Examples |
+   |---|---|---|
+   | **Hug contents** | Containers that adapt to content | Buttons, badges, tags, inline labels |
+   | **Fill container** | Elements that stretch to fill parent | Text blocks in cards, images, content areas |
+   | **Fixed** | Elements with mandatory exact dimensions | Logos, icons, avatars, root page frames |
+
+   **Critical rule:** If any child is set to Fill, the parent auto-switches from Hug to Fixed on that axis (circular dependency prevention).
+
+   Use spacing values from the brand tokens spacing scale (see `references/brand-tokens.md`) — never ad-hoc pixel values.
+
+2. **Build the layout structure** — section frames (header, content, footer, etc.) with auto-layout for editability. Stack layers bottom-to-top: `bg` → structure containers → content (text, images) → branding (logo) → decorative overlays. This ordering must be consistent across all frames.
 3. **Move atoms into the composition** — move or clone verified atoms from the working frame into their correct sections, position according to the composition plan
 4. **Add connection elements last** — lines, arrows, and connectors depend on final positions. Create them after everything else is placed. Verify connections visually — lines should touch their target elements, not float nearby. **If any layout change happens after connectors are placed** (card resizing, repositioning, re-centering), **delete and rebuild all connectors from scratch** — adjusting individual connectors is error-prone and slower than a clean rebuild.
 
@@ -447,7 +479,7 @@ Fix any issues now — it's much easier to fix individual atoms than after compo
 
 1. **Alignment and spacing** — consistent spacing, proper alignment, visual balance
 2. **Layer organization** — descriptive names on all layers, logical layer order (background → structure → content → decorative)
-3. **Final screenshot** — verify brand colors exact, typography correct, no placeholders, connections attached, design looks intentional. If adapting an existing asset, do a final A/B comparison with the original source file.
+3. **Final screenshot** — verify brand colors exact, typography correct, no placeholders, connections attached, design looks intentional. For imported SVGs, explicitly verify aspect ratios one more time: compare each logo's rendered proportions against its source viewBox — stretched or squished logos are the most common visual defect that passes casual inspection. If adapting an existing asset, do a final A/B comparison with the original source file.
 4. **Clean up** — delete the "Working — Atoms" frame, remove stray elements
 
 #### Iteration is expected
