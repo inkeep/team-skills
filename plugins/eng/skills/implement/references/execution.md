@@ -88,7 +88,7 @@ After each implement.sh run completes, read spec.json and progress.txt:
 |---|---|
 | Story is too large (blocker is "ran out of context" or incomplete implementation) | Split into smaller stories in spec.json, set `passes: false` on the new stories |
 | Acceptance criteria are ambiguous (blocker mentions unclear requirements) | Rewrite criteria to be more specific, then re-run |
-| External dependency blocking (missing env var, unavailable service) | Skip the story: set `notes` to explain the blocker, move to next |
+| External dependency blocking (missing env var, unavailable service) | Set `notes` to explain the blocker. `implement.sh` increments `attemptCount` automatically and marks the story `status: "blocked"` when the retry budget is exhausted. |
 | Implementation approach is wrong (repeated failures on same code path) | Add guidance to `tmp/ship/progress.txt` suggesting an alternative approach |
 
 ### Escalation
@@ -122,6 +122,7 @@ Max turns controls how much work a single iteration can do before being cut off.
 | Max implement.sh runs | 3 | The skill invokes implement.sh up to 3 times, checking between runs. Increase only if stuck story handling resolves issues between runs. |
 | Stuck threshold | 2 consecutive runs | Same story fails with same blocker in 2 runs → apply remediation before next run. |
 | Escalation threshold | 3 consecutive runs | Same story fails 3 runs → stop and consult user. |
+| Max story attempts (`--max-story-attempts`) | 3 | Within a single implement.sh run, each story gets at most this many tries before being marked `status: "blocked"` and skipped. |
 
 ---
 

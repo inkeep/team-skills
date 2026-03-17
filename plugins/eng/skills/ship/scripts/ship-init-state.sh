@@ -134,6 +134,16 @@ jq -n \
       lint: $qgLint
     },
     completedPhases: ["Phase 0", "Phase 1"],
+    phaseHistory: [
+      { phase: "Phase 0", startedAt: $now, completedAt: $now },
+      { phase: "Phase 1", startedAt: $now, completedAt: $now },
+      { phase: "Phase 2", startedAt: $now, completedAt: null }
+    ],
+    phaseMetrics: {
+      "Phase 0": { startedAt: $now, completedAt: $now, iterations: 1 },
+      "Phase 1": { startedAt: $now, completedAt: $now, iterations: 1 },
+      "Phase 2": { startedAt: $now, completedAt: null, iterations: 0 }
+    },
     capabilities: {
       gh: $capGh,
       browser: $capBrowser,

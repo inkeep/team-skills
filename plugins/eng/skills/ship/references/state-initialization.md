@@ -99,6 +99,16 @@ If either file is missing, check the script's error output and re-run. Do not pr
   "prNumber": null,
   "qualityGates": { "test": "<cmd>", "typecheck": "<cmd>", "lint": "<cmd>" },
   "completedPhases": ["Phase 0", "Phase 1"],
+  "phaseHistory": [
+    { "phase": "Phase 0", "startedAt": "<ISO 8601 timestamp>", "completedAt": "<ISO 8601 timestamp>" },
+    { "phase": "Phase 1", "startedAt": "<ISO 8601 timestamp>", "completedAt": "<ISO 8601 timestamp>" },
+    { "phase": "Phase 2", "startedAt": "<ISO 8601 timestamp>", "completedAt": null }
+  ],
+  "phaseMetrics": {
+    "Phase 0": { "startedAt": "<ISO 8601 timestamp>", "completedAt": "<ISO 8601 timestamp>", "iterations": 1 },
+    "Phase 1": { "startedAt": "<ISO 8601 timestamp>", "completedAt": "<ISO 8601 timestamp>", "iterations": 1 },
+    "Phase 2": { "startedAt": "<ISO 8601 timestamp>", "completedAt": null, "iterations": 0 }
+  },
   "capabilities": { "gh": true, "browser": false, "peekaboo": false, "docker": false },
   "scopeCalibration": "<from --scope>",
   "amendments": [],
@@ -131,6 +141,8 @@ started_at: "<ISO 8601 timestamp>"
 | `prNumber` | Initialization (`null`) | After PR creation (set to PR number) |
 | `qualityGates` | Initialization (from Phase 0 detection) | — |
 | `completedPhases` | Initialization | Append at each phase transition |
+| `phaseHistory` | Initialization | Stop hook repairs/extends it as phases start and complete |
+| `phaseMetrics` | Initialization | Stop hook updates timestamps/iteration counts and mirrors them to `metrics.json` |
 | `capabilities` | Initialization (from Phase 0 detection) | — |
 | `scopeCalibration` | Initialization (from Phase 0 Step 4) | — |
 | `amendments` | Initialization (empty) | Any phase: append when user requests post-spec changes |
@@ -138,6 +150,6 @@ started_at: "<ISO 8601 timestamp>"
 
 ## What happens after activation
 
-The stop hook is now active. If your context is compacted or you try to exit, the hook blocks exit and re-injects a phase-aware prompt with your current state, keeping you working through all remaining phases. The loop runs until you complete all phases and output `<complete>SHIP COMPLETE</complete>`, or until 20 iterations are reached.
+The stop hook is now active. If your context is compacted or you try to exit, the hook blocks exit and re-injects a phase-aware prompt with your current state, keeping you working through all remaining phases. It also validates that `currentPhase` and `completedPhases` are contiguous, repairs phase gaps, updates `phaseMetrics`, writes `${CLAUDE_SHIP_DIR:-tmp/ship}/metrics.json`, and refuses to advance when an inter-phase gate is missing (for example: no branch diff after implementation, missing `qa-progress.json`, missing docs diff, or missing `prNumber` before review completion). The loop runs until you complete all phases and output `<complete>SHIP COMPLETE</complete>`, or until 20 iterations are reached.
 
 To cancel the loop manually: `/cancel-ship`

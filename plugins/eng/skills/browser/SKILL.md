@@ -21,7 +21,7 @@ General-purpose browser automation skill. Write custom Playwright code for any a
    cd $SKILL_DIR && node run.js --session start
    ```
 
-   Scripts auto-detect the session and connect via WebSocket (~50ms) instead of launching a new browser (~2-3s). Login state, cookies, and localStorage persist between runs. Skip this step only for true one-off scripts or CI/CD environments.
+   Scripts auto-detect the session and connect via WebSocket (~50ms) instead of launching a new browser (~2-3s). Login state, cookies, and localStorage persist between runs. Session state is stored per workspace under `tmp/browser/` when the project root can be resolved, which prevents parallel worktrees from colliding. Skip this step only for true one-off scripts or CI/CD environments.
 
 2. **Auto-detect dev servers** - For localhost testing, run server detection:
 
@@ -1081,10 +1081,10 @@ cd $SKILL_DIR && node run.js --session stop
 
 1. `--session start` launches a headless Chromium via Playwright's `launchServer()`
 2. The browser runs as a background daemon (detached process)
-3. Session info is written to `/tmp/playwright-session.json`
+3. Session info is written to `tmp/browser/playwright-session.json` in the current workspace when the project root can be resolved (fallback: system temp dir)
 4. When you run a script, `run.js` auto-detects the session and connects via WebSocket
 5. Your code gets pre-wired `browser`, `context`, and `page` variables
-6. On script exit, cookies/localStorage/current URL are saved to `/tmp/playwright-session-state.json`
+6. On script exit, cookies/localStorage/current URL are saved to `tmp/browser/playwright-session-state.json` in the current workspace (fallback: system temp dir)
 7. Next script reconnects and restores state — same auth, same URL, ready to continue
 
 ### What your code gets

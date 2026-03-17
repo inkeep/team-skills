@@ -53,8 +53,9 @@ All execution state lives in `tmp/ship/` (gitignored). The only committed artifa
 
 | File | What it holds | Created | Updated | Read by |
 |---|---|---|---|---|
-| `tmp/ship/state.json` | Workflow state — current phase, feature name, spec path, PR #, branch, capabilities, quality gates, amendments | Phase 1 (Ship) | Every phase transition (Ship) | Stop hook (re-injection), Ship (re-entry) |
+| `tmp/ship/state.json` | Workflow state — current phase, feature name, spec path, PR #, branch, capabilities, quality gates, amendments, phaseHistory, phaseMetrics | Phase 1 (Ship) | Every phase transition (Ship); stop hook also repairs phase state/history and updates metrics | Stop hook (re-injection), Ship (re-entry) |
 | `tmp/ship/loop.md` | Loop control — iteration counter, max iterations, completion promise, session_id (for isolation) | Phase 1 (Ship) | Each re-entry (stop hook increments iteration, stamps session_id) | Stop hook (block/allow exit) |
+| `tmp/ship/metrics.json` | Run metrics snapshot — per-phase timestamps, durations, and iteration counts | Stop hook | Each re-entry (overwritten) | Debugging, run analysis |
 | `tmp/ship/last-prompt.md` | Last re-injection prompt — the full prompt the stop hook constructed on its most recent re-entry, for debugging | Stop hook | Each re-entry (overwritten) | Debugging only |
 | `tmp/ship/spec.json` | User stories — acceptance criteria, priority, pass/fail status | Phase 2 (/implement) | Each iteration (sets `passes: true`) | implement.sh, iterations, Ship |
 | `tmp/ship/progress.txt` | Iteration log — what was done, learnings, blockers | Phase 2 start (implement.sh) | Each iteration (append) | Iterations, Ship |
@@ -69,7 +70,7 @@ All execution state lives in `tmp/ship/` (gitignored). The only committed artifa
 | **Phase 1 end** | **Run** `ship-init-state.sh` — creates both `state.json` and `loop.md` (see Phase 1, Step 3) | — |
 | **Phase 2 start** | — | `/implement` creates `tmp/ship/spec.json`, `tmp/ship/implement-prompt.md`, `tmp/ship/progress.txt` |
 | **Pre-push local review gate** | — | `run-local-review.sh` stages the portable review bundle into `tmp/ship/pr-review-plugin/` and overwrites `tmp/ship/review-output.md` with the latest markdown summary |
-| **Any phase → next** | Set `currentPhase` to next phase, append completed phase to `completedPhases`, refresh `lastUpdated` | — |
+| **Any phase → next** | Set `currentPhase` to next phase, append completed phase to `completedPhases`, refresh `lastUpdated` | Stop hook validates contiguous phases, repairs `phaseHistory`, and refreshes metrics on re-entry |
 | **User amendment** (any phase) | Append to `amendments[]`: `{"description": "...", "status": "pending"}` | — |
 | **Iteration completes a story** | — | `tmp/ship/spec.json`: set story `passes: true`. `tmp/ship/progress.txt`: append iteration log. |
 | **PR created** (after pre-push local review) | Set `prNumber` | Draft PR created on GitHub |
@@ -84,7 +85,21 @@ The PR body is a living document — not write-once. A draft PR with a stub body
 
 Load `/pr` skill for all PR body work — writing the full body and updating it after subsequent phases. The skill owns the template, section guidance, and principles (self-contained, stateless).
 
-**Update rule:** After any phase that changes code or documentation, check whether the PR description is now stale and re-load `/pr` skill to update it. Phase 6 verifies the description is comprehensive and current.
+### Stop hook enforcement
+
+The stop hook does more than re-inject context. On every re-entry it:
+
+- Validates that `currentPhase` is a known value and that `completedPhases` has no gaps.
+- Repairs corrupted phase state by rolling back to the earliest incomplete phase.
+- Maintains `phaseHistory` entries as phases start and complete.
+- Maintains `phaseMetrics` and writes `tmp/ship/metrics.json` with per-phase durations and iteration counts.
+- Refuses to advance past a phase when its artifact gate is missing:
+  - Phase 2 → branch diff present and configured quality gates passing
+  - Phase 3 → `tmp/ship/qa-progress.json` exists with at least one scenario
+  - Phase 4 → branch diff includes a `.md` or `.mdx` change
+  - Phase 5 → `prNumber` is set unless GitHub capability was explicitly unavailable
+
+**Update rule:** After any phase that changes code or documentation, check whether the PR description is now stale and re-load `/pr` to update it. Phase 6 verifies the description is comprehensive and current.
 
 ---
 

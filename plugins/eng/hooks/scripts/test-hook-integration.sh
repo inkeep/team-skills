@@ -41,7 +41,7 @@ cat > tmp/ship/loop.md << 'EOF'
 ---
 active: true
 iteration: 1
-max_iterations: 3
+max_iterations: 2
 completion_promise: "SHIP COMPLETE"
 started_at: "2026-02-15T14:00:00Z"
 ---
@@ -70,9 +70,9 @@ echo ""
 
 # Run Claude — it should see the stop hook re-inject and mention phase context
 RESPONSE=$(env -u CLAUDECODE -u CLAUDE_CODE_ENTRYPOINT claude \
-  -p "Read tmp/ship/state.json and tell me what phase this ship workflow is at. Just output the phase name." \
+  -p "What phase is this ship workflow at? Answer briefly." \
   --dangerously-skip-permissions \
-  --max-turns 5 \
+  --max-turns 2 \
   --output-format json 2>&1 || true)
 
 echo "Response: $RESPONSE"
