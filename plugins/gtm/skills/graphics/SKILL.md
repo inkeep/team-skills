@@ -105,11 +105,12 @@ rect.fills = [figma.variables.setBoundVariableForPaint(
 
 Create these tasks in order:
 1. `"Graphics: Parse request"` → set to `in_progress`
-2. `"Graphics: Collect assets & brand tokens"` → pending
-3. `"Graphics: Plan composition"` → pending
-4. `"Graphics: Generate graphic"` → pending
-5. `"Graphics: Brand consistency check"` → pending
-6. `"Graphics: Export & deliver"` → pending
+2. `"Graphics: Creative brief"` → pending
+3. `"Graphics: Collect assets & brand tokens"` → pending
+4. `"Graphics: Plan composition"` → pending
+5. `"Graphics: Generate graphic"` → pending
+6. `"Graphics: Brand consistency check"` → pending
+7. `"Graphics: Export & deliver"` → pending
 
 As each step begins, mark its task `in_progress`. When the step completes, mark it `completed`.
 
@@ -180,6 +181,8 @@ The standard files also contain **design guidelines specific to each medium** (t
 
 Present the suggestion to the user: "Based on the content, I'd suggest a [type] approach because [reason]. Does that work, or did you have something different in mind?"
 
+  Use the content analysis to pre-fill the Creative Brief in Step 1b — extract the key message, hero content, audience, and tone from the content rather than asking the user for them from scratch.
+
 - **Output format**: choose based on the graphic type and what happens to it next:
 
 | Graphic type | Best format | Why |
@@ -215,6 +218,72 @@ Present the suggestion to the user: "Based on the content, I'd suggest a [type] 
 
 - **Existing asset**: if user provides a Figma URL or file reference, use it as the starting point (skip step 2)
 - **Content**: what the graphic should depict or communicate
+
+**Mark task "Graphics: Parse request" as `completed`.**
+
+---
+
+### 1b. Creative Brief — align on messaging and purpose
+
+⛔ **Mark task "Graphics: Creative brief" as `in_progress` before proceeding.** Do NOT skip to asset collection or visual planning without establishing what the graphic needs to communicate.
+
+The Creative Brief captures the **what** and **why** — who this is for, what it should say, and what the viewer should do. The Composition Brief (Step 3) captures the **how** — visual layout, recipes, and patterns. Separating these prevents the observed failure mode of jumping to visual execution without understanding the message.
+
+**Interaction model: propose-confirm, not interrogate.** Extract as much as possible from context, propose a brief, pause ONCE for confirmation. Do not ask blank questions — always lead with a recommendation.
+
+#### How to produce the brief
+
+**Route based on what the user provided:**
+
+| User provided | What to do |
+|---|---|
+| **Content** (blog post, feature spec, article) | Extract answers to all 6 fields from the content. Propose the brief with your extractions. Pause for confirmation. |
+| **Partial context** ("make a graphic for our Agents feature") | Ask for the 2-3 fields you can't infer (key message, hero content). Propose defaults for the rest based on format + brand knowledge. Pause for confirmation. |
+| **Fully-specified request** ("blog cover with headline 'X', showing Y mockup, for Z audience") | Confirm the brief is complete — do not interrogate. Proceed. |
+
+#### Creative Brief template
+
+```
+## Creative Brief
+
+### Goal
+___ (What should this graphic achieve? Click-through to blog? Brand awareness? Social sharing? Education?)
+
+### Audience
+___ (Who sees this? Technical decision-makers, developers, support leaders, general B2B?)
+
+### Key message
+___ (One sentence — the single takeaway the viewer should remember)
+
+### Hero content
+___ (What's the visual centerpiece? A specific stat, product UI, illustration concept, or headline?)
+
+### Tone
+___ (3-5 adjectives — e.g., "authoritative, technical, clean" or "warm, approachable, human")
+
+### Call to action
+___ (What should the viewer DO? Read the blog post, book a demo, share on LinkedIn, remember the brand?)
+```
+
+**Rules for the brief:**
+- **Propose, don't interrogate.** When content is available, FILL IN the fields with your best extraction and present for confirmation. When content is unavailable, propose reasonable defaults and ask the user to correct what's wrong — don't present 6 blank fields.
+- **One confirmation round.** Present the brief, get user confirmation or adjustments, proceed. Do not iterate more than once unless the user's corrections reveal a fundamental misunderstanding.
+- **Push back on weak angles.** If the content has a stronger hook than what the user described, surface it: "You mentioned [X], but the content includes [impressive stat/compelling UI/stronger angle] — should we lead with that instead?" This is the designer's contribution to messaging — visual hierarchy IS a messaging decision.
+- **Skip when unnecessary.** If the user's request already specifies the message, audience, hero content, and tone (even informally), confirm and proceed — don't force them through a template. Write out the brief for your own reference but don't make the user re-approve what they already said.
+- **Context (field 7) is already handled.** Step 1 captures the output medium and dimensions. Don't re-ask.
+
+**How the Creative Brief feeds forward:**
+- **Key message** → determines what's visually dominant in the Composition Brief (Step 3)
+- **Hero content** → determines which artifact recipe to apply (product mockup? code-as-visual? metric callout?)
+- **Audience** → influences tone translation (developer-facing = monospace-forward, technical depth; executive-facing = clean, stat-forward)
+- **Goal + CTA** → determines whether the graphic needs a CTA element, urgency signals, or is purely brand/awareness
+- **Tone** → maps to warm vs dark background decision, color accent choices, visual density
+
+**Why this exists:** Without this step, the observed failure mode is the agent producing visually polished graphics that communicate the wrong message, feature the wrong content, or target the wrong audience — because it never asked. 95% of design misalignment traces to brief quality (Superside research). The cost of one confirmation round is far lower than the cost of rebuilding a graphic that missed the point.
+
+**Mark task "Graphics: Creative brief" as `completed`.**
+
+---
 
 ### 2. Find a starting point, collect assets, and pull brand tokens
 
@@ -370,6 +439,16 @@ Write out the brief using this template:
 - Edge bleed: ___ (bleed / contained / overlapping)
 - Brand system consistency: ___ (if part of a series — what's locked, what varies)
 
+### Generation method per element
+(For each visual element, declare which tool and why. Consult the output format table in Step 1.)
+- Illustrations/icons/abstract art: ___ (Quiver / Figma shapes / N/A — why?)
+- Logos (Inkeep): ___ (cloned from Brand Assets node ID: ___)
+- Logos (third-party): ___ (cloned from Brand Assets / fetched via fetch-logo.ts / N/A)
+- Product screenshots: ___ (Figma mockup / real screenshot + styling / N/A)
+- Photorealistic imagery: ___ (GPT Image / N/A)
+- Text and layout: Figma (always)
+- Hybrid composition needed? ___ (e.g., "Quiver illustration → import to Figma → add text + brand elements")
+
 ### Composition plan
 - Layout: overall structure, element placement
 - Content elements: text, icons, shapes, images, data points
@@ -383,15 +462,20 @@ Write out the brief using this template:
 - [ ] Badge is ≤1/8 heading visual weight
 - [ ] No raw screenshots (all product UI is stylized)
 - [ ] Max 2 typefaces in this graphic
+- [ ] Illustrations use Quiver (not hand-built Figma shapes) unless purely geometric
+- [ ] Third-party logos are real assets (not text/shape approximations)
 ```
 
 **Rules for the brief:**
 - Every recipe must be explicitly marked YES or NO — skipping the scan is the failure mode this prevents
+- Every visual element must declare its generation tool — this prevents defaulting to Figma shapes for everything
 - Color values must reference token names (`brand/primary`, `bg/surface`) not bare hex codes from memory
 - If no artifact recipes apply (e.g., a pure diagram), note "None — diagram only, using diagram rules from brand-guide.md"
 - The anti-pattern check must all pass before presenting to the user. If any fail, fix the plan first.
+- If an illustration or icon is marked "Figma shapes" instead of Quiver, justify WHY (only acceptable for purely geometric compositions like simple diagrams)
+- If a third-party logo is not sourced from Brand Assets or fetch-logo.ts, STOP — logos must never be approximated
 
-**Why this exists:** Without this checkpoint, the observed failure mode is the agent skipping the Load instructions, planning from general design knowledge, and producing graphics that miss brand-specific treatments (wrong shadow, wrong radius, flat backgrounds, oversized badges). The brief forces the agent to read the references because it can't fill the template without them.
+**Why this exists:** Without this checkpoint, the observed failure modes are: (1) the agent skipping the Load instructions, planning from general design knowledge, and producing graphics that miss brand-specific treatments (wrong shadow, wrong radius, flat backgrounds, oversized badges); (2) the agent defaulting to basic Figma shapes for everything instead of using Quiver for illustrations, GPT Image for photorealistic imagery, and fetch-logo.ts for third-party logos — producing flat, unpolished graphics that lack the richness the toolchain enables. The brief forces the agent to read the references and commit to the right tools before building.
 
 For diagrams: plan the nodes, edges, groupings, and flow direction. Follow the diagram rules in brand-guide.md (max 8-10 nodes, L-to-R or T-to-B flow, JetBrains Mono labels, 90-degree connector bends).
 
