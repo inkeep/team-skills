@@ -196,7 +196,7 @@ See `references/composition-patterns.md` § "Brand system consistency" for the f
 
 - Raw product screenshots without styling (always float, angle, shadow, round)
 - Stock photo aesthetic (generic office scenes, handshakes) — zero top companies use stock photos
-- More than 2 lines of title text
+- More than 2 lines of title text. **If the article title is too long**, create a shorter thumbnail variant — the thumbnail title doesn't need to match the article title exactly. Aim for 5-8 words that capture the core idea. Never break below the readability minimum to fit a long title.
 - **Excessive padding** — content should fill 75-85% of the frame, not float in empty space
 - **Flat backgrounds** — always add subtle texture (dot grid, gradient, light bloom, grain)
 - **Too many colors** — limit surround to 3 colors; let the mockup carry color complexity

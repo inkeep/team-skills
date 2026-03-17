@@ -6,22 +6,25 @@ Standard for YouTube channel art / banner images.
 
 | Property | Value |
 |---|---|
-| **Upload size** | 2560 x 1440 px |
+| **Working canvas** | 1280 x 720 px |
+| **Export size** | 2560 x 1440 px (export at **2x scale**) |
 | **Aspect ratio** | 16:9 |
 | **File formats** | JPG, PNG, GIF, BMP |
 | **Max file size** | 6 MB |
+
+All pixel values below are at **1280×720 working scale**.
 
 ## Safe zones (critical)
 
 The banner displays differently on every device. Only the center strip is guaranteed visible everywhere.
 
-| Device | Visible area |
-|---|---|
-| TV | Full 2560 x 1440 |
-| Desktop | ~2560 x 423 px (centered strip) |
-| Tablet | ~1855 x 423 px |
-| Mobile | ~1546 x 423 px |
-| **All-device safe zone** | **1235 x 338 px (centered)** |
+| Device | Visible area (at 1280w working) | Visible area (at 2560w exported) |
+|---|---|---|
+| TV | Full 1280 x 720 | Full 2560 x 1440 |
+| Desktop | ~1280 x 212 (centered strip) | ~2560 x 423 |
+| Tablet | ~928 x 212 | ~1855 x 423 |
+| Mobile | ~773 x 212 | ~1546 x 423 |
+| **All-device safe zone** | **618 x 169 (centered)** | **1235 x 338** |
 
 ```
 ┌──────────────────────────────────────────────────┐
@@ -34,7 +37,7 @@ The banner displays differently on every device. Only the center strip is guaran
 │  │  │  │      MOBILE             │      │      │  │
 │  │  │  │  ┌──────────────┐      │      │      │  │
 │  │  │  │  │  ALL DEVICES  │      │      │      │  │
-│  │  │  │  │ 1235 x 338   │      │      │      │  │
+│  │  │  │  │  618 x 169   │      │      │      │  │
 │  │  │  │  └──────────────┘      │      │      │  │
 │  │  │  └────────────────────────┘      │      │  │
 │  │  └──────────────────────────────────┘      │  │
@@ -42,7 +45,7 @@ The banner displays differently on every device. Only the center strip is guaran
 └──────────────────────────────────────────────────┘
 ```
 
-**ALL critical content (logo, tagline, CTA) must fit within the center 1235 x 338 px area.** Anything outside this zone will be cropped on at least one device.
+**ALL critical content (logo, tagline, CTA) must fit within the center 618 x 169 px area (at working scale).** Anything outside this zone will be cropped on at least one device.
 
 ## Design guidelines
 
@@ -53,8 +56,8 @@ The banner displays differently on every device. Only the center strip is guaran
 - That's it — the safe zone is narrow. Don't try to fit too much
 
 ### Composition
-- **Design the full 2560 x 1440** with decorative/brand elements that look good on desktop/TV
-- **Keep ALL text and logos within the 1235 x 338 safe zone**
+- **Design the full 1280 x 720 working canvas** with decorative/brand elements that look good on desktop/TV
+- **Keep ALL text and logos within the 618 x 169 safe zone**
 - **Gradient or brand-colored background** works well for the outer areas
 - **Test across devices** — YouTube's channel customization shows a preview of how it crops
 
@@ -65,6 +68,6 @@ The banner displays differently on every device. Only the center strip is guaran
 
 ### What to avoid
 - Text outside the safe zone (will be cropped on mobile)
-- Small text (the safe zone is only 338px tall — keep text large)
+- Small text (the safe zone is only 169px tall at working scale — keep text large)
 - Busy, detailed backgrounds (lost at mobile rendering sizes)
 - Outdated information (update the banner when messaging changes)

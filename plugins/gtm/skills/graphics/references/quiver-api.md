@@ -35,6 +35,7 @@ The script lives at `scripts/quiver-generate.ts`. Uses Node.js built-ins for the
 bun scripts/quiver-generate.ts generate \
   --prompt "A minimal logo for a developer tools company" \
   --instructions "Use colors #3784FF and #231F20. Clean geometric style." \
+  --temperature 0.5 \
   --output logo.svg
 ```
 
@@ -68,6 +69,8 @@ Up to 4 reference images (local file paths or URLs). References guide the model'
 ```bash
 bun scripts/quiver-generate.ts vectorize \
   --image screenshot.png \
+  --auto-crop \
+  --target-size 512 \
   --output vectorized.svg
 ```
 
@@ -102,14 +105,19 @@ If `sharp` is not installed, PNG generation fails gracefully (warning only) and 
 | `n` | no | 1 | Number of SVGs to generate (1-16) |
 | `temperature` | no | 1 | Randomness (0-2). Lower = more deterministic |
 | `top_p` | no | 1 | Nucleus sampling (0-1) |
+| `presence_penalty` | no | 0 | Encourages pattern diversity (-2 to 2). Positive = explore new patterns, negative = more focused/consistent |
 | `max_output_tokens` | no | — | Max output length (up to 131072) |
 
 ### POST /v1/svgs/vectorizations
 
-| Parameter | Required | Description |
-|---|---|---|
-| `model` | yes | `"arrow-preview"` |
-| `image` | yes | Base64 data URI or URL of raster image |
+| Parameter | Required | Default | Description |
+|---|---|---|---|
+| `model` | yes | — | `"arrow-preview"` |
+| `image` | yes | — | Base64 data URI or URL of raster image |
+| `auto_crop` | no | false | Auto-detect and crop subject before vectorization — cleaner output from messy inputs |
+| `target_size` | no | — | Target output size in pixels, square (128-4096) |
+
+**Note:** As of 2026-03-17, the vectorization endpoint may reject some image inputs with "Invalid input" errors. If this occurs, try a different image format or resolution, or fall back to the generation endpoint with a descriptive prompt. This appears to be an API-side issue.
 
 ## Prompting guide
 
@@ -136,24 +144,83 @@ Brand constraints:
 - No text unless explicitly requested (text renders as paths, not editable)
 ```
 
-### Temperature tuning
+### Temperature and presence_penalty tuning
 
-| Intent | Temperature | Why |
-|---|---|---|
-| Brand-consistent icon set | 0.3–0.5 | Low variation; each icon should match the others |
-| On-brand illustration | 0.5–0.7 | Some creative range within brand constraints |
-| Creative exploration | 1.0–1.5 | Maximum variation; pair with `--n 3` for user to pick direction |
+| Intent | Temperature | Presence Penalty | Why |
+|---|---|---|---|
+| Brand-consistent icon set | 0.3–0.5 | -0.5 to 0 | Low variation + reinforce consistency |
+| On-brand illustration | 0.5–0.7 | 0 | Some creative range within brand constraints |
+| Creative exploration | 1.0–1.5 | 0.5–1.0 | Maximum variation + push pattern diversity; pair with `--n 3` |
 
-Note: the script doesn't expose `--temperature` yet (uses default 1.0). For temperature-sensitive work, modify the script or call the API directly.
+The script exposes `--temperature` and `--presence-penalty` flags for tuning. Combine with `--n 3` to generate variants and pick the best.
 
-### Reference images
+### Reference images (visual conditioning)
 
-For style consistency, export 1-2 existing Figma assets as PNG and pass as `--references`:
-- **Icon sets:** generate the first icon, use it as reference for subsequent icons
-- **Style matching:** when output must feel like existing brand assets
-- **Color transfer:** the model picks up palette from references
+References are processed through a Vision Transformer (CLIP/SigLIP) into visual tokens that condition the SVG generation. This is **semantic visual understanding**, not pixel-level style transfer — the model extracts high-level features (style, composition, color palette, shape language, line weight) and uses them to influence output.
 
-References guide style — they don't clone the image.
+**What transfers well:**
+- Overall visual style (flat, hand-drawn, geometric, organic)
+- Color palette and color relationships
+- Shape language (rounded vs angular, organic vs geometric)
+- Level of detail and complexity
+- Line weight characteristics
+- Composition patterns
+
+**What doesn't transfer precisely:**
+- Exact hex values (use `--instructions` to specify exact colors)
+- Fine textures or intricate patterns (may be simplified)
+- Pixel-perfect reproduction (this is conditioning, not copying)
+
+**Best practices:**
+
+| Aspect | Recommendation |
+|---|---|
+| Number of references | 1-2 for clear style direction. 3-4 for robust style signal. Diminishing returns beyond 3. |
+| Image format | PNG or JPEG raster. SVGs must be rendered to PNG first (the vision encoder processes raster). |
+| Image size | 400-800px is sufficient. The encoder processes at 224-384px internally — very high resolution provides no benefit. |
+| Combining with text | `prompt` = what to draw. `instructions` = explicit style rules (hex colors, constraints). `references` = visual examples of the target aesthetic. All three work together. |
+| Temperature | Use 0.4-0.6 when references are provided (lower = more faithful to reference style). The SDK example uses 0.4 with references. |
+| Consistency across generations | Use the SAME reference(s) + SAME instructions + low temperature for all items in a set. Feed your best output back as reference for subsequent generations to compound consistency. |
+
+**For Inkeep illustration style:** Export an existing illustration from the marketing site as PNG (e.g., the B2B support card with hexagonal icons), pass as reference, and combine with the illustration system instructions from `references/illustration-system.md`:
+
+```bash
+# Export existing illustration as reference
+curl -sL -o /tmp/inkeep-ref.png "https://inkeep.com/images/use-cases/b2b-customer-support-card-image.svg"
+sips -s format png -Z 800 /tmp/inkeep-ref.png --out /tmp/inkeep-ref-800.png
+
+# Generate new illustration matching the style
+bun scripts/quiver-generate.ts generate \
+  --prompt "Hand-drawn hexagonal grid with precise blue icons — a Slack hash, a chat bubble, and a gear" \
+  --references /tmp/inkeep-ref-800.png \
+  --instructions "Match the illustration style exactly. TWO layers: (1) faint gray hand-drawn containers at 15-20% opacity, (2) precise blue #3784FF filled icons inside. No shadows, no gradients. Colors: #3784FF blue fills, #231F20 gray outlines, #F7F4ED cream fills." \
+  --temperature 0.5 \
+  --output slack-illustration.svg
+```
+
+## SVG output quality
+
+Arrow generates **native SVG** — not raster-to-trace conversion. Key quality characteristics:
+
+- **Semantic primitives**: Uses `<circle>`, `<rect>`, `<polygon>`, `<text>` instead of path-approximating simple shapes. This means imported elements are individually editable in Figma.
+- **Meaningful layer names**: Groups are labeled meaningfully (not `path_1`, `path_2`). Layer structure survives Figma import.
+- **Compact paths**: RLRF training penalizes verbose SVG — fewer anchor points than traced alternatives, smaller file sizes.
+- **Figma compatibility**: Imports cleanly via `createNodeFromSvg()`. Layer structure preserved. Elements remain editable without extensive cleanup.
+
+**Known issues to check after import:**
+- Complex gradients sometimes need manual adjustment in Figma
+- Accessibility structure (`aria-*`, `<title>`, `<desc>`) not always clean — add if needed for web use
+- Very intricate prompts (many detailed elements) can produce slower generation or incomplete output
+
+## Streaming (optional)
+
+Set `stream: true` to receive Server-Sent Events with progressive output:
+
+1. **`reasoning`** event — model's thinking process
+2. **`draft`** event — partial SVG preview (useful for progress visibility)
+3. **`content`** event — final complete SVG with usage stats
+
+Terminates with `data: [DONE]`. Useful for long-running generations where you want to show progress, but not necessary for typical use — the default synchronous response works fine for most graphics skill operations.
 
 ## Rate limits and credits
 

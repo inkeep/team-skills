@@ -182,7 +182,7 @@ When building workflow diagrams, architecture diagrams, or flow charts:
 
 ## Gradient Backgrounds
 
-30 pre-designed gradient backgrounds exist in the brand system assets (1920x1080 PNG):
+30 pre-designed gradient backgrounds exist in the brand system assets (1920x1080 PNG). When using these as image fills in a working canvas (e.g., 1280×720), import the PNG and set as an image fill with `scaleMode: 'FILL'` — it will scale to fit the frame and export cleanly at any scale.
 
 | Tier | Range | Description | Text contrast |
 |---|---|---|---|

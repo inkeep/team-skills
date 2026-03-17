@@ -34,7 +34,22 @@ The `figma-console` MCP communicates with Figma Desktop via a WebSocket bridge p
 2. Right-click canvas → **Plugins → Development → Figma Desktop Bridge**
 3. Wait for the green "MCP Ready" status widget
 
-**If the plugin disconnects** (e.g., after tab refresh or file switch), re-run it from the Plugins menu. The skill checks connection status via `figma_get_status` before building and will guide the user if disconnected.
+**Connection stability:** The plugin stays connected as long as the Figma tab remains open and the plugin UI is visible. Known disconnect triggers:
+
+| Trigger | Auto-reconnects? | What to do |
+|---|---|---|
+| Figma tab refresh or file reload | No | Re-launch plugin from Plugins menu |
+| Closing the Figma tab with plugin | No | Re-open file, re-launch plugin |
+| Figma Desktop app restart | No | Re-launch plugin |
+| MCP server restart (Claude Code session restart) | Yes (up to 5 retries) | Wait ~10s, then verify with `figma_get_status` |
+| Idle / inactivity | No disconnect | N/A — connection persists |
+
+**If the plugin disconnects mid-session**, try programmatic recovery before asking the user to manually re-launch:
+1. Call `figma_reconnect` — forces a WebSocket reconnection. Resolves most stale-connection issues.
+2. If that fails, call `figma_reload_plugin` — fully reloads the plugin (equivalent to re-launching from the menu).
+3. Only if both fail, guide the user to manually re-launch: right-click canvas → Plugins → Development → Figma Desktop Bridge.
+
+**Multi-file connections:** The plugin can run in multiple Figma files simultaneously — each file gets its own WebSocket connection tracked by `fileKey`. To work across files (e.g., cloning assets from the Design Assets file into the Graphics Workspace), the plugin must be running in **both** files. Verify with `figma_list_open_files` before cross-file operations. Use `figma_navigate` to switch the active file context.
 
 ### Default Graphics Workspace
 
@@ -62,9 +77,16 @@ All Figma design work defaults to the shared **Inkeep Agent Graphics Workspace**
 const page = figma.createPage();
 page.name = "[YYYY-MM-DD] Blog — Agents in Slack thumbnails";
 await figma.setCurrentPageAsync(page);
+return { pageId: page.id, pageName: page.name }; // IMPORTANT: store pageId for all subsequent operations
 ```
 
 Page naming: `[YYYY-MM-DD] {medium} — {project description}`. This prevents overlap between sessions and keeps the workspace organized.
+
+⚠️ **Parallel-safety (multiple Claude Code instances on the same file):** Multiple agents may operate on the same Figma file simultaneously (on different pages). `figma.currentPage` is **global** — if another agent calls `setCurrentPageAsync`, your `currentPage` reference silently points to the wrong page. To avoid this:
+- **Store your page's node ID** from the `createPage()` return value above
+- **Always use `getNodeByIdAsync(pageId)`** to scope searches — never `figma.currentPage.findOne()`
+- **Always pass explicit `nodeId`** to `figma_capture_screenshot` — never rely on "capture current page"
+- Node operations by ID (`getNodeByIdAsync`, `figma_set_text`, `figma_set_fills`) are safe — they target specific nodes regardless of which page is "current"
 
 **Frame naming within pages:** Follow professional conventions — `AssetType/Platform/Variant` (e.g., `Social/LinkedIn/Post-Dark`, `Blog/Cover/Agents-in-Slack`). Slash-separated names create automatic hierarchy in the Assets panel and nested folders on export.
 
@@ -285,6 +307,48 @@ ___ (What should the viewer DO? Read the blog post, book a demo, share on Linked
 
 ---
 
+### 1c. Product context discovery (when hero content involves the product)
+
+**Skip this step if** the hero content is purely typographic, abstract, or logo-based. Only run it when the Creative Brief calls for product UI, a feature mockup, or a visual that needs to represent what the product actually does.
+
+**Goal:** Understand the feature/product well enough to build a convincing visual representation. You don't need to replicate the exact product UI — you need to understand what the feature IS, what its key UI elements are, and what makes it visually distinctive.
+
+**Step 1: Check working directory for product context**
+
+```bash
+# Quick detection — does this look like a product codebase?
+ls package.json src/ specs/ docs/ PRDs/ .cursor/ CLAUDE.md 2>/dev/null
+```
+
+| What you find | What to do |
+|---|---|
+| **Product source code** (src/, app/, components/) | Use the Explore agent to search for UI components related to the feature. Look for: component names, prop types, UI states, key interactions. Extract the CONCEPTS, not the code. |
+| **Specs or PRDs** (specs/, PRDs/, docs/*.md) | Read any spec related to the feature being graphiced. Extract: what the feature does, what the user sees, key UI elements, user flow. |
+| **Marketing site code** (with public/images/) | Check if existing illustrations or screenshots of the feature already exist. These are the canonical "how we show this product" references. |
+| **CLAUDE.md or project docs** | Scan for feature descriptions, product overview, or architecture notes that explain what the product does. |
+| **Nothing relevant** | Move to Step 2. |
+
+**Step 2: If no product context found, ask the user ONE question**
+
+"The graphic calls for a product mockup of [feature]. To make it look convincing, I need to understand what the feature looks like. Can you point me to any of these?
+- A URL showing this feature (live product, staging, or demo)
+- A spec, PRD, or doc describing the UI
+- An existing screenshot or mockup
+- Or just describe the key UI elements in a sentence"
+
+If the user provides context, use it. If they say "just make it up" or "use your best judgment," proceed with a stylized representation using the illustration system (`references/illustration-system.md`).
+
+**Step 3: Capture what you learned**
+
+Write 2-3 bullet points in the Composition Brief (Step 3) under "Product context":
+- What the feature does (one sentence)
+- Key UI elements the mockup should show (e.g., "conversation thread with agent response + approve/deny buttons")
+- Visual metaphor if not showing literal UI (e.g., "network of channel nodes radiating from a central hub")
+
+This grounds the visual in the actual product without requiring pixel-accurate UI reproduction.
+
+---
+
 ### 2. Find a starting point, collect assets, and pull brand tokens
 
 ⛔ **Mark task "Graphics: Collect assets & brand tokens" as `in_progress` before proceeding.**
@@ -412,6 +476,9 @@ Write out an asset manifest listing what was found and what's missing:
 
 **Load:** `references/composition-patterns.md` for format-agnostic layout principles (Z-pattern, split layout proportions, visual hierarchy ratios, color restraint, background texture, content coverage, edge bleed).
 
+**If the graphic includes illustrations, visual metaphors, or decorative elements in the Inkeep hand-drawn style:**
+**Load:** `references/illustration-system.md` for the dual-stroke visual language (hand-drawn gray containers + precise blue fills), color palette, composition patterns, Quiver generation instructions, and the blue swoosh underline signature element.
+
 ⛔ **Produce a Composition Brief before proceeding.** This is the checkpoint that prevents the "skip reference files" failure mode — planning from general knowledge instead of brand-specific recipes and patterns.
 
 Write out the brief using this template:
@@ -516,12 +583,16 @@ Best for: slide assets, marketing visuals, diagrams, social images, cards, hero 
 Before starting, verify the Desktop Bridge plugin is running:
 1. Call `figma_get_status` to check connection
 2. If `setup.valid` is `true` — proceed
-3. If `setup.valid` is `false` — guide the user through these steps:
-   - "Open your target Figma file in **Figma Desktop** (not browser)"
-   - "Right-click the canvas → **Plugins → Development → Figma Desktop Bridge**"
-   - "Wait for the green 'MCP Ready' status widget to appear"
-   - If the plugin isn't in the menu: "You need to import it first — run `npx figma-console-mcp@latest --print-path` in your terminal, then in Figma: Right-click → Plugins → Development → Import plugin from manifest... → select that path"
+3. If `setup.valid` is `false` — attempt programmatic recovery first:
+   a. Call `figma_reconnect` — wait a few seconds, then re-check `figma_get_status`
+   b. If still disconnected, call `figma_reload_plugin` — re-check `figma_get_status`
+   c. If still disconnected, guide the user to manually re-launch:
+      - "Open your target Figma file in **Figma Desktop** (not browser)"
+      - "Right-click the canvas → **Plugins → Development → Figma Desktop Bridge**"
+      - "Wait for the green 'MCP Ready' status widget to appear"
+      - If the plugin isn't in the menu: "You need to import it first — run `npx figma-console-mcp@latest --print-path` in your terminal, then in Figma: Right-click → Plugins → Development → Import plugin from manifest... → select that path"
    - After the user confirms, call `figma_get_status` again to verify
+4. If cross-file operations are needed (e.g., cloning from Design Assets), call `figma_list_open_files` to verify the plugin is running in **all** required files. If a file is missing, ask the user to open the plugin in that file too.
 
 Follow the five-phase workflow below. Do NOT try to build the entire graphic in one pass.
 
@@ -529,11 +600,13 @@ Follow the five-phase workflow below. Do NOT try to build the entire graphic in 
 
 **Goal:** Transfer the assets identified in Step 2's Asset Manifest into the target Figma file. This phase executes the manifest — it does not redo the search.
 
+**Before cross-file operations**, call `figma_list_open_files` to verify the plugin is running in both the source and target files. If the source file isn't connected, ask the user to open the Desktop Bridge plugin in that file — `figma_navigate` will silently fail if the plugin isn't running in the target file.
+
 For each "Found (will reuse)" item in the manifest:
 1. **Navigate** to the source file (`figma_navigate`)
 2. **Locate** the asset by node ID
 3. **Clone or transfer** it into the target file (see cross-file strategies below)
-4. **Verify** the cloned asset looks correct (screenshot)
+4. **Verify** the cloned asset looks correct (screenshot — pass explicit `nodeId`, not relying on current page)
 
 **Cross-file asset transfer strategies:**
 

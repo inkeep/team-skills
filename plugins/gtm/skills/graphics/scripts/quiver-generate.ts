@@ -4,8 +4,8 @@
  * Quiver.ai SVG generation script.
  *
  * Usage:
- *   bun scripts/quiver-generate.ts generate --prompt "A logo for ..." [--instructions "..."] [--references img1.png,img2.png] [--n 2] [--output out.svg]
- *   bun scripts/quiver-generate.ts vectorize --image input.png [--output out.svg]
+ *   bun scripts/quiver-generate.ts generate --prompt "A logo for ..." [--instructions "..."] [--references img1.png,img2.png] [--n 2] [--temperature 0.5] [--presence-penalty 0.5] [--output out.svg]
+ *   bun scripts/quiver-generate.ts vectorize --image input.png [--auto-crop] [--target-size 512] [--output out.svg]
  *
  * Auto-generates PNG previews alongside SVGs (requires `sharp` module).
  * The agent can then use the Read tool on the PNG to visually inspect the result.
@@ -129,6 +129,8 @@ async function generate(args: Record<string, string>): Promise<ScriptResult> {
 
   if (args.instructions) body.instructions = args.instructions;
   if (args.n) body.n = parseInt(args.n, 10);
+  if (args.temperature) body.temperature = parseFloat(args.temperature);
+  if (args["presence-penalty"]) body.presence_penalty = parseFloat(args["presence-penalty"]);
 
   if (args.references) {
     const refs = args.references.split(",").map((r) => r.trim());
@@ -164,11 +166,16 @@ async function vectorize(args: Record<string, string>): Promise<ScriptResult> {
     ? args.image
     : imageToBase64(args.image);
 
-  console.error(`Vectorizing image with model ${MODEL}...`);
-  const res = await request("POST", "/v1/svgs/vectorizations", {
+  const vectorizeBody: Record<string, any> = {
     model: MODEL,
     image,
-  });
+  };
+
+  if (args["auto-crop"] !== undefined) vectorizeBody.auto_crop = true;
+  if (args["target-size"]) vectorizeBody.target_size = parseInt(args["target-size"], 10);
+
+  console.error(`Vectorizing image with model ${MODEL}...`);
+  const res = await request("POST", "/v1/svgs/vectorizations", vectorizeBody);
 
   const svgs = extractSvgs(res.body);
   return writeSvgs(svgs, args.output);
@@ -228,14 +235,20 @@ async function writeSvgs(svgs: string[], outputArg?: string): Promise<ScriptResu
   return result;
 }
 
+const BOOLEAN_FLAGS = new Set(["auto-crop"]);
+
 function parseArgs(argv: string[]): { command: string; args: Record<string, string> } {
   const args: Record<string, string> = {};
   const command = argv[2];
   for (let i = 3; i < argv.length; i++) {
     if (argv[i].startsWith("--")) {
       const key = argv[i].slice(2);
-      args[key] = argv[i + 1] || "";
-      i++;
+      if (BOOLEAN_FLAGS.has(key)) {
+        args[key] = "true";
+      } else {
+        args[key] = argv[i + 1] || "";
+        i++;
+      }
     }
   }
   return { command, args };
@@ -255,8 +268,8 @@ async function main() {
       default:
         console.error(
           "Usage:\n" +
-            '  bun scripts/quiver-generate.ts generate --prompt "..." [--instructions "..."] [--references img1.png,img2.png] [--n 2] [--output out.svg]\n' +
-            "  bun scripts/quiver-generate.ts vectorize --image input.png [--output out.svg]\n"
+            '  bun scripts/quiver-generate.ts generate --prompt "..." [--instructions "..."] [--references img1.png,img2.png] [--n 2] [--temperature 0.5] [--presence-penalty 0.5] [--output out.svg]\n' +
+            "  bun scripts/quiver-generate.ts vectorize --image input.png [--auto-crop] [--target-size 512] [--output out.svg]\n"
         );
         process.exit(1);
     }

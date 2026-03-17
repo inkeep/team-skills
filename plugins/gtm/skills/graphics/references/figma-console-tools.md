@@ -233,6 +233,99 @@ Run this check after every batch of child placements — especially after text e
 
 For data-driven graphics (comparison tables, pie/donut charts, line/area charts, sparklines), see **`standards/data-visualization.md`** which contains both design guidelines AND tested `figma_execute` code recipes in a single file.
 
+### Pattern: Syntax-highlighted code block (setRangeFills)
+
+Build syntax-highlighted code blocks as native, editable Figma text using per-character coloring. The result is real text (selectable, editable, scalable) — not an image or SVG outline.
+
+**When to use:** Blog thumbnails for technical/API content. The code signals "developer content" at card sizes — it's not meant to be fully readable, but recognizable as code.
+
+**Brand code color palettes:**
+
+Dark background (Tier 1 thumbnails):
+
+| Token type | Color | Token |
+|---|---|---|
+| Background | `#231F20` | surface/dark |
+| Default text | `#FAFAF7` | — |
+| Keywords (`const`, `new`, `import`, `async`, `await`) | `#3784FF` | brand/primary |
+| Strings (quoted text) | `#FFC883` | brand/golden-sun |
+| Comments (`//`) | `#5F5C62` | text/muted |
+| Functions/methods | `#69A3FF` | brand/sky-blue |
+| Numbers/constants | `#E69F00` | Okabe-Ito orange |
+| Types/classes | `#E1DBFF` | brand/accent-cool |
+| Punctuation (`.`, `,`, `{`, `}`) | `#8A8790` | — |
+
+Light background (Tier 2 thumbnails):
+
+| Token type | Color | Token |
+|---|---|---|
+| Background | `#FBF9F4` | bg/primary |
+| Default text | `#231F20` | text/primary |
+| Keywords | `#3784FF` | brand/primary |
+| Strings | `#009E73` | Okabe-Ito green |
+| Comments | `#5F5C62` | text/muted |
+| Functions/methods | `#29325C` | text/dark-blue |
+| Numbers/constants | `#D55E00` | Okabe-Ito vermillion |
+
+```javascript
+// Step 1: Load font and create container
+await figma.loadFontAsync({ family: "JetBrains Mono", style: "Bold" });
+
+const container = figma.createFrame();
+container.name = "mockup-code";
+container.layoutMode = 'VERTICAL';
+container.layoutSizingHorizontal = 'HUG';
+container.layoutSizingVertical = 'HUG';
+container.paddingTop = 32; container.paddingBottom = 32;
+container.paddingLeft = 32; container.paddingRight = 32;
+container.cornerRadius = 16;
+container.fills = [{ type: 'SOLID', color: { r: 0.137, g: 0.122, b: 0.125 } }]; // surface/dark
+
+// Step 2: Create text node with full code
+const code = figma.createText();
+code.name = "body";
+code.fontName = { family: "JetBrains Mono", style: "Bold" };
+code.fontSize = 22;
+code.lineHeight = { value: 160, unit: "PERCENT" };
+code.characters = 'const agent = new InkeepAgent({\n  channel: "#support",\n  model: "claude-4"\n});';
+// Default text color
+code.fills = [{ type: 'SOLID', color: { r: 0.98, g: 0.98, b: 0.97 } }]; // near-white
+
+// Step 3: Apply per-token colors using setRangeFills
+// "const" (0-5) — keyword
+code.setRangeFills(0, 5, [figma.util.solidPaint("#3784FF")]);
+// "agent" (6-11) — variable (keep default white)
+// " = " (12-14) — operator (keep default)
+// "new" (14-17) — keyword
+code.setRangeFills(14, 17, [figma.util.solidPaint("#3784FF")]);
+// "InkeepAgent" (18-29) — class/type
+code.setRangeFills(18, 29, [figma.util.solidPaint("#E1DBFF")]);
+// "channel" (35-42) — property
+code.setRangeFills(35, 42, [figma.util.solidPaint("#69A3FF")]);
+// '"#support"' (44-54) — string
+code.setRangeFills(44, 54, [figma.util.solidPaint("#FFC883")]);
+// "model" (59-64) — property
+code.setRangeFills(59, 64, [figma.util.solidPaint("#69A3FF")]);
+// '"claude-4"' (66-76) — string
+code.setRangeFills(66, 76, [figma.util.solidPaint("#FFC883")]);
+
+container.appendChild(code);
+```
+
+**Design guidance:**
+- **3-8 lines max** — thumbnails are viewed small. More than 8 lines becomes noise.
+- **Show the "money line"** — the most distinctive part of the API. `new InkeepAgent({...})` is better than `import` statements.
+- **Use JetBrains Mono Bold** (not Regular) — Bold weight is more readable at small sizes and matches the brand's label font treatment.
+- **Slight rotation (2-3°)** and `shadow/brand` (blue glow) when used as a floating element in a split layout.
+- **Don't try to highlight every token perfectly.** Keywords (blue), strings (golden), and comments (muted) cover 90% of the visual effect. The rest can stay default color.
+- **The code doesn't need to compile.** It needs to LOOK like real code and signal the feature being launched. Simplified pseudocode is fine.
+
+**Figma API reference:**
+- `setRangeFills(start, end, fills: Paint[])` — sets fill color on character range
+- `figma.util.solidPaint("#hex")` — convenience for creating SolidPaint from CSS hex
+- `setRangeFontName(start, end, fontName)` — if mixing monospace + sans in same text node
+- Range indices are 0-based, end is exclusive
+
 ### Pattern: Spotlight cutout (tutorial highlight)
 
 Create tutorial/walkthrough images where the background is dimmed and the target UI element is highlighted with a spotlight effect. Used for SaaS product tutorials, UX walkthroughs, and "click here" documentation images.
