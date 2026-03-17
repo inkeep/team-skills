@@ -27,6 +27,13 @@ Design for 16:9 but keep the focal content centered so the 2:1 crop for featured
 - **Keep text to the left or center** — right-edge text can get cropped on smaller card views
 - **Max 2 lines of title text** — thumbnails are viewed small; more text becomes unreadable
 - **High contrast** — ensure text is readable even at card sizes (~300px wide)
+- **Thumbnail readability test (REQUIRED):** After final composition, export the frame at thumbnail size via `figma_execute` and visually verify the title is still legible:
+  ```javascript
+  const node = await figma.getNodeByIdAsync('FRAME_ID');
+  const bytes = await node.exportAsync({ format: 'PNG', constraint: { type: 'WIDTH', value: 300 } });
+  // Visually verify title text is readable at this size
+  ```
+  If the title is unreadable at 300px wide, increase font size or simplify the composition. Titles below 100px at 2560w generally fail this test.
 
 ### Composition
 - **Z-pattern layout** (research-backed, NNG eye-tracking): hook/title top-left, key visual center, brand/CTA bottom-right

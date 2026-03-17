@@ -411,7 +411,7 @@ The script outputs JSON to stdout with the SVG content, source, and metadata. Us
 
 **Load:** `references/svg-logo-sources.md` for source details, coverage gaps, and manual API patterns if needed.
 
-Import the resulting SVG into Figma via `figma.createNodeFromSvg(svgString)` in `figma_execute`. After import:
+Import the resulting SVG into Figma via `figma.createNodeFromSvg(svgString)` in `figma_execute`. **Load:** `references/svg-import-limitations.md` if the SVG is complex (gradients, masks, filters) or from Brandfetch (brand-uploaded, variable quality). Simple Icons SVGs always import clean; Iconify logos are ~90% safe. After import:
 - Name the node with `third-party/` prefix (e.g., `third-party/freshdesk`)
 - Adapt to the graphic's visual treatment — if other logos are monochrome/grey, convert the imported logo to match (replace fills with the target color)
 - **Preserve the SVG's aspect ratio when resizing.** Extract the viewBox dimensions (e.g., `viewBox="0 0 24 24"` → 1:1 ratio) and calculate target dimensions from that ratio. Never hardcode arbitrary width/height that doesn't match the viewBox. For example, a 24×24 viewBox resized to 60px wide must be 60×60, not 120×60.
@@ -444,6 +444,18 @@ Determine build order from simplest to most complex:
 **Goal:** Create each missing element individually. Verify each one before moving on. Do NOT try to build the entire graphic at once.
 
 ⛔ **Keep each `figma_execute` call to ONE logical operation** — create one element, style one element, move one element. Never create an entire composition in a single call. Large multi-element calls timeout (30s limit), leave partial state when they fail, and skip the per-atom verification that catches issues early. INSTEAD: create → screenshot → verify → next element.
+
+⚠️ **Auto-layout sizing trap:** After setting `layoutMode` on any frame, **always explicitly set both `layoutSizingHorizontal` and `layoutSizingVertical`** in the same call. Figma's defaults are unpredictable — calling `frame.resize(2560, 1440)` then `frame.layoutMode = 'VERTICAL'` can silently change the frame's sizing behavior, causing it to collapse to hug its content or stretch unexpectedly. Follow this pattern:
+
+```javascript
+// ALWAYS set sizing explicitly after layoutMode
+frame.layoutMode = 'VERTICAL';
+frame.layoutSizingHorizontal = 'FIXED';  // root frames: always FIXED
+frame.layoutSizingVertical = 'FIXED';    // root frames: always FIXED
+// For content containers: use 'HUG' or 'FILL' as appropriate
+```
+
+Also: **always set `clipsContent = true`** on any frame that is a final deliverable or visual container. Without this, overflowing children appear fine on the canvas but extend beyond the frame bounds — and `figma_capture_screenshot` will NOT show the overflow because it exports at frame bounds with clipping.
 
 Create a temporary working frame to build atoms in isolation:
 ```javascript
@@ -520,7 +532,7 @@ Fix any issues now — it's much easier to fix individual atoms than after compo
 - [ ] Visual hierarchy reads correctly
 - [ ] Text is readable at intended display size (see output medium table in Step 1)
 - [ ] No content overflow or collapsed spacing from dimensional changes
-- [ ] **Bounds check:** every child element fits within its parent frame. Run this programmatic check via `figma_execute` — don't rely on visual inspection alone for edge clipping (screenshots miss 2-4px overflow). This is the #1 cause of text cutoff and content clipping:
+- [ ] ⛔ **Bounds check (MANDATORY — screenshots cannot catch this):** `figma_capture_screenshot` exports with clipping — children that overflow outside the frame are invisible in screenshots but broken on the actual canvas. This is not a 2-4px edge case; overflow can be hundreds of pixels (e.g., an auto-layout sidebar that expanded beyond its parent). **You MUST run this programmatic check after every composition step**, not just at the end. Do not trust screenshots alone for layout verification:
    ```javascript
    const parent = await figma.getNodeByIdAsync('PARENT_ID');
    const issues = [];
@@ -895,6 +907,7 @@ Screenshot every deliverable at its final dimensions using `figma_capture_screen
 - [ ] Nothing looks "off" — no clipped text, overflow, misalignment, or visual artifacts
 - [ ] Text is fully readable and not truncated or wrapping unexpectedly
 - [ ] All elements are within frame bounds (nothing cut off at edges)
+- [ ] **Thumbnail readability (for blog covers/social images):** Export at target card width via `figma_execute`: `await node.exportAsync({ format: 'PNG', constraint: { type: 'WIDTH', value: 300 } })`. Verify the title is legible and the composition reads clearly at this reduced size. If text is unreadable, the font size is too small — go back and fix before delivering.
 - [ ] Colors look correct — no wrong fills, missing backgrounds, or transparency issues
 - [ ] Logos and brand marks are present and look right (not placeholder text or shapes)
 - [ ] Overall composition looks intentional and professional — not like a work-in-progress
