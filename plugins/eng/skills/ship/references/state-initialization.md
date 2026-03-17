@@ -27,7 +27,8 @@ The worktree and feature branch were created in Phase 0, Step 1. Dependency inst
   --gh <true|false> \
   --browser <true|false> \
   --peekaboo <true|false> \
-  --docker <true|false>
+  --docker <true|false> \
+  --isolated-env <true|false>
 ```
 
 Where `<path-to-skill>` is this skill's base directory (shown in the skill header when loaded).
@@ -38,7 +39,7 @@ Where `<path-to-skill>` is this skill's base directory (shown in the skill heade
 - `--worktree` → empty (working in-place)
 - `--scope` → `feature`
 - `--test-cmd`, `--typecheck-cmd`, `--lint-cmd` → empty (no quality gate)
-- `--gh` → `true`; `--browser`, `--peekaboo`, `--docker` → `false`
+- `--gh` → `true`; `--browser`, `--peekaboo`, `--docker`, `--isolated-env` → `false`
 - `--max-iterations` → `20`
 
 Fill in every value you know from Phase 0 (capability detection, scope calibration) and Phase 1 (feature name, spec path, branch). Omit flags where the default is correct.
@@ -71,7 +72,7 @@ EOF
   --test-cmd "pnpm test" \
   --typecheck-cmd "pnpm typecheck" \
   --lint-cmd "pnpm lint" \
-  --gh true --browser true
+  --gh true --browser true --isolated-env true
 ```
 
 ### Verify after running
@@ -109,7 +110,15 @@ If either file is missing, check the script's error output and re-run. Do not pr
     "Phase 1": { "startedAt": "<ISO 8601 timestamp>", "completedAt": "<ISO 8601 timestamp>", "iterations": 1 },
     "Phase 2": { "startedAt": "<ISO 8601 timestamp>", "completedAt": null, "iterations": 0 }
   },
-  "capabilities": { "gh": true, "browser": false, "peekaboo": false, "docker": false },
+  "capabilities": { "gh": true, "browser": false, "peekaboo": false, "docker": false, "isolatedEnv": true },
+  "isolatedEnv": {
+    "name": "<feature slug or override>",
+    "envFile": "tmp/ship/isolated-env.sh",
+    "metadataFile": "tmp/ship/isolated-env.json",
+    "stateFile": ".isolated-envs/<name>.json",
+    "teardownCommand": "./scripts/isolated-env.sh down <name>",
+    "active": true
+  },
   "scopeCalibration": "<from --scope>",
   "amendments": [],
   "lastUpdated": "<ISO 8601 timestamp>"
@@ -144,6 +153,7 @@ started_at: "<ISO 8601 timestamp>"
 | `phaseHistory` | Initialization | Stop hook repairs/extends it as phases start and complete |
 | `phaseMetrics` | Initialization | Stop hook updates timestamps/iteration counts and mirrors them to `metrics.json` |
 | `capabilities` | Initialization (from Phase 0 detection) | — |
+| `isolatedEnv` | Initialization (from `${CLAUDE_SHIP_DIR:-tmp/ship}/isolated-env.json` when present) | Re-run `ship-setup-isolated-env.sh` if you need to attach a different env |
 | `scopeCalibration` | Initialization (from Phase 0 Step 4) | — |
 | `amendments` | Initialization (empty) | Any phase: append when user requests post-spec changes |
 | `lastUpdated` | Initialization | Every phase transition |
@@ -151,5 +161,7 @@ started_at: "<ISO 8601 timestamp>"
 ## What happens after activation
 
 The stop hook is now active. If your context is compacted or you try to exit, the hook blocks exit and re-injects a phase-aware prompt with your current state, keeping you working through all remaining phases. It also validates that `currentPhase` and `completedPhases` are contiguous, repairs phase gaps, updates `phaseMetrics`, writes `${CLAUDE_SHIP_DIR:-tmp/ship}/metrics.json`, and refuses to advance when an inter-phase gate is missing (for example: no branch diff after implementation, missing `qa-progress.json`, missing docs diff, or missing `prNumber` before review completion). The loop runs until you complete all phases and output `<complete>SHIP COMPLETE</complete>`, or until 20 iterations are reached.
+
+If `${CLAUDE_SHIP_DIR:-tmp/ship}/isolated-env.json` exists, `ship-init-state.sh` folds that metadata into `state.json` automatically. Keep passing `--isolated-env true` when capability detection found repo support so the state file records both support and the active env attachment.
 
 To cancel the loop manually: `/cancel-ship`

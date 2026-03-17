@@ -13,6 +13,7 @@
 #     [--test-cmd <cmd>] [--typecheck-cmd <cmd>] [--lint-cmd <cmd>] \
 #     [--gh <true|false>] [--browser <true|false>] \
 #     [--peekaboo <true|false>] [--docker <true|false>] \
+#     [--isolated-env <true|false>] \
 #     [--max-iterations <N>]
 #
 # Requires: jq
@@ -35,6 +36,8 @@ CAP_GH=true
 CAP_BROWSER=false
 CAP_PEEKABOO=false
 CAP_DOCKER=false
+CAP_ISOLATED_ENV=false
+CAP_ISOLATED_ENV_SET=false
 MAX_ITERATIONS=20
 
 # --- Parse arguments ---
@@ -52,6 +55,7 @@ while [[ $# -gt 0 ]]; do
     --browser)        CAP_BROWSER="$2"; shift 2 ;;
     --peekaboo)       CAP_PEEKABOO="$2"; shift 2 ;;
     --docker)         CAP_DOCKER="$2"; shift 2 ;;
+    --isolated-env)   CAP_ISOLATED_ENV="$2"; CAP_ISOLATED_ENV_SET=true; shift 2 ;;
     --max-iterations) MAX_ITERATIONS="$2"; shift 2 ;;
     *) echo "Error: Unknown option: $1" >&2; exit 1 ;;
   esac
@@ -92,10 +96,11 @@ if [[ ! "$MAX_ITERATIONS" =~ ^[0-9]+$ ]]; then
 fi
 
 # --- Validate boolean capability flags ---
-for flag_name in gh browser peekaboo docker; do
+for flag_name in gh browser peekaboo docker isolated_env; do
   eval "flag_val=\$CAP_$(echo "$flag_name" | tr '[:lower:]' '[:upper:]')"
   if [[ "$flag_val" != "true" && "$flag_val" != "false" ]]; then
-    echo "Error: --$flag_name must be true or false (got: '$flag_val')" >&2
+    cli_name="${flag_name//_/-}"
+    echo "Error: --$cli_name must be true or false (got: '$flag_val')" >&2
     exit 1
   fi
 done
@@ -104,6 +109,27 @@ done
 mkdir -p "$SHIP_DIR"
 
 NOW=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
+ISOLATED_ENV_METADATA_FILE="${SHIP_DIR}/isolated-env.json"
+ISOLATED_ENV_NAME=""
+ISOLATED_ENV_ENV_FILE=""
+ISOLATED_ENV_STATE_FILE=""
+ISOLATED_ENV_TEARDOWN_COMMAND=""
+ISOLATED_ENV_ACTIVE=false
+
+if [[ -f "$ISOLATED_ENV_METADATA_FILE" ]]; then
+  if [[ "$CAP_ISOLATED_ENV_SET" == "false" ]]; then
+    CAP_ISOLATED_ENV=true
+  fi
+
+  ISOLATED_ENV_NAME=$(jq -r '.name // ""' "$ISOLATED_ENV_METADATA_FILE")
+  ISOLATED_ENV_ENV_FILE=$(jq -r '.envFile // ""' "$ISOLATED_ENV_METADATA_FILE")
+  ISOLATED_ENV_STATE_FILE=$(jq -r '.stateFile // ""' "$ISOLATED_ENV_METADATA_FILE")
+  ISOLATED_ENV_TEARDOWN_COMMAND=$(jq -r '.teardownCommand // ""' "$ISOLATED_ENV_METADATA_FILE")
+  META_ACTIVE=$(jq -r '.active // false' "$ISOLATED_ENV_METADATA_FILE")
+  if [[ "$META_ACTIVE" == "true" || "$META_ACTIVE" == "false" ]]; then
+    ISOLATED_ENV_ACTIVE="$META_ACTIVE"
+  fi
+fi
 
 # --- Write state.json using jq for safe JSON construction ---
 jq -n \
@@ -119,6 +145,13 @@ jq -n \
   --argjson capBrowser "$CAP_BROWSER" \
   --argjson capPeekaboo "$CAP_PEEKABOO" \
   --argjson capDocker "$CAP_DOCKER" \
+  --argjson capIsolatedEnv "$CAP_ISOLATED_ENV" \
+  --arg isolatedEnvName "$ISOLATED_ENV_NAME" \
+  --arg isolatedEnvFile "$ISOLATED_ENV_ENV_FILE" \
+  --arg isolatedEnvMetadataFile "$ISOLATED_ENV_METADATA_FILE" \
+  --arg isolatedEnvStateFile "$ISOLATED_ENV_STATE_FILE" \
+  --arg isolatedEnvTeardown "$ISOLATED_ENV_TEARDOWN_COMMAND" \
+  --argjson isolatedEnvActive "$ISOLATED_ENV_ACTIVE" \
   --arg now "$NOW" \
   '{
     currentPhase: "Phase 2",
@@ -148,7 +181,16 @@ jq -n \
       gh: $capGh,
       browser: $capBrowser,
       peekaboo: $capPeekaboo,
-      docker: $capDocker
+      docker: $capDocker,
+      isolatedEnv: $capIsolatedEnv
+    },
+    isolatedEnv: {
+      name: (if $isolatedEnvName == "" then null else $isolatedEnvName end),
+      envFile: (if $isolatedEnvFile == "" then null else $isolatedEnvFile end),
+      metadataFile: (if $capIsolatedEnv then $isolatedEnvMetadataFile else null end),
+      stateFile: (if $isolatedEnvStateFile == "" then null else $isolatedEnvStateFile end),
+      teardownCommand: (if $isolatedEnvTeardown == "" then null else $isolatedEnvTeardown end),
+      active: (if $capIsolatedEnv then $isolatedEnvActive else false end)
     },
     scopeCalibration: $scope,
     amendments: [],
