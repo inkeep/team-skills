@@ -27,6 +27,10 @@ SHIP_DIR="${CLAUDE_SHIP_DIR:-tmp/ship}"
 MAX_TURNS=""
 PROMPT_TEXT=""
 DOCKER_EXEC_PATH="/home/agent/.local/bin:/home/agent/.claude/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
+HOST_CLAUDE_CREDENTIALS_FILE="${HOME}/.claude/.credentials.json"
+HOST_CLAUDE_PROFILE_FILE="${HOME}/.claude.json"
+REVIEW_API_KEY=""
+REVIEW_API_KEY_SOURCE=""
 
 while [[ $# -gt 0 ]]; do
   case "$1" in
@@ -175,6 +179,93 @@ bring_up_service_with_retries() {
   exit 1
 }
 
+extract_api_key_from_env_file() {
+  local env_file="$1"
+
+  [[ -f "$env_file" ]] || return 1
+
+  awk -F= '
+    /^ANTHROPIC_API_KEY=/ {
+      sub(/^[^=]*=/, "")
+      print
+      exit
+    }
+  ' "$env_file"
+}
+
+api_key_works() {
+  local api_key="$1"
+
+  [[ -n "$api_key" ]] || return 1
+
+  curl --fail --silent --show-error --max-time 15 \
+    -H "x-api-key: ${api_key}" \
+    -H "anthropic-version: 2023-06-01" \
+    https://api.anthropic.com/v1/models >/dev/null
+}
+
+select_review_api_key() {
+  local repo_env_key=""
+  local shell_env_key="${ANTHROPIC_API_KEY:-}"
+
+  repo_env_key="$(extract_api_key_from_env_file "$REPO_ROOT/.env" 2>/dev/null || true)"
+  if api_key_works "$repo_env_key"; then
+    REVIEW_API_KEY="$repo_env_key"
+    REVIEW_API_KEY_SOURCE="repo .env"
+    return 0
+  fi
+
+  if api_key_works "$shell_env_key"; then
+    REVIEW_API_KEY="$shell_env_key"
+    REVIEW_API_KEY_SOURCE="shell environment"
+    return 0
+  fi
+
+  REVIEW_API_KEY=""
+  REVIEW_API_KEY_SOURCE=""
+  return 1
+}
+
+container_supports_claudeai_auth() {
+  local compose_file="$1"
+
+  docker compose -f "$compose_file" exec -T sandbox /bin/bash -lc '
+    set -euo pipefail
+    auth_json="$(unset ANTHROPIC_API_KEY; claude auth status 2>/dev/null || true)"
+    if [[ -z "$auth_json" ]]; then
+      exit 1
+    fi
+
+    printf "%s\n" "$auth_json" | jq -e '.loggedIn == true and .authMethod == "claude.ai"' >/dev/null
+  ' >/dev/null 2>&1
+}
+
+bootstrap_container_claude_auth() {
+  local compose_file="$1"
+  local container_id=""
+
+  if [[ ! -f "$HOST_CLAUDE_CREDENTIALS_FILE" || ! -f "$HOST_CLAUDE_PROFILE_FILE" ]]; then
+    return 1
+  fi
+
+  container_id="$(docker compose -f "$compose_file" ps -q sandbox 2>/dev/null || true)"
+  if [[ -z "$container_id" ]]; then
+    return 1
+  fi
+
+  echo "Bootstrapping sandbox Claude auth from host credentials..." >&2
+  docker cp "$HOST_CLAUDE_CREDENTIALS_FILE" "${container_id}:/home/agent/.claude/.credentials.json" >/dev/null
+  docker cp "$HOST_CLAUDE_PROFILE_FILE" "${container_id}:/home/agent/.claude.json" >/dev/null
+  docker compose -f "$compose_file" exec -T -u root sandbox /bin/bash -lc '
+    set -euo pipefail
+    chown agent:agent /home/agent/.claude/.credentials.json /home/agent/.claude.json
+    chmod 600 /home/agent/.claude/.credentials.json
+    chmod 644 /home/agent/.claude.json
+  ' >/dev/null
+
+  container_supports_claudeai_auth "$compose_file"
+}
+
 if [[ "$DOCKER_EXEC" == "true" ]]; then
   if ! command -v docker >/dev/null 2>&1; then
     echo "docker CLI is required for --docker mode" >&2
@@ -191,12 +282,27 @@ if [[ "$DOCKER_EXEC" == "true" ]]; then
     bring_up_service_with_retries "$RESOLVED_COMPOSE_FILE" 'sandbox' --no-deps
   fi
 
+  DOCKER_AUTH_MODE="api-key"
+  if select_review_api_key; then
+    echo "Using validated Anthropic API key from ${REVIEW_API_KEY_SOURCE}." >&2
+  elif container_supports_claudeai_auth "$RESOLVED_COMPOSE_FILE"; then
+    DOCKER_AUTH_MODE="claude.ai"
+    echo "Sandbox ANTHROPIC_API_KEY failed validation; falling back to existing claude.ai auth." >&2
+  elif bootstrap_container_claude_auth "$RESOLVED_COMPOSE_FILE"; then
+    DOCKER_AUTH_MODE="claude.ai"
+    echo "Sandbox ANTHROPIC_API_KEY failed validation; falling back to host-backed claude.ai auth." >&2
+  else
+    echo "Sandbox ANTHROPIC_API_KEY validation failed and claude.ai auth is unavailable; proceeding with api-key mode." >&2
+  fi
+
   exec docker compose -f "$RESOLVED_COMPOSE_FILE" exec \
     -e CLAUDE_SHIP_DIR="$SHIP_DIR" \
     -e LOCAL_REVIEW_COMPOSE_FILE="$RESOLVED_COMPOSE_FILE" \
     -e LOCAL_REVIEW_EXECUTION_MODE="docker" \
     -e LOCAL_REVIEW_SOURCE_REPO="/workspace" \
     -e LOCAL_REVIEW_TMP_REPO="/tmp/local-review-workspace" \
+    -e LOCAL_REVIEW_AUTH_MODE="$DOCKER_AUTH_MODE" \
+    -e LOCAL_REVIEW_API_KEY="$REVIEW_API_KEY" \
     -e PATH="$DOCKER_EXEC_PATH" \
     sandbox \
     /bin/bash -lc '
@@ -204,6 +310,12 @@ if [[ "$DOCKER_EXEC" == "true" ]]; then
 
       SOURCE_REPO="${LOCAL_REVIEW_SOURCE_REPO:-/workspace}"
       TMP_REPO="${LOCAL_REVIEW_TMP_REPO:-/tmp/local-review-workspace}"
+
+      if [[ "${LOCAL_REVIEW_AUTH_MODE:-api-key}" == "claude.ai" ]]; then
+        unset ANTHROPIC_API_KEY
+      elif [[ -n "${LOCAL_REVIEW_API_KEY:-}" ]]; then
+        export ANTHROPIC_API_KEY="${LOCAL_REVIEW_API_KEY}"
+      fi
 
       rm -rf "$TMP_REPO"
       mkdir -p "$TMP_REPO"
@@ -260,4 +372,4 @@ if [[ "$DOCKER_EXEC" == "true" ]]; then
     "${REVIEW_ARGS[@]}"
 fi
 
-exec env LOCAL_REVIEW_EXECUTION_MODE=host "$BUNDLE_SCRIPT" "${REVIEW_ARGS[@]}"
+exec "$BUNDLE_SCRIPT" "${REVIEW_ARGS[@]}"
