@@ -183,7 +183,7 @@ Present the suggestion to the user: "Based on the content, I'd suggest a [type] 
 | Illustrations, icons, logos, abstract art, decorative elements | **Quiver (Option D)** | AI generates layered, stylized vectors with complex paths impractical to hand-code |
 | Icon sets (multiple matching icons) | **Quiver (Option D)** with references | Generate one, pass it as `--references` for the rest — maintains visual consistency |
 | Background patterns, textures, abstract decorative art | **Quiver (Option D)** | Hard to hand-code, easy to describe |
-| Charts, graphs, data visualizations (bar, line, pie, donut, sparkline) | **Figma (Option A)** | Native primitives (arcData for pie/donut, vectorPaths for line charts) produce editable, brand-consistent output — see code patterns in `references/figma-console-tools.md`. Load `standards/data-visualization.md` for chart type selection and design guidelines |
+| Charts, graphs, data visualizations (bar, line, pie, donut, sparkline) | **Figma (Option A)** | Native primitives produce editable, brand-consistent output. **Load `standards/data-visualization.md`** — contains both design guidelines (chart selection, colors, labeling) AND code recipes (arcData, vectorPaths) |
 | Simple structural SVGs (basic shapes, inline diagrams) | **Hand-coded SVG (Option B)** | Exact control; simple enough to write directly; humans can maintain the code |
 | System architecture, flowcharts, sequence diagrams | **D2/Mermaid (Option C)** | Purpose-built diagram languages with automatic layout |
 | Converting a raster image to SVG | **Quiver vectorize (Option D)** | AI-powered raster-to-vector conversion |
@@ -218,7 +218,7 @@ Before creating from scratch, search for existing assets to build from. **Always
 
 **a) Check the Brand Assets page first**
 
-The Inkeep Design Assets file (`D7NDSM2peo1iLhkjLxmGP5`) has a curated **Brand Assets** page (node `5003:63`) with 148 atomic graphical elements organized into 8 sections. Search here first for logos, icons, illustrations, backgrounds, and third-party logos.
+The Inkeep Design Assets file (`D7NDSM2peo1iLhkjLxmGP5`) has a curated **Brand Assets** page (node `5003:63`) with brand assets organized into sections (logos, icons, illustrations, customers, third-party logos, backgrounds, UI elements). Search here first for any reusable visual asset.
 
 Use `figma_execute` to search by hierarchical name:
 ```javascript
@@ -950,7 +950,7 @@ Should have:
 - **One-shot generation**: Never try to build the entire graphic in one pass. INSTEAD: one `figma_execute` call per element → screenshot → verify → next element. Build atoms individually in a working frame, then compose into the final layout.
 - **Placeholder content**: Never leave "Icon here", empty shapes, or "TODO" labels. INSTEAD: search Brand Assets page (logos, icons, third-party logos), then SVG logo sources (`references/svg-logo-sources.md`). If truly unfindable, create a styled text pill and flag it for the user to replace.
 - **Skipping visual checkpoints**: Don't assume it looks right. INSTEAD: `figma_capture_screenshot` after creating each atom, after each dimensional change, and before delivering. Run `figma_lint_design` at Step 5 to catch what screenshots miss (hardcoded colors, contrast, unnamed layers).
-- **Creating from scratch when a Figma component exists**: INSTEAD: always search Brand Assets page (node `5003:63`) first — 148 curated assets including logos, icons, illustrations, backgrounds, third-party logos. Check `references/master-designs.md` navigation table for which section to search.
+- **Creating from scratch when a Figma component exists**: INSTEAD: always search Brand Assets page (node `5003:63`) first — it has curated logos, icons, illustrations, customer assets, third-party logos, and backgrounds. Check `references/master-designs.md` navigation table for which section to search.
 - **Generating SVG when Figma-native is better**: Default to Figma designs for slide/marketing assets — they're editable and reusable. Use SVG only when code output is specifically needed.
 - **Approximate colors**: Use exact hex values from the brand, not "close enough" colors
 - **Unnamed layers**: Every Figma layer should have a descriptive name, not "Frame 47" or "Rectangle 12"
@@ -962,7 +962,7 @@ Should have:
 - **Hand-coding SVG for complex illustrations**: When the graphic is an illustration, logo, or stylized icon, use Quiver (Option D) instead of writing SVG by hand — Arrow produces layered vectors with complex paths that are impractical to hand-code
 - **Using Quiver for text-heavy graphics**: Quiver renders text as vector paths, not `<text>` elements — the result is non-editable, imprecise for body copy, and can't be spell-checked. Use Figma for anything with substantial text.
 - **Using Quiver for the brand mark**: Quiver will hallucinate a logo. Always clone the real Inkeep logo from the design system in Figma. Use the hybrid workflow (Quiver → Figma) when you need both custom artwork and the brand mark.
-- **Using Quiver for data visualization**: Quiver can't produce charts with accurate data values. Use hand-coded SVG or D2 for bar charts, line graphs, pie charts.
+- **Using Quiver for data visualization**: Quiver can't produce charts with accurate data values. Use Figma (Option A) with the code recipes in `standards/data-visualization.md` — native primitives (arcData for pie/donut, vectorPaths for line charts, rectangles for bar charts) produce editable, brand-consistent charts.
 - **Quiver without brand instructions**: Always pass brand tokens in `--instructions` (separate from `prompt`). Without them, Quiver generates with its own palette. Include explicit hex codes and negative constraints ("no gradients unless specified").
 - **Vague Quiver prompts**: "A nice icon" wastes credits and produces random output. Use the 5-component prompt structure: subject + style + color palette + composition + constraints.
 - **Skipping Quiver output review**: Always read and verify the generated SVG before delivering — check hex values in the SVG source against the brand palette, not just visual impression
