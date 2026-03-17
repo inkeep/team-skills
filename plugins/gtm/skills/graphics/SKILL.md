@@ -68,35 +68,32 @@ Page naming: `[YYYY-MM-DD] {medium} — {project description}`. This prevents ov
 
 **Frame naming within pages:** Follow professional conventions — `AssetType/Platform/Variant` (e.g., `Social/LinkedIn/Post-Dark`, `Blog/Cover/Agents-in-Slack`). Slash-separated names create automatic hierarchy in the Assets panel and nested folders on export.
 
-### Design Tokens (pre-configured in the workspace)
+### Design Tokens
 
-The workspace contains **30 Figma variables** across 4 collections that agents should use instead of hardcoding hex values:
+The Inkeep Design Assets file contains the canonical design token system as Figma variables across 5 collections. **Always use these tokens instead of hardcoding hex values.**
 
-| Collection | Tokens | How to use |
+**Load:** `references/brand-tokens.md` for the full token reference — includes all collections, semantic usage guidance, typography rules, design patterns (feature card, testimonial, hero section), and code examples.
+
+| Collection | What it covers | Key usage rules |
 |---|---|---|
-| **Inkeep Colors** (9) | `bg/primary`, `bg/surface`, `text/primary`, `text/muted`, `brand/primary`, `brand/accent-warm`, `brand/accent-cool`, `surface/white`, `surface/dark` | Bind to fills via `setBoundVariableForPaint` or `boundVariables` |
-| **Inkeep Spacing** (6) | `spacing/xs`(4), `sm`(8), `md`(16), `lg`(24), `xl`(32), `xxl`(48) | Use for padding, gap, margins in auto-layout frames |
-| **Inkeep Radius** (5) | `radius/sm`(4), `md`(8), `lg`(16), `xl`(24), `pill`(9999) | Use for `cornerRadius` |
-| **Inkeep Typography** (10) | 3 font families + 7 sizes (12-64px) | Reference for font selection and sizing |
+| **Inkeep Colors** | Core palette, card backgrounds, surface colors, UI utility colors | Bind via `setBoundVariableForPaint`. Card backgrounds rotate through `card/warm-peach`, `card/light-blue`, etc. **Never use #FFFFFF as page background** — use `bg/primary`. |
+| **Inkeep Spacing** | Base scale (4-48px) + contextual layout spacing (section gaps, hero padding, page max-width) | Base scale for component internals. Contextual tokens for page layout (`spacing/section-gap` = 100px between sections). |
+| **Inkeep Radius** | Full range from 2px micro to 80px large headers | The signature aesthetic uses **large radii**: 32px for feature cards, 47px for use case cards, 60px for hero badges. `radius/pill` (9999) for buttons. |
+| **Inkeep Typography** | Font families, semantic sizes, weights, tracking (letter-spacing), leading (line-height) | **Strict rules:** Neue Haas for headings (weight 400), JetBrains Mono for labels (weight 500, **always uppercase**), Noto Serif for body (weight 300). Never mix more than 2 typefaces per component. |
+| **Inkeep Shadows** | 9 shadow definitions from subtle to brand glow | `shadow/subtle` for cards at rest, `shadow/medium` for hover, `shadow/brand` for blue-tinted glow on branded elements. |
 
-**Using tokens in `figma_execute`:**
+**Discovering tokens dynamically** (always prefer this over hardcoded values):
 ```javascript
-// Look up a color variable by name
 const vars = await figma.variables.getLocalVariablesAsync('COLOR');
-const brandPrimary = vars.find(v => v.name === 'brand/primary');
-
-// Bind a fill to the variable (instead of hardcoding hex)
-const rect = figma.createRectangle();
+const token = vars.find(v => v.name === 'brand/primary');
 rect.fills = [figma.variables.setBoundVariableForPaint(
-  { type: 'SOLID', color: { r: 0.216, g: 0.518, b: 1 } },
-  'color',
-  brandPrimary
+  { type: 'SOLID', color: { r: 0.216, g: 0.518, b: 1 } }, 'color', token
 )];
 ```
 
-**Why tokens matter:** `figma_lint_design` flags hardcoded colors as warnings. Binding to variables ensures brand consistency cascades — if a brand color changes, all elements update automatically. It also enables future dark mode support by adding a "Dark" mode to the Inkeep Colors collection.
+**Why tokens matter:** `figma_lint_design` flags hardcoded colors as warnings. Variable binding ensures brand consistency cascades automatically.
 
-**If working in a non-workspace file** (user specified a different target): fall back to hardcoded hex values from `references/brand-tokens.md`. Tokens are only available in the workspace file.
+**If working in a file without tokens** (user specified a different target): fall back to hardcoded hex values from `references/brand-tokens.md`.
 
 **Why a shared workspace?** Figma has no API to create new files. The workspace prevents: (1) polluting brand asset files with work-in-progress, (2) requiring the user to create a new file for every request, (3) agents working in random/personal Drafts files that aren't team-accessible.
 
@@ -634,7 +631,7 @@ Best for: illustrations, icons, logos, abstract art, decorative elements, backgr
 
    ```
    --instructions "Brand constraints:
-   - Colors: background #FBF9F4, accent #3784FF, primary #1A1A1A, secondary #6B6B6B
+   - Colors: background #FBF9F4, accent #3784FF, primary #231F20, secondary #6B6B6B
    - Style: clean, minimal, geometric, consistent with Inkeep brand
    - No photorealistic elements
    - No gradients unless explicitly requested
@@ -679,7 +676,7 @@ Best for: illustrations, icons, logos, abstract art, decorative elements, backgr
    ```bash
    bun scripts/quiver-generate.ts generate \
      --prompt "Abstract illustration of AI agents collaborating, flat geometric style" \
-     --instructions "Colors: #FBF9F4 background, #3784FF accent, #1A1A1A primary. Minimal, clean." \
+     --instructions "Colors: #FBF9F4 background, #3784FF accent, #231F20 primary. Minimal, clean." \
      --n 3 \
      --output agent-collab.svg
    ```
@@ -693,7 +690,7 @@ Best for: illustrations, icons, logos, abstract art, decorative elements, backgr
    - Is the composition clean and intentional?
 
    **Source inspection (Read the SVG):**
-   - Grep hex values — do they match the brand palette (`#FBF9F4`, `#3784FF`, `#1A1A1A`, `#6B6B6B`)?
+   - Grep hex values — do they match the brand palette (`#FBF9F4`, `#3784FF`, `#231F20`, `#6B6B6B`)?
    - Any unwanted `<text>` elements when "no text" was specified?
    - Is the SVG valid and reasonable size?
 

@@ -129,7 +129,7 @@ The `instructions` parameter is a separate channel from `prompt`. Use it for per
 
 ```
 Brand constraints:
-- Colors: background #FBF9F4, accent #3784FF, primary #1A1A1A, secondary #6B6B6B
+- Colors: background #FBF9F4, accent #3784FF, primary #231F20, secondary #6B6B6B
 - Style: clean, minimal, geometric, consistent with Inkeep brand
 - No photorealistic elements
 - No gradients unless explicitly requested
