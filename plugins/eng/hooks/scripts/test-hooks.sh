@@ -452,6 +452,28 @@ OUTPUT=$(echo '{"transcript_path":"'"$TRANSCRIPT"'","session_id":"session-DDDD"}
   | (cd "$PROJ" && "$SCRIPT_DIR/ship-stop-hook.sh") 2>/dev/null || true)
 assert_output_empty "After stamp, different session -> allows exit" "$OUTPUT"
 
+# Test 15f: Loop has session_id but hook provides none -> allows exit (can't verify)
+PROJ="$TMPDIR/t15f_session"
+make_state_file "$PROJ"
+mkdir -p "$PROJ/tmp/ship"
+cat > "$PROJ/tmp/ship/loop.md" << 'EOF'
+---
+active: true
+iteration: 1
+max_iterations: 20
+completion_promise: "SHIP COMPLETE"
+session_id: "session-AAAA"
+started_at: "2026-02-17T00:00:00Z"
+---
+EOF
+TRANSCRIPT="$TMPDIR/transcript15f_session.jsonl"
+make_transcript "$TRANSCRIPT" "working"
+# No session_id in hook input — can't verify ownership, should allow exit
+OUTPUT=$(echo '{"transcript_path":"'"$TRANSCRIPT"'"}' \
+  | (cd "$PROJ" && "$SCRIPT_DIR/ship-stop-hook.sh") 2>/dev/null || true)
+assert_output_empty "Loop has session_id, hook has none -> allows exit" "$OUTPUT"
+assert_file_exists "Loop file preserved when can't verify" "$PROJ/tmp/ship/loop.md"
+
 # Test 16: Prompt logging — last-prompt.md written on re-injection
 PROJ="$TMPDIR/t16_prompt_log"
 make_state_file "$PROJ"

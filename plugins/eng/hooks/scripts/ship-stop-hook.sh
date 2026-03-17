@@ -70,8 +70,26 @@ COMPLETION_PROMISE=$(echo "$FRONTMATTER" | grep '^completion_promise:' | sed 's/
 LOOP_SESSION_ID=$(echo "$FRONTMATTER" | grep '^session_id:' | sed 's/session_id: *//' | sed 's/^"\(.*\)"$/\1/' || echo "")
 
 # --- Session isolation: only the owning session controls this loop ---
-if [[ -n "$LOOP_SESSION_ID" ]] && [[ -n "$HOOK_SESSION_ID" ]] && [[ "$LOOP_SESSION_ID" != "$HOOK_SESSION_ID" ]]; then
-  # This loop belongs to a different session — allow exit without interfering
+# Three cases:
+#   1. Both have session_id and they match    → owner, fall through to block
+#   2. Both have session_id and they differ   → not owner, allow exit
+#   3. Loop has no session_id, hook does      → stamp ownership, fall through to block
+#   4. Loop has session_id, hook doesn't      → can't verify, allow exit (safe default)
+#   5. Neither has session_id                 → can't isolate, fall through (backward compat)
+if [[ -n "$HOOK_SESSION_ID" ]]; then
+  if [[ -z "$LOOP_SESSION_ID" ]]; then
+    # No session_id in loop yet — claim ownership for this session (first encounter)
+    TEMP_FILE="${LOOP_STATE_FILE}.tmp.$$"
+    awk -v sid="$HOOK_SESSION_ID" '/^started_at:/{print "session_id: \"" sid "\""}1' "$LOOP_STATE_FILE" > "$TEMP_FILE"
+    mv "$TEMP_FILE" "$LOOP_STATE_FILE"
+    LOOP_SESSION_ID="$HOOK_SESSION_ID"
+  fi
+  if [[ "$LOOP_SESSION_ID" != "$HOOK_SESSION_ID" ]]; then
+    # This loop belongs to a different session — allow exit without interfering
+    exit 0
+  fi
+elif [[ -n "$LOOP_SESSION_ID" ]]; then
+  # Loop has a session_id but hook didn't provide one — can't verify, allow exit
   exit 0
 fi
 
@@ -429,12 +447,6 @@ TEMP_FILE="${LOOP_STATE_FILE}.tmp.$$"
 sed "s/^iteration: .*/iteration: $NEXT_ITERATION/" "$LOOP_STATE_FILE" > "$TEMP_FILE"
 mv "$TEMP_FILE" "$LOOP_STATE_FILE"
 
-# Stamp session_id on first encounter (backward compat for older state files)
-if [[ -z "$LOOP_SESSION_ID" ]] && [[ -n "$HOOK_SESSION_ID" ]]; then
-  TEMP_FILE="${LOOP_STATE_FILE}.tmp.$$"
-  awk -v sid="$HOOK_SESSION_ID" '/^started_at:/{print "session_id: \"" sid "\""}1' "$LOOP_STATE_FILE" > "$TEMP_FILE"
-  mv "$TEMP_FILE" "$LOOP_STATE_FILE"
-fi
 
 # Build system message — includes full SKILL.md so the agent has complete phase instructions
 SYSTEM_MSG="🔄 Ship loop iteration ${NEXT_ITERATION} | Phase: ${CURRENT_PHASE} | To complete: output <complete>SHIP COMPLETE</complete> (ONLY when ALL phases are genuinely done — do not lie to exit!)"
