@@ -21,6 +21,7 @@ Master design files are team-maintained Figma files containing canonical compone
 |---|---|---|---|
 | BABCO Design Assets | https://www.figma.com/design/by048nPGeK3c6FKMvlmPCz/BABCO-Design-Assetts | Brand guide, color system, typography, logos, social assets, presentation templates, marketing graphics | All graphics — primary brand token and asset source |
 | Inkeep Design Assets | https://www.figma.com/design/D7NDSM2peo1iLhkjLxmGP5/Inkeep-Design-Assetts | Brand Assets master page — all atomic graphical elements (logos, icons, illustrations, backgrounds, third-party logos) | Primary source for logos, icons, illustrations, backgrounds |
+| Inkeep Agent Graphics Workspace | https://www.figma.com/design/S5kGTPZ0kSjmSxusJ56QJH/Inkeep-Agent-Graphics-Workspace | Shared workspace for AI-generated graphics — one page per project, organized by date and medium | Default target for all new graphics creation (unless user specifies a different file) |
 
 ## Navigating Figma files via MCP
 
