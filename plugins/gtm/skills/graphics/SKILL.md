@@ -322,13 +322,18 @@ Write out an asset manifest listing what was found and what's missing:
 
 ⛔ **Mark task "Graphics: Plan composition" as `in_progress`. Verify that "Graphics: Collect assets & brand tokens" is `completed` — if not, go back and complete Step 2 first. Do NOT plan without knowing what assets are available.**
 
-Before generating, plan the composition:
-- **Layout**: overall structure, element placement, visual hierarchy
-- **Content elements**: text, icons, shapes, images, data points
-- **Color mapping**: which brand colors apply to which elements
-- **Typography mapping**: which font styles for headings, labels, body text
+**Load:** `references/brand-guide.md` for brand principles, design rules, illustration style, component patterns, typography rules, and voice/tone — use this to inform every composition decision below.
 
-For diagrams: plan the nodes, edges, groupings, and flow direction.
+**Load:** `references/brand-tokens.md` for exact token values and design pattern recipes (feature card, testimonial, hero section, etc.).
+
+Before generating, plan the composition:
+- **Layout**: overall structure, element placement, visual hierarchy. Check brand-guide.md for the Section Header pattern (the most-used layout) and other component patterns.
+- **Content elements**: text, icons, shapes, images, data points
+- **Color mapping**: which brand color tokens apply to which elements. Follow the color usage rules in brand-guide.md (e.g., rotate card backgrounds, never white page bg, no blue icons on blue).
+- **Typography mapping**: which font for each text element. **Strict rules:** Neue Haas for headings (weight 400), JetBrains Mono for labels/tags/buttons (weight 500, always uppercase), Noto Serif for body (weight 300). See the typography scale in brand-tokens.md for exact sizes, tracking, and leading per element.
+- **Illustration style**: if the graphic includes illustrations, follow the hand-drawn style rules in brand-guide.md (irregular strokes, line weight for depth, no shadows, Azure Blue linework).
+
+For diagrams: plan the nodes, edges, groupings, and flow direction. Follow the diagram rules in brand-guide.md (max 8-10 nodes, L-to-R or T-to-B flow, JetBrains Mono labels, 90-degree connector bends).
 
 **Confirm high-cost decisions explicitly.** Some choices are expensive to reverse once built — especially connection elements (arrows, lines) that depend on positions of other elements. Before building, get explicit user confirmation on:
 - **Flow direction** (clockwise vs counter-clockwise, left-to-right vs top-to-bottom)
