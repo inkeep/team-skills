@@ -147,6 +147,8 @@ printf '%s\n' "$RUN_DIR" > "${SHIP_DIR}/local-review-latest.txt"
 write_run_metadata() {
   local claude_status="${1:-}"
   local finished_at="${2:-}"
+  local raw_claude_status="${3:-}"
+  local exit_normalization="${4:-}"
   local context_file=".claude/skills/pr-context/SKILL.md"
   local run_metadata="${RUN_DIR}/run-metadata.txt"
 
@@ -166,8 +168,14 @@ write_run_metadata() {
     if [[ -f "$context_file" ]]; then
       printf 'context_file=%s\n' "$context_file"
     fi
+    if [[ -n "$raw_claude_status" ]]; then
+      printf 'claude_raw_exit_code=%s\n' "$raw_claude_status"
+    fi
     if [[ -n "$claude_status" ]]; then
       printf 'claude_exit_code=%s\n' "$claude_status"
+    fi
+    if [[ -n "$exit_normalization" ]]; then
+      printf 'exit_normalization=%s\n' "$exit_normalization"
     fi
     if [[ -n "$finished_at" ]]; then
       printf 'finished_at_utc=%s\n' "$finished_at"
@@ -214,6 +222,14 @@ run_pr_context_generator() {
 run_pr_context_generator
 generate_run_artifacts
 
+has_valid_review_summary() {
+  local candidate_file="$1"
+
+  [[ -f "$candidate_file" ]] || return 1
+  grep -q '^## PR Review Summary' "$candidate_file" && \
+    grep -q 'Recommendation:' "$candidate_file"
+}
+
 claude_status=0
 
 env -u CLAUDECODE -u CLAUDE_CODE_ENTRYPOINT claude \
@@ -224,14 +240,17 @@ env -u CLAUDECODE -u CLAUDE_CODE_ENTRYPOINT claude \
   --max-turns "$MAX_TURNS" \
   2>&1 | tee "$TMP_OUTPUT" || claude_status=$?
 
+raw_claude_status="$claude_status"
+exit_normalization=""
+
 if [[ -s "$TMP_OUTPUT" ]]; then
   cp "$TMP_OUTPUT" "${RUN_DIR}/claude-output.log"
 fi
 
-if [[ -f "$OUTPUT_FILE" ]] && grep -q '^## PR Review Summary' "$OUTPUT_FILE"; then
+if has_valid_review_summary "$OUTPUT_FILE"; then
   cp "$OUTPUT_FILE" "${RUN_DIR}/review-output.md"
   echo "Local review output captured at $OUTPUT_FILE"
-elif [[ -s "$TMP_OUTPUT" ]] && grep -q '^## PR Review Summary' "$TMP_OUTPUT"; then
+elif has_valid_review_summary "$TMP_OUTPUT"; then
   cp "$TMP_OUTPUT" "$OUTPUT_FILE"
   cp "$OUTPUT_FILE" "${RUN_DIR}/review-output.md"
   echo "Local review output captured at $OUTPUT_FILE"
@@ -239,7 +258,14 @@ else
   echo "Local review output did not contain the expected markdown summary header" >&2
   claude_status=1
 fi
-write_run_metadata "$claude_status" "$(date -u +%Y-%m-%dT%H:%M:%SZ)"
+
+if has_valid_review_summary "$OUTPUT_FILE" && [[ "$raw_claude_status" -ne 0 ]]; then
+  echo "Claude exited with status ${raw_claude_status} after writing a valid review summary; treating the artifact as success" >&2
+  claude_status=0
+  exit_normalization="valid_summary_present"
+fi
+
+write_run_metadata "$claude_status" "$(date -u +%Y-%m-%dT%H:%M:%SZ)" "$raw_claude_status" "$exit_normalization"
 echo "Local review run artifacts captured at ${RUN_DIR}"
 
 exit "$claude_status"
