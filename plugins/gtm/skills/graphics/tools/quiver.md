@@ -27,12 +27,12 @@ See the routing table in SKILL.md Step 1 for the full decision matrix. Summary o
 
 ## Script usage
 
-The script lives at `scripts/quiver-generate.ts`. Uses Node.js built-ins for the API call; uses `sharp` (optional) for auto-generating PNG previews. If `sharp` is not installed, SVGs still generate — only PNG previews are skipped.
+The script lives at `tools/quiver-generate.ts`. Uses Node.js built-ins for the API call; uses `sharp` (optional) for auto-generating PNG previews. If `sharp` is not installed, SVGs still generate — only PNG previews are skipped.
 
 ### Generate SVG from text
 
 ```bash
-bun scripts/quiver-generate.ts generate \
+bun tools/quiver-generate.ts generate \
   --prompt "A minimal logo for a developer tools company" \
   --instructions "Use colors #3784FF and #231F20. Clean geometric style." \
   --temperature 0.5 \
@@ -42,7 +42,7 @@ bun scripts/quiver-generate.ts generate \
 ### Generate multiple variants
 
 ```bash
-bun scripts/quiver-generate.ts generate \
+bun tools/quiver-generate.ts generate \
   --prompt "Abstract illustration of AI agents collaborating" \
   --instructions "Warm background #FBF9F4, accent #3784FF, minimal flat style" \
   --n 3 \
@@ -55,7 +55,7 @@ bun scripts/quiver-generate.ts generate \
 Export a Figma asset as PNG, then pass it as a reference:
 
 ```bash
-bun scripts/quiver-generate.ts generate \
+bun tools/quiver-generate.ts generate \
   --prompt "Icon for customer support in the same style" \
   --references /tmp/existing-icon.png \
   --instructions "Match the visual style of the reference. Use #3784FF accent." \
@@ -67,7 +67,7 @@ Up to 4 reference images (local file paths or URLs). References guide the model'
 ### Vectorize a raster image
 
 ```bash
-bun scripts/quiver-generate.ts vectorize \
+bun tools/quiver-generate.ts vectorize \
   --image screenshot.png \
   --auto-crop \
   --target-size 512 \
@@ -88,7 +88,7 @@ The script writes SVG files and auto-generates PNG previews (via `sharp`) alongs
 
 **Visual inspection:** Use the Read tool on the PNG preview to visually inspect the output — the Read tool can display images but not SVGs. Then check the SVG source for objective brand compliance (hex values, structure).
 
-Status messages go to stderr, so you can capture just the JSON: `bun scripts/quiver-generate.ts generate --prompt "..." 2>/dev/null`
+Status messages go to stderr, so you can capture just the JSON: `bun tools/quiver-generate.ts generate --prompt "..." 2>/dev/null`
 
 If `sharp` is not installed, PNG generation fails gracefully (warning only) and the script still outputs the SVGs.
 
@@ -182,7 +182,7 @@ References are processed through a Vision Transformer (CLIP/SigLIP) into visual 
 | Temperature | Use 0.4-0.6 when references are provided (lower = more faithful to reference style). The SDK example uses 0.4 with references. |
 | Consistency across generations | Use the SAME reference(s) + SAME instructions + low temperature for all items in a set. Feed your best output back as reference for subsequent generations to compound consistency. |
 
-**For Inkeep illustration style:** Export an existing illustration from the marketing site as PNG (e.g., the B2B support card with hexagonal icons), pass as reference, and combine with the illustration system instructions from `references/illustration-system.md`:
+**For Inkeep illustration style:** Export an existing illustration from the marketing site as PNG (e.g., the B2B support card with hexagonal icons), pass as reference, and combine with the illustration system instructions from `content-types/illustration.md`:
 
 ```bash
 # Export existing illustration as reference
@@ -190,7 +190,7 @@ curl -sL -o /tmp/inkeep-ref.png "https://inkeep.com/images/use-cases/b2b-custome
 sips -s format png -Z 800 /tmp/inkeep-ref.png --out /tmp/inkeep-ref-800.png
 
 # Generate new illustration matching the style
-bun scripts/quiver-generate.ts generate \
+bun tools/quiver-generate.ts generate \
   --prompt "Hand-drawn hexagonal grid with precise blue icons — a Slack hash, a chat bubble, and a gear" \
   --references /tmp/inkeep-ref-800.png \
   --instructions "Match the illustration style exactly. TWO layers: (1) faint gray hand-drawn containers at 15-20% opacity, (2) precise blue #3784FF filled icons inside. No shadows, no gradients. Colors: #3784FF blue fills, #231F20 gray outlines, #F7F4ED cream fills." \

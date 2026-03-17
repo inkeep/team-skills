@@ -6,12 +6,12 @@ Impact: Without this, the agent falls back to text pill placeholders instead of 
 
 # SVG Logo Sources for Third-Party Brands
 
-When a third-party logo is not in the Brand Assets page, use `scripts/fetch-logo.ts` to find and download the SVG in a single call. The script checks all sources in parallel and returns the best result.
+When a third-party logo is not in the Brand Assets page, use `tools/fetch-logo.ts` to find and download the SVG in a single call. The script checks all sources in parallel and returns the best result.
 
 ## Quick usage
 
 ```bash
-bun scripts/fetch-logo.ts --name "Freshdesk" --domain "freshdesk.com" --output /tmp/freshdesk.svg
+bun tools/fetch-logo.ts --name "Freshdesk" --domain "freshdesk.com" --output /tmp/freshdesk.svg
 ```
 
 Options:
@@ -36,6 +36,21 @@ The script checks these sources (phase 1 in parallel, phase 2 only if needed):
 Phase 1 (Simple Icons + Iconify) runs in parallel (~200ms). Phase 2 (Brandfetch) only fires when phase 1 finds nothing (~1s).
 
 If all sources fail, the script returns `"found": false`. Fall back to a styled text pill placeholder (brand name in rounded rectangle) and flag for user to replace manually.
+
+### Domain resolution via Brandfetch Search API
+
+When the company domain is unknown (e.g., you only know "Freshworks" but not that the domain is `freshworks.com`), the **Brand Search API** can resolve it:
+
+```
+GET https://api.brandfetch.io/v2/search/{name}?c={clientId}
+```
+
+- **Auth:** Client ID as query param `c=BRANDFETCH_CLIENT_ID` (not Bearer token)
+- **Response:** Array of `{ name, domain, icon, claimed, brandId }` — first result is best match
+- **Rate limit:** 500K req/month, 200 req per 5 min per IP
+- **Cost:** Free (uses Client ID, not Brand API quota)
+
+This is integrated into `tools/fetch-brand.ts` (full brand profile fetcher) as the domain resolution step when `--domain` is not provided. The `fetch-logo.ts` script still uses naive domain inference (name → `{name}.com`) for speed — use `fetch-brand.ts` when domain inference fails or when you need the full brand profile (colors, fonts, company data) alongside the logo.
 
 ### Why this order?
 
@@ -200,9 +215,22 @@ After importing a third-party logo from any source:
 - [ ] **Verify SVG import** — screenshot after import to confirm it rendered correctly. Some SVGs with gradients, masks, or complex filters may not import cleanly into Figma
 - [ ] **If SVG import fails** — try a simpler variant (icon-only vs full wordmark), try a different source, or fall back to the text pill placeholder
 
+## Full brand profiles (beyond logos)
+
+When you need more than just the logo — brand colors, fonts, and company data for comparison graphics, case study heroes, or integration showcases — use the full brand profile script:
+
+```bash
+bun tools/fetch-brand.ts --name "Zendesk" --domain "zendesk.com"
+```
+
+Returns `{ logo, colors, fonts, company }`. See SKILL.md Step 2f for details and the Asset Manifest integration.
+
+Full Brandfetch API capabilities report: `reports/brandfetch-quiver-extended-capabilities/REPORT.md`
+
 ## Additional resources
 
 - Full research report: `reports/svg-logo-apis-brand-collections/REPORT.md`
+- Brandfetch capabilities report: `reports/brandfetch-quiver-extended-capabilities/REPORT.md`
 - Simple Icons website: https://simpleicons.org/
 - Brandfetch developer portal: https://brandfetch.com/developers
 - Iconify API docs: https://iconify.design/docs/api/

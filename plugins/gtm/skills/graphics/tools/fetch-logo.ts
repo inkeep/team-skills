@@ -4,14 +4,14 @@
  * SVG logo fetcher — checks multiple sources in parallel and returns the first hit.
  *
  * Single logo:
- *   bun scripts/fetch-logo.ts --name "Freshdesk"
- *   bun scripts/fetch-logo.ts --name "Pfizer" --domain "pfizer.com"
- *   bun scripts/fetch-logo.ts --name "Vercel" --output vercel.svg
- *   bun scripts/fetch-logo.ts --name "Nike" --theme dark
+ *   bun tools/fetch-logo.ts --name "Freshdesk"
+ *   bun tools/fetch-logo.ts --name "Pfizer" --domain "pfizer.com"
+ *   bun tools/fetch-logo.ts --name "Vercel" --output vercel.svg
+ *   bun tools/fetch-logo.ts --name "Nike" --theme dark
  *
  * Batch mode (multiple logos in parallel):
- *   bun scripts/fetch-logo.ts --batch "Vercel,Supabase,Clerk,Freshdesk,Pfizer:pfizer.com"
- *   bun scripts/fetch-logo.ts --batch "Vercel,Supabase" --output-dir /tmp/logos
+ *   bun tools/fetch-logo.ts --batch "Vercel,Supabase,Clerk,Freshdesk,Pfizer:pfizer.com"
+ *   bun tools/fetch-logo.ts --batch "Vercel,Supabase" --output-dir /tmp/logos
  *
  *   Batch format: comma-separated names. Append :domain for Brandfetch hints.
  *   Output: JSON array to stdout. With --output-dir, saves each SVG as {slug}.svg.
@@ -291,7 +291,7 @@ function log(msg: string) {
 }
 
 function usage() {
-  console.error(`Usage: bun scripts/fetch-logo.ts --name "Brand Name" [options]
+  console.error(`Usage: bun tools/fetch-logo.ts --name "Brand Name" [options]
 
 Options:
   --name      Brand name to search for (required)
@@ -304,9 +304,9 @@ Output: JSON to stdout with found, source, name, slug, format, theme, svg, url
         Status messages go to stderr.
 
 Examples:
-  bun scripts/fetch-logo.ts --name "Freshdesk" --domain "freshdesk.com"
-  bun scripts/fetch-logo.ts --name "Vercel" --output /tmp/vercel.svg
-  bun scripts/fetch-logo.ts --name "Pfizer" --domain "pfizer.com" --theme dark`);
+  bun tools/fetch-logo.ts --name "Freshdesk" --domain "freshdesk.com"
+  bun tools/fetch-logo.ts --name "Vercel" --output /tmp/vercel.svg
+  bun tools/fetch-logo.ts --name "Pfizer" --domain "pfizer.com" --theme dark`);
 }
 
 async function main() {

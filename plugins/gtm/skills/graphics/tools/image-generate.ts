@@ -4,8 +4,8 @@
  * OpenAI GPT Image 1.5 — raster image generation and editing.
  *
  * Usage:
- *   bun scripts/image-generate.ts generate --prompt "..." [--quality high] [--size 1536x1024] [--n 2] [--output out.png]
- *   bun scripts/image-generate.ts edit --prompt "..." --image input.png [--mask mask.png] [--output out.png]
+ *   bun tools/image-generate.ts generate --prompt "..." [--quality high] [--size 1536x1024] [--n 2] [--output out.png]
+ *   bun tools/image-generate.ts edit --prompt "..." --image input.png [--mask mask.png] [--output out.png]
  *
  * Requires: OPENAI_API_KEY environment variable.
  * Docs: https://platform.openai.com/docs/guides/image-generation
@@ -200,8 +200,8 @@ async function main() {
       default:
         console.error(
           "Usage:\n" +
-            '  bun scripts/image-generate.ts generate --prompt "..." [--quality high] [--size 1536x1024] [--n 2] [--output out.png]\n' +
-            '  bun scripts/image-generate.ts edit --prompt "..." --image input.png [--mask mask.png] [--output out.png]\n'
+            '  bun tools/image-generate.ts generate --prompt "..." [--quality high] [--size 1536x1024] [--n 2] [--output out.png]\n' +
+            '  bun tools/image-generate.ts edit --prompt "..." --image input.png [--mask mask.png] [--output out.png]\n'
         );
         process.exit(1);
     }

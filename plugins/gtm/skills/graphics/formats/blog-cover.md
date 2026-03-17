@@ -53,7 +53,7 @@ These proportions are measured from the top 6 performing companies (Resend, Dub.
 
 ### Split layout, visual sizing, and hierarchy
 
-See `references/composition-patterns.md` for the full split layout proportions, edge bleed techniques, and visual hierarchy ratios.
+See `brand.md` § Composition Patterns for the full split layout proportions, edge bleed techniques, and visual hierarchy ratios.
 
 **Blog-cover-specific calibration:**
 - Text area: 30-40% of width (left), visual area: 55-65% (right)
@@ -72,7 +72,7 @@ For major product launches, rebrand announcements, or flagship features. Full cu
 **Background:** `surface/dark` (#231F20) for maximum impact, OR `bg/primary` (#FBF9F4) for brand warmth. Dark is reserved for the biggest moments — it breaks pattern and demands attention. Add subtle texture (dot grid at 2-3% opacity, or light bloom from the visual element) to prevent flatness.
 
 **Layout (split composition):**
-- **Left 40-45%:** JetBrains Mono "NEW" badge (small, muted — see `references/artifact-recipes.md` § "JetBrains Mono badge system") → Neue Haas heading (80-100px, weight 95 Black or 75 Bold) → Noto Serif subtitle (16-20px, `text/muted` or `brand/golden-sun` on dark)
+- **Left 40-45%:** JetBrains Mono "NEW" badge (small, muted — see `brand.md` § Artifact Recipes § "JetBrains Mono badge system") → Neue Haas heading (80-100px, weight 95 Black or 75 Bold) → Noto Serif subtitle (16-20px, `text/muted` or `brand/golden-sun` on dark)
 - **Right 55-60%:** Custom visual element that fills most of the right side — one of:
   - **Stylized product mockup** — agent conversation UI, dashboard panel, floating at angle with `shadow/brand` (blue-tinted glow) and `radius/lg-alt` (32px). Let it bleed past the right edge.
   - **Visual metaphor** — 3D rendered object or custom illustration representing the feature concept (inspired by Resend/Neon approach)
@@ -118,7 +118,7 @@ For integration announcements, partner features, ecosystem posts. Fastest to pro
 **Background:** `bg/primary` (#FBF9F4) or `surface/dark` (#231F20) for major partners.
 
 **Layout (centered or split):**
-- JetBrains Mono "INTEGRATION" badge (see `references/artifact-recipes.md` § "JetBrains Mono badge system")
+- JetBrains Mono "INTEGRATION" badge (see `brand.md` § Artifact Recipes § "JetBrains Mono badge system")
 - Neue Haas heading (50-60px): "Inkeep + [Partner]" or feature title
 - **Partner logo** (real logo from Brand Assets `third-party/` prefix, never approximated) + Inkeep logo, connected with "×" or "+" symbol
 - Logos at equal visual weight, centered or right-aligned
@@ -138,7 +138,7 @@ For any blog post, decide which visual element to use:
 | Integration / partner announcement | **Logo composition** — partner logo + Inkeep logo with connector | Slack + Inkeep logos |
 | Abstract concept / architecture | **Visual metaphor** — illustration or abstract graphic representing the concept | Network graph for multi-agent, lock icon for security |
 | Key metric or stat | **Metric-embedded mockup** — stylized UI card with large stat number | "40% deflection" in a styled card |
-| Technical / API / code content | **Code-as-visual** — syntax-highlighted code snippet as a supporting visual element in the right portion of a split layout. Build using the "Syntax-highlighted code block" pattern in `references/figma-console-tools.md` — uses `setRangeFills` for native editable Figma text with brand colors (brand/primary for keywords, golden-sun for strings). Show 3-8 lines of the "money line" of the API. The code signals "developer content" at card sizes — it's not meant to be fully read. (Clerk + Trigger.dev technique) | `new InkeepAgent({...})`, SDK initialization, MCP server config |
+| Technical / API / code content | **Code-as-visual** — syntax-highlighted code snippet as a supporting visual element in the right portion of a split layout. Build using the "Syntax-highlighted code block" pattern in `tools/figma-console.md` — uses `setRangeFills` for native editable Figma text with brand colors (brand/primary for keywords, golden-sun for strings). Show 3-8 lines of the "money line" of the API. The code signals "developer content" at card sizes — it's not meant to be fully read. (Clerk + Trigger.dev technique) | `new InkeepAgent({...})`, SDK initialization, MCP server config |
 | Comparison / evaluation | **Split layout or data table** — comparison visual | Side-by-side feature comparison |
 | No strong visual hook | **Typography-led** — bold title as primary element with minimal supporting graphic | Large Neue Haas heading on warm background |
 
@@ -152,9 +152,9 @@ For any blog post, decide which visual element to use:
 
 ### Badge, mockup, background, and composition treatment
 
-**Load:** `references/artifact-recipes.md` for the full badge system (text options, sizing, styling), product mockup treatment (7-step recipe), code-as-visual, metric callout, and logo composition recipes.
+**Load:** `brand.md` § Artifact Recipes for the full badge system (text options, sizing, styling), product mockup treatment (7-step recipe), code-as-visual, metric callout, and logo composition recipes.
 
-**Load:** `references/composition-patterns.md` for background texture techniques (4 options), color restraint rules (max 3 colors in surround), Z-pattern layout, visual hierarchy ratios, and content coverage targets.
+**Load:** `brand.md` § Composition Patterns for background texture techniques (4 options), color restraint rules (max 3 colors in surround), Z-pattern layout, visual hierarchy ratios, and content coverage targets.
 
 **Blog-cover-specific calibration:**
 - Badge size: 9-11px at 1280w working canvas (scales to 18-22px at 2x export)
@@ -188,7 +188,7 @@ If the title is unreadable at 300px wide (exported), increase font size or simpl
 
 ## Brand system consistency
 
-See `references/composition-patterns.md` § "Brand system consistency" for the full lock/vary framework and restraint principle.
+See `brand.md` § Composition Patterns § "Brand system consistency" for the full lock/vary framework and restraint principle.
 
 **Blog-cover-specific:** Lock background treatment, typeface, logo position, badge format, and corner radius across all thumbnails in a series. Vary color accent, visual content, and layout variant per post.
 
@@ -206,7 +206,7 @@ See `references/composition-patterns.md` § "Brand system consistency" for the f
 - Using pure white (#FFFFFF) as background — always use `bg/primary` (#FBF9F4)
 - Approximating logos with text (always use real logos from Brand Assets)
 
-See also `references/composition-patterns.md` § "What feels dated" for temporal anti-patterns to avoid.
+See also `brand.md` § Composition Patterns § "What feels dated" for temporal anti-patterns to avoid.
 
 ## Exemplar companies to reference
 

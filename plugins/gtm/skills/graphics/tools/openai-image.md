@@ -25,12 +25,12 @@ See the routing table in SKILL.md Step 1 for the full decision matrix. Summary:
 
 ## Script usage
 
-The script lives at `scripts/image-generate.ts`. Run with bun (zero external dependencies).
+The script lives at `tools/image-generate.ts`. Run with bun (zero external dependencies).
 
 ### Generate an image
 
 ```bash
-bun scripts/image-generate.ts generate \
+bun tools/image-generate.ts generate \
   --prompt "A photorealistic product shot of a laptop on a marble desk, warm studio lighting" \
   --quality high \
   --size 1536x1024 \
@@ -40,7 +40,7 @@ bun scripts/image-generate.ts generate \
 ### Generate multiple variants
 
 ```bash
-bun scripts/image-generate.ts generate \
+bun tools/image-generate.ts generate \
   --prompt "Abstract geometric background in brand blue #3784FF and cream #FBF9F4" \
   --quality medium \
   --n 3 \
@@ -51,7 +51,7 @@ bun scripts/image-generate.ts generate \
 ### Edit an existing image (inpainting / modification)
 
 ```bash
-bun scripts/image-generate.ts edit \
+bun tools/image-generate.ts edit \
   --prompt "Replace the background with a sunset beach scene" \
   --image original-photo.png \
   --quality high \
@@ -61,7 +61,7 @@ bun scripts/image-generate.ts edit \
 ### Edit with a mask (targeted region)
 
 ```bash
-bun scripts/image-generate.ts edit \
+bun tools/image-generate.ts edit \
   --prompt "Fill the masked area with a potted plant" \
   --image room-photo.png \
   --mask area-to-fill.png \
@@ -73,7 +73,7 @@ The mask is a PNG with an alpha channel — transparent areas (alpha=0) indicate
 ### Generate with transparent background
 
 ```bash
-bun scripts/image-generate.ts generate \
+bun tools/image-generate.ts generate \
   --prompt "A coffee cup icon" \
   --background transparent \
   --output-format png \
@@ -93,7 +93,7 @@ The script writes image files and prints a JSON result to stdout:
 
 **Visual inspection:** Use the Read tool on the output PNG to visually inspect the result. Unlike Quiver SVGs, no conversion is needed — GPT Image output is already raster.
 
-Status messages go to stderr. Capture just the JSON: `bun scripts/image-generate.ts generate --prompt "..." 2>/dev/null`
+Status messages go to stderr. Capture just the JSON: `bun tools/image-generate.ts generate --prompt "..." 2>/dev/null`
 
 ## CLI parameters
 

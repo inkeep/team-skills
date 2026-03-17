@@ -75,7 +75,7 @@ For any new case study, follow these steps in order:
 
 1. **Research the customer.** Visit their website. Note their primary brand color, their product domain, and what their product looks like.
 
-2. **Fetch their logo.** Check Brand Assets for `third-party/{name}`. If not found, use `scripts/fetch-logo.ts` or download from their website. The logo must be real — never approximated.
+2. **Fetch their logo.** Check Brand Assets for `third-party/{name}`. If not found, use `tools/fetch-logo.ts` or download from their website. The logo must be real — never approximated.
 
 3. **Create the background.**
    - Start with a frame at hero dimensions (900 x 420 working)

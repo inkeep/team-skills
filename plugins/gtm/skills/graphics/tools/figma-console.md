@@ -231,7 +231,7 @@ Run this check after every batch of child placements — especially after text e
 
 ### Pattern: Data visualization (charts, graphs, tables)
 
-For data-driven graphics (comparison tables, pie/donut charts, line/area charts, sparklines), see **`standards/data-visualization.md`** which contains both design guidelines AND tested `figma_execute` code recipes in a single file.
+For data-driven graphics (comparison tables, pie/donut charts, line/area charts, sparklines), see **`content-types/data-visualization.md`** which contains both design guidelines AND tested `figma_execute` code recipes in a single file.
 
 ### Pattern: Syntax-highlighted code block (setRangeFills)
 

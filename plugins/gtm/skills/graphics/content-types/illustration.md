@@ -357,7 +357,7 @@ curl -sL -o /tmp/inkeep-ref.png "https://inkeep.com/images/use-cases/b2b-custome
 sips -s format png -Z 800 /tmp/inkeep-ref.png --out /tmp/inkeep-ref-800.png
 
 # Generate new illustration matching the style
-node scripts/quiver-generate.cjs generate \
+bun tools/quiver-generate.ts generate \
   --prompt "Hand-drawn hexagonal grid with precise blue Slack hash icon in center, radiating connection lines to channel name labels" \
   --references /tmp/inkeep-ref-800.png \
   --instructions "Match the illustration style of the reference exactly. Use #3784FF for precise fills, #231F20 at 20% for hand-drawn containers. No shadows, no gradients." \
@@ -391,7 +391,7 @@ Quiver with `--references` + the style instructions above produces illustrations
 | **In a grid alongside existing illustrations** (new use case card) | Higher — should feel like the same artist | Quiver with 2-3 references from the same grid + low temperature (0.4) + detailed instructions | Good — slight style drift acceptable, may need Figma touch-up on stroke weights |
 | **Replacing an existing illustration** | Highest — must match exactly | Generate with Quiver, then refine in Figma or flag for designer review | Agent produces 80% draft; designer polishes the last 20% if needed |
 
-**The reference image workflow is the key to consistency.** See `references/quiver-api.md` § "Reference images" for the full technical details on how references work (visual conditioning via Vision Transformer, what transfers well, best practices for temperature and image sizing).
+**The reference image workflow is the key to consistency.** See `tools/quiver.md` § "Reference images" for the full technical details on how references work (visual conditioning via Vision Transformer, what transfers well, best practices for temperature and image sizing).
 
 ### Compounding consistency across a set
 

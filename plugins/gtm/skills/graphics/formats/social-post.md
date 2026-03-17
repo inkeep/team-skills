@@ -41,7 +41,7 @@ Quick reference for standalone social media images across platforms. For deeper 
 
 | Post type | Recommended approach |
 |---|---|
-| **Product announcement** | Screenshot/mockup of the feature + bold headline. **Load:** `references/artifact-recipes.md` for mockup styling |
+| **Product announcement** | Screenshot/mockup of the feature + bold headline. **Load:** `brand.md` § Artifact Recipes for mockup styling |
 | **Blog promotion** | Use the blog cover thumbnail (already 16:9) — no need to create a separate graphic |
 | **Stat / metric** | Large number as the hero element + brief context |
 | **Quote** | Speaker photo + quote text in large type |
