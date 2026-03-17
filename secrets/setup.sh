@@ -177,7 +177,7 @@ for SKILL_NAME in $SKILL_NAMES; do
       let count = 0;
       for (const f of (item.fields || [])) {
         if (f.label && f.label !== 'notesPlain' && f.value) {
-          existing[f.label] = f.value;
+          existing[f.label.trim()] = f.value;
           count++;
         }
       }

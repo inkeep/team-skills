@@ -21,6 +21,7 @@ Master design files are team-maintained Figma files containing canonical compone
 |---|---|---|---|
 | BABCO Design Assets | https://www.figma.com/design/by048nPGeK3c6FKMvlmPCz/BABCO-Design-Assetts | Brand guide, color system, typography, logos, social assets, presentation templates, marketing graphics | All graphics — primary brand token and asset source |
 | Inkeep Design Assets | https://www.figma.com/design/D7NDSM2peo1iLhkjLxmGP5/Inkeep-Design-Assetts | Brand Assets master page — all atomic graphical elements (logos, icons, illustrations, backgrounds, third-party logos) | Primary source for logos, icons, illustrations, backgrounds |
+| Inkeep Agent Graphics Workspace | https://www.figma.com/design/S5kGTPZ0kSjmSxusJ56QJH/Inkeep-Agent-Graphics-Workspace | Shared workspace for AI-generated graphics — one page per project, organized by date and medium | Default target for all new graphics creation (unless user specifies a different file) |
 
 ## Navigating Figma files via MCP
 
@@ -66,34 +67,31 @@ This map is a snapshot to help you start in the right place. Always verify with 
 | Full Brand Guide (Brand Guide frame) | `2454-979` | BABCO |
 | Brand Assets (master asset page) | `5003:63` | Inkeep Design Assets |
 | Logos section | `5003:64` | Inkeep Design Assets |
-| Brand Mascot section | `5003:65` | Inkeep Design Assets |
-| Illustrations section | `5003:66` | Inkeep Design Assets |
-| Icons section | `5003:67` | Inkeep Design Assets |
-| UI Elements section | `5003:68` | Inkeep Design Assets |
-| Decorative & Backgrounds section | `5003:69` | Inkeep Design Assets |
-| Third-Party Logos section | `5003:70` | Inkeep Design Assets |
 | Icon Set section | `5006:187898` | Inkeep Design Assets |
+| Illustrations section | `5003:66` | Inkeep Design Assets |
+| Customers section | `5045:158` | Inkeep Design Assets |
+| Third-Party Logos section | `5003:70` | Inkeep Design Assets |
+| Decorative & Backgrounds section | `5003:69` | Inkeep Design Assets |
+| UI Elements section | `5003:68` | Inkeep Design Assets |
+| Brand Mascot section | `5003:65` | Inkeep Design Assets |
 
 > For other pages, use the Figma MCP to get their node IDs dynamically. Node IDs may change if pages are restructured.
 
 ### Navigation strategy by task
 
-| What you need | Where to look first | Then |
+| What you need | Where to look first | Fallback |
 |---|---|---|
-| Logo (any format) | Brand Assets → Logos section (`5003:64`) | Final Logos page |
-| Icons (atomic, any type) | Brand Assets → Icon Set (`5006:187898`) — 52 normalized icons | Icons section (`5003:67`) |
-| Icons (nav, homepage, product) | Brand Assets → Icons section (`5003:67`) | Graphics page |
-| Illustrations (use case, hero, dev) | Brand Assets → Illustrations section (`5003:66`) | Graphics page |
-| Background/gradient/texture | Brand Assets → Decorative & Backgrounds (`5003:69`) | Gradient backgrounds page |
-| Third-party logos | Brand Assets → Third-Party Logos (`5003:70`) | Integrations page |
-| UI mockups (chat, data viz) | Brand Assets → UI Elements (`5003:68`) | — |
-| Mascot/Keepie | Brand Assets → Brand Mascot (`5003:65`) | — |
-| Brand colors, typography, gradients | Full Brand Guide page (BABCO) | — |
-| Social media graphic reference | Social Assets or Social Banners page | — |
-| Presentation visual patterns | Presentation Template page | — |
-| Product marketing assets | Sept 8 - Pre-built Agents, Use cases pages | — |
-| Banner dimensions/layouts | YouTube Banner or Social Banners page | — |
-| Event/tradeshow materials | Tablecloth page | — |
+| Logo (any format) | Brand Assets → Logos (`logo/`) | — |
+| Any icon | Brand Assets → Icon Set (`iconset/`) | — |
+| Illustrations | Brand Assets → Illustrations (`illustration/`) | — |
+| Customer assets (logo + case study hero) | Brand Assets → Customers (`customer/`) | — |
+| Integration partner logo | Brand Assets → Third-Party Logos (`third-party/`) | `scripts/fetch-logo.ts` for logos not in the library |
+| Background, gradient, texture | Brand Assets → Decorative & Backgrounds (`background/`) | — |
+| Product UI mockup | Brand Assets → UI Elements (`ui/`) | — |
+| Mascot/Keepie | Brand Assets → Brand Mascot (`mascot/`) | — |
+| Brand colors, typography, spacing | Design tokens in the Graphics Workspace file | Fallback hex values in `references/brand-tokens.md` |
+| Social media graphic reference | Social Assets or Social Banners page (BABCO file) | — |
+| Presentation visual patterns | Presentation Template page (BABCO file) | — |
 
 ## Brand Assets Page
 
@@ -105,66 +103,44 @@ The Brand Assets page in the Inkeep Design Assets file is a curated collection o
 
 ### Asset catalog
 
-| Category | Path prefix | Count | Description |
+All assets use **slash-separated hierarchical names**: `{section}/{subcategory}/{variant}`. Search by path prefix to find what you need.
+
+| Section | Path prefix | What's here | How to search |
 |---|---|---|---|
-| Logos | `logo/` | 18 | Full-color, black, white, icon-only, wordmarks, .com variants, favicons |
-| Brand Mascot | `mascot/` | 1 | Keepie character variants |
-| Illustrations | `illustration/` | 24 | Use case, abstract, detailed, dev page, homepage, customer story |
-| Icons | `icon/` | 20 | Navigation icons (04-17), homepage product icons, customer icons |
-| UI Elements | `ui/` | 4 | Data viz (analytics, topics), chat widget, search bar |
-| Decorative & Backgrounds | `background/` | 16 | Footer gradients, grid, dots, polygons, gradient backgrounds, textures |
-| Third-Party Logos | `third-party/` | 13 | Slack, Discord, GitHub, Notion, Jira, Linear, PostHog, etc. |
-| Icon Set | `iconset/` | 52 | Consolidated atomic icons extracted from across all pages — use case, product, platform, utility, status, brand mark, and favicon variants |
-| **Total** | | **148** | |
+| **Logos** | `logo/` | Brand marks in all variants — full logo, icon-only, wordmark, dual-mark, .com, favicons. Each in color/black/white. | `logo/full-color`, `logo/icon/black`, `logo/favicon/` |
+| **Icon Set** | `iconset/` | All atomic icons normalized to ~40px. **Search here first for any icon.** Covers use cases, products, platform, utility, navigation, status, brand marks, favicons. | `iconset/search`, `iconset/ai-chat-sparkle`, `iconset/status/` |
+| **Illustrations** | `illustration/` | Product illustrations, use-case illustrations, developer page, homepage, security. Descriptively named by subject. | `illustration/use-case/`, `illustration/product/`, `illustration/security/` |
+| **Customers** | `customer/` | Per-customer assets — brand mark logo + case study hero illustration, grouped by company. | `customer/posthog/`, `customer/payabli/` |
+| **Third-Party Logos** | `third-party/` | Integration partner wordmarks (Slack, GitHub, etc.). For customer logos, check the Customers section instead. | `third-party/slack`, `third-party/github` |
+| **Decorative & Backgrounds** | `background/` | Footer gradients, grid patterns, dots, polygons, gradient backgrounds (by size and color), textures. | `background/gradient/wide/`, `background/texture/` |
+| **UI Elements** | `ui/` | Product UI mockups — search bar, data visualizations, chat widget. | `ui/data-viz/`, `ui/chat-widget` |
+| **Brand Mascot** | `mascot/` | Keepie character. | `mascot/keepie/` |
 
-### Icon Set
-
-The Icon Set section (`5006:187898`) is a consolidated collection of all atomic icons found across the Figma file, normalized to ~40px and organized by row:
-
-| Row | Path prefix | Count | Description |
-|---|---|---|---|
-| Use Case Icons | `iconset/b2b-customer-support`, etc. | 6 | B2B/B2C support, documentation, sales, marketing, product |
-| Product Icons | `iconset/ask-ai-assistant`, etc. | 6 | AI assistant, search, copilot, docs writer, content marketer, visual builder |
-| Resources Icons | `iconset/blog`, `iconset/docs`, `iconset/case-studies` | 3 | Blog, docs, case studies (24px originals) |
-| Platform Icons | `iconset/no-code-agent-studio`, etc. | 4 | Agent studio, dev framework, agent workforce, enterprise |
-| Brand Marks | `iconset/inkeep-mark/color`, `/black`, `/white` | 3 | Inkeep brand mark in 3 color variants |
-| Utility | `iconset/chevron-down`, `iconset/arrow-circle-*`, `iconset/password-lock` | 4 | Navigation and UI utility icons |
-| Blue Circles | `iconset/circle-minus`, `iconset/circle-hamburger`, `iconset/brand-mark-outline` | 3 | Blue circle icons and brand mark outline |
-| Nav 7 Icons | `iconset/chat-bubbles`, `iconset/shopping-star`, etc. | 5 | Chat, shopping, documents, voice, webpage |
-| Nav 8 Icons | `iconset/ai-chat-sparkle`, `iconset/search`, etc. | 6 | AI chat, search, cursor, edit, CMS, flowchart |
-| Favicons | `iconset/favicon/filled-light`, `/filled-blue`, `/outline-interlocking` | 3 | Brand mark favicon variants |
-| Status Icons | `iconset/status/not-started`, `/in-progress`, `/review`, `/deploy` | 4 | Workflow status icons |
-| Compound Icons | `iconset/hex-puzzle`, `iconset/hex-person`, `iconset/circle-person`, `iconset/send-circle`, `iconset/brand-mark-stroke` | 5 | Hexagon-wrapped and circle-wrapped brand icons |
-
-Search for icons by prefix:
-```javascript
-const page = figma.root.findOne(n => n.id === '5003:63');
-const iconSet = page.findOne(n => n.id === '5006:187898');
-const icon = iconSet.findOne(n => n.name === 'iconset/search');
-```
+> **Do not hardcode asset counts or specific names** — the library evolves. Always search dynamically using the path prefixes above.
 
 ### How to find an asset
 
-All assets use slash-separated hierarchical names: `{category}/{subcategory}/{variant}`.
+Use `figma_execute` to search by name or prefix. Always scope searches to the Brand Assets page (`5003:63`) — never search the entire file.
 
-Search by path prefix:
-- `logo/icon/` → icon-only logo marks
-- `illustration/use-case/` → use case page illustrations
-- `background/gradient/1920/` → 1920x1080 gradient backgrounds
-- `third-party/slack` → Slack logo
-
-Use `figma_execute` to search by name:
 ```javascript
-const page = figma.root.findOne(n => n.id === '5003:63');
-const asset = page.findOne(n => n.name === 'logo/full-color');
+// Find a specific asset by exact name
+const page = await figma.getNodeByIdAsync('5003:63');
+const logo = page.findOne(n => n.name === 'logo/full-color');
+
+// Find all assets matching a prefix
+const icons = page.findAll(n => n.name.startsWith('iconset/'));
+
+// Find within a specific section
+const iconSet = await figma.getNodeByIdAsync('5006:187898');
+const searchIcon = iconSet.findOne(n => n.name === 'iconset/search');
 ```
 
 ### How to use an asset
 
-1. Navigate to the Brand Assets page (node `5003:63`)
-2. Find the asset by its hierarchical name
-3. Clone it to your working page: `asset.clone()`
-4. Move the clone into your composition and modify as needed
+1. Navigate to the Brand Assets file (`figma_navigate`)
+2. Search the Brand Assets page (node `5003:63`) by name or prefix
+3. Clone it: `asset.clone()`
+4. Move the clone into your working file and composition
 
 ## Adding a new master design
 

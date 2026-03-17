@@ -1,6 +1,16 @@
 {
-  "description": "Ship loop stop hook — re-grounds the agent after context loss and drives autonomous execution through all phases",
+  "description": "Engineering plugin hooks — SessionStart directory resolution, Ship loop stop hook, and session cleanup",
   "hooks": {
+    "SessionStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "${CLAUDE_PLUGIN_ROOT}/hooks/scripts/resolve-dirs.sh"
+          }
+        ]
+      }
+    ],
     "Stop": [
       {
         "hooks": [

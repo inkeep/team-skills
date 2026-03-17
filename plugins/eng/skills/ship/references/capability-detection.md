@@ -34,3 +34,13 @@ Record what's available. These results are stored in `tmp/ship/state.json` (crea
 If any capability is unavailable: briefly state which capabilities are missing and what will be skipped or degraded. Keep to 2-3 sentences. Frame as a **negotiation checkpoint** — the user may be able to fix the issue (e.g., re-authenticate `gh`, start Chrome extension) before work proceeds.
 
 If all capabilities are available: proceed directly without discussion.
+
+## Delegation stance
+
+When ship is invoked with `--delegated` flag, or when operating in an isolated environment (worktree, container):
+
+- Capability detection runs identically — same probes, same results recording.
+- **Communication changes:** Results are recorded to `state.json` and flowed to child skills as explicit flags. Missing capabilities are documented but do NOT pause for user negotiation — degradation paths are pre-planned in each child skill.
+- **Flag propagation:** Pass `--delegated` to all child skills that support the autonomy convention (`/debug`, `/qa`). This signals that the child skill should operate at Delegated autonomy level — iterating freely within its approved action classes without per-action human approval.
+
+Child skills that don't recognize `--delegated` ignore it — the flag is forward-compatible.

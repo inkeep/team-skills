@@ -230,6 +230,8 @@ When writing each instruction, ensure it survives these questions:
 
 Don't draft loosely and fix later — get it right as you write. An explicit "do X, not Y" or a short example is usually enough to eliminate ambiguity.
 
+**Cross-file consistency:** When a skill has multiple reference files that cover related topics, verify they don't provide conflicting guidance. If references contain legitimately different approaches for different situations, establish explicit precedence or selection criteria in SKILL.md (e.g., "For REST services use `references/api.md`; for GraphQL use `references/graphql.md`"). Without this, the agent loads both and has no basis to choose — a common source of confused output.
+
 ---
 
 ## 15) Embed checks into actions, not after them

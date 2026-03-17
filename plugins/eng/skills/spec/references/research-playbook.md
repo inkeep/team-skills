@@ -20,7 +20,7 @@ The user's role is **judgment**: product vision, priority, risk tolerance, scope
 | Internal prior art (codebase patterns) | Risk tolerance decisions |
 | External prior art (web, comparable products) | 1-way door confirmations |
 | Blast radius mapping | Business constraints (timeline, budget, team) |
-| Verifying claims against primary sources | Scope decisions (Phase 1 vs defer) |
+| Verifying claims against primary sources | Scope decisions (In Scope vs Future Work) |
 | Negative searches (documenting NOT FOUND) | Persona / consumer prioritization |
 
 **Gray area** (bias toward investigating):
@@ -81,6 +81,8 @@ Verify with types/source (not just docs):
 - failure semantics?
 - performance implications?
 
+When the dependency is OSS, verify from source code (see Type E "OSS source access" for the cloning protocol).
+
 ### E) Third-party dependency investigation
 When the spec depends on packages, libraries, frameworks, or external software outside the source repo, investigate thoroughly before making design decisions that rely on them. The goal: build an accurate mental model of what the 3P system actually provides for your scenario — and sanity-check that it's the right choice.
 
@@ -110,6 +112,8 @@ Each subagent receives:
 - Instructions to search source code, documentation, and web for relevant patterns
 
 The spec agent persists key findings to spec-local `evidence/<dependency-name>.md` files and incorporates them into the world model and design decisions. Findings that were appended to existing reports via Path C live in both places — the report for reuse, the spec evidence for local context.
+
+**OSS source access:** Subagents that load `/research` inherit the source code research protocol — cloning OSS repos to `~/.claude/oss-repos/` for persistent, cross-session reuse. See `/research` skill's `references/source-code-research.md` for the full cloning, validation, and subagent orchestration patterns. For closed-source dependencies, web search and official docs are the primary sources.
 
 **When to use this vs. Type D (targeted capability checks):**
 - **Type D:** "Does dependency X support capability Y?" — quick, per-decision verification.

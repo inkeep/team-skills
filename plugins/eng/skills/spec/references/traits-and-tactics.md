@@ -31,7 +31,7 @@ Each trait includes: signal → the move you should make → what to record.
 ### 4) Scope accordion
 **Signal:** You're exploring architecture and future directions.
 **Move:** Expand to validate generality; contract to ship; preserve expansion as appendices.
-**Record:** deferrals with "what we learned" + triggers.
+**Record:** Future Work entries with maturity tiers — what we learned + triggers to revisit.
 
 ### 5) Decision velocity calibration
 **Signal:** Some items are easy; one is hard.
@@ -43,10 +43,10 @@ Each trait includes: signal → the move you should make → what to record.
 **Move:** Treat the feeling of completeness as a signal to probe harder. Re-run the three extraction probes (walk-through, tensions, negative space) from Step 4 against the current state. Restate: what's resolved, what's still open, what's blocking, and what hasn't been examined yet.
 **Record:** current Open Questions list (top P0) + any newly discovered items from the re-sweep.
 
-### 7) Documented deferral
-**Signal:** You say "later", "Phase 2", or "future work" without concrete criteria.
-**Move:** Document it properly (learnings, rationale, triggers, sketch). Then decide: does it pass the phase qualification bar (concrete acceptance criteria, owner, timeframe)? If yes, it earns a phase. If not, it stays as a documented deferral.
-**Record:** deferral entry or qualified phase — not a vague bullet.
+### 7) Future Work classification
+**Signal:** You say "later", "not now", or "future work" without classifying maturity.
+**Move:** Classify the maturity tier honestly: Explored (investigated, clear picture), Identified (known to matter, needs investigation), or Noted (surfaced, not examined). Document appropriately for the tier — Explored items get implementation sketches, Identified items get investigation plans, Noted items get a brief description.
+**Record:** Future Work entry with maturity tier — not a vague "later" bullet.
 
 ### 8) Recursive refinement loop
 **Signal:** New findings change old decisions.
@@ -88,9 +88,9 @@ Each trait includes: signal → the move you should make → what to record.
 **Record:** what was investigated, what remains uncertain, what needs user input.
 
 ### 15) User as domain knowledge contributor
-**Signal:** User has internal context not in the code.
-**Move:** Ask for internal patterns, constraints, surface maps; treat them as evidence.
-**Record:** user-provided constraints (with caveats).
+**Signal:** A question requires domain knowledge that isn't in the code, docs, or web — product intent, user behavior, organizational context, strategic priorities.
+**Move:** Ask about what they know or think, and propose options for them to react to. Frame as intent/preference questions ("Do you need X, or would Y satisfy the need?"), not process questions ("Have you checked with...?"). Treat their answers as evidence.
+**Record:** user-provided constraints and domain knowledge (with caveats where the agent's investigation suggests a different picture).
 
 ### 16) Constraint propagation
 **Signal:** A decision impacts many downstream areas.
@@ -101,6 +101,11 @@ Each trait includes: signal → the move you should make → what to record.
 **Signal:** Research for one question surfaces something unexpected — a bug, a race condition, an inconsistency, a gap in another area.
 **Move:** Don't bury it. Flag it immediately ("While researching X, I found Y"), assess whether it affects the current design, and add it to the backlog.
 **Record:** the issue, its impact assessment, and whether it changes any prior decisions.
+
+### 18) Product-technical tension surfacing
+**Signal:** Investigation reveals that a product goal and a technical constraint pull in different directions, or that the design optimizes for one dimension at disproportionate cost to the other.
+**Move:** Surface the tension explicitly with evidence on both sides. Don't bury it in individual decisions — name it directly: "Your product goal is zero-configuration setup, but the technical design requires three environment variables. Either the goal softens or we need a different technical approach." Present both directions with their costs. See `references/challenge-protocol.md` for calibration.
+**Record:** The tension, which direction was chosen, and why — in the Decision Log with cross-cutting type.
 
 ---
 

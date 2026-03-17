@@ -28,7 +28,7 @@ The spec process operates across four layers. Each has a different audience, att
 **One canonical spec artifact** that contains both PRD + Technical Spec content:
 
 - `SPEC.md` (PRD section + Technical Spec section)
-  - includes: Open Questions, Decision Log, Assumptions, Risks, Appendices/Deferrals
+  - includes: Open Questions, Decision Log, Assumptions, Risks, Future Work
 
 Optional supporting artifacts (only if they reduce friction):
 - `OPEN_QUESTIONS.md` (if the backlog is large and changes frequently)
@@ -84,7 +84,7 @@ Evidence should contain primary source material (code snippets, exact output, AP
 **Keep in meta/_changelog.md (process history):**
 - Decision evolution ("D3 was initially Option A; switched to B after auth-flow evidence")
 - Assumption lifecycle events ("A2 stated Feb 12 → refuted Feb 14 → cascade: §8, §9 updated")
-- Phase reorganization, scope changes, evidence additions
+- Scope reorganization, scope changes, evidence additions
 - Open Question decomposition and promotions
 - Session summaries and pending items carried forward
 
@@ -130,6 +130,17 @@ last-updated: YYYY-MM-DD
 
 **Format:** Same structure as `/research` evidence files — with findings, confidence levels (CONFIRMED / INFERRED / UNCERTAIN / NOT FOUND), and source references. See the research skill's conventions.
 
+**Confidence ceilings:** Certain claim types have a maximum confidence regardless of how sure the agent feels. Apply these caps when writing findings:
+
+| Claim type | Max confidence | Why |
+|---|---|---|
+| Recalled best practices (not verified this session) | INFERRED | Memory is not evidence |
+| Version-specific behavior (API, library, framework) | UNCERTAIN unless verified against current source/types | Versions change; docs lag |
+| Predictions about runtime behavior at scale | INFERRED | Estimates, not measurements |
+| Analogical claims ("X works like Y") | INFERRED | Analogies break at boundaries |
+
+If a finding would be marked CONFIRMED but falls into one of these categories, cap it and note what verification would raise confidence.
+
 ### meta/_changelog.md format
 
 Append-only. Never edit past entries. Each session appends a dated entry:
@@ -158,7 +169,7 @@ Write cadence is **event-driven**, not time-based. The trigger is the nature of 
 **The principle:**
 - **Evidence (factual, observable)** → write to files immediately. Facts don't need user input.
 - **Synthesis (interpretive, judgment-dependent)** → write to SPEC.md after user confirmation. Don't persist premature judgments.
-- **Structural SPEC.md updates** (new requirement, phase change, design revision) → write as soon as the underlying information is confirmed, whether by evidence or user decision.
+- **Structural SPEC.md updates** (new requirement, scope change, design revision) → write as soon as the underlying information is confirmed, whether by evidence or user decision.
 - **File operations are silent agent discipline.** The user steers via conversation. Don't announce file writes as output — surface the substance of what shifted instead (see output format §5 "What evolved").
 
 ### Write trigger protocol
@@ -222,7 +233,7 @@ Write cadence is **event-driven**, not time-based. The trigger is the nature of 
 | Existing design element refined | SPEC.md §9 | **Surgical edit** the subsection |
 | New section needed (not in template) | SPEC.md | **Append** under most relevant parent |
 | Evidence strengthens existing decision | SPEC.md §10 | **Surgical edit** evidence/links column |
-| Phasing changes | SPEC.md §13 | **Surgical edit** / **append** / move to §15 as appropriate |
+| Scope changes (item moves In Scope ↔ Future Work) | SPEC.md §13 / §15 | **Surgical edit** / **append** / move between sections as appropriate |
 
 #### Interpretive insight that needs user input
 

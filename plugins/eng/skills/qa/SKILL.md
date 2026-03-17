@@ -16,6 +16,22 @@ A feature can pass every unit test and still have a broken layout, a confusing f
 
 ---
 
+## Autonomy
+
+This skill supports the cross-skill autonomy convention:
+
+| Level | Behavior | How entered |
+|---|---|---|
+| **Supervised** (default) | Pause at tool-availability negotiation checkpoints; inform user of gaps before proceeding | Default when standalone |
+| **Delegated** | Proceed through all gates autonomously; document gaps in final report instead of pausing | `--delegated` flag from orchestrator, or container environment detected |
+
+**Delegated mode adjustments:**
+- Tool gaps are documented, not negotiated — proceed with available tools
+- Bug discovery with unclear root cause: load `/debug` skill with `--delegated` — it returns structured findings without human gates
+- Test suite gap discovery: write tests autonomously without asking
+
+---
+
 ## Workflow
 
 ### Step 1: Detect available tools
@@ -25,15 +41,19 @@ Probe what testing tools are available. This determines your testing surface are
 | Capability | How to detect | Use for | If unavailable |
 |---|---|---|---|
 | **Shell / CLI** | Always available | API calls (`curl`), CLI verification, data validation, database state checks, process behavior, file/log inspection | — |
-| **Browser automation** | Check if browser interaction tools are accessible | UI testing, form flows, visual verification, full user journey walkthrough, error state rendering, layout audit | Substitute with shell-based API/endpoint testing. Document: "UI not visually verified." |
-| **Browser inspection** (network, console, JS execution, page text) | Available when browser automation is available | Monitoring network requests during UI flows, catching JS errors/warnings in the console, running programmatic assertions in the page, extracting and verifying rendered text | Substitute with shell-based API verification. Document the gap. |
-| **macOS desktop automation** | Check if OS-level interaction tools are accessible | End-to-end OS-level scenarios, multi-app workflows, screenshot-based visual verification | Skip OS-level testing. Document the gap. |
+| **Browser automation (`/browser` skill — Playwright)** | Check if `/browser` skill is loadable | UI testing, form flows, visual verification, full user journey walkthrough, error state rendering, layout audit | Substitute with shell-based API/endpoint testing. Document: "UI not visually verified." **Do NOT fall back to Peekaboo or Claude-in-Chrome for web page testing.** |
+| **Browser inspection** (network, console, JS execution, page text) | Available when `/browser` (Playwright) is available — these are Playwright helpers, not Chrome extension tools | Monitoring network requests during UI flows, catching JS errors/warnings in the console, running programmatic assertions in the page, extracting and verifying rendered text | Substitute with shell-based API verification. Document the gap. |
+| **macOS desktop automation** (Peekaboo) | Check if `mcp__peekaboo__*` tools are available | OS-level scenarios **only**: native app automation, file dialogs, clipboard, multi-app workflows, desktop screenshots. **Not for web page testing** — use `/browser` for that. | Skip OS-level testing. Document the gap. |
 
-Record what's available. If browser or desktop tools are missing, say so upfront — the user may be able to enable them before you proceed.
+Record what's available.
+
+**Supervised mode (default):** If browser or desktop tools are missing, say so upfront as a negotiation checkpoint — the user may be able to enable them before you proceed.
+
+**Delegated mode** (when invoked with `--delegated`): Record tool gaps but proceed without waiting. Use available tools fully; document unavailable tools in the final report. Do not pause for the user to enable missing tools.
 
 **Probe aggressively.** Don't stop at "browser automation is available." Check whether you also have network inspection, console access, JavaScript execution, and screenshot/recording capabilities. Each expands your testing surface area. The more tools you have, the more you should use.
 
-**Cross-skill integration:** When browser automation is available, `Load /browser skill` for structured testing primitives. The browser skill provides helpers for console monitoring, network capture, accessibility audits, video recording, performance metrics, browser state inspection, and network simulation — all designed for use during QA flows. These helpers turn "check the console for errors" into reliable, automatable verification with structured output. Reference `/browser` SKILL.md for the full helper table and usage patterns.
+**Browser tool routing (mandatory):** When web/UI testing is needed, you MUST `Load /browser skill` (Playwright-based headless automation). This is the ONLY browser automation tool for QA. Do NOT use `mcp__peekaboo__*` tools (Peekaboo) or `mcp__claude-in-chrome__*` tools (Chrome extension) for web page interaction — even though they appear in your available tools. Peekaboo is for OS-level macOS automation only (native apps, file dialogs, window management). Claude-in-Chrome is for ad-hoc browser tasks outside QA. During QA, all web page testing — navigation, form filling, clicking, visual verification, console monitoring, network inspection, accessibility audits, video recording — goes through `/browser` and its Playwright helpers. If `/browser` is unavailable, fall back to shell-based testing (`curl`, scripts, API calls) — not to Peekaboo or Chrome extension.
 
 **Get the system running.** Check `AGENTS.md`, `CLAUDE.md`, or similar repo configuration files for build, run, and setup instructions. If the software can be started locally, start it — you cannot test user-facing behavior against a system that isn't running. If the system depends on external services, databases, or environment variables, check what's available and what you can reach. Document anything you cannot start.
 
@@ -51,9 +71,9 @@ Determine what to test from whatever input is available. Check these sources in 
 **Enrich with structured domain knowledge (if available):**
 After gathering context from the sources above, check whether the repo provides catalog skills that map surfaces and audiences:
 
-- **Load:** `/product-surface-areas` if available — identify which customer-facing surfaces (APIs, SDKs, CLI, UI, docs) the change touches.
-- **Load:** `/internal-surface-areas` if available — identify which internal subsystems (build, CI, database, auth, runtime) are affected.
-- **Load:** `/audience-impact` if available — identify which roles are affected and how fast the change reaches them. Pay special attention to **silent** impacts — these need explicit test scenarios because they won't produce obvious failures.
+- Load `/product-surface-areas` skill if available — identify which customer-facing surfaces (APIs, SDKs, CLI, UI, docs) the change touches.
+- Load `/internal-surface-areas` skill if available — identify which internal subsystems (build, CI, database, auth, runtime) are affected.
+- Load `/audience-impact` skill if available — identify which roles are affected and how fast the change reaches them. Pay special attention to **silent** impacts — these need explicit test scenarios because they won't produce obvious failures.
 
 These catalogs transform "what files changed" into "what surfaces and audiences are affected" — which directly drives more comprehensive test scenarios in Step 3.
 
@@ -104,6 +124,7 @@ When `tmp/ship/` exists, write all planned scenarios to `tmp/ship/qa-progress.js
       "whyManual": "requires visual inspection of responsive layout",
       "tracesTo": "US-002",
       "status": "planned",
+      "verifiedVia": null,
       "notes": "",
       "evidence": []
     }
@@ -126,6 +147,7 @@ When `tmp/ship/` exists, write all planned scenarios to `tmp/ship/qa-progress.js
 | `scenarios[].tracesTo` | No | User story ID from `spec.json` (e.g., `US-003`) when the mapping is clear. Omit when the relationship is fuzzy or many-to-many. |
 | `scenarios[].status` | Yes | One of: `planned`, `validated`, `failed`, `blocked`, `skipped`. |
 | `scenarios[].notes` | Yes | Empty string when `planned`. Populated on status change — see Status values table below. |
+| `scenarios[].verifiedVia` | When executed | Fidelity level from Step 5: `browser`, `api`, `shell`, or `inference`. Required for `validated`/`failed` scenarios. `null` for `planned`. If multiple levels were used, record the highest. |
 | `scenarios[].evidence` | No | Array of CDN URLs for video recordings captured during this scenario via `/browser` helpers. Omit or `[]` when scenario doesn't involve browser automation. |
 
 **Status values:**
@@ -170,6 +192,17 @@ If no PR exists, maintain the checklist as task list items only.
 Work through each scenario. Use the strongest tool available for each.
 
 **Testing priority: emulate real users first.** Prefer tools that replicate how a user actually interacts with the system. Browser automation over API calls. SDK/client library calls over raw HTTP. Real user journeys over isolated endpoint checks. Fall back to lower-fidelity tools (curl, direct database queries) for parts of the system that are not user-facing or when higher-fidelity tools are unavailable. For parts of the system touched by the changes but not visible to the customer — use server-side observability (logs, telemetry, database state) to verify correctness beneath the surface.
+
+**Verification fidelity levels** (use these values in `verifiedVia` when recording results):
+
+| Level | Method | Typical use |
+|---|---|---|
+| `browser` | Full user flow through real UI (Playwright) | UI scenarios, visual correctness, end-to-end UX |
+| `api` | Direct API/endpoint calls, skipping UI layer | Backend behavior, response shapes, auth flows |
+| `shell` | CLI, database queries, file/log inspection | State verification, data integrity, process behavior |
+| `inference` | Deduced from code reading, no runtime execution | Only when no runtime path is feasible |
+
+Default to the highest feasible level for each scenario. A scenario about visual layout validated via `api` is materially different from one validated via `browser` — the report consumer needs to know.
 
 **Unblock yourself with ad-hoc scripts.** Do not wait for formal test infrastructure, published packages, or CI pipelines. If you need to verify something, write a quick script and run it. Put all throwaway artifacts — scripts, fixtures, test data, temporary configs — in a `tmp/` directory at the repo root (typically gitignored). These are disposable; they don't need to be production-quality. Specific patterns:
 - **Quick verification scripts:** Write a script that imports a module, calls a function, and asserts the output. Run it. Delete it when done (or leave it in `tmp/`).
@@ -246,16 +279,16 @@ Changes touch more of the system than what's visible to the user. After exercisi
 
 ### Step 6: Record results
 
-**When `tmp/ship/` exists:** After each scenario (or batch), update the scenario's `status` and `notes` in `qa-progress.json`. Do not touch the PR body — a downstream consumer will render it.
+**When `tmp/ship/` exists:** After each scenario (or batch), update the scenario's `status`, `verifiedVia`, and `notes` in `qa-progress.json`. Set `verifiedVia` to the fidelity level from Step 5 (`browser`, `api`, `shell`, or `inference`) that reflects how the scenario was actually executed. If multiple levels were used (e.g., browser flow + database state check), record the highest. Do not touch the PR body — a downstream consumer will render it.
 
-**When `tmp/ship/` does not exist:** Update the `## Manual QA` section in the PR body directly using the same read → modify → write mechanism from Step 4.
+**When `tmp/ship/` does not exist:** Update the `## Manual QA` section in the PR body directly using the same read → modify → write mechanism from Step 4. Include the fidelity level in the checklist item (e.g., `[browser]`, `[api]`).
 
 **When you find a bug:**
 
 First, assess: do you see the root cause, or just the symptom?
 
 - **Root cause is obvious** (wrong variable, missing class, off-by-one visible in the code) — fix it directly. Write a test if possible, verify, document.
-- **Root cause is unclear** (unexpected behavior, cause not visible from the symptom) — load `/debug` for systematic root cause investigation before attempting a fix. QA resumes after the fix is verified.
+- **Root cause is unclear** (unexpected behavior, cause not visible from the symptom) — load `/debug` skill for systematic root cause investigation before attempting a fix. If QA is running in delegated mode, pass `--delegated` to `/debug` so it iterates freely without per-action permission gates. `/debug` returns structured findings (root cause, recommended fix, blast radius) — apply the fix based on its findings, then resume QA.
 
 After fixing a bug, record it: update the scenario's `status` to `validated` and put the bug description + fix in `notes` (e.g., `"found stale cache; added cache-bust on logout"`). If the bug was discovered **outside any planned scenario** — while navigating between tests or doing exploratory poking — add a new scenario to `scenarios[]` with the next sequential ID, describe what you found and fixed, and mark it `validated` with the fix in `notes`.
 
@@ -303,3 +336,4 @@ Not every feature needs deep QA. Match effort to risk:
 - **Duplicating formal tests.** If the test suite already covers it, don't repeat it manually. Your time is for what the test suite *can't* do.
 - **Skipping tools that are available.** If browser automation is available and the feature has a UI — use it. Don't substitute with curl when you can click through the real thing.
 - **Silent gaps.** If you can't test something, say so explicitly. An undocumented gap is worse than a documented one.
+- **Using Peekaboo or Claude-in-Chrome for web testing.** `mcp__peekaboo__*` and `mcp__claude-in-chrome__*` tools are NOT for QA web page testing. Use `/browser` (Playwright). Peekaboo is for OS-level macOS automation only. Chrome extension is for ad-hoc browser tasks outside QA. If `/browser` is unavailable, fall back to shell-based testing — not to these tools.

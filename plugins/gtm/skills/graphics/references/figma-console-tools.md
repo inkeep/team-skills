@@ -19,14 +19,21 @@ The `figma-console` MCP server (southleft/figma-console-mcp) provides 56+ tools 
 
 ## Prerequisites
 
-The Figma Desktop Bridge plugin must be running in the target Figma file:
+The Figma Desktop Bridge plugin must be running in the target Figma file.
 
-1. Figma Desktop app must be open (not browser Figma)
-2. The Desktop Bridge plugin must be imported from the figma-console-mcp repo's `figma-desktop-bridge/manifest.json`
-3. Run the plugin in the file you want to work with
-4. Verify connection: call `figma_get_status`
+**One-time setup (import the plugin):**
+1. Open **Figma Desktop** (not browser Figma)
+2. Right-click canvas → **Plugins → Development → Import plugin from manifest...**
+3. Select the manifest file. Find its path: `npx figma-console-mcp@latest --print-path`
+4. The plugin appears permanently in **Plugins → Development → Figma Desktop Bridge**
 
-If the plugin disconnects (e.g., after tab refresh), it must be re-launched manually.
+**Each session (run the plugin):**
+1. Open your target Figma file in Figma Desktop
+2. Right-click canvas → **Plugins → Development → Figma Desktop Bridge**
+3. Wait for the green "MCP Ready" status widget
+4. Verify connection: call `figma_get_status` — check `setup.valid` is `true`
+
+If the plugin disconnects (e.g., after tab refresh or file switch), re-run it from the Plugins menu.
 
 **Multiple files:** The bridge can be connected to multiple Figma files simultaneously, but only one file is "active" at a time. When switching between files, call `figma_navigate` with the target file URL before any `figma_execute` calls — otherwise node lookups will silently fail against the wrong file.
 
@@ -222,6 +229,187 @@ return { was: parent.height, needed: requiredHeight };
 
 Run this check after every batch of child placements — especially after text elements, which may be taller than expected depending on font size and line count.
 
+### Pattern: Data visualization (charts, graphs, tables)
+
+For data-driven graphics (comparison tables, pie/donut charts, line/area charts, sparklines), see **`standards/data-visualization.md`** which contains both design guidelines AND tested `figma_execute` code recipes in a single file.
+
+### Pattern: Spotlight cutout (tutorial highlight)
+
+Create tutorial/walkthrough images where the background is dimmed and the target UI element is highlighted with a spotlight effect. Used for SaaS product tutorials, UX walkthroughs, and "click here" documentation images.
+
+**Technique:** A screenshot is placed as an image fill on a rectangle. A boolean subtract overlay (full-size dark rectangle minus a smaller cutout rectangle) sits on top, dimming everything except the target element. The cutout creates a "window" that reveals the original screenshot at full brightness.
+
+**Getting the base screenshot:**
+- **User-provided image** — simplest; user already has screenshots or pastes into Figma
+- **Claude in Chrome** — capture authenticated pages the user is already logged into
+- **`/browser` skill** — scripted Playwright capture when interaction is needed before capture (dismiss modals, click tabs, scroll to section)
+
+**Step 1: Import screenshot as image fill**
+
+```javascript
+// Create the base rectangle with the screenshot as an image fill.
+// If the screenshot is already in Figma (user pasted it), skip this step
+// and use the existing node. If you have a local PNG file, read it and
+// convert to base64, then set as image fill via figma_set_image_fill.
+//
+// Dimensions should match the screenshot's aspect ratio.
+// Common sizes: 1101x735 (3:2), 1200x800 (3:2), 1440x900 (16:10)
+
+const base = figma.createRectangle();
+base.name = 'screenshot-base';
+base.resize(IMG_WIDTH, IMG_HEIGHT);
+base.cornerRadius = 20;
+// Image fill is set via figma_set_image_fill tool with the screenshot
+```
+
+After importing, use `figma_set_image_fill` to apply the screenshot as the rectangle's fill. Screenshot and verify the image displays correctly before proceeding.
+
+**Step 2: Create the spotlight overlay**
+
+```javascript
+// Parameters — adjust per target element
+const IMG_WIDTH = 1101;   // match screenshot dimensions
+const IMG_HEIGHT = 735;
+const CORNER_RADIUS = 20; // outer card rounding
+const OVERLAY_OPACITY = 0.5; // 0.5 = 50% dim (good default)
+
+// Each highlight target: { x, y, width, height, cornerRadius, strokeWeight }
+// Position is relative to the screenshot's top-left corner.
+// Measure from the screenshot where the target element sits.
+const highlights = [
+  { x: 14, y: 142, width: 241, height: 42, cornerRadius: 14, strokeWeight: 2 }
+];
+
+// --- Build the overlay ---
+
+const baseNode = await figma.getNodeByIdAsync('BASE_NODE_ID');
+const parent = baseNode.parent;
+
+// 1. Full-size dark rectangle (the mask)
+const mask = figma.createRectangle();
+mask.name = 'spotlight-mask';
+mask.resize(IMG_WIDTH, IMG_HEIGHT);
+mask.x = baseNode.x;
+mask.y = baseNode.y;
+mask.cornerRadius = CORNER_RADIUS;
+mask.fills = [{ type: 'SOLID', color: { r: 0, g: 0, b: 0 } }];
+
+// 2. Cutout rectangles (one per highlight target)
+const cutouts = [];
+for (let i = 0; i < highlights.length; i++) {
+  const h = highlights[i];
+  const cutout = figma.createRectangle();
+  cutout.name = `spotlight-cutout-${i + 1}`;
+  cutout.resize(h.width, h.height);
+  cutout.x = baseNode.x + h.x;
+  cutout.y = baseNode.y + h.y;
+  cutout.cornerRadius = h.cornerRadius;
+  cutout.fills = [{ type: 'SOLID', color: { r: 0.85, g: 0.85, b: 0.85 } }];
+  cutout.strokes = [{ type: 'SOLID', color: { r: 1, g: 1, b: 1 } }];
+  cutout.strokeWeight = h.strokeWeight;
+  cutouts.push(cutout);
+}
+
+// 3. Boolean subtract: mask minus cutouts = overlay with holes
+const allNodes = [mask, ...cutouts];
+const boolOp = figma.union(allNodes, parent);
+// Change from union to subtract
+boolOp.booleanOperation = 'SUBTRACT';
+boolOp.name = 'spotlight-overlay';
+boolOp.opacity = OVERLAY_OPACITY;
+boolOp.fills = [{ type: 'SOLID', color: { r: 0, g: 0, b: 0 } }];
+
+return { overlayId: boolOp.id, highlights: highlights.length };
+```
+
+**Step 3 (optional): Add step number badges**
+
+For multi-step tutorials, add numbered circles near each highlight:
+
+```javascript
+// Position each badge at the top-right corner of its cutout
+const BADGE_SIZE = 28;
+const BADGE_OFFSET = -8; // overlap the cutout edge slightly
+
+for (let i = 0; i < highlights.length; i++) {
+  const h = highlights[i];
+
+  // Circle background
+  const badge = figma.createEllipse();
+  badge.name = `step-badge-${i + 1}`;
+  badge.resize(BADGE_SIZE, BADGE_SIZE);
+  badge.x = baseNode.x + h.x + h.width + BADGE_OFFSET;
+  badge.y = baseNode.y + h.y + BADGE_OFFSET;
+  badge.fills = [{ type: 'SOLID', color: { r: 0.216, g: 0.518, b: 1.0 } }]; // brand blue #3784FF
+
+  // Number text
+  const label = figma.createText();
+  await figma.loadFontAsync({ family: 'Inter', style: 'Bold' });
+  label.fontName = { family: 'Inter', style: 'Bold' };
+  label.characters = String(i + 1);
+  label.fontSize = 14;
+  label.fills = [{ type: 'SOLID', color: { r: 1, g: 1, b: 1 } }];
+  label.textAlignHorizontal = 'CENTER';
+  label.textAlignVertical = 'CENTER';
+  label.resize(BADGE_SIZE, BADGE_SIZE);
+  label.x = badge.x;
+  label.y = badge.y;
+}
+```
+
+**Multi-step tutorial series:**
+
+For tutorials with multiple steps, reuse the same base screenshot and create separate groups — one per step — each with a different cutout position:
+
+```javascript
+// Step 1: highlight sidebar "Triggers" nav item
+const step1Highlights = [{ x: 14, y: 142, width: 241, height: 42, cornerRadius: 14, strokeWeight: 1 }];
+
+// Step 2: highlight "Webhooks" tab
+const step2Highlights = [{ x: 394, y: 191, width: 96, height: 33, cornerRadius: 14, strokeWeight: 2 }];
+
+// Step 3: highlight two fields at once
+const step3Highlights = [
+  { x: 200, y: 300, width: 300, height: 40, cornerRadius: 8, strokeWeight: 2 },
+  { x: 200, y: 360, width: 300, height: 40, cornerRadius: 8, strokeWeight: 2 }
+];
+```
+
+Each step produces one exportable group (screenshot + overlay). Clone the base screenshot rectangle for each step — all share the same image fill (efficient, consistent).
+
+**Configurable parameters:**
+
+| Parameter | Default | Purpose |
+|---|---|---|
+| `OVERLAY_OPACITY` | 0.5 | Dim level — 0.5 is a good balance between de-emphasis and context visibility |
+| `CORNER_RADIUS` | 20 | Outer card rounding — matches typical card/modal appearance |
+| Cutout `cornerRadius` | 14 | Pill shape for cutout — matches modern UI element shapes (buttons, tabs, nav items) |
+| Cutout `strokeWeight` | 1–2px | White border ring thickness around the highlighted element |
+| Cutout `fills` color | `#D9D9D9` | Light gray — visible inside the boolean subtract. White stroke provides the visible ring. |
+| Badge color | `#3784FF` | Brand blue for step number circles |
+
+**Design guidance:**
+
+| Concern | Guidance |
+|---|---|
+| **Cutout padding** | Add 4–8px padding around the target element on each side. Pixel-exact cutouts feel cramped and the white ring barely clears the element. Measure the element's bounds, then expand the cutout rectangle by the padding. |
+| **Cutout corner radius** | Match the target element's own border radius when possible (a button with `border-radius: 8px` gets an 8px cutout). Default to 14px pill when the element's radius is unknown. |
+| **Cropping vs full-page** | Prefer a **cropped but contextual** screenshot — show enough of the surrounding UI that the user knows where they are (sidebar + main content area) but don't include empty space or irrelevant panels. If the full-page screenshot is 1440x900, crop to the relevant ~1100x735 region. All images in a tutorial series must use the same crop region for visual consistency. |
+| **Screenshot resolution** | Capture or import screenshots at **2x retina** resolution. In Figma, this means the image's native pixel dimensions should be 2× the rectangle size (e.g., 2202×1470 image in a 1101×735 rectangle). The analyzed example uses `scalingFactor: 0.5` to achieve this. |
+| **Dark UI screenshots** | A black overlay on a dark-themed UI is nearly invisible. For dark UIs, use a **dark navy overlay** (`{ r: 0.05, g: 0.05, b: 0.15 }`) instead of pure black, or increase opacity to 0.6–0.7. Test by screenshotting — if the overlay is hard to see, adjust. |
+| **Drop shadow** | Optional but recommended for docs/marketing pages with white backgrounds. Adds depth and grounds the card. Apply to the outer group: `{ type: 'DROP_SHADOW', color: { r: 0, g: 0, b: 0, a: 0.12 }, offset: { x: 0, y: 4 }, radius: 16, spread: 0, visible: true, blendMode: 'NORMAL' }` |
+| **Consistent sizing across series** | All images in a tutorial series MUST use identical dimensions. Decide the crop region and size once (e.g., 1101×735) and clone that base for every step. Inconsistent sizing creates jarring visual rhythm in docs pages. |
+| **Overlay opacity by context** | Light UIs: 0.5 (default). Dark UIs: 0.6–0.7. High-contrast need (single critical action): 0.6. Low-contrast (gentle guidance): 0.3–0.4. |
+
+**When to use this pattern:**
+- SaaS product tutorials ("click here to configure webhooks")
+- Onboarding walkthroughs ("first, navigate to Settings")
+- Documentation images for step-by-step guides
+- Feature announcement graphics ("new: check out the Analytics tab")
+- Any screenshot where you need to draw the viewer's eye to a specific UI element
+
+**Export:** Set export settings on each step's group: `PNG` at `8x` scale for high-resolution documentation images, or `2x` for web use.
+
 ### Pattern: Element reorder (safe swap)
 
 When the user asks to reorder elements within a container (flip rows, swap cards), follow this sequence:
@@ -381,6 +569,49 @@ await figma.setCurrentPageAsync(target);
 ```
 
 Also call `figma_navigate` with the target file/page URL after any session break, before your first `figma_execute`.
+
+### Auto-layout silent no-ops
+
+Several auto-layout operations are silently ignored — no error thrown, no warning, just nothing happens:
+
+- **Writing x/y on auto-layout children is a no-op.** Children of auto-layout frames have positions computed automatically. Setting `child.x = 100` is silently discarded. INSTEAD: use `itemSpacing`, `paddingTop/Right/Bottom/Left`, and `layoutAlign` on the parent frame to control child positioning.
+- **`resize()` on an auto-layout frame no-ops in AUTO-sized dimensions.** If `primaryAxisSizingMode` is `"AUTO"` (hug contents), calling `resize()` on that axis is ignored. INSTEAD: set `primaryAxisSizingMode = "FIXED"` first, then resize, or resize children to change the frame's auto-computed size.
+- **Toggling `layoutMode` off/on does NOT restore original state.** Setting `layoutMode = "VERTICAL"` then `layoutMode = "NONE"` leaves children displaced. There is no undo.
+- **Default 10px padding** is automatically applied when setting a frame to auto-layout. Always set explicit padding values immediately after enabling auto-layout.
+
+### `figma.mixed` — text properties return a symbol, not a value
+
+When a text node has multiple styles (e.g., mixed font sizes or weights), properties like `fontSize`, `fontName`, `fontWeight` return `figma.mixed` — a unique JavaScript `symbol`, not a number or string. Reading it as a number causes downstream logic failures.
+
+**Workaround:** Always check before reading text properties:
+```javascript
+if (node.fontSize === figma.mixed) {
+  // Use getRangeFontSize() for character-range-level access
+} else {
+  const size = node.fontSize; // safe to use as number
+}
+```
+
+Note: `figma.mixed` applies to any property with mixed values, not just text (e.g., `cornerRadius` when corners differ).
+
+### Node ID format: colons in API, hyphens in URLs
+
+Figma URLs use hyphens (`?node-id=5-3`), the Plugin API and REST API use colons (`5:3`). Always convert when copying node IDs from URLs:
+
+```javascript
+const nodeId = urlNodeId.replace('-', ':'); // "5-3" → "5:3"
+```
+
+### `createNodeFromSvg` limitations
+
+SVG import via `figma.createNodeFromSvg(svgString)` has known issues (confirmed via community reports):
+
+- **Gradient strokes with `url(#...)` references** may fail with "failed to invert transform" errors
+- **`<defs>` and `<use>` elements** are not reliably supported — inline all references before import
+- **SVGs without explicit `viewBox`/`width`/`height`** import at tiny sizes — always include these attributes
+- **Percentage-based gradient coordinates** (`x1="0%"`) may cause failures — use absolute values
+
+INSTEAD of importing complex SVGs: screenshot the original for reference, then recreate a simplified version using basic Figma shapes and vector paths.
 
 ## Execution strategy
 
