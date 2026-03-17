@@ -86,6 +86,7 @@ This map is a snapshot to help you start in the right place. Always verify with 
 | Illustrations (use case, hero, dev) | Brand Assets → Illustrations section (`5003:66`) | Graphics page |
 | Background/gradient/texture | Brand Assets → Decorative & Backgrounds (`5003:69`) | Gradient backgrounds page |
 | Third-party logos | Brand Assets → Third-Party Logos (`5003:70`) | Integrations page |
+| Third-party logos (not in Brand Assets) | `scripts/fetch-logo.ts` — Simple Icons → Iconify → Brandfetch | Text pill placeholder |
 | UI mockups (chat, data viz) | Brand Assets → UI Elements (`5003:68`) | — |
 | Mascot/Keepie | Brand Assets → Brand Mascot (`5003:65`) | — |
 | Brand colors, typography, gradients | Full Brand Guide page (BABCO) | — |

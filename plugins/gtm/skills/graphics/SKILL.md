@@ -1,28 +1,60 @@
 ---
 name: graphics
-description: Create on-brand graphics and visual assets as native editable Figma designs. Use when asked to create graphics, visuals, diagrams, charts, social images, slide assets, marketing materials, or any visual asset that should follow the brand. Creates native Figma objects (frames, text, shapes, auto-layout) for full editability. Can also generate SVG, D2, or Mermaid when code output is specifically needed. Requires figma and figma-console MCP servers.
+description: Create on-brand graphics and visual assets as native editable Figma designs. Use when asked to create graphics, visuals, diagrams, charts, social images, slide assets, marketing materials, or any visual asset that should follow the brand. Creates native Figma objects (frames, text, shapes, auto-layout) for full editability. Can also generate SVG via Quiver.ai (AI-generated vector art), photorealistic raster images via GPT Image 1.5, hand-coded SVG, D2, or Mermaid when code output is specifically needed. Requires figma and figma-console MCP servers. Quiver.ai requires QUIVERAI_API_KEY. GPT Image requires OPENAI_API_KEY.
 argument-hint: "[description of graphic needed] (optional: existing Figma URL or asset reference)"
 ---
 
 # On-Brand Graphics Generator
 
-Create visual assets as native editable Figma designs that follow the Inkeep brand. Primary use case: graphical assets for slide decks, marketing materials, social media, and documentation.
+Create visual assets as native editable Figma designs that follow the Inkeep brand. Primary use case: graphical assets for slide decks, marketing materials, social media, and documentation. Can also generate AI-powered SVGs via Quiver.ai for illustrations, logos, icons, and complex vector art. Can generate photorealistic raster images and edit existing images via GPT Image 1.5.
 
 ## Prerequisites
 
-This skill requires two MCP servers (scoped to the gtm plugin):
-- **figma** (official) — read designs, brand tokens, screenshots, design context
-- **figma-console** (southleft/figma-console-mcp) — create and modify native Figma objects
+This skill requires two MCP servers:
+- **figma** (official, HTTP) — read designs, brand tokens, screenshots, design context. Authenticates via OAuth on first use (Claude Code prompts automatically).
+- **figma-console** (southleft/figma-console-mcp, stdio) — create and modify native Figma objects. Requires a Figma Personal Access Token + the Desktop Bridge plugin.
 
-Additionally, the **Figma Desktop Bridge plugin** must be running in the target Figma file. See `references/figma-console-tools.md` for setup details.
-
-If MCP servers are missing, instruct the user to run:
+**If MCP servers or credentials are missing** (including `QUIVERAI_API_KEY` for SVG generation, `OPENAI_API_KEY` for raster generation, and `BRANDFETCH_API_KEY` for third-party logo fetching), instruct the user to run:
 ```bash
-~/.claude/plugins/marketplaces/inkeep-team-skills/secrets/setup.sh --skill google-mcp --account inkeep.1password.com
+./secrets/setup.sh --skill graphics --account inkeep.1password.com
 ```
-For figma-console, also ensure `FIGMA_ACCESS_TOKEN` is set in the MCP config.
+
+### Figma Desktop Bridge (required for native Figma design creation)
+
+The `figma-console` MCP communicates with Figma Desktop via a WebSocket bridge plugin. This cannot be automated — Figma has no CLI/API for plugin management.
+
+**One-time setup (import the plugin):**
+1. Open **Figma Desktop** (not browser Figma)
+2. Right-click canvas → **Plugins → Development → Import plugin from manifest...**
+3. Select the manifest file. To find its path, run: `npx figma-console-mcp@latest --print-path`
+4. The plugin now appears permanently in **Plugins → Development → Figma Desktop Bridge**
+
+**Each session (run the plugin):**
+1. Open your target Figma file in Figma Desktop
+2. Right-click canvas → **Plugins → Development → Figma Desktop Bridge**
+3. Wait for the green "MCP Ready" status widget
+
+**If the plugin disconnects** (e.g., after tab refresh or file switch), re-run it from the Plugins menu. The skill checks connection status via `figma_get_status` before building and will guide the user if disconnected.
 
 ## Workflow
+
+### Step 0: Create workflow tasks (MANDATORY FIRST ACTION)
+
+⛔ **Before doing anything else**, create these tasks to track workflow progress. This is not optional — skipping this step is the primary cause of the agent jumping straight to building without collecting assets or brand tokens.
+
+Create these tasks in order:
+1. `"Graphics: Parse request"` → set to `in_progress`
+2. `"Graphics: Collect assets & brand tokens"` → pending
+3. `"Graphics: Plan composition"` → pending
+4. `"Graphics: Generate graphic"` → pending
+5. `"Graphics: Brand consistency check"` → pending
+6. `"Graphics: Export & deliver"` → pending
+
+As each step begins, mark its task `in_progress`. When the step completes, mark it `completed`.
+
+**Why this exists:** Without explicit task tracking, the observed failure mode is the agent skipping asset collection (Step 2) and brand token extraction (Step 3), jumping straight to building from scratch with approximated brand elements. This produces off-brand graphics with fake logos and wrong colors.
+
+---
 
 ### 1. Parse the request
 
@@ -40,12 +72,79 @@ Identify:
 
 If the user doesn't specify the medium, **ask** — text sizing is the most common source of iteration waste. Default to slide deck sizing when the purpose is "presentation" or "deck."
 
-- **Dimensions**: target size and aspect ratio (infer from purpose if not specified)
-- **Output format**: Figma design (default — editable native objects), SVG (when code output specifically needed), or D2/Mermaid (for technical diagrams)
+- **Dimensions**: determine from the output medium. **Load the matching standard file** from `standards/` for exact dimensions, design guidelines, and best practices:
+
+| Medium | Standard file | Default size |
+|---|---|---|
+| Blog cover / thumbnail | `standards/blog-cover.md` | 2560 x 1440 px (16:9) |
+| Social / Open Graph image | `standards/social-og.md` | 1200 x 630 px (~1.91:1) |
+| Social post (cross-platform) | `standards/social-post.md` | 1200 x 675 px (16:9) |
+| LinkedIn single-image post | `standards/linkedin-post.md` | 1200 x 1200 px (1:1) |
+| LinkedIn carousel | `standards/linkedin-carousel.md` | 1080 x 1080 px per slide (1:1) |
+| LinkedIn banner | `standards/linkedin-banner.md` | 1128 x 191 (company) / 1584 x 396 (personal) |
+| Twitter/X | `standards/twitter-x.md` | 1200 x 675 px (16:9) |
+| YouTube thumbnail | `standards/youtube-thumbnail.md` | 1280 x 720 px (16:9) |
+| YouTube channel banner | `standards/youtube-banner.md` | 2560 x 1440 px (16:9) |
+| Email header / newsletter | `standards/email-header.md` | 1200 x 400-600 px (2x retina) |
+| Slide deck graphic | `standards/slide-graphic.md` | 960 x 540 px working / 1920 x 1080 export (16:9) |
+| Case study hero / thumbnail | `standards/case-study-hero.md` | 1800 x 840 px hero / 800 x 500 px thumbnail |
+
+If the medium doesn't match any standard file, ask the user for dimensions. Do not guess — wrong dimensions are the most common rework cause.
+
+The standard files also contain **design guidelines specific to each medium** (text sizing, composition, what works/what to avoid). Read the relevant file before planning the graphic — it will inform your composition decisions in Step 3.
+
+- **Content analysis** (when the user provides a blog post, article, or content to create graphics for): Scan the content and suggest a visual approach before planning:
+
+| Content signal | Suggested visual approach |
+|---|---|
+| Key statistic or metric in the content | **Bold data callout** — large stat as hero element |
+| Comparison between options/products | **Split layout or comparison table** — side-by-side with pros/cons |
+| Step-by-step process or workflow | **Sequential diagram** — numbered steps with flow arrows |
+| Customer quote or testimonial | **Quote card** — speaker photo + quote text |
+| Product feature or UI explanation | **Annotated product mockup** — simplified UI with callouts |
+| Abstract concept or architecture | **Illustration or diagram** — visual metaphor for the concept |
+| List of criteria or evaluation rubric | **Data grid or scorecard** — structured table with ratings |
+| Announcement or launch | **Bold headline + product visual** — clean, editorial feel |
+
+Present the suggestion to the user: "Based on the content, I'd suggest a [type] approach because [reason]. Does that work, or did you have something different in mind?"
+
+- **Output format**: choose based on the graphic type and what happens to it next:
+
+| Graphic type | Best format | Why |
+|---|---|---|
+| Slide assets, marketing cards, social images, multi-element layouts | **Figma (Option A)** — default | Editable by designers; precise layout; auto-layout; text control |
+| Text-heavy designs (feature tables, pricing, comparisons) | **Figma (Option A)** | Quiver converts text to paths — no editability, imprecise for body copy |
+| Illustrations, icons, logos, abstract art, decorative elements | **Quiver (Option D)** | AI generates layered, stylized vectors with complex paths impractical to hand-code |
+| Icon sets (multiple matching icons) | **Quiver (Option D)** with references | Generate one, pass it as `--references` for the rest — maintains visual consistency |
+| Background patterns, textures, abstract decorative art | **Quiver (Option D)** | Hard to hand-code, easy to describe |
+| Simple structural SVGs (basic shapes, bar charts, inline diagrams) | **Hand-coded SVG (Option B)** | Exact control; simple enough to write directly; humans can maintain the code |
+| System architecture, flowcharts, sequence diagrams | **D2/Mermaid (Option C)** | Purpose-built diagram languages with automatic layout |
+| Converting a raster image to SVG | **Quiver vectorize (Option D)** | AI-powered raster-to-vector conversion |
+| Illustration FOR a slide/marketing layout | **Quiver (Option D) → Figma (Option A)** | Generate the illustration with Quiver, import into Figma, compose with brand elements and text — see hybrid workflow in Option D |
+| Photorealistic images, product mockups, realistic scenes | **GPT Image (Option E)** | AI-generated raster — photographic quality, studio lighting, realistic materials |
+| Hero images with photographic quality | **GPT Image (Option E)** | Raster output at up to 1536x1024; use `--quality high` for best results |
+| Image editing (inpainting, background swap, style transfer, object removal) | **GPT Image edit (Option E)** | Modify existing raster images with natural language instructions |
+| Raster image FOR a slide/marketing layout | **GPT Image (Option E) → Figma (Option A)** | Generate raster image, place in Figma as image fill, compose with brand elements and text |
+
+**Do NOT use GPT Image for:**
+- Vector graphics (icons, logos, illustrations that need to scale) — use Quiver (Option D). Raster images pixelate when scaled; SVGs scale infinitely.
+- Editable layouts, text-heavy designs — use Figma (Option A). Raster images can't be edited by designers.
+- Diagrams, flowcharts, architecture — use D2/Mermaid (Option C). GPT Image can't produce structured, accurate diagrams.
+- Assets that ship as code (inline SVGs, repo-committed graphics) — use Quiver or hand-coded SVG. Raster files are large and not code-editable.
+
+**Do NOT use Quiver for:**
+- Graphics that must include the Inkeep brand mark — Quiver will hallucinate a logo. Use Figma for brand mark placement; Quiver can generate surrounding artwork.
+- Data visualizations (charts, graphs) — Quiver can't hit exact data values. Use hand-coded SVG or D2.
+- Precise text layout (body copy, tables, feature lists) — Quiver renders text as vector paths, not `<text>` elements. Result is non-editable and imprecise for multi-line copy.
+- SVGs that developers will hand-edit — Quiver output is machine-generated paths (clean but not semantic). Hand-coded SVG is better for human-maintained files.
+- Exact reproduction of an existing Figma component — use Figma to clone it.
+
 - **Existing asset**: if user provides a Figma URL or file reference, use it as the starting point (skip step 2)
 - **Content**: what the graphic should depict or communicate
 
-### 2. Find a starting point and collect assets
+### 2. Find a starting point, collect assets, and pull brand tokens
+
+⛔ **Mark task "Graphics: Collect assets & brand tokens" as `in_progress` before proceeding.**
 
 Before creating from scratch, search for existing assets to build from. **Always use the Figma MCP for navigation** — never the browser.
 
@@ -94,7 +193,7 @@ Wait for user confirmation before proceeding.
 - What text comes from the slide master/layout vs. what's on the slide itself — you'll need to avoid duplicating master-provided elements
 - The deck's visual weight and density — match the existing slides' level of detail
 
-### 3. Pull brand tokens from Figma
+**e) Pull brand tokens from Figma**
 
 Use the Figma MCP to extract brand tokens from the design system.
 
@@ -109,7 +208,54 @@ Extract:
 
 If referencing an existing Figma asset, also extract its specific layout, dimensions, and visual structure.
 
-### 4. Plan the graphic
+**f) Verify brand font availability**
+
+The Inkeep brand font (Neue Haas Grotesk Display Pro) is a paid/custom font. If it's not available in the target Figma file, text operations will silently fail or fall back to a default — producing off-brand graphics with no warning.
+
+Check font availability early via `figma_execute`:
+```javascript
+const fonts = await figma.listAvailableFontsAsync();
+const brandFonts = fonts.filter(f => f.fontName.family.includes('Neue Haas'));
+console.log('Brand fonts available:', brandFonts.map(f => `${f.fontName.family} ${f.fontName.style}`));
+```
+
+- If brand fonts are found → note the available weights (Bold, Roman, Medium, etc.) in the manifest
+- If NOT found → warn the user: "The brand font (Neue Haas Grotesk Display Pro) isn't available in this Figma file. It's likely shared via your team's Figma library — enable it in Assets → Team Library. Without it, text will fall back to a default font." Then ask whether to proceed with a fallback font (Inter is the closest available alternative) or wait.
+
+**g) Produce the Asset Manifest (required before proceeding)**
+
+⛔ **Do NOT proceed to planning or building until you have produced this manifest.** This is the checkpoint that prevents the "skip asset collection" failure mode.
+
+Write out an asset manifest listing what was found and what's missing:
+
+```
+## Asset Manifest
+
+### Found (will reuse)
+- [x] Inkeep logo — node ID: ___, source file: ___
+- [x] Third-party logo (Slack) — node ID: ___, source file: ___
+- [x] Brand colors: #FBF9F4, #3784FF, #231F20, ...
+- [x] Font: Neue Haas Grotesk Display Pro (Bold, Roman, Medium) — verified available via listAvailableFontsAsync
+
+### Not found (will create)
+- [ ] Custom illustration — will build from shapes
+- [ ] Connection arrows — will create after layout
+
+### Approximations (MUST justify)
+- (list any element where you're using a text/shape stand-in instead of the real asset, with reason)
+```
+
+**Rules for the manifest:**
+- Every logo MUST be cloned from the Brand Assets page — never approximated with text or shapes
+- If a needed asset isn't found after searching, explicitly note the search terms used and sections checked
+- If cross-file cloning is impractical, explain why and propose an alternative (e.g., recreate simplified version)
+- Approximations are only acceptable for decorative elements, never for brand marks or third-party logos
+
+**Mark task "Graphics: Collect assets & brand tokens" as `completed`.**
+
+### 3. Plan the graphic
+
+⛔ **Mark task "Graphics: Plan composition" as `in_progress`. Verify that "Graphics: Collect assets & brand tokens" is `completed` — if not, go back and complete Step 2 first. Do NOT plan without knowing what assets are available.**
 
 Before generating, plan the composition:
 - **Layout**: overall structure, element placement, visual hierarchy
@@ -133,7 +279,17 @@ If the graphic is adapting an existing asset or following an established pattern
 
 Present the plan to the user for review before generating.
 
-### 5. Generate the graphic
+**Mark task "Graphics: Plan composition" as `completed`.**
+
+### 4. Generate the graphic
+
+⛔ **Mark task "Graphics: Generate graphic" as `in_progress`. Before creating ANY Figma elements, verify:**
+- [ ] **Asset manifest exists** — Step 2 produced a manifest listing found/missing/approximated assets
+- [ ] **Brand tokens collected** — you have exact hex colors and font families from the design system, not from memory or the user's message
+- [ ] **Logos are real** — any Inkeep or third-party logos are cloned from the Brand Assets page or fetched via `scripts/fetch-logo.ts`, not approximated with text or shapes
+- [ ] **Plan was confirmed** — the user reviewed and approved the composition plan
+
+**If any of these are not met, STOP and complete the missing step before proceeding.**
 
 **Load:** `references/figma-console-tools.md` for tool reference and common patterns.
 
@@ -145,37 +301,27 @@ Best for: slide assets, marketing visuals, diagrams, social images, cards, hero 
 
 Before starting, verify the Desktop Bridge plugin is running:
 1. Call `figma_get_status` to check connection
-2. If not connected, ask user to launch the Desktop Bridge plugin in their target Figma file
+2. If `setup.valid` is `true` — proceed
+3. If `setup.valid` is `false` — guide the user through these steps:
+   - "Open your target Figma file in **Figma Desktop** (not browser)"
+   - "Right-click the canvas → **Plugins → Development → Figma Desktop Bridge**"
+   - "Wait for the green 'MCP Ready' status widget to appear"
+   - If the plugin isn't in the menu: "You need to import it first — run `npx figma-console-mcp@latest --print-path` in your terminal, then in Figma: Right-click → Plugins → Development → Import plugin from manifest... → select that path"
+   - After the user confirms, call `figma_get_status` again to verify
 
 Follow the five-phase workflow below. Do NOT try to build the entire graphic in one pass.
 
-#### Phase A: Collect reusable assets
+#### Phase A: Stage collected assets into the working file
 
-**Goal:** Find every existing asset you can reuse. Never create what already exists.
+**Goal:** Transfer the assets identified in Step 2's Asset Manifest into the target Figma file. This phase executes the manifest — it does not redo the search.
 
-From the composition plan (Step 4), list every visual element the graphic requires — logos, icons, components, typography styles, color values, decorative elements. Then search for each one:
+For each "Found (will reuse)" item in the manifest:
+1. **Navigate** to the source file (`figma_navigate`)
+2. **Locate** the asset by node ID
+3. **Clone or transfer** it into the target file (see cross-file strategies below)
+4. **Verify** the cloned asset looks correct (screenshot)
 
-1. **Logo first — never approximate.** If the graphic includes the brand mark, clone the real logo from the design system before doing anything else. Search the Brand Assets page (node `5003:63`) for `logo/full-color`, `logo/black`, `logo/white`, `logo/icon/*`, `logo/wordmark/*`, `logo/favicon/*`. Never substitute the logo with a colored shape, text, or approximation — if you can't find or clone it, stop and ask the user.
-2. **Search Brand Assets page** — the Inkeep Design Assets file has a curated Brand Assets page (node `5003:63`) with 148 assets organized by path prefix (`logo/`, `icon/`, `illustration/`, `background/`, `third-party/`, `ui/`, `mascot/`). Search here before looking elsewhere.
-3. **Icons** — `icon/nav/*` (14 variants), `icon/homepage/*`, `icon/customer/*`
-4. **Illustrations** — `illustration/use-case/*`, `illustration/abstract/*`, `illustration/dev-page/*`, `illustration/homepage/*`
-5. **Backgrounds** — `background/gradient/*`, `background/footer/*`, `background/polygon/*`, `background/grid`
-6. **Third-party logos** — `third-party/slack`, `third-party/github`, `third-party/notion`, etc.
-7. **Fall back to BABCO** — for brand tokens (colors, typography, spacing), check the BABCO Design Assets file Brand Guide page
-8. **Typography** — pull exact font family/weight/size from the Brand Guide page
-9. **Colors** — pull exact hex values from the Brand Guide page
-
-For each asset found, record what it is, where it is (file key + node ID), and how you'll use it (clone, export, extract style values). For assets you'll incorporate, stage them: clone nodes into your working page, or note exact style values.
-
-**Missing third-party logos:** The asset library won't have every logo (e.g., Totango, Gong, Salesforce). When a needed third-party logo isn't in the Brand Assets page:
-1. Search the web for an SVG version of the logo
-2. Import it into Figma via `figma.createNodeFromSvg(svgString)` in `figma_execute`
-3. Adapt to the graphic's visual treatment — if other logos are monochrome/grey, convert the imported logo to match (replace fills with the target color)
-4. Scale to match sibling logo sizes
-
-If SVG import fails or the logo is too complex, create a styled text pill as a placeholder (brand name in a rounded rectangle) and flag it for the user to replace manually.
-
-**Cross-file asset transfer:** When source assets live in a different Figma file than your target, choose a strategy:
+**Cross-file asset transfer strategies:**
 
 | Situation | Strategy |
 |---|---|
@@ -185,19 +331,30 @@ If SVG import fails or the logo is too complex, create a styled text pill as a p
 
 Always call `figma_navigate` to switch active file context before accessing nodes in a different file.
 
-**Checkpoint:** List all assets collected and mark what's missing:
+**Missing third-party logos:** When a needed third-party logo isn't in the Brand Assets page:
+
+Use the fetch-logo script to find and download the SVG in a single call. It checks Simple Icons, Iconify, and Brandfetch in parallel and returns the best result:
+
+```bash
+bun scripts/fetch-logo.ts --name "Freshdesk" --domain "freshdesk.com" --output /tmp/freshdesk.svg
 ```
-Assets collected:
-- [x] Inkeep logo (node 123:456, cloned to working page)
-- [x] Brand colors: #FBF9F4, #3784FF, #231F20, #6B6B6B
-- [x] Font: Inter Bold 32px for headings, Inter Regular 16px for body
-- [ ] Feature icons — NOT FOUND (need to create)
-- [ ] Connection lines — need to create
-```
+
+The script outputs JSON to stdout with the SVG content, source, and metadata. Use `--prefer color` (default) for full-color logos or `--prefer mono` for monochrome. Use `--theme dark` for dark-mode variants.
+
+**Load:** `references/svg-logo-sources.md` for source details, coverage gaps, and manual API patterns if needed.
+
+Import the resulting SVG into Figma via `figma.createNodeFromSvg(svgString)` in `figma_execute`. After import:
+- Name the node with `third-party/` prefix (e.g., `third-party/freshdesk`)
+- Adapt to the graphic's visual treatment — if other logos are monochrome/grey, convert the imported logo to match (replace fills with the target color)
+- Scale to match sibling logo sizes
+
+If the script returns `"found": false` or SVG import fails, create a styled text pill as a placeholder (brand name in a rounded rectangle) and flag it for the user to replace manually.
+
+**Checkpoint:** All "Found" items from the manifest are staged in the working file. Screenshot to verify.
 
 #### Phase B: Gap analysis and creation plan
 
-**Goal:** For every element NOT found in Phase A, plan exactly how to create it.
+**Goal:** For every "Not found" item in the Asset Manifest, plan exactly how to create it.
 
 For each gap, define:
 - **What it looks like** — dimensions, colors, shape, style (reference similar elements from master designs)
@@ -216,6 +373,8 @@ Determine build order from simplest to most complex:
 #### Phase C: Build atoms (bottom-up)
 
 **Goal:** Create each missing element individually. Verify each one before moving on. Do NOT try to build the entire graphic at once.
+
+⛔ **Keep each `figma_execute` call to ONE logical operation** — create one element, style one element, move one element. Never create an entire composition in a single call. Large multi-element calls timeout (30s limit), leave partial state when they fail, and skip the per-atom verification that catches issues early. INSTEAD: create → screenshot → verify → next element.
 
 Create a temporary working frame to build atoms in isolation:
 ```javascript
@@ -261,7 +420,22 @@ Fix any issues now — it's much easier to fix individual atoms than after compo
 - [ ] Visual hierarchy reads correctly
 - [ ] Text is readable at intended display size (see output medium table in Step 1)
 - [ ] No content overflow or collapsed spacing from dimensional changes
-- [ ] **Bounds check:** every child element fits within its parent frame. Run a programmatic check — don't rely on visual inspection alone for edge clipping. See `references/figma-console-tools.md` → "Container sizing from content bounds" for the code pattern. This is the #1 cause of text cutoff and content clipping.
+- [ ] **Bounds check:** every child element fits within its parent frame. Run this programmatic check via `figma_execute` — don't rely on visual inspection alone for edge clipping (screenshots miss 2-4px overflow). This is the #1 cause of text cutoff and content clipping:
+   ```javascript
+   const parent = await figma.getNodeByIdAsync('PARENT_ID');
+   const issues = [];
+   for (const child of parent.children) {
+     const cb = child.absoluteBoundingBox;
+     const pb = parent.absoluteBoundingBox;
+     if (!cb || !pb) continue; // null = invisible node, skip
+     if (cb.x < pb.x || cb.y < pb.y ||
+         cb.x + cb.width > pb.x + pb.width ||
+         cb.y + cb.height > pb.y + pb.height) {
+       issues.push({ name: child.name, id: child.id, overflow: 'extends beyond parent' });
+     }
+   }
+   return issues.length ? issues : 'All children within bounds';
+   ```
 - [ ] **Sibling consistency:** for repeating elements (card grids, icon rows, tag lists), verify that siblings have matching visual weight — equal heights, same number of text lines, consistent padding. A single-line label next to a two-line label misaligns everything below it. Fix content or equalize container sizes before moving on.
 - [ ] **If adapting an existing asset:** screenshot the original reference AND your output — compare element-by-element. "The original" means the source Figma file, not any derived copy (not your HTML mockup, not your plan description). Check arrow directions, element ordering, label placement, and logo usage against the actual source.
 
@@ -307,7 +481,259 @@ Mermaid:
 2. Render via CLI or browser
 3. Post-process to apply brand colors if needed
 
-### 6. Apply brand consistency
+**Option D: AI-generated SVG via Quiver (for illustrations, logos, icons, vector art)**
+
+Best for: illustrations, icons, logos, abstract art, decorative elements, background patterns, custom letterforms — anything with complex vector paths that would be impractical to hand-code. Arrow (Quiver's model) is #1 on SVG Arena and produces clean, layered, editable SVG with semantic grouping.
+
+**Load:** `references/quiver-api.md` for full API details, script usage, and parameter reference.
+
+**Prerequisite:** `QUIVERAI_API_KEY` must be set. If missing, the script will error with setup instructions. If the user doesn't have a key, direct them to https://quiver.ai → Settings → Developers → API Keys.
+
+**Generation workflow:**
+
+1. **Craft the prompt** using a 5-component structure:
+
+   ```
+   [Subject] + [Style] + [Color palette] + [Composition] + [Constraints]
+   ```
+
+   | Component | What to include | Example |
+   |---|---|---|
+   | **Subject** | Specific description of what's depicted | "A rocket launching from a laptop screen" |
+   | **Style** | Aesthetic direction using vocabulary the model responds to (see below) | "flat geometric style" |
+   | **Color palette** | Explicit hex codes for tight control | "using #3784FF and #FBF9F4" |
+   | **Composition** | Framing and spatial arrangement | "centered, square viewport" |
+   | **Constraints** | What to exclude or limit | "no text, no gradients, 3-4 colors max" |
+
+   **Style vocabulary Arrow responds well to:** flat, geometric, minimal, line art, duotone, isometric, hand-drawn, woodblock, heraldic, calligraphic, ornate, continuous stroke, monochrome, organic.
+
+   **Good prompt:**
+   ```
+   "A crane bird in traditional woodblock illustration style with warm earth tones, centered composition, clean lines, no text"
+   ```
+
+   **Bad prompt:**
+   ```
+   "A nice bird picture"
+   ```
+   Vague prompts produce vague results and burn credits. Be specific about subject, style, and constraints.
+
+2. **Set the `instructions` parameter for persistent brand constraints.** The `instructions` channel is separate from `prompt` — use it for brand rules that apply regardless of the subject:
+
+   ```
+   --instructions "Brand constraints:
+   - Colors: background #FBF9F4, accent #3784FF, primary #1A1A1A, secondary #6B6B6B
+   - Style: clean, minimal, geometric, consistent with Inkeep brand
+   - No photorealistic elements
+   - No gradients unless explicitly requested
+   - No text unless explicitly requested (text renders as paths, not editable)"
+   ```
+
+   The separation matters: `prompt` describes *what to draw*, `instructions` describes *how to style it*. This gives tighter, more consistent results than putting everything in one field.
+
+3. **Set temperature based on intent:**
+
+   | Intent | Temperature | Why |
+   |---|---|---|
+   | Brand-consistent icon set | 0.3–0.5 | Low variation; each icon should match the others |
+   | On-brand illustration (known style) | 0.5–0.7 | Some creative range within brand constraints |
+   | Creative exploration (novel graphic) | 1.0–1.5 | Maximum variation; generate 2-3 variants for user to pick |
+
+   The script doesn't expose `--temperature` yet — for now, the default (1.0) works for most requests. For icon sets where consistency matters, consider adding temperature support to the script.
+
+4. **Use reference images for style consistency.** Export 1-2 existing brand assets from Figma as PNG and pass as `--references`:
+
+   ```bash
+   # Export an existing Figma asset to PNG first (via figma_execute):
+   # node.exportAsync({ format: 'PNG', constraint: { type: 'SCALE', value: 2 } })
+
+   bun scripts/quiver-generate.ts generate \
+     --prompt "Icon for AI-powered search" \
+     --references /tmp/existing-brand-icon.png \
+     --instructions "Match the visual style of the reference. Use #3784FF accent." \
+     --output search-icon.svg
+   ```
+
+   **When to use references:**
+   - **Icon sets** — generate the first icon, then use it as `--references` for subsequent icons so they all share the same visual language
+   - **Style matching** — when the output must feel like it belongs alongside existing brand assets
+   - **Color palette transfer** — the model picks up the palette from references
+
+   **When references don't help:**
+   - Exact reproduction (references guide style, they don't clone the image)
+   - Passing a photo when you want a flat vector (mismatched style signals)
+
+5. **Generate.** For novel graphics, generate 2-3 variants (`--n 3`) so the user can pick a direction:
+   ```bash
+   bun scripts/quiver-generate.ts generate \
+     --prompt "Abstract illustration of AI agents collaborating, flat geometric style" \
+     --instructions "Colors: #FBF9F4 background, #3784FF accent, #1A1A1A primary. Minimal, clean." \
+     --n 3 \
+     --output agent-collab.svg
+   ```
+   Each variant costs 1 credit. Don't generate more variants than needed — `--n 2` or `--n 3` is usually sufficient.
+
+6. **Review output.** The script auto-generates PNG previews alongside each SVG. Visually inspect the PNG using the Read tool (which displays images), then also check the SVG source for objective compliance:
+
+   **Visual inspection (Read the PNG):**
+   - Does the graphic match the prompt intent?
+   - Is the visual style consistent with the brand?
+   - Is the composition clean and intentional?
+
+   **Source inspection (Read the SVG):**
+   - Grep hex values — do they match the brand palette (`#FBF9F4`, `#3784FF`, `#1A1A1A`, `#6B6B6B`)?
+   - Any unwanted `<text>` elements when "no text" was specified?
+   - Is the SVG valid and reasonable size?
+
+   **If objective failures (wrong colors, unwanted elements):** fix the prompt/instructions and regenerate (up to 2 retries). Don't keep generating indefinitely — if 3 attempts miss, adjust the approach or ask the user.
+
+   **If objectively OK but aesthetics are uncertain:** show the PNG preview to the user and let them drive subjective feedback ("make it more geometric", "try warmer tones", "less busy").
+
+   **Iteration strategy when output misses:**
+   - **Wrong style:** Adjust the style vocabulary in the prompt (e.g., "flat geometric" → "minimal line art")
+   - **Wrong colors:** Make hex codes more explicit in `instructions`; add "ONLY use these colors"
+   - **Too complex:** Add constraints: "simple, 3-5 elements max, clean lines"
+   - **Too simple:** Add detail to the subject description; remove "minimal" constraints
+   - **Inconsistent with brand:** Add a reference image from Figma exports
+
+**Hybrid workflow: Quiver → Figma (for composed graphics)**
+
+When the final deliverable needs both AI-generated artwork AND brand elements, text, or precise layout — generate the illustration with Quiver, then compose in Figma:
+
+1. **Generate the artwork** with Quiver (steps 1-6 above) — focus on the illustration/icon/decorative element only, not the full layout
+2. **Import into Figma:**
+   ```javascript
+   // via figma_execute
+   const fs = require('fs');
+   const svgString = '...'; // Read the SVG file content
+   const imported = figma.createNodeFromSvg(svgString);
+   imported.name = "Quiver — [descriptive name]";
+   ```
+3. **Compose in Figma** using the Option A workflow — add brand logos (cloned from the design system, never generated by Quiver), text (using proper fonts and `<text>` elements), layout structure, and other elements
+4. **Apply brand consistency** — verify the imported Quiver artwork looks right alongside Figma-native elements
+
+This hybrid approach is the right default for: slide deck illustrations, marketing hero images, social graphics that need both artwork and text, any graphic that needs the Inkeep logo alongside custom illustration.
+
+**Vectorization workflow** (raster image to SVG):
+
+```bash
+bun scripts/quiver-generate.ts vectorize \
+  --image screenshot.png \
+  --output vectorized.svg
+```
+
+Use this when you need to convert an existing raster asset (screenshot, PNG export, photo) into clean, editable SVG. The vectorization preserves structure and separates elements into layers.
+
+**Option E: AI-generated raster images via GPT Image 1.5 (for photorealistic images, mockups, image editing)**
+
+Best for: photorealistic product shots, hero images, editorial illustrations with photographic quality, image editing (inpainting, background replacement, style transfer, object removal). GPT Image 1.5 is #1 on LM Arena (Elo 1268) — best-in-class for photorealism and text-in-image rendering.
+
+**Load:** `references/openai-image-api.md` for full API details, script usage, and parameter reference.
+
+**Prerequisite:** `OPENAI_API_KEY` must be set. If missing, the script will error with setup instructions. Pull from 1Password: `./secrets/setup.sh --skill graphics --account inkeep.1password.com`
+
+**Generation workflow:**
+
+1. **Craft the prompt** — be specific about subject, setting, lighting, camera perspective, and materials:
+
+   **Good prompt:**
+   ```
+   "A close-up product photograph of artisan coffee beans spilling from a burlap sack
+   onto a dark wooden table, warm directional lighting from the left, shallow depth of field"
+   ```
+
+   **Bad prompt:**
+   ```
+   "coffee beans"
+   ```
+
+   For brand-consistent images, include hex colors and style direction:
+   ```
+   "A hero image for a tech company website. Warm cream background (#FBF9F4),
+   subtle geometric patterns in blue (#3784FF). Clean, modern, minimal. No text."
+   ```
+
+2. **Generate** — default is `--quality high` for best results:
+   ```bash
+   bun scripts/image-generate.ts generate \
+     --prompt "A photorealistic product shot of a laptop on a marble desk" \
+     --quality high \
+     --size 1536x1024 \
+     --output product-shot.png
+   ```
+
+   For exploration, generate 2-3 variants:
+   ```bash
+   bun scripts/image-generate.ts generate \
+     --prompt "Abstract hero image with geometric shapes" \
+     --n 3 \
+     --output hero-variants.png
+   ```
+   Each image at high quality costs ~$0.17-0.25. Don't generate more variants than needed.
+
+3. **Review output** — use the Read tool on the PNG to visually inspect:
+   - Does the image match the prompt intent?
+   - Are brand colors accurate (if specified)?
+   - Is the composition and lighting appropriate for the use case?
+   - Any artifacts, unwanted text, or quality issues?
+
+   **If the output misses — iteration strategy:**
+   - **Wrong lighting/mood:** Add explicit lighting direction ("warm light from left", "soft diffused studio lighting")
+   - **Wrong composition:** Specify camera angle ("shot from above", "eye-level", "close-up macro")
+   - **Wrong colors:** Include hex codes directly in the prompt
+   - **Unwanted elements:** Add negative constraints ("no text", "no people", "no watermarks")
+   - **Too generic:** Add material/texture descriptions ("matte finish", "brushed metal", "rough linen")
+
+   **Autonomous retry for objective failures** (wrong subject, completely off-prompt): fix the prompt and regenerate (up to 2 retries). **Aesthetic judgment goes to the user** — show the image and let them direct refinement.
+
+**Editing workflow** (inpainting, background replacement, style transfer):
+
+```bash
+# Replace background
+bun scripts/image-generate.ts edit \
+  --prompt "Replace the background with a gradient from cream #FBF9F4 to light blue" \
+  --image original.png \
+  --output new-background.png
+
+# Targeted edit with mask (transparent areas = edit region)
+bun scripts/image-generate.ts edit \
+  --prompt "Fill the masked area with a potted plant" \
+  --image room.png \
+  --mask area-to-fill.png \
+  --output with-plant.png
+
+# Style transfer
+bun scripts/image-generate.ts edit \
+  --prompt "Apply a warm, vintage film photography look while preserving the subject" \
+  --image modern-photo.png \
+  --output vintage-style.png
+```
+
+**Transparent background** (for compositing in Figma):
+
+```bash
+bun scripts/image-generate.ts generate \
+  --prompt "A coffee cup, studio lighting, isolated object" \
+  --background transparent \
+  --output-format png \
+  --output coffee-cup.png
+```
+
+**Hybrid workflow: GPT Image → Figma (for composed graphics)**
+
+When the final deliverable needs both a photorealistic image AND brand elements, text, or precise layout — generate the raster image with GPT Image, then place it in Figma:
+
+1. **Generate the image** with GPT Image (steps above) — use `--background transparent` if the image will be layered over other elements
+2. **Export** the PNG to a location accessible to Figma
+3. **Place in Figma** — use `figma_execute` to create an image fill on a rectangle, or guide the user to drag-and-drop the PNG into their Figma file
+4. **Compose in Figma** using the Option A workflow — add brand logos, text, layout structure around the raster image
+5. **Apply brand consistency** — verify the raster image looks right alongside Figma-native elements
+
+This hybrid approach is the right default for: slide deck hero images, marketing materials that need both photography and text, social graphics with product mockups, any graphic that needs photorealistic imagery alongside brand elements and precise text layout.
+
+### 5. Apply brand consistency
+
+**Mark task "Graphics: Generate graphic" as `completed`. Mark task "Graphics: Brand consistency check" as `in_progress`.**
 
 After generating, verify the graphic matches the brand:
 - [ ] Colors match the brand palette exactly (no approximations)
@@ -316,11 +742,23 @@ After generating, verify the graphic matches the brand:
 - [ ] Visual style is consistent with existing brand assets
 - [ ] Appropriate use of gradients, shadows, or effects
 
-For Figma designs: take a screenshot (`figma_capture_screenshot`) and visually verify. Check that layers are well-named and organized.
+For Figma designs:
+1. Take a screenshot (`figma_capture_screenshot`) and visually verify
+2. Run `figma_lint_design` on the root frame to catch issues screenshots miss:
+   - **Hardcoded colors** not bound to variables (visually identical but not token-linked)
+   - **Unnamed layers** (default names like "Frame 47", "Rectangle 12")
+   - **WCAG contrast violations** (AA 4.5:1 for normal text, 3:1 for large text)
+   - **Text below 12px**, interactive targets below 24x24px, line height below 1.5x
+   - **Missing text styles**, detached components, frames without auto-layout
+3. Fix any critical/warning findings before delivering
 
 For SVGs: validate the code is clean and renders correctly.
 
-### 7. Export and deliver
+**Mark task "Graphics: Brand consistency check" as `completed`.**
+
+### 6. Export and deliver
+
+**Mark task "Graphics: Export & deliver" as `in_progress`.**
 
 **For Figma designs (primary):**
 1. Verify the design in Figma:
@@ -351,16 +789,36 @@ This pipeline has friction (public hosting, coordinate mapping, master element s
    - [ ] If SVG: no broken references, valid markup
 4. Share the file path or output with the user
 
+⛔ **Final visual inspection (REQUIRED before telling the user the graphic is done).**
+
+Screenshot every deliverable at its final dimensions using `figma_capture_screenshot`. Visually inspect each one and verify:
+- [ ] Nothing looks "off" — no clipped text, overflow, misalignment, or visual artifacts
+- [ ] Text is fully readable and not truncated or wrapping unexpectedly
+- [ ] All elements are within frame bounds (nothing cut off at edges)
+- [ ] Colors look correct — no wrong fills, missing backgrounds, or transparency issues
+- [ ] Logos and brand marks are present and look right (not placeholder text or shapes)
+- [ ] Overall composition looks intentional and professional — not like a work-in-progress
+
+**If ANY issue is found, fix it and re-screenshot before proceeding. Do NOT tell the user the graphic is complete until every deliverable passes this inspection.**
+
+For multi-graphic deliverables (e.g., 5 thumbnail options): screenshot and inspect EACH one individually. Do not declare the set complete after checking only one.
+
+**Mark task "Graphics: Export & deliver" as `completed`.**
+
 ## Quality bar
 
 Must have:
 - [ ] Checked master designs and Figma before creating from scratch
 - [ ] All colors match brand palette exactly
 - [ ] Typography uses brand fonts
-- [ ] Output format matches the use case (Figma for editable, SVG for code, D2 for technical)
+- [ ] Output format matches the use case (Figma for editable, Quiver for vector illustrations/icons, GPT Image for photorealistic raster, D2 for technical)
 - [ ] Deliverable shared with user (Figma URL or file path)
 - [ ] For Figma: no placeholder content — every element is real (actual logos, icons, text)
 - [ ] For Figma: visual checkpoint completed at each workflow phase
+- [ ] For Quiver: brand colors and style constraints passed via `instructions` parameter (never generate without brand instructions)
+- [ ] For Quiver: SVG output reviewed — verify hex colors in source match brand palette
+- [ ] For GPT Image: output visually inspected via Read tool before delivering
+- [ ] For GPT Image: quality set to `high` unless user explicitly requested lower
 
 Should have:
 - [ ] Plan reviewed by user before generation
@@ -368,14 +826,18 @@ Should have:
 - [ ] For Figma: layers named descriptively, auto-layout applied for editability
 - [ ] For Figma: atoms built and verified individually before composition
 - [ ] For SVG: clean, well-structured code
+- [ ] For Quiver: reference images used when generating icon sets or matching existing brand style
+- [ ] For Quiver: prompt uses 5-component structure (subject + style + palette + composition + constraints)
+- [ ] For GPT Image: brand colors included as hex codes in the prompt when brand consistency matters
+- [ ] For GPT Image: `--background transparent` used when image will be composited in Figma
 - [ ] Multiple sizes if needed for different contexts
 
 ## Anti-patterns
 
-- **One-shot generation**: Never try to build the entire graphic in one pass. Follow the bottom-up workflow: collect assets, build atoms individually, verify each one, then compose.
-- **Placeholder content**: Never leave "Icon here", empty shapes, or "TODO" labels in the design. If an asset is missing, find it (Phase A) or create it (Phase C).
-- **Skipping visual checkpoints**: Every phase must end with a screenshot verification. Don't assume it looks right — verify. Screenshot after every dimensional change too — resizing elements cascades (text reflows, heights change, spacing collapses).
-- **Creating from scratch when a Figma component exists**: Always check master designs and the design system first
+- **One-shot generation**: Never try to build the entire graphic in one pass. INSTEAD: one `figma_execute` call per element → screenshot → verify → next element. Build atoms individually in a working frame, then compose into the final layout.
+- **Placeholder content**: Never leave "Icon here", empty shapes, or "TODO" labels. INSTEAD: search Brand Assets page (logos, icons, third-party logos), then SVG logo sources (`references/svg-logo-sources.md`). If truly unfindable, create a styled text pill and flag it for the user to replace.
+- **Skipping visual checkpoints**: Don't assume it looks right. INSTEAD: `figma_capture_screenshot` after creating each atom, after each dimensional change, and before delivering. Run `figma_lint_design` at Step 5 to catch what screenshots miss (hardcoded colors, contrast, unnamed layers).
+- **Creating from scratch when a Figma component exists**: INSTEAD: always search Brand Assets page (node `5003:63`) first — 148 curated assets including logos, icons, illustrations, backgrounds, third-party logos. Check `references/master-designs.md` navigation table for which section to search.
 - **Generating SVG when Figma-native is better**: Default to Figma designs for slide/marketing assets — they're editable and reusable. Use SVG only when code output is specifically needed.
 - **Approximate colors**: Use exact hex values from the brand, not "close enough" colors
 - **Unnamed layers**: Every Figma layer should have a descriptive name, not "Frame 47" or "Rectangle 12"
@@ -384,3 +846,16 @@ Should have:
 - **Skipping the plan**: Always present the composition plan before generating
 - **Forgetting to verify connection**: Always check `figma_get_status` before starting Figma operations
 - **Hardcoded dimensions in SVG**: Use viewBox for SVGs so they scale properly
+- **Hand-coding SVG for complex illustrations**: When the graphic is an illustration, logo, or stylized icon, use Quiver (Option D) instead of writing SVG by hand — Arrow produces layered vectors with complex paths that are impractical to hand-code
+- **Using Quiver for text-heavy graphics**: Quiver renders text as vector paths, not `<text>` elements — the result is non-editable, imprecise for body copy, and can't be spell-checked. Use Figma for anything with substantial text.
+- **Using Quiver for the brand mark**: Quiver will hallucinate a logo. Always clone the real Inkeep logo from the design system in Figma. Use the hybrid workflow (Quiver → Figma) when you need both custom artwork and the brand mark.
+- **Using Quiver for data visualization**: Quiver can't produce charts with accurate data values. Use hand-coded SVG or D2 for bar charts, line graphs, pie charts.
+- **Quiver without brand instructions**: Always pass brand tokens in `--instructions` (separate from `prompt`). Without them, Quiver generates with its own palette. Include explicit hex codes and negative constraints ("no gradients unless specified").
+- **Vague Quiver prompts**: "A nice icon" wastes credits and produces random output. Use the 5-component prompt structure: subject + style + color palette + composition + constraints.
+- **Skipping Quiver output review**: Always read and verify the generated SVG before delivering — check hex values in the SVG source against the brand palette, not just visual impression
+- **Generating too many Quiver variants**: Each variant costs 1 credit. Use `--n 2` or `--n 3` for exploration, not `--n 16`. For brand-consistent work, one well-prompted generation often suffices.
+- **Using GPT Image for vector assets**: GPT Image produces raster PNGs that pixelate when scaled. For icons, logos, or illustrations that need to work at multiple sizes, use Quiver (Option D) for SVG output.
+- **Using GPT Image for editable layouts**: Raster images can't be edited by designers in Figma. Use Figma (Option A) for layouts with text, brand elements, and precise positioning. Use the hybrid workflow (GPT Image → Figma) when you need both.
+- **GPT Image without visual inspection**: Always Read the output PNG before delivering. The agent can see images — verify the result matches intent before showing the user.
+- **Excessive GPT Image variants at high quality**: Each high-quality image costs $0.17-0.25. Use `--n 2` or `--n 3` for exploration, not `--n 10`. Use `--quality medium` ($0.04) for rapid iteration, then `--quality high` for the final version.
+- **Vague GPT Image prompts**: "A nice photo" produces generic stock imagery. Include subject, lighting direction, camera perspective, materials, and negative constraints for photorealistic quality.

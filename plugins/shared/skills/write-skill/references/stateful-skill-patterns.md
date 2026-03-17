@@ -85,3 +85,7 @@ When new information refutes an earlier assumption or decision, the agent should
 ### 6) Design for progressive context revelation
 
 The invoker rarely provides all relevant context upfront. The skill should instruct the agent to maintain structured state alongside conversation (assumption registers, decision logs, open question lists) rather than relying on raw conversation as the sole source of truth. When the invoker provides new context that changes earlier understanding, the agent should make explicit what changed and update affected artifacts (see pattern #5). As context grows, the agent should prioritize preserving invoker goals and its own reasoning trace in full, while compressing raw observations and intermediate data.
+
+### 7) Re-anchor to intent in long-running work
+
+For multi-session or long-running skills, accumulated context gradually shifts the agent's effective behavior away from original intent — a form of behavioral drift distinct from the skill-text drift that the update playbook addresses. The skill should instruct the agent to periodically re-read the canonical deliverable or goal statement to re-anchor before continuing work. This is especially important after resuming a session, after integrating significant new context, or when the agent notices its work diverging from the stated objective. Without re-anchoring, each session compounds small deviations until the output no longer serves the original purpose.

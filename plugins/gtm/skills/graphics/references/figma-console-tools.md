@@ -19,14 +19,21 @@ The `figma-console` MCP server (southleft/figma-console-mcp) provides 56+ tools 
 
 ## Prerequisites
 
-The Figma Desktop Bridge plugin must be running in the target Figma file:
+The Figma Desktop Bridge plugin must be running in the target Figma file.
 
-1. Figma Desktop app must be open (not browser Figma)
-2. The Desktop Bridge plugin must be imported from the figma-console-mcp repo's `figma-desktop-bridge/manifest.json`
-3. Run the plugin in the file you want to work with
-4. Verify connection: call `figma_get_status`
+**One-time setup (import the plugin):**
+1. Open **Figma Desktop** (not browser Figma)
+2. Right-click canvas → **Plugins → Development → Import plugin from manifest...**
+3. Select the manifest file. Find its path: `npx figma-console-mcp@latest --print-path`
+4. The plugin appears permanently in **Plugins → Development → Figma Desktop Bridge**
 
-If the plugin disconnects (e.g., after tab refresh), it must be re-launched manually.
+**Each session (run the plugin):**
+1. Open your target Figma file in Figma Desktop
+2. Right-click canvas → **Plugins → Development → Figma Desktop Bridge**
+3. Wait for the green "MCP Ready" status widget
+4. Verify connection: call `figma_get_status` — check `setup.valid` is `true`
+
+If the plugin disconnects (e.g., after tab refresh or file switch), re-run it from the Plugins menu.
 
 **Multiple files:** The bridge can be connected to multiple Figma files simultaneously, but only one file is "active" at a time. When switching between files, call `figma_navigate` with the target file URL before any `figma_execute` calls — otherwise node lookups will silently fail against the wrong file.
 
@@ -222,6 +229,147 @@ return { was: parent.height, needed: requiredHeight };
 
 Run this check after every batch of child placements — especially after text elements, which may be taller than expected depending on font size and line count.
 
+### Pattern: Data grid / comparison table
+
+Build structured data tables (comparison matrices, evaluation scorecards, decision frameworks) programmatically from data. This avoids building each cell manually.
+
+```javascript
+// Data grid builder — creates a branded comparison table from structured data
+// Input: title, columns (headers), rows (arrays of cell values)
+
+const data = {
+  title: "Platform Comparison",
+  columns: ["Capability", "Inkeep", "Competitor A", "Competitor B"],
+  rows: [
+    ["Knowledge base", "✓", "✓", "◐"],
+    ["Slack integration", "✓", "✗", "✓"],
+    ["Custom workflows", "✓", "◐", "✗"],
+    ["SSO / SAML", "✓", "✓", "✗"],
+  ]
+};
+
+const CELL_W = 200;
+const CELL_H = 48;
+const HEADER_H = 56;
+const PAD = 24;
+const tableW = data.columns.length * CELL_W;
+
+// Root frame
+const root = figma.createFrame();
+root.name = data.title;
+root.layoutMode = "VERTICAL";
+root.primaryAxisSizingMode = "AUTO";
+root.counterAxisSizingMode = "AUTO";
+root.paddingTop = PAD; root.paddingBottom = PAD;
+root.paddingLeft = PAD; root.paddingRight = PAD;
+root.itemSpacing = 0;
+root.cornerRadius = 16;
+root.fills = [{ type: 'SOLID', color: { r: 1, g: 1, b: 1 } }];
+
+// Title
+const titleText = figma.createText();
+await figma.loadFontAsync({ family: "Inter", style: "Bold" });
+await figma.loadFontAsync({ family: "Inter", style: "Regular" });
+await figma.loadFontAsync({ family: "Inter", style: "Medium" });
+titleText.fontName = { family: "Inter", style: "Bold" };
+titleText.characters = data.title;
+titleText.fontSize = 24;
+titleText.fills = [{ type: 'SOLID', color: { r: 0.137, g: 0.122, b: 0.125 } }];
+root.appendChild(titleText);
+
+// Spacer
+const spacer = figma.createFrame();
+spacer.resize(tableW, 16);
+spacer.fills = [];
+root.appendChild(spacer);
+
+// Header row
+const headerRow = figma.createFrame();
+headerRow.name = "Header Row";
+headerRow.layoutMode = "HORIZONTAL";
+headerRow.primaryAxisSizingMode = "AUTO";
+headerRow.counterAxisSizingMode = "FIXED";
+headerRow.resize(tableW, HEADER_H);
+headerRow.fills = [{ type: 'SOLID', color: { r: 0.216, g: 0.518, b: 1.0 } }];
+headerRow.cornerRadius = 8;
+root.appendChild(headerRow);
+
+for (const col of data.columns) {
+  const cell = figma.createFrame();
+  cell.layoutMode = "HORIZONTAL";
+  cell.resize(CELL_W, HEADER_H);
+  cell.primaryAxisAlignItems = "CENTER";
+  cell.counterAxisAlignItems = "CENTER";
+  cell.paddingLeft = 12; cell.paddingRight = 12;
+  cell.fills = [];
+  headerRow.appendChild(cell);
+
+  const t = figma.createText();
+  t.fontName = { family: "Inter", style: "Bold" };
+  t.characters = col;
+  t.fontSize = 14;
+  t.fills = [{ type: 'SOLID', color: { r: 1, g: 1, b: 1 } }];
+  cell.appendChild(t);
+}
+
+// Data rows
+for (let i = 0; i < data.rows.length; i++) {
+  const row = figma.createFrame();
+  row.name = `Row ${i + 1}`;
+  row.layoutMode = "HORIZONTAL";
+  row.primaryAxisSizingMode = "AUTO";
+  row.counterAxisSizingMode = "FIXED";
+  row.resize(tableW, CELL_H);
+  row.fills = i % 2 === 0
+    ? [{ type: 'SOLID', color: { r: 0.969, g: 0.965, b: 0.957 } }]
+    : [];
+  root.appendChild(row);
+
+  for (const val of data.rows[i]) {
+    const cell = figma.createFrame();
+    cell.layoutMode = "HORIZONTAL";
+    cell.resize(CELL_W, CELL_H);
+    cell.primaryAxisAlignItems = "CENTER";
+    cell.counterAxisAlignItems = "CENTER";
+    cell.paddingLeft = 12; cell.paddingRight = 12;
+    cell.fills = [];
+    row.appendChild(cell);
+
+    const t = figma.createText();
+    t.fontName = { family: "Inter", style: "Regular" };
+    t.characters = val;
+    t.fontSize = 14;
+    // Color-code check/cross marks
+    if (val === "✓") t.fills = [{ type: 'SOLID', color: { r: 0.18, g: 0.71, b: 0.49 } }];
+    else if (val === "✗") t.fills = [{ type: 'SOLID', color: { r: 0.88, g: 0.12, b: 0.35 } }];
+    else if (val === "◐") t.fills = [{ type: 'SOLID', color: { r: 0.98, g: 0.70, b: 0.18 } }];
+    else t.fills = [{ type: 'SOLID', color: { r: 0.137, g: 0.122, b: 0.125 } }];
+    cell.appendChild(t);
+  }
+}
+
+return { id: root.id, name: root.name };
+```
+
+**When to use this pattern:**
+- Comparison tables (product vs competitor, feature matrices)
+- Evaluation scorecards (criteria × options with ratings)
+- Decision frameworks (criteria, what to look for, why it matters)
+- Pricing tables (plan names × features)
+
+**Customization points:**
+- `CELL_W` / `CELL_H` — adjust for content density
+- Header fill color — use brand primary (#3784FF) or adapt to context
+- Alternating row colors — brand surface (#F7F4ED) for zebra striping
+- Status icons — ✓ (green), ✗ (red), ◐ (yellow) for at-a-glance ratings
+- The data object can be constructed from any structured input the user provides
+
+**Advantages over AI-generated table images:**
+- Fully editable in Figma (designers can adjust after creation)
+- Exact brand fonts and colors (not approximated by AI)
+- Scales to any number of rows/columns
+- Text remains as text (searchable, accessible, crisp at any zoom)
+
 ### Pattern: Element reorder (safe swap)
 
 When the user asks to reorder elements within a container (flip rows, swap cards), follow this sequence:
@@ -381,6 +529,49 @@ await figma.setCurrentPageAsync(target);
 ```
 
 Also call `figma_navigate` with the target file/page URL after any session break, before your first `figma_execute`.
+
+### Auto-layout silent no-ops
+
+Several auto-layout operations are silently ignored — no error thrown, no warning, just nothing happens:
+
+- **Writing x/y on auto-layout children is a no-op.** Children of auto-layout frames have positions computed automatically. Setting `child.x = 100` is silently discarded. INSTEAD: use `itemSpacing`, `paddingTop/Right/Bottom/Left`, and `layoutAlign` on the parent frame to control child positioning.
+- **`resize()` on an auto-layout frame no-ops in AUTO-sized dimensions.** If `primaryAxisSizingMode` is `"AUTO"` (hug contents), calling `resize()` on that axis is ignored. INSTEAD: set `primaryAxisSizingMode = "FIXED"` first, then resize, or resize children to change the frame's auto-computed size.
+- **Toggling `layoutMode` off/on does NOT restore original state.** Setting `layoutMode = "VERTICAL"` then `layoutMode = "NONE"` leaves children displaced. There is no undo.
+- **Default 10px padding** is automatically applied when setting a frame to auto-layout. Always set explicit padding values immediately after enabling auto-layout.
+
+### `figma.mixed` — text properties return a symbol, not a value
+
+When a text node has multiple styles (e.g., mixed font sizes or weights), properties like `fontSize`, `fontName`, `fontWeight` return `figma.mixed` — a unique JavaScript `symbol`, not a number or string. Reading it as a number causes downstream logic failures.
+
+**Workaround:** Always check before reading text properties:
+```javascript
+if (node.fontSize === figma.mixed) {
+  // Use getRangeFontSize() for character-range-level access
+} else {
+  const size = node.fontSize; // safe to use as number
+}
+```
+
+Note: `figma.mixed` applies to any property with mixed values, not just text (e.g., `cornerRadius` when corners differ).
+
+### Node ID format: colons in API, hyphens in URLs
+
+Figma URLs use hyphens (`?node-id=5-3`), the Plugin API and REST API use colons (`5:3`). Always convert when copying node IDs from URLs:
+
+```javascript
+const nodeId = urlNodeId.replace('-', ':'); // "5-3" → "5:3"
+```
+
+### `createNodeFromSvg` limitations
+
+SVG import via `figma.createNodeFromSvg(svgString)` has known issues (confirmed via community reports):
+
+- **Gradient strokes with `url(#...)` references** may fail with "failed to invert transform" errors
+- **`<defs>` and `<use>` elements** are not reliably supported — inline all references before import
+- **SVGs without explicit `viewBox`/`width`/`height`** import at tiny sizes — always include these attributes
+- **Percentage-based gradient coordinates** (`x1="0%"`) may cause failures — use absolute values
+
+INSTEAD of importing complex SVGs: screenshot the original for reference, then recreate a simplified version using basic Figma shapes and vector paths.
 
 ## Execution strategy
 

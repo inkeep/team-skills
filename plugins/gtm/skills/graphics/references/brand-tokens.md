@@ -115,3 +115,37 @@ style: {
   font-color: "#1A1A1A"
 }
 ```
+
+### Quiver.ai (via `--instructions` parameter)
+
+Pass brand tokens as the `--instructions` argument to `scripts/quiver-generate.ts`:
+
+```
+Use these brand colors:
+- Background: #FBF9F4 (warm cream)
+- Primary text: #1A1A1A
+- Secondary text: #6B6B6B
+- Accent: #3784FF (blue)
+Clean, minimal, geometric style. No gradients unless specified.
+```
+
+For stronger brand consistency, export 1-2 existing Figma assets as PNG and pass them as `--references` — the model will match the visual style.
+
+### GPT Image 1.5 (via `--prompt` text)
+
+Include brand colors as hex codes directly in the prompt for `scripts/image-generate.ts`:
+
+```
+A hero image for a tech company website. Warm cream background (#FBF9F4),
+subtle geometric accents in blue (#3784FF). Clean, modern, minimal aesthetic.
+Professional studio lighting. No text, no watermarks.
+```
+
+For image editing, specify what to preserve:
+
+```
+Replace only the background with a gradient from cream (#FBF9F4) to white.
+Keep the product and its shadows exactly as they are.
+```
+
+Unlike Quiver (which has a separate `instructions` parameter), GPT Image uses a single prompt — include both the subject description and style/color constraints in one string.

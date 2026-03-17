@@ -1,20 +1,19 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-# google-mcp.sh — Configure MCP servers for the GTM plugin
+# gslides.sh — Configure MCP servers for the /gslides skill
 #
 # Called by setup.sh when a skill has a "setup" field pointing here.
 # Expects SECRETS_FILE env var pointing to the pulled secrets temp file.
 #
 # What it does:
 #   1. Sets up Python venv for google-slides-mcp dependencies
-#   2. Registers MCP servers with Claude Code (figma, figma-console, google-slides)
-#   3. Prompts for Figma Personal Access Token (per-user, for figma-console-mcp)
-#   4. Creates OAuth credentials JSON for gcloud ADC
-#   5. Runs gcloud auth application-default login if no ADC exists
+#   2. Registers figma (read-only) and google-slides MCP servers
+#   3. Creates OAuth credentials JSON for gcloud ADC
+#   4. Runs gcloud auth application-default login if no ADC exists
 
 echo ""
-echo "=== Google MCP Setup ==="
+echo "=== Google Slides MCP Setup ==="
 
 # --- 1. Set up Python venv for google-slides-mcp ---
 
@@ -89,17 +88,11 @@ if [[ -z "$PROJECT_PATH" ]]; then
 else
   echo "  Registering MCP servers scoped to: $PROJECT_PATH"
 
-  # Read existing figma-console token (if any) so we don't overwrite it
-  EXISTING_FIGMA_TOKEN=$(jq -r --arg path "$PROJECT_PATH" \
-    '.projects[$path].mcpServers["figma-console"].env.FIGMA_ACCESS_TOKEN // ""' \
-    "$CLAUDE_JSON" 2>/dev/null || echo "")
-
-  # Use jq to write all three MCP servers into the gtm project scope
+  # Use jq to write figma + google-slides MCP servers into the project scope
   jq --arg path "$PROJECT_PATH" \
      --arg pythonpath "$PYTHONPATH_VAL" \
      --arg project "$GOOGLE_PROJECT_ID" \
-     --arg binpath "$HOME/bin:/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin" \
-     --arg figma_token "${EXISTING_FIGMA_TOKEN:-figd_PLACEHOLDER}" '
+     --arg binpath "$HOME/bin:/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin" '
     # Ensure the project entry exists
     .projects[$path] //= {
       "allowedTools": [],
@@ -115,16 +108,6 @@ else
       "type": "http",
       "url": "https://mcp.figma.com/mcp"
     } |
-    # Add figma-console MCP (southleft — write designs, Plugin API access)
-    .projects[$path].mcpServers["figma-console"] = {
-      "type": "stdio",
-      "command": "npx",
-      "args": ["-y", "figma-console-mcp@latest"],
-      "env": {
-        "FIGMA_ACCESS_TOKEN": $figma_token,
-        "ENABLE_MCP_APPS": "true"
-      }
-    } |
     # Add google-slides MCP
     .projects[$path].mcpServers["google-slides"] = {
       "type": "stdio",
@@ -139,64 +122,10 @@ else
     }
   ' "$CLAUDE_JSON" > /tmp/claude-json-mcp-update.json && mv /tmp/claude-json-mcp-update.json "$CLAUDE_JSON"
 
-  echo "  Registered 'figma', 'figma-console', and 'google-slides' (scoped to gtm plugin)."
+  echo "  Registered 'figma' and 'google-slides' MCP servers."
 fi
 
-# --- 3. Figma Personal Access Token (per-user) ---
-#
-# figma-console-mcp requires a Figma Personal Access Token for REST API calls.
-# This is per-user (tied to individual Figma accounts), not shared.
-
-if [[ -n "$PROJECT_PATH" ]]; then
-  CURRENT_TOKEN=$(jq -r --arg path "$PROJECT_PATH" \
-    '.projects[$path].mcpServers["figma-console"].env.FIGMA_ACCESS_TOKEN // ""' \
-    "$CLAUDE_JSON" 2>/dev/null || echo "")
-
-  if [[ -z "$CURRENT_TOKEN" || "$CURRENT_TOKEN" == "figd_PLACEHOLDER" ]]; then
-    echo ""
-    echo "  Figma Personal Access Token needed for figma-console-mcp."
-    echo "  This token is per-user (tied to your Figma account)."
-    echo ""
-    echo "  To create one:"
-    echo "    1. Go to https://www.figma.com/settings (Security tab)"
-    echo "    2. Under 'Personal access tokens', click 'Generate new token'"
-    echo "    3. Name: figma-console-mcp"
-    echo "    4. Expiration: 90 days (max)"
-    echo "    5. Scopes: check all under 'Files' and 'Design systems'"
-    echo "    6. Click 'Generate token' and copy it"
-    echo ""
-
-    # Try to open Figma settings in the browser
-    if command -v open &>/dev/null; then
-      read -p "  Open Figma settings in your browser? [Y/n] " -n 1 -r
-      echo
-      if [[ $REPLY =~ ^[Yy]?$ ]]; then
-        open "https://www.figma.com/settings"
-        echo "  Opened Figma settings. Switch to the 'Security' tab."
-        echo ""
-      fi
-    fi
-
-    read -p "  Paste your Figma token (starts with figd_): " FIGMA_TOKEN
-    echo
-
-    if [[ "$FIGMA_TOKEN" == figd_* ]]; then
-      jq --arg path "$PROJECT_PATH" --arg token "$FIGMA_TOKEN" \
-        '.projects[$path].mcpServers["figma-console"].env.FIGMA_ACCESS_TOKEN = $token' \
-        "$CLAUDE_JSON" > /tmp/claude-json-figma-token.json && \
-        mv /tmp/claude-json-figma-token.json "$CLAUDE_JSON"
-      echo "  Figma token saved to ~/.claude.json."
-    else
-      echo "  WARNING: Token doesn't start with 'figd_'. Skipping."
-      echo "  You can set it manually later in ~/.claude.json under:"
-      echo "    .projects[\"$PROJECT_PATH\"].mcpServers[\"figma-console\"].env.FIGMA_ACCESS_TOKEN"
-    fi
-  else
-    echo "  Figma Personal Access Token already configured."
-  fi
-fi
-
-# --- 4. Create OAuth credentials JSON for gcloud ADC ---
+# --- 3. Create OAuth credentials JSON for gcloud ADC ---
 
 CREDS_DIR="$HOME/.config/inkeep-mcp"
 CREDS_FILE="$CREDS_DIR/google-oauth-credentials.json"
@@ -238,7 +167,7 @@ else
   echo "  Created credentials JSON at $CREDS_FILE (chmod 600)."
 fi
 
-# --- 5. gcloud ADC login ---
+# --- 4. gcloud ADC login ---
 
 ADC_FILE="$HOME/.config/gcloud/application_default_credentials.json"
 
@@ -259,13 +188,18 @@ else
     echo "      --project=inkeep"
     echo ""
 
-    read -p "  Run gcloud auth now? [Y/n] " -n 1 -r
-    echo
-    if [[ $REPLY =~ ^[Yy]?$ ]]; then
-      gcloud auth application-default login \
-        --client-id-file="$CREDS_FILE" \
-        --scopes=openid,https://www.googleapis.com/auth/userinfo.email,https://www.googleapis.com/auth/cloud-platform,https://www.googleapis.com/auth/presentations,https://www.googleapis.com/auth/drive,https://www.googleapis.com/auth/documents,https://www.googleapis.com/auth/spreadsheets \
-        --project=inkeep
+    if [[ ! -t 0 ]]; then
+      echo "  NOTE: Non-interactive shell detected — skipping gcloud auth prompt."
+      echo "  Run the command above manually to complete setup."
+    else
+      read -p "  Run gcloud auth now? [Y/n] " -n 1 -r
+      echo
+      if [[ $REPLY =~ ^[Yy]?$ ]]; then
+        gcloud auth application-default login \
+          --client-id-file="$CREDS_FILE" \
+          --scopes=openid,https://www.googleapis.com/auth/userinfo.email,https://www.googleapis.com/auth/cloud-platform,https://www.googleapis.com/auth/presentations,https://www.googleapis.com/auth/drive,https://www.googleapis.com/auth/documents,https://www.googleapis.com/auth/spreadsheets \
+          --project=inkeep
+      fi
     fi
   else
     echo "  gcloud CLI not found. Install it first:"
@@ -276,4 +210,10 @@ else
 fi
 
 echo ""
-echo "=== Google MCP Setup Complete ==="
+echo "  ─────────────────────────────────────────────────"
+echo "  ⚠  RESTART CLAUDE CODE to load the new MCP servers."
+echo "  ─────────────────────────────────────────────────"
+echo "  MCP servers are loaded at startup. Exit Claude Code"
+echo "  and reopen it for /gslides to work."
+echo ""
+echo "=== Google Slides MCP Setup Complete ==="

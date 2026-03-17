@@ -68,28 +68,61 @@ brew install 1password-cli  # skip if already installed
 ~/.claude/plugins/marketplaces/inkeep-team-skills/secrets/setup.sh --skill screengrabs --account inkeep.1password.com
 ```
 
-### GTM MCP servers (Figma + Google Slides)
+### Graphics (Figma design creation)
 
-`/gslides` and `/graphics` require MCP servers for Figma and Google Slides. The setup script handles everything:
+`/graphics` needs Figma MCP servers + Quiver.ai API key:
 
 ```bash
 brew install 1password-cli  # skip if already installed
-~/.claude/plugins/marketplaces/inkeep-team-skills/secrets/setup.sh --skill google-mcp --account inkeep.1password.com
+./secrets/setup.sh --skill graphics --account inkeep.1password.com
+```
+
+This will:
+1. Pull `QUIVERAI_API_KEY` from 1Password (shared vault)
+2. Register `figma` (read-only) and `figma-console` (write) MCP servers
+3. Prompt you to create a **Figma Personal Access Token** (opens browser to Figma settings)
+
+**Prerequisites:**
+- 1Password CLI with desktop app integration enabled
+- Access to the **Shared** vault (ask your team admin)
+- Figma account (for the Personal Access Token — per-user, 90-day expiry)
+
+**Figma Desktop Bridge (required for native design creation):**
+
+The `figma-console` MCP talks to Figma via a WebSocket bridge plugin. This requires manual setup — Figma has no CLI for plugin management.
+
+*One-time — import the plugin:*
+1. Open **Figma Desktop** (not browser)
+2. Right-click canvas → **Plugins → Development → Import plugin from manifest...**
+3. Select the manifest file. Find its path: `npx figma-console-mcp@latest --print-path`
+
+*Each session — run the plugin:*
+1. Open your target Figma file in Figma Desktop
+2. Right-click canvas → **Plugins → Development → Figma Desktop Bridge**
+3. Wait for the green "MCP Ready" status widget
+
+The `/graphics` skill checks connection automatically and will guide you if the plugin isn't running.
+
+### Google Slides (presentations)
+
+`/gslides` needs Figma (read-only) + Google Slides MCP servers:
+
+```bash
+brew install 1password-cli  # skip if already installed
+./secrets/setup.sh --skill gslides --account inkeep.1password.com
 ```
 
 This will:
 1. Pull Google OAuth credentials from 1Password (shared vault)
 2. Set up Python venv for google-slides-mcp dependencies
-3. Register three MCP servers scoped to the gtm plugin (`figma`, `figma-console`, `google-slides`)
-4. Prompt you to create a **Figma Personal Access Token** (opens browser to Figma settings)
-5. Create an OAuth credentials JSON for gcloud ADC
-6. Prompt you to run `gcloud auth` (one-time browser-based login)
+3. Register `figma` (read-only) and `google-slides` MCP servers
+4. Create an OAuth credentials JSON for gcloud ADC
+5. Prompt you to run `gcloud auth` (one-time browser-based login)
 
 **Prerequisites:**
 - 1Password CLI with desktop app integration enabled
 - Access to the **Shared** vault (ask your team admin)
 - `gcloud` CLI: `brew install --cask google-cloud-sdk`
-- Figma account (for the Personal Access Token)
 
 **What's shared vs per-user:**
 
@@ -98,14 +131,6 @@ This will:
 | Google Client ID + Secret | Shared (identifies the app) | 1Password Shared vault |
 | Google OAuth token | Per-user (your Google account) | `gcloud auth` browser flow |
 | Figma OAuth token | Per-user (your Figma account) | Automatic on first Figma MCP use |
-| Figma Personal Access Token | Per-user (your Figma account) | Figma Settings > Security (90-day expiry, re-generate when expired) |
-
-**For `/graphics` (Figma-native design creation):**
-
-The `/graphics` skill uses `figma-console-mcp` to create native editable Figma designs. This requires:
-- **Figma Desktop app** (not browser) with the **Desktop Bridge plugin** running
-- The plugin is imported from `figma-console-mcp`'s `figma-desktop-bridge/manifest.json`
-- See the [figma-console-mcp README](https://github.com/southleft/figma-console-mcp) for plugin setup
 
 ---
 

@@ -16,9 +16,9 @@ This skill requires two MCP servers (scoped to the gtm plugin — they only load
 
 If any are missing, instruct the user to run:
 ```bash
-~/.claude/plugins/marketplaces/inkeep-team-skills/secrets/setup.sh --skill google-mcp --account inkeep.1password.com
+./secrets/setup.sh --skill gslides --account inkeep.1password.com
 ```
-This registers both MCP servers under the gtm plugin project scope only.
+This registers `figma` and `google-slides` MCP servers, sets up gcloud ADC, and pulls Google OAuth credentials.
 
 ## Workflow
 
