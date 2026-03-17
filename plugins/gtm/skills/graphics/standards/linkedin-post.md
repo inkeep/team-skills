@@ -62,10 +62,11 @@ Eye-tracking research (NNG, 500+ participants) confirms the Z-pattern for visual
 
 ### What works (B2B scroll-stoppers)
 - **Bold data callouts** — large stat as hero element (most effective B2B pattern)
-- **Annotated product mockups** — simplified UI with callouts, not raw screenshots
+- **Annotated product mockups** — simplified UI with callouts, not raw screenshots. **Load:** `references/artifact-recipes.md` for detailed mockup treatment (float, shadow, radius, edge bleed)
 - **Data visualizations** — charts/graphs communicate instantly
 - **Faces with emotion** — real people, not neutral corporate headshots
 - **Unexpected color contrast** in a muted feed (Von Restorff Effect)
+- **Animated GIFs** — 2-3x engagement vs static images; 42% more in B2B-specific tests. Best for process demos, before/after, and micro-interactions. For animated content, use the Remotion workflow — the graphics skill produces static assets only.
 
 ### What to avoid
 - Stock photography (lowest-performing image type on LinkedIn)

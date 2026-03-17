@@ -137,7 +137,7 @@ If the user doesn't specify the medium, **ask** — text sizing is the most comm
 
 | Medium | Standard file | Default size |
 |---|---|---|
-| Blog cover / thumbnail | `standards/blog-cover.md` | 2560 x 1440 px (16:9) |
+| Blog cover / thumbnail | `standards/blog-cover.md` | 1280 x 720 px working / 2560 x 1440 export @2x (16:9) |
 | Social / Open Graph image | `standards/social-og.md` | 1200 x 630 px (~1.91:1) |
 | Social post (cross-platform) | `standards/social-post.md` | 1200 x 675 px (16:9) |
 | LinkedIn single-image post | `standards/linkedin-post.md` | 1200 x 1200 px (1:1) |
@@ -145,15 +145,24 @@ If the user doesn't specify the medium, **ask** — text sizing is the most comm
 | LinkedIn banner | `standards/linkedin-banner.md` | 1128 x 191 (company) / 1584 x 396 (personal) |
 | Twitter/X | `standards/twitter-x.md` | 1200 x 675 px (16:9) |
 | YouTube thumbnail | `standards/youtube-thumbnail.md` | 1280 x 720 px (16:9) |
-| YouTube channel banner | `standards/youtube-banner.md` | 2560 x 1440 px (16:9) |
+| YouTube channel banner | `standards/youtube-banner.md` | 1280 x 720 px working / 2560 x 1440 export @2x (16:9) |
 | Email header / newsletter | `standards/email-header.md` | 1200 x 400-600 px (2x retina) |
 | Slide deck graphic | `standards/slide-graphic.md` | 960 x 540 px working / 1920 x 1080 export (16:9) |
-| Case study hero / thumbnail | `standards/case-study-hero.md` | 1800 x 840 px hero / 800 x 500 px thumbnail |
+| Case study hero / thumbnail | `standards/case-study-hero.md` | 900 x 420 px working / 1800 x 840 export @2x hero / 400 x 250 working / 800 x 500 export @2x thumbnail |
 | Chart / data visualization | `standards/data-visualization.md` | Varies by context — see standard for chart type selection, color palette, text sizing |
 
 If the medium doesn't match any standard file, ask the user for dimensions. Do not guess — wrong dimensions are the most common rework cause.
 
 The standard files also contain **design guidelines specific to each medium** (text sizing, composition, what works/what to avoid). Read the relevant file before planning the graphic — it will inform your composition decisions in Step 3.
+
+- **Multi-format detection**: If the request implies multiple output formats — user says "all sizes," "social + blog," "graphics for this blog post" (which needs blog cover + OG image + social post), or lists several platforms — flag this as a **multi-format request**:
+  1. List all target formats and dimensions (load each format's standard file)
+  2. Designate the **blog cover (1280×720 working canvas)** as the master — it's the widest and most content-rich format, giving maximum layout flexibility for derivation
+  3. In Step 4, design the master first, then derive other formats by cloning and adapting
+
+  **Load:** `references/multi-format-cascade.md` for the master+derive pattern, per-format content adaptation rules, and the clone→resize→adapt procedure.
+
+  If the user only requests a single format, skip this — the standard workflow applies unchanged.
 
 - **Content analysis** (when the user provides a blog post, article, or content to create graphics for): Scan the content and suggest a visual approach before planning:
 
@@ -163,7 +172,7 @@ The standard files also contain **design guidelines specific to each medium** (t
 | Comparison between options/products | **Split layout or comparison table** — side-by-side with pros/cons |
 | Step-by-step process or workflow | **Sequential diagram** — numbered steps with flow arrows |
 | Customer quote or testimonial | **Quote card** — speaker photo + quote text |
-| Product feature or UI explanation | **Annotated product mockup** — simplified UI with callouts |
+| Product feature or UI explanation | **Annotated product mockup** — simplified UI with callouts. **Load:** `references/artifact-recipes.md` for the full mockup treatment (float, shadow, round corners, bleed) — adapt proportions to your target format's dimensions. |
 | Tutorial, walkthrough, or "click here" guide | **Spotlight cutout** — screenshot with dimmed overlay + highlighted target element (see Pattern: Spotlight cutout in `references/figma-console-tools.md`) |
 | Abstract concept or architecture | **Illustration or diagram** — visual metaphor for the concept |
 | List of criteria or evaluation rubric | **Data grid or scorecard** — structured table with ratings |
@@ -258,7 +267,11 @@ Wait for user confirmation before proceeding.
 - What text comes from the slide master/layout vs. what's on the slide itself — you'll need to avoid duplicating master-provided elements
 - The deck's visual weight and density — match the existing slides' level of detail
 
-**e) Pull brand tokens from Figma**
+**e) Blog thumbnail category color (when applicable)**
+
+When creating a blog thumbnail, check `src/components/blog/category-badge.tsx` in the marketing site repo for the current category→color mapping. Use the matching accent color so the thumbnail aligns with the blog category badge displayed on the site. Do not hardcode category colors here — the source file is the single source of truth.
+
+**f) Pull brand tokens from Figma**
 
 Use the Figma MCP to extract brand tokens from the design system.
 
@@ -273,7 +286,7 @@ Extract:
 
 If referencing an existing Figma asset, also extract its specific layout, dimensions, and visual structure.
 
-**f) Verify brand font availability**
+**g) Verify brand font availability**
 
 The Inkeep brand font (Neue Haas Grotesk Display Pro) is a paid/custom font. If it's not available in the target Figma file, text operations will silently fail or fall back to a default — producing off-brand graphics with no warning.
 
@@ -287,7 +300,7 @@ console.log('Brand fonts available:', brandFonts.map(f => `${f.fontName.family} 
 - If brand fonts are found → note the available weights (Bold, Roman, Medium, etc.) in the manifest
 - If NOT found → warn the user: "The brand font (Neue Haas Grotesk Display Pro) isn't available in this Figma file. It's likely shared via your team's Figma library — enable it in Assets → Team Library. Without it, text will fall back to a default font." Then ask whether to proceed with a fallback font (Inter is the closest available alternative) or wait.
 
-**g) Produce the Asset Manifest (required before proceeding)**
+**h) Produce the Asset Manifest (required before proceeding)**
 
 ⛔ **Do NOT proceed to planning or building until you have produced this manifest.** This is the checkpoint that prevents the "skip asset collection" failure mode.
 
@@ -326,12 +339,59 @@ Write out an asset manifest listing what was found and what's missing:
 
 **Load:** `references/brand-tokens.md` for exact token values and design pattern recipes (feature card, testimonial, hero section, etc.).
 
-Before generating, plan the composition:
-- **Layout**: overall structure, element placement, visual hierarchy. Check brand-guide.md for the Section Header pattern (the most-used layout) and other component patterns.
-- **Content elements**: text, icons, shapes, images, data points
-- **Color mapping**: which brand color tokens apply to which elements. Follow the color usage rules in brand-guide.md (e.g., rotate card backgrounds, never white page bg, no blue icons on blue).
-- **Typography mapping**: which font for each text element. **Strict rules:** Neue Haas for headings (weight 400), JetBrains Mono for labels/tags/buttons (weight 500, always uppercase), Noto Serif for body (weight 300). See the typography scale in brand-tokens.md for exact sizes, tracking, and leading per element.
-- **Illustration style**: if the graphic includes illustrations, follow the hand-drawn style rules in brand-guide.md (irregular strokes, line weight for depth, no shadows, Azure Blue linework).
+**Load:** `references/artifact-recipes.md` for reusable visual element recipes (product mockup treatment, code-as-visual, badge system, metric callout, logo composition, quote card).
+
+**Load:** `references/composition-patterns.md` for format-agnostic layout principles (Z-pattern, split layout proportions, visual hierarchy ratios, color restraint, background texture, content coverage, edge bleed).
+
+⛔ **Produce a Composition Brief before proceeding.** This is the checkpoint that prevents the "skip reference files" failure mode — planning from general knowledge instead of brand-specific recipes and patterns.
+
+Write out the brief using this template:
+
+```
+## Composition Brief
+
+### Artifact recipes applied
+(Scan artifact-recipes.md and select which apply. Mark each YES/NO with a one-line note.)
+- Product mockup treatment: ___
+- Product-as-marketing: ___
+- Code-as-visual: ___
+- Badge system: ___ (which badge text: ___)
+- Metric callout: ___
+- Logo composition: ___
+- Quote card: ___
+
+### Composition patterns applied
+(Scan composition-patterns.md and select which apply.)
+- Layout: ___ (Z-pattern / split / stacked / centered / other)
+- Visual hierarchy: ___ (heading size, badge ratio)
+- Color restraint: ___ (which 3 colors in surround)
+- Background texture: ___ (which technique)
+- Content coverage: ___ (estimated fill %)
+- Edge bleed: ___ (bleed / contained / overlapping)
+- Brand system consistency: ___ (if part of a series — what's locked, what varies)
+
+### Composition plan
+- Layout: overall structure, element placement
+- Content elements: text, icons, shapes, images, data points
+- Color mapping: exact token names from brand-tokens.md (not hex from memory)
+- Typography mapping: font + weight + size for each text element
+- Illustration style (if applicable): hand-drawn rules from brand-guide.md
+
+### Anti-pattern check
+- [ ] Background is NOT flat (has texture/gradient)
+- [ ] Surround uses ≤3 colors (mockup internals don't count)
+- [ ] Badge is ≤1/8 heading visual weight
+- [ ] No raw screenshots (all product UI is stylized)
+- [ ] Max 2 typefaces in this graphic
+```
+
+**Rules for the brief:**
+- Every recipe must be explicitly marked YES or NO — skipping the scan is the failure mode this prevents
+- Color values must reference token names (`brand/primary`, `bg/surface`) not bare hex codes from memory
+- If no artifact recipes apply (e.g., a pure diagram), note "None — diagram only, using diagram rules from brand-guide.md"
+- The anti-pattern check must all pass before presenting to the user. If any fail, fix the plan first.
+
+**Why this exists:** Without this checkpoint, the observed failure mode is the agent skipping the Load instructions, planning from general design knowledge, and producing graphics that miss brand-specific treatments (wrong shadow, wrong radius, flat backgrounds, oversized badges). The brief forces the agent to read the references because it can't fill the template without them.
 
 For diagrams: plan the nodes, edges, groupings, and flow direction. Follow the diagram rules in brand-guide.md (max 8-10 nodes, L-to-R or T-to-B flow, JetBrains Mono labels, 90-degree connector bends).
 
@@ -347,7 +407,7 @@ Don't infer these from ambiguous language — describe your interpretation and c
 
 If the graphic is adapting an existing asset or following an established pattern, a single plan with user confirmation is sufficient.
 
-Present the plan to the user for review before generating.
+Present the Composition Brief to the user for review before generating.
 
 **Mark task "Graphics: Plan composition" as `completed`.**
 
@@ -447,7 +507,7 @@ Determine build order from simplest to most complex:
 
 ⛔ **Keep each `figma_execute` call to ONE logical operation** — create one element, style one element, move one element. Never create an entire composition in a single call. Large multi-element calls timeout (30s limit), leave partial state when they fail, and skip the per-atom verification that catches issues early. INSTEAD: create → screenshot → verify → next element.
 
-⚠️ **Auto-layout sizing trap:** After setting `layoutMode` on any frame, **always explicitly set both `layoutSizingHorizontal` and `layoutSizingVertical`** in the same call. Figma's defaults are unpredictable — calling `frame.resize(2560, 1440)` then `frame.layoutMode = 'VERTICAL'` can silently change the frame's sizing behavior, causing it to collapse to hug its content or stretch unexpectedly. Follow this pattern:
+⚠️ **Auto-layout sizing trap:** After setting `layoutMode` on any frame, **always explicitly set both `layoutSizingHorizontal` and `layoutSizingVertical`** in the same call. Figma's defaults are unpredictable — calling `frame.resize(1280, 720)` then `frame.layoutMode = 'VERTICAL'` can silently change the frame's sizing behavior, causing it to collapse to hug its content or stretch unexpectedly. Follow this pattern:
 
 ```javascript
 // ALWAYS set sizing explicitly after layoutMode
@@ -553,6 +613,12 @@ Fix any issues now — it's much easier to fix individual atoms than after compo
 - [ ] **Sibling consistency:** for repeating elements (card grids, icon rows, tag lists), verify that siblings have matching visual weight — equal heights, same number of text lines, consistent padding. A single-line label next to a two-line label misaligns everything below it. Fix content or equalize container sizes before moving on.
 - [ ] **If adapting an existing asset:** screenshot the original reference AND your output — compare element-by-element. "The original" means the source Figma file, not any derived copy (not your HTML mockup, not your plan description). Check arrow directions, element ordering, label placement, and logo usage against the actual source.
 
+#### Direction checkpoint (for novel compositions only)
+
+If the graphic involves a **novel composition** (not adapting a template or existing layout), screenshot the rough layout now — before investing in polish. Show the user and ask: **"Layout direction OK before I refine?"**
+
+Skip this for template-based work (blog covers using established patterns, social images from existing layouts, icon variations). The intent is to catch fundamental direction issues before polish investment — not to add a gate on every graphic.
+
 #### Phase E: Polish and verify
 
 **Goal:** Final refinements and quality check.
@@ -653,7 +719,13 @@ Best for: illustrations, icons, logos, abstract art, decorative elements, backgr
    | On-brand illustration (known style) | 0.5–0.7 | Some creative range within brand constraints |
    | Creative exploration (novel graphic) | 1.0–1.5 | Maximum variation; generate 2-3 variants for user to pick |
 
-   The script doesn't expose `--temperature` yet — for now, the default (1.0) works for most requests. For icon sets where consistency matters, consider adding temperature support to the script.
+   The script exposes `--temperature` and `--presence-penalty` flags. Use `--presence-penalty` to further control diversity: negative values (-0.5) reinforce consistency (good for icon sets), positive values (0.5–1.0) push pattern diversity (good for exploration).
+
+   **Explore-then-refine for novel graphics:** When creating something without an established visual direction, use a two-phase approach:
+   - **Phase 1 (Explore):** `--temperature 1.2 --presence-penalty 0.5 --n 4` — generate diverse directions. Show the user thumbnails and ask which direction to pursue.
+   - **Phase 2 (Refine):** `--temperature 0.5 --presence-penalty -0.3 --n 2 --references <phase-1-winner>` — generate polished variants of the chosen direction.
+
+   Skip Phase 1 for work with an established direction (icon sets matching existing style, illustrations described precisely by the user).
 
 4. **Use reference images for style consistency.** Export 1-2 existing brand assets from Figma as PNG and pass as `--references`:
 
@@ -865,6 +937,14 @@ For Figma designs:
    - **Text below 12px**, interactive targets below 24x24px, line height below 1.5x
    - **Missing text styles**, detached components, frames without auto-layout
 3. Fix any critical/warning findings before delivering
+4. **Subjective polish evaluation** — screenshot the graphic and evaluate these dimensions that automated checks cannot catch:
+   - [ ] **Hierarchy:** Squint at the screenshot (or mentally blur it) — does the focal point still stand out? Is there a clear visual entry point?
+   - [ ] **Whitespace:** Is spacing deliberate and balanced, or does it feel cramped or randomly distributed? Are micro-gaps (between elements) and macro-gaps (between sections) both intentional?
+   - [ ] **Visual weight:** Are heavy elements (large, dark, saturated) balanced by lighter ones? Does the composition feel stable or lopsided?
+   - [ ] **Typography:** Are headlines visually comfortable? Is all-caps text tracked out slightly? Does font pairing create contrast without conflict?
+   - [ ] **Composition flow:** Does the eye move through the design in the intended order (headline → supporting visual → call-to-action)?
+
+   These are evaluative — note issues and fix what you can. Not every graphic will be perfect on every dimension, but catching obvious imbalances before delivery is the goal.
 
 For SVGs: validate the code is clean and renders correctly.
 
@@ -874,6 +954,8 @@ For SVGs: validate the code is clean and renders correctly.
 
 **Mark task "Graphics: Export & deliver" as `in_progress`.**
 
+**Working resolution and export:** Some formats use a smaller working canvas and export at 2x for the final output (blog covers: 1280×720 working → 2560×1440 export, YouTube banners, case study heroes). Figma vectors scale losslessly, so export at 2x with `exportAsync({ format: 'PNG', constraint: { type: 'SCALE', value: 2 } })`. For formats already at their final pixel size (OG images, social posts, LinkedIn), export at 1x.
+
 **For Figma designs (primary):**
 1. Verify the design in Figma:
    - [ ] Correct dimensions and aspect ratio
@@ -882,7 +964,7 @@ For SVGs: validate the code is clean and renders correctly.
    - [ ] Text is readable at the intended display size
    - [ ] No orphaned or mispositioned elements
 2. Share the Figma file URL with the user
-3. If PNG/SVG export is also needed, use `figma_execute` to export or guide the user to export from Figma
+3. If PNG/SVG export is also needed, use `figma_execute` to export. For working-canvas formats, export at 2x scale to produce the final resolution.
 
 **Handoff to Google Slides:** When the graphic needs to land in a Google Slides deck:
 1. **Strip master-provided elements** — if the target slide's layout/master provides headers, labels, or icons, create a separate export version of the Figma frame with those elements removed to avoid visual doubling
