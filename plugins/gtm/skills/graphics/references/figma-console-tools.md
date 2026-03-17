@@ -370,6 +370,125 @@ return { id: root.id, name: root.name };
 - Scales to any number of rows/columns
 - Text remains as text (searchable, accessible, crisp at any zoom)
 
+### Pattern: Pie / donut chart (arcData)
+
+Build pie or donut charts using native Figma ellipses with `arcData`. Each slice is a separate ellipse overlaid at the same position.
+
+```javascript
+const data = [
+  { label: "Support", value: 40, color: { r: 0.22, g: 0.52, b: 1 } },
+  { label: "Sales", value: 30, color: { r: 0.18, g: 0.71, b: 0.49 } },
+  { label: "Engineering", value: 20, color: { r: 0.98, g: 0.70, b: 0.18 } },
+  { label: "Other", value: 10, color: { r: 0.88, g: 0.12, b: 0.35 } },
+];
+
+const total = data.reduce((sum, d) => sum + d.value, 0);
+let currentAngle = -Math.PI / 2; // start at 12 o'clock (0 = 3 o'clock)
+const size = 200;
+
+const chartFrame = figma.createFrame();
+chartFrame.name = "Donut Chart";
+chartFrame.resize(size + 40, size + 40);
+chartFrame.fills = [];
+
+for (const d of data) {
+  const sliceAngle = (d.value / total) * 2 * Math.PI;
+  const ellipse = figma.createEllipse();
+  ellipse.resize(size, size);
+  ellipse.x = 20;
+  ellipse.y = 20;
+  ellipse.arcData = {
+    startingAngle: currentAngle,
+    endingAngle: currentAngle + sliceAngle,
+    innerRadius: 0.6, // 0 = pie, 0.5-0.8 = donut
+  };
+  ellipse.fills = [{ type: 'SOLID', color: d.color }];
+  ellipse.name = d.label;
+  chartFrame.appendChild(ellipse);
+  currentAngle += sliceAngle;
+}
+```
+
+**Key details:**
+- `arcData` uses **radians**. 0 = 3 o'clock position, clockwise. Start at `-Math.PI/2` for 12 o'clock.
+- `innerRadius`: 0 = full pie chart, 0.5-0.8 = donut chart
+- Each slice is a separate ellipse — fully editable, independently colorable
+- Add labels as separate TextNodes positioned outside the chart (not inside the ellipse)
+
+**When to use:** Part-of-whole visualizations. For B2B marketing, donut charts (innerRadius 0.6) are more effective than pie charts at social media sizes. But bar charts are generally more effective than either — use donut only when the "part of whole" framing is the point.
+
+---
+
+### Pattern: Line chart (vectorPaths)
+
+Build line charts from data arrays using SVG path syntax in vectorPaths.
+
+```javascript
+const data = [10, 45, 28, 72, 55, 90, 38];
+const width = 400;
+const height = 200;
+const maxVal = Math.max(...data);
+const padding = 20;
+
+// Create chart container
+const chartFrame = figma.createFrame();
+chartFrame.name = "Line Chart";
+chartFrame.resize(width + padding * 2, height + padding * 2);
+chartFrame.fills = [{ type: 'SOLID', color: { r: 1, g: 1, b: 1 } }];
+
+// Calculate points
+const points = data.map((v, i) => ({
+  x: padding + (i / (data.length - 1)) * width,
+  y: padding + height - (v / maxVal) * height,
+}));
+
+// Build SVG path string
+const pathData = points
+  .map((p, i) => `${i === 0 ? 'M' : 'L'} ${p.x.toFixed(1)} ${p.y.toFixed(1)}`)
+  .join(' ');
+
+// Line
+const line = figma.createVector();
+line.name = "Trend Line";
+line.vectorPaths = [{ windingRule: "NONE", data: pathData }];
+line.strokes = [{ type: 'SOLID', color: { r: 0.22, g: 0.52, b: 1 } }];
+line.strokeWeight = 2.5;
+line.strokeCap = 'ROUND';
+line.strokeJoin = 'ROUND';
+line.fills = [];
+chartFrame.appendChild(line);
+
+// Area fill (optional — close path to bottom)
+const areaPath = pathData
+  + ` L ${(padding + width).toFixed(1)} ${(padding + height).toFixed(1)}`
+  + ` L ${padding} ${(padding + height).toFixed(1)} Z`;
+const area = figma.createVector();
+area.name = "Area Fill";
+area.vectorPaths = [{ windingRule: "NONZERO", data: areaPath }];
+area.fills = [{ type: 'SOLID', color: { r: 0.22, g: 0.52, b: 1 } }];
+area.opacity = 0.1;
+area.strokes = [];
+chartFrame.insertChild(0, area); // behind the line
+
+// Data point dots
+for (const p of points) {
+  const dot = figma.createEllipse();
+  dot.resize(6, 6);
+  dot.x = p.x - 3;
+  dot.y = p.y - 3;
+  dot.fills = [{ type: 'SOLID', color: { r: 0.22, g: 0.52, b: 1 } }];
+  chartFrame.appendChild(dot);
+}
+```
+
+**Variants:**
+- **Sparkline** (minimal, no axes): same pattern but smaller frame (e.g., 120×40), no dots, no labels — just the line
+- **Area chart**: include the area fill path (close to bottom corners + fill with low opacity)
+- **Multi-line**: create multiple vectors with different stroke colors, one per data series
+- **Smooth curves**: use `C` (cubic bezier) commands in the path string instead of `L` (straight lines) — apply Catmull-Rom to Bezier interpolation for natural-looking curves
+
+**When to use:** Trends over time. Keep to 1-2 lines max for social media graphics. For B2B marketing, a "big number" callout with a small sparkline underneath is the highest-performing combination.
+
 ### Pattern: Spotlight cutout (tutorial highlight)
 
 Create tutorial/walkthrough images where the background is dimmed and the target UI element is highlighted with a spotlight effect. Used for SaaS product tutorials, UX walkthroughs, and "click here" documentation images.

@@ -68,6 +68,36 @@ Page naming: `[YYYY-MM-DD] {medium} — {project description}`. This prevents ov
 
 **Frame naming within pages:** Follow professional conventions — `AssetType/Platform/Variant` (e.g., `Social/LinkedIn/Post-Dark`, `Blog/Cover/Agents-in-Slack`). Slash-separated names create automatic hierarchy in the Assets panel and nested folders on export.
 
+### Design Tokens (pre-configured in the workspace)
+
+The workspace contains **30 Figma variables** across 4 collections that agents should use instead of hardcoding hex values:
+
+| Collection | Tokens | How to use |
+|---|---|---|
+| **Inkeep Colors** (9) | `bg/primary`, `bg/surface`, `text/primary`, `text/muted`, `brand/primary`, `brand/accent-warm`, `brand/accent-cool`, `surface/white`, `surface/dark` | Bind to fills via `setBoundVariableForPaint` or `boundVariables` |
+| **Inkeep Spacing** (6) | `spacing/xs`(4), `sm`(8), `md`(16), `lg`(24), `xl`(32), `xxl`(48) | Use for padding, gap, margins in auto-layout frames |
+| **Inkeep Radius** (5) | `radius/sm`(4), `md`(8), `lg`(16), `xl`(24), `pill`(9999) | Use for `cornerRadius` |
+| **Inkeep Typography** (10) | 3 font families + 7 sizes (12-64px) | Reference for font selection and sizing |
+
+**Using tokens in `figma_execute`:**
+```javascript
+// Look up a color variable by name
+const vars = await figma.variables.getLocalVariablesAsync('COLOR');
+const brandPrimary = vars.find(v => v.name === 'brand/primary');
+
+// Bind a fill to the variable (instead of hardcoding hex)
+const rect = figma.createRectangle();
+rect.fills = [figma.variables.setBoundVariableForPaint(
+  { type: 'SOLID', color: { r: 0.216, g: 0.518, b: 1 } },
+  'color',
+  brandPrimary
+)];
+```
+
+**Why tokens matter:** `figma_lint_design` flags hardcoded colors as warnings. Binding to variables ensures brand consistency cascades — if a brand color changes, all elements update automatically. It also enables future dark mode support by adding a "Dark" mode to the Inkeep Colors collection.
+
+**If working in a non-workspace file** (user specified a different target): fall back to hardcoded hex values from `references/brand-tokens.md`. Tokens are only available in the workspace file.
+
 **Why a shared workspace?** Figma has no API to create new files. The workspace prevents: (1) polluting brand asset files with work-in-progress, (2) requiring the user to create a new file for every request, (3) agents working in random/personal Drafts files that aren't team-accessible.
 
 ## Workflow
@@ -122,6 +152,7 @@ If the user doesn't specify the medium, **ask** — text sizing is the most comm
 | Email header / newsletter | `standards/email-header.md` | 1200 x 400-600 px (2x retina) |
 | Slide deck graphic | `standards/slide-graphic.md` | 960 x 540 px working / 1920 x 1080 export (16:9) |
 | Case study hero / thumbnail | `standards/case-study-hero.md` | 1800 x 840 px hero / 800 x 500 px thumbnail |
+| Chart / data visualization | `standards/data-visualization.md` | Varies by context — see standard for chart type selection, color palette, text sizing |
 
 If the medium doesn't match any standard file, ask the user for dimensions. Do not guess — wrong dimensions are the most common rework cause.
 
@@ -152,7 +183,8 @@ Present the suggestion to the user: "Based on the content, I'd suggest a [type] 
 | Illustrations, icons, logos, abstract art, decorative elements | **Quiver (Option D)** | AI generates layered, stylized vectors with complex paths impractical to hand-code |
 | Icon sets (multiple matching icons) | **Quiver (Option D)** with references | Generate one, pass it as `--references` for the rest — maintains visual consistency |
 | Background patterns, textures, abstract decorative art | **Quiver (Option D)** | Hard to hand-code, easy to describe |
-| Simple structural SVGs (basic shapes, bar charts, inline diagrams) | **Hand-coded SVG (Option B)** | Exact control; simple enough to write directly; humans can maintain the code |
+| Charts, graphs, data visualizations (bar, line, pie, donut, sparkline) | **Figma (Option A)** | Native primitives (arcData for pie/donut, vectorPaths for line charts) produce editable, brand-consistent output — see code patterns in `references/figma-console-tools.md`. Load `standards/data-visualization.md` for chart type selection and design guidelines |
+| Simple structural SVGs (basic shapes, inline diagrams) | **Hand-coded SVG (Option B)** | Exact control; simple enough to write directly; humans can maintain the code |
 | System architecture, flowcharts, sequence diagrams | **D2/Mermaid (Option C)** | Purpose-built diagram languages with automatic layout |
 | Converting a raster image to SVG | **Quiver vectorize (Option D)** | AI-powered raster-to-vector conversion |
 | Illustration FOR a slide/marketing layout | **Quiver (Option D) → Figma (Option A)** | Generate the illustration with Quiver, import into Figma, compose with brand elements and text — see hybrid workflow in Option D |
