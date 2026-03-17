@@ -35,8 +35,14 @@ pr-review (orchestrator, opus)
 # @claude --review        — triggers review (delta-scoped if re-review)
 # @claude --full-review   — triggers full-scope review (overrides delta scoping)
 
-# Local testing
-claude --agent pr-review "Review the changes in this branch"
+# Local review (recommended entrypoint, also what /ship uses)
+./ci/pr-review/scripts/pr-review.sh
+
+# Or explicit two-step local review (debugging / manual inspection)
+./ci/pr-review/scripts/generate-pr-context.sh
+claude -p "Review the current local changes. Begin Phase 1." \
+  --plugin-dir ci/pr-review \
+  --agent pr-review:pr-review-local
 ```
 
 ## Orchestrator Workflow
@@ -304,23 +310,20 @@ For comparison, `AGENTS.md` alone is ~12,000+ tokens and is always loaded. The P
 
 ## Local Testing
 
-Create the pr-context skill manually for local runs. When `Review scope` is absent from the metadata table (as it will be for manually-created pr-context), the orchestrator defaults to full-scope behavior.
+
+Use the bundled local-review scripts instead of hand-writing `pr-context`. `pr-review.sh` is the preferred entrypoint; it is the path `/ship` should call and it captures the final markdown summary to `${CLAUDE_SHIP_DIR:-tmp/ship}/review-output.md` by default. Each run also writes durable artifacts under `${CLAUDE_SHIP_DIR:-tmp/ship}/local-review-runs/` and updates `${CLAUDE_SHIP_DIR:-tmp/ship}/local-review-latest.txt` to the newest run directory.
 
 ```bash
-mkdir -p .claude/skills/pr-context
-cat > .claude/skills/pr-context/SKILL.md << 'EOF'
----
-name: pr-context
-description: PR context for local testing
----
-# PR Review Context
-## Changed Files
+# Generate local pr-context from git state
+./ci/pr-review/scripts/generate-pr-context.sh
+
+# Run the local orchestrator and capture markdown output
+./ci/pr-review/scripts/pr-review.sh
 ```
-src/example.ts
-```
-## Diff
-```diff
-+ console.log('test');
-```
-EOF
-```
+
+`generate-pr-context.sh` mirrors the CI-generated skill layout but replaces GitHub-only sections with local equivalents:
+- base branch, diff, changed files, commit log, and working-tree changes
+- no prior GitHub feedback
+- local in-repo references use `path:line` instead of GitHub blob URLs
+
+`pr-review.sh` invokes the new `pr-review-local` agent, which shares Phases 1-4 with the GitHub orchestrator and writes a markdown review summary instead of posting a pending review. When `tmp/ship/` exists, that summary becomes the pre-push local review artifact for `/ship`.
