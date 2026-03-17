@@ -36,6 +36,40 @@ The `figma-console` MCP communicates with Figma Desktop via a WebSocket bridge p
 
 **If the plugin disconnects** (e.g., after tab refresh or file switch), re-run it from the Plugins menu. The skill checks connection status via `figma_get_status` before building and will guide the user if disconnected.
 
+### Default Graphics Workspace
+
+All Figma design work defaults to the shared **Inkeep Agent Graphics Workspace** unless the user specifies a different target file.
+
+| Property | Value |
+|---|---|
+| **File name** | Inkeep Agent Graphics Workspace |
+| **File key** | `S5kGTPZ0kSjmSxusJ56QJH` |
+| **URL** | `https://www.figma.com/design/S5kGTPZ0kSjmSxusJ56QJH/Inkeep-Agent-Graphics-Workspace` |
+| **Location** | inkeep → Team project (shared, all team members can access) |
+
+**Target file resolution:**
+
+| Condition | Target file |
+|---|---|
+| User provides a Figma URL in their request | Use that file |
+| User says "create in [file name]" or references an existing file | Use that file |
+| No file specified (default) | Use the Graphics Workspace |
+
+**Page-per-project organization:** Each graphics request gets its own page in the workspace. The agent creates a new page at the start of Phase A:
+
+```javascript
+// via figma_execute
+const page = figma.createPage();
+page.name = "[YYYY-MM-DD] Blog — Agents in Slack thumbnails";
+await figma.setCurrentPageAsync(page);
+```
+
+Page naming: `[YYYY-MM-DD] {medium} — {project description}`. This prevents overlap between sessions and keeps the workspace organized.
+
+**Frame naming within pages:** Follow professional conventions — `AssetType/Platform/Variant` (e.g., `Social/LinkedIn/Post-Dark`, `Blog/Cover/Agents-in-Slack`). Slash-separated names create automatic hierarchy in the Assets panel and nested folders on export.
+
+**Why a shared workspace?** Figma has no API to create new files. The workspace prevents: (1) polluting brand asset files with work-in-progress, (2) requiring the user to create a new file for every request, (3) agents working in random/personal Drafts files that aren't team-accessible.
+
 ## Workflow
 
 ### Step 0: Create workflow tasks (MANDATORY FIRST ACTION)
@@ -102,6 +136,7 @@ The standard files also contain **design guidelines specific to each medium** (t
 | Step-by-step process or workflow | **Sequential diagram** — numbered steps with flow arrows |
 | Customer quote or testimonial | **Quote card** — speaker photo + quote text |
 | Product feature or UI explanation | **Annotated product mockup** — simplified UI with callouts |
+| Tutorial, walkthrough, or "click here" guide | **Spotlight cutout** — screenshot with dimmed overlay + highlighted target element (see Pattern: Spotlight cutout in `references/figma-console-tools.md`) |
 | Abstract concept or architecture | **Illustration or diagram** — visual metaphor for the concept |
 | List of criteria or evaluation rubric | **Data grid or scorecard** — structured table with ratings |
 | Announcement or launch | **Bold headline + product visual** — clean, editorial feel |
@@ -125,6 +160,7 @@ Present the suggestion to the user: "Based on the content, I'd suggest a [type] 
 | Hero images with photographic quality | **GPT Image (Option E)** | Raster output at up to 1536x1024; use `--quality high` for best results |
 | Image editing (inpainting, background swap, style transfer, object removal) | **GPT Image edit (Option E)** | Modify existing raster images with natural language instructions |
 | Raster image FOR a slide/marketing layout | **GPT Image (Option E) → Figma (Option A)** | Generate raster image, place in Figma as image fill, compose with brand elements and text |
+| Tutorial walkthrough / UX highlight (SaaS "click here" guides) | **Figma (Option A)** — spotlight cutout pattern | Screenshot as image fill + boolean subtract overlay. See Pattern: Spotlight cutout in `references/figma-console-tools.md` |
 
 **Do NOT use GPT Image for:**
 - Vector graphics (icons, logos, illustrations that need to scale) — use Quiver (Option D). Raster images pixelate when scaled; SVGs scale infinitely.
@@ -297,7 +333,7 @@ Choose the generation method based on graphic type and output needs:
 
 **Option A: Native Figma design (default — recommended for most graphics)**
 
-Best for: slide assets, marketing visuals, diagrams, social images, cards, hero graphics — anything that benefits from editability.
+Best for: slide assets, marketing visuals, diagrams, social images, cards, hero graphics, tutorial walkthrough highlights — anything that benefits from editability. For tutorial/walkthrough images with spotlight highlights, see **Pattern: Spotlight cutout** in `references/figma-console-tools.md`.
 
 Before starting, verify the Desktop Bridge plugin is running:
 1. Call `figma_get_status` to check connection

@@ -45,6 +45,22 @@ Use these only when the Figma MCP is unavailable.
 
 > These are observed values. The Figma file is authoritative — pull the full palette dynamically when possible.
 
+### Spacing Scale (8px base)
+
+Use these values for all padding, gaps, and margins. Never use ad-hoc pixel values — pick from this scale.
+
+| Token | Value | Use for |
+|---|---|---|
+| `space-xs` | 4px | Icon-to-label gaps, tight internal spacing |
+| `space-sm` | 8px | Compact component padding |
+| `space-md` | 16px | Standard card padding, section gap |
+| `space-lg` | 24px | Between content blocks |
+| `space-xl` | 32px | Between distinct sections |
+| `space-2xl` | 48px | Major section separators |
+| `space-3xl` | 64px | Page-level vertical spacing |
+
+Padding and gap should use the same value or a harmonious pair from this scale. A card with 24px padding and 16px internal gap looks intentional. A card with 23px padding and 17px gap looks accidental.
+
 ### Typography
 
 | Context | Guidance |

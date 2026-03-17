@@ -370,6 +370,183 @@ return { id: root.id, name: root.name };
 - Scales to any number of rows/columns
 - Text remains as text (searchable, accessible, crisp at any zoom)
 
+### Pattern: Spotlight cutout (tutorial highlight)
+
+Create tutorial/walkthrough images where the background is dimmed and the target UI element is highlighted with a spotlight effect. Used for SaaS product tutorials, UX walkthroughs, and "click here" documentation images.
+
+**Technique:** A screenshot is placed as an image fill on a rectangle. A boolean subtract overlay (full-size dark rectangle minus a smaller cutout rectangle) sits on top, dimming everything except the target element. The cutout creates a "window" that reveals the original screenshot at full brightness.
+
+**Getting the base screenshot:**
+- **User-provided image** — simplest; user already has screenshots or pastes into Figma
+- **Claude in Chrome** — capture authenticated pages the user is already logged into
+- **`/browser` skill** — scripted Playwright capture when interaction is needed before capture (dismiss modals, click tabs, scroll to section)
+
+**Step 1: Import screenshot as image fill**
+
+```javascript
+// Create the base rectangle with the screenshot as an image fill.
+// If the screenshot is already in Figma (user pasted it), skip this step
+// and use the existing node. If you have a local PNG file, read it and
+// convert to base64, then set as image fill via figma_set_image_fill.
+//
+// Dimensions should match the screenshot's aspect ratio.
+// Common sizes: 1101x735 (3:2), 1200x800 (3:2), 1440x900 (16:10)
+
+const base = figma.createRectangle();
+base.name = 'screenshot-base';
+base.resize(IMG_WIDTH, IMG_HEIGHT);
+base.cornerRadius = 20;
+// Image fill is set via figma_set_image_fill tool with the screenshot
+```
+
+After importing, use `figma_set_image_fill` to apply the screenshot as the rectangle's fill. Screenshot and verify the image displays correctly before proceeding.
+
+**Step 2: Create the spotlight overlay**
+
+```javascript
+// Parameters — adjust per target element
+const IMG_WIDTH = 1101;   // match screenshot dimensions
+const IMG_HEIGHT = 735;
+const CORNER_RADIUS = 20; // outer card rounding
+const OVERLAY_OPACITY = 0.5; // 0.5 = 50% dim (good default)
+
+// Each highlight target: { x, y, width, height, cornerRadius, strokeWeight }
+// Position is relative to the screenshot's top-left corner.
+// Measure from the screenshot where the target element sits.
+const highlights = [
+  { x: 14, y: 142, width: 241, height: 42, cornerRadius: 14, strokeWeight: 2 }
+];
+
+// --- Build the overlay ---
+
+const baseNode = await figma.getNodeByIdAsync('BASE_NODE_ID');
+const parent = baseNode.parent;
+
+// 1. Full-size dark rectangle (the mask)
+const mask = figma.createRectangle();
+mask.name = 'spotlight-mask';
+mask.resize(IMG_WIDTH, IMG_HEIGHT);
+mask.x = baseNode.x;
+mask.y = baseNode.y;
+mask.cornerRadius = CORNER_RADIUS;
+mask.fills = [{ type: 'SOLID', color: { r: 0, g: 0, b: 0 } }];
+
+// 2. Cutout rectangles (one per highlight target)
+const cutouts = [];
+for (let i = 0; i < highlights.length; i++) {
+  const h = highlights[i];
+  const cutout = figma.createRectangle();
+  cutout.name = `spotlight-cutout-${i + 1}`;
+  cutout.resize(h.width, h.height);
+  cutout.x = baseNode.x + h.x;
+  cutout.y = baseNode.y + h.y;
+  cutout.cornerRadius = h.cornerRadius;
+  cutout.fills = [{ type: 'SOLID', color: { r: 0.85, g: 0.85, b: 0.85 } }];
+  cutout.strokes = [{ type: 'SOLID', color: { r: 1, g: 1, b: 1 } }];
+  cutout.strokeWeight = h.strokeWeight;
+  cutouts.push(cutout);
+}
+
+// 3. Boolean subtract: mask minus cutouts = overlay with holes
+const allNodes = [mask, ...cutouts];
+const boolOp = figma.union(allNodes, parent);
+// Change from union to subtract
+boolOp.booleanOperation = 'SUBTRACT';
+boolOp.name = 'spotlight-overlay';
+boolOp.opacity = OVERLAY_OPACITY;
+boolOp.fills = [{ type: 'SOLID', color: { r: 0, g: 0, b: 0 } }];
+
+return { overlayId: boolOp.id, highlights: highlights.length };
+```
+
+**Step 3 (optional): Add step number badges**
+
+For multi-step tutorials, add numbered circles near each highlight:
+
+```javascript
+// Position each badge at the top-right corner of its cutout
+const BADGE_SIZE = 28;
+const BADGE_OFFSET = -8; // overlap the cutout edge slightly
+
+for (let i = 0; i < highlights.length; i++) {
+  const h = highlights[i];
+
+  // Circle background
+  const badge = figma.createEllipse();
+  badge.name = `step-badge-${i + 1}`;
+  badge.resize(BADGE_SIZE, BADGE_SIZE);
+  badge.x = baseNode.x + h.x + h.width + BADGE_OFFSET;
+  badge.y = baseNode.y + h.y + BADGE_OFFSET;
+  badge.fills = [{ type: 'SOLID', color: { r: 0.216, g: 0.518, b: 1.0 } }]; // brand blue #3784FF
+
+  // Number text
+  const label = figma.createText();
+  await figma.loadFontAsync({ family: 'Inter', style: 'Bold' });
+  label.fontName = { family: 'Inter', style: 'Bold' };
+  label.characters = String(i + 1);
+  label.fontSize = 14;
+  label.fills = [{ type: 'SOLID', color: { r: 1, g: 1, b: 1 } }];
+  label.textAlignHorizontal = 'CENTER';
+  label.textAlignVertical = 'CENTER';
+  label.resize(BADGE_SIZE, BADGE_SIZE);
+  label.x = badge.x;
+  label.y = badge.y;
+}
+```
+
+**Multi-step tutorial series:**
+
+For tutorials with multiple steps, reuse the same base screenshot and create separate groups — one per step — each with a different cutout position:
+
+```javascript
+// Step 1: highlight sidebar "Triggers" nav item
+const step1Highlights = [{ x: 14, y: 142, width: 241, height: 42, cornerRadius: 14, strokeWeight: 1 }];
+
+// Step 2: highlight "Webhooks" tab
+const step2Highlights = [{ x: 394, y: 191, width: 96, height: 33, cornerRadius: 14, strokeWeight: 2 }];
+
+// Step 3: highlight two fields at once
+const step3Highlights = [
+  { x: 200, y: 300, width: 300, height: 40, cornerRadius: 8, strokeWeight: 2 },
+  { x: 200, y: 360, width: 300, height: 40, cornerRadius: 8, strokeWeight: 2 }
+];
+```
+
+Each step produces one exportable group (screenshot + overlay). Clone the base screenshot rectangle for each step — all share the same image fill (efficient, consistent).
+
+**Configurable parameters:**
+
+| Parameter | Default | Purpose |
+|---|---|---|
+| `OVERLAY_OPACITY` | 0.5 | Dim level — 0.5 is a good balance between de-emphasis and context visibility |
+| `CORNER_RADIUS` | 20 | Outer card rounding — matches typical card/modal appearance |
+| Cutout `cornerRadius` | 14 | Pill shape for cutout — matches modern UI element shapes (buttons, tabs, nav items) |
+| Cutout `strokeWeight` | 1–2px | White border ring thickness around the highlighted element |
+| Cutout `fills` color | `#D9D9D9` | Light gray — visible inside the boolean subtract. White stroke provides the visible ring. |
+| Badge color | `#3784FF` | Brand blue for step number circles |
+
+**Design guidance:**
+
+| Concern | Guidance |
+|---|---|
+| **Cutout padding** | Add 4–8px padding around the target element on each side. Pixel-exact cutouts feel cramped and the white ring barely clears the element. Measure the element's bounds, then expand the cutout rectangle by the padding. |
+| **Cutout corner radius** | Match the target element's own border radius when possible (a button with `border-radius: 8px` gets an 8px cutout). Default to 14px pill when the element's radius is unknown. |
+| **Cropping vs full-page** | Prefer a **cropped but contextual** screenshot — show enough of the surrounding UI that the user knows where they are (sidebar + main content area) but don't include empty space or irrelevant panels. If the full-page screenshot is 1440x900, crop to the relevant ~1100x735 region. All images in a tutorial series must use the same crop region for visual consistency. |
+| **Screenshot resolution** | Capture or import screenshots at **2x retina** resolution. In Figma, this means the image's native pixel dimensions should be 2× the rectangle size (e.g., 2202×1470 image in a 1101×735 rectangle). The analyzed example uses `scalingFactor: 0.5` to achieve this. |
+| **Dark UI screenshots** | A black overlay on a dark-themed UI is nearly invisible. For dark UIs, use a **dark navy overlay** (`{ r: 0.05, g: 0.05, b: 0.15 }`) instead of pure black, or increase opacity to 0.6–0.7. Test by screenshotting — if the overlay is hard to see, adjust. |
+| **Drop shadow** | Optional but recommended for docs/marketing pages with white backgrounds. Adds depth and grounds the card. Apply to the outer group: `{ type: 'DROP_SHADOW', color: { r: 0, g: 0, b: 0, a: 0.12 }, offset: { x: 0, y: 4 }, radius: 16, spread: 0, visible: true, blendMode: 'NORMAL' }` |
+| **Consistent sizing across series** | All images in a tutorial series MUST use identical dimensions. Decide the crop region and size once (e.g., 1101×735) and clone that base for every step. Inconsistent sizing creates jarring visual rhythm in docs pages. |
+| **Overlay opacity by context** | Light UIs: 0.5 (default). Dark UIs: 0.6–0.7. High-contrast need (single critical action): 0.6. Low-contrast (gentle guidance): 0.3–0.4. |
+
+**When to use this pattern:**
+- SaaS product tutorials ("click here to configure webhooks")
+- Onboarding walkthroughs ("first, navigate to Settings")
+- Documentation images for step-by-step guides
+- Feature announcement graphics ("new: check out the Analytics tab")
+- Any screenshot where you need to draw the viewer's eye to a specific UI element
+
+**Export:** Set export settings on each step's group: `PNG` at `8x` scale for high-resolution documentation images, or `2x` for web use.
+
 ### Pattern: Element reorder (safe swap)
 
 When the user asks to reorder elements within a container (flip rows, swap cards), follow this sequence:
