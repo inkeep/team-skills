@@ -68,8 +68,9 @@ SETTINGS
 echo "State file + loop file created. Running Claude subprocess..."
 echo ""
 
-# Run Claude — it should see the stop hook re-inject and mention phase context
-RESPONSE=$(env -u CLAUDECODE -u CLAUDE_CODE_ENTRYPOINT claude \
+# Run Claude — it should trigger the stop hook and either mention phase context
+# directly or leave behind the hook artifacts proving re-injection happened.
+RESPONSE=$(CLAUDE_PROJECT_DIR="$TMPDIR" env -u ANTHROPIC_API_KEY -u CLAUDECODE -u CLAUDE_CODE_ENTRYPOINT claude \
   -p "What phase is this ship workflow at? Answer briefly." \
   --dangerously-skip-permissions \
   --max-turns 2 \
@@ -80,6 +81,9 @@ echo ""
 
 if echo "$RESPONSE" | grep -qi "Phase 3\|auth-flow\|Testing"; then
   echo "PASS: Claude identified ship workflow state"
+  exit 0
+elif [[ -f tmp/ship/last-prompt.md ]] && [[ -f tmp/ship/metrics.json ]] && grep -q '^iteration: 2$' tmp/ship/loop.md; then
+  echo "PASS: Stop hook blocked exit and re-injected ship state"
   exit 0
 elif echo "$RESPONSE" | grep -qi "no.*found\|does not exist"; then
   echo "SOFT PASS: State file may not be accessible in this context"
