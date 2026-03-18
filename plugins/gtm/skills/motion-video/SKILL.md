@@ -56,7 +56,7 @@ Determine what to build before writing code.
 
 **1c. Load brand references:**
 
-- **Load:** `/brand` — brand identity, principles, color usage, typography rules, text style rules
+- **Load:** `/brand` and load any reference files relevant to your task following the skill's reference loading guidance for your content. This is important for ensuring you are fully grounded and can leverage brand assets, tokens, and guidance.
 - **Load:** `brand/motion-language.md` — easing curves, timing, animation patterns (Remotion-specific)
 - For token values: read `.claude/design-system/manifest.md`
 - For product demos: **Load:** `references/product-demo-patterns.md` — how to compose walkthrough scenes

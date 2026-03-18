@@ -66,7 +66,8 @@ Wait for user confirmation before proceeding. If the user says "just create a ne
 
 Use the Figma MCP to extract brand tokens from the Inkeep design system.
 
-**Load:** `references/brand-guidelines.md` for the Figma file URL and fallback token values.
+**Load:** `/brand` and load any reference files relevant to your task following the skill's reference loading guidance for your content. This is important for ensuring you are fully grounded and can leverage brand assets, tokens, and guidance.
+**Load:** `references/brand-guidelines.md` for the Figma file URL and slide-specific styling defaults.
 
 Key assets to extract:
 - **Color palette**: primary, secondary, accent, background, text colors

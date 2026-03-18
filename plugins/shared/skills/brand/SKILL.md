@@ -66,6 +66,7 @@ Load the reference files relevant to what you're building:
 | Product mockups, code blocks, badges, metric callouts, logos, quotes, headers, buttons | `references/element-patterns.md` — reusable element recipes with exact brand styling |
 | Illustrations, icons, diagrams, or gradient backgrounds | `references/brand-guide.md` — illustration style, icon rules, diagram rules, gradient tiers, decorative elements, what feels dated |
 | Product screenshots or UI representations | `references/product-representation.md` — fidelity spectrum (6 levels), decision framework, cleaning-up techniques, brand-product bridging |
+| Charts, graphs, or data visualization | `references/data-visualization.md` — data series colors, labeling standards, chart type selection, data integrity rules |
 | Animation or motion (video scenes, slide transitions) | `references/motion-philosophy.md` — principles, do's/don'ts, standard motion patterns |
 | Marketing website copy (headlines, CTAs, landing pages) | `references/copy-patterns.md` — headline formulas, CTA conventions, value framing hierarchy, use case page patterns |
 
