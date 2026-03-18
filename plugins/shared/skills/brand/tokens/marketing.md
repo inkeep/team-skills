@@ -1,4 +1,4 @@
-# Inkeep Design Assets Manifest
+# Inkeep Marketing Design Tokens
 
 **236 components, 112 design tokens** | File: Graphics & Icons (`D7NDSM2peo1iLhkjLxmGP5`) | Generated: 2026-03-18
 

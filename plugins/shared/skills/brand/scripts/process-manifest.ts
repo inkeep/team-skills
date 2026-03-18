@@ -171,7 +171,7 @@ function generateMarkdown(
     : 0;
 
   // === HEADER ===
-  lines.push("# Inkeep Design Assets Manifest");
+  lines.push("# Inkeep Marketing Design Tokens");
   lines.push("");
   lines.push(
     `**${compCount} components, ${tokenCount} design tokens** | ` +
