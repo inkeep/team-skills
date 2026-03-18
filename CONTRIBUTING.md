@@ -123,6 +123,20 @@ git push origin feat/improve-research-skill
 
 After your PR is merged, consumers with auto-update receive the changes on their next Claude Code session. Contributors with local clones need to `git pull`.
 
+### Commit message convention
+
+Use conventional-commits-style prefixes:
+
+| Prefix | When |
+|---|---|
+| `feat(<scope>)` | New skill, new capability, new reference file |
+| `fix(<scope>)` | Bug fix, corrected guidance, fixed token value |
+| `docs(<scope>)` | README, CONTRIBUTING, skill descriptions |
+| `chore(<scope>)` | Version bumps, config, cleanup |
+| `refactor(<scope>)` | Restructuring without behavior change |
+
+Scope is typically the skill or plugin name: `feat(brand)`, `fix(graphics)`, `docs(gtm)`.
+
 ### Pushing Secrets to 1Password
 
 To create/update 1Password items for skill secrets (one item per skill, as defined in `secrets/secrets.json`):
@@ -263,6 +277,18 @@ When a skill delegates to subagents or external APIs, brand and task context mus
 - **Parallel subagents** need a series brief — locked visual/style decisions passed identically to all subagents to ensure consistent output.
 
 For detailed guidance on skill design patterns, use `/write-skill`.
+
+### Configurable output directories
+
+Skills that produce persistent artifacts (reports, specs, working state) use env vars to let users configure output locations:
+
+| Env var | Default | Used by |
+|---|---|---|
+| `CLAUDE_REPORTS_DIR` | `<repo>/reports/` or `~/reports/` | `/research` |
+| `CLAUDE_SPECS_DIR` | `<repo>/specs/` | `/spec` |
+| `CLAUDE_SHIP_DIR` | `tmp/ship/` | `/ship`, `/implement` |
+
+These are resolved at session start by the eng plugin's `SessionStart` hook and made available as `resolved-reports-dir`, `resolved-specs-dir`, `resolved-ship-dir` in the agent's context. If you create a skill that produces persistent output, follow this pattern: define a `CLAUDE_<THING>_DIR` env var with a sensible default, and resolve it in the hook.
 
 ## Troubleshooting
 
