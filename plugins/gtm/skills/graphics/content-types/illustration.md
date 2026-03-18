@@ -12,110 +12,383 @@ This reference covers the visual vocabulary, construction rules, composition pat
 
 ---
 
-## The dual-stroke language
+## The three-tier visual language
 
-Every Inkeep illustration uses exactly TWO visual languages in the same image:
+Inkeep illustrations use THREE visual tiers that work together to create depth and hierarchy:
 
-### Layer 1: Hand-drawn containers (gray, imprecise)
+### Tier 1: Background structure (gray, faint)
 
-The structural scaffolding — hexagons, circles, rounded rectangles, card frames, flow lines.
-
-| Property | Value | Notes |
-|---|---|---|
-| **Stroke color** | `#231F20` (text/primary) | Never blue, never another color |
-| **Stroke opacity** | 15-30% | Very faint — these are guidelines, not bold outlines |
-| **Stroke width** | 1.2-2.8px (variable) | The variation IS the hand-drawn feel |
-| **Linecap** | Round | Always round, never square/butt |
-| **Fill** | None, or `#F7F4ED` (bg/surface) at ~80% opacity | Containers are transparent or very lightly filled |
-| **Path quality** | Slightly irregular | Avoid perfectly geometric shapes. Organic wobble on straight edges. Corners not perfectly sharp. |
-| **Depth** | Line weight variation only | No drop shadows. Thicker strokes = foreground, thinner = background |
-
-### Layer 2: Precise filled elements (blue, exact)
-
-The meaningful content inside the containers — icons, symbols, UI elements, data shapes.
+The distant scaffolding — outer card panels, hexagonal grids, background containers, and connecting lines that recede into the background.
 
 | Property | Value | Notes |
 |---|---|---|
-| **Fill color** | `#3784FF` (brand/primary) | Solid fill, no stroke |
+| **Stroke color** | `#231F20` (text/primary) | Gray only at this tier |
+| **Stroke opacity** | 10-30% (varies by depth) | 10-15% for farthest elements, 20-30% for mid-ground structure |
+| **Stroke weight** | 2-4px | 3px is the most common default |
+| **Stroke cap** | `NONE` (butt cap) | NOT round — butt caps are the standard (2082 vs 51 measured instances) |
+| **Fill** | None, or `#F7F4ED` (bg/surface) | Containers are transparent or cream-filled |
+| **Corner radius** | 48-54px for outer containers, 24-32px for inner | See corner radius system below |
+| **Path quality** | Slightly irregular | Organic wobble on edges, corners not perfectly sharp |
+
+### Tier 2: Active containers (blue, prominent)
+
+The primary interactive/focal elements — chat panels, calendar frames, flow diagram nodes, card outlines for active UI elements. These use blue stroke, not gray.
+
+| Property | Value | Notes |
+|---|---|---|
+| **Stroke color** | `#3784FF` (brand/primary) | Blue outlines for active/focal containers |
+| **Stroke opacity** | 1.0 (full) | Confident, not faded |
+| **Stroke weight** | 3px (standard), 6px for focal emphasis | Heavier weight draws attention |
+| **Stroke cap** | `NONE` (butt cap) | Consistent with tier 1 |
+| **Fill** | None, or `#D8E6FC` / `#D0E1FF` light blue wash | Blue wash fill behind focal elements (shield, hub center) |
+| **Corner radius** | 24-32px | Primary container size |
+
+### Tier 3: Content elements (filled, precise)
+
+The meaningful content — icons, data shapes, indicators, active buttons. These use solid fills.
+
+| Property | Value | Notes |
+|---|---|---|
+| **Fill color** | `#3784FF` (brand/primary) | Solid fill for icons and active elements |
 | **Fill opacity** | 1.0 (full) | Confident, not tentative |
-| **Path quality** | Clean, geometric, precise | These ARE perfect shapes — circles are circular, lines are straight |
-| **No stroke** | — | Filled elements never have outlines |
-| **Secondary fill** | `#E5AE61` (golden amber) | Warm accent for secondary data/highlights. Used sparingly (~20% as often as blue) |
+| **Path quality** | Clean, geometric, precise | Circles are circular, lines are straight |
+| **Stroke** | Optional — same-hue stroke reinforces emphasis | Focal elements often use fill + stroke of the same color for boldness |
 
-### The contrast is the point
+### How the tiers interact
 
-The tension between rough gray containers and clean blue fills is what makes the style distinctive. If everything is precise, it looks corporate. If everything is rough, it looks sketchy. The combination says "human-guided technology."
+```
+Tier 1 (gray bg)     →  Tier 2 (blue containers)  →  Tier 3 (blue fills)
+Hex grid, outer cards     Chat panels, flow nodes       Icons, data shapes
+#231F20 @ 10-30%          #3784FF @ 100% stroke          #3784FF @ 100% fill
+Recedes                   Draws attention                 Carries meaning
+```
+
+The progression from faint gray → bold blue stroke → solid blue fill creates visual depth without shadows or gradients.
 
 ---
 
-## Color palette (strict — only these colors)
+## Semantic color system
 
-| Role | Hex | Token | Usage frequency |
+Colors carry meaning in Inkeep illustrations. This is not decorative — the color assignments communicate who/what an element represents.
+
+### Primary semantic roles
+
+| Color | Semantic meaning | Examples |
+|---|---|---|
+| **Blue** (`#3784FF`) | AI / system / Inkeep | AI Assistant responses, system UI, primary data series, active controls |
+| **Golden/amber** | Human / user / external content | User questions, image placeholders, links, secondary data, status badges |
+| **Gray** (`#231F20` at opacity) | Structure / scaffolding | Containers, backgrounds, connecting lines |
+
+### Golden/amber variants (all serve the "human/user" role)
+
+| Hex | Name | Usage |
+|---|---|---|
+| `#E5AE61` | Golden sun | Primary warm accent — text, icon fills |
+| `#FFCB83` | Light amber | Stroke color for user content containers (chat bubbles, image frames) |
+| `#E6B828` | Dark golden | Deeper warm accent, chart data |
+| `#FFE6C2` | Warm wash | Background fills for warm areas (at 60-100% opacity) |
+
+### Applying the blue/golden semantic split
+
+In **chat interface** illustrations:
+- User message bubbles: golden stroke (`#FFCB83`) container, golden text
+- AI response bubbles: blue stroke (`#3784FF`) container, blue text
+
+In **website/UI mockup** illustrations:
+- Image placeholders: golden stroke frame with mountain/landscape icon in golden
+- Content/text areas: blue stroke containers, blue text lines
+- Chat widget panels: blue stroke, blue content
+
+In **data visualization** illustrations:
+- Primary data series: blue fills/strokes
+- Secondary data series: golden fills/strokes
+- Comparison overlays: blue polygon vs golden polygon (radar charts)
+
+---
+
+## Full color palette
+
+| Role | Hex | Opacity | Usage frequency | Notes |
+|---|---|---|---|---|
+| **Primary blue** | `#3784FF` | 1.0 | ~50% of all colored elements | Icons, active containers, text, data |
+| **Background structure** | `#231F20` | 10-30% | ~25% | Tier 1 containers and scaffolding |
+| **Foreground structure** | `#231F20` | 40-70% | Rare | Charcoal monochrome illustrations (see Pattern 10) |
+| **Golden sun** | `#E5AE61` | 1.0 | ~8% | Warm fills, user text |
+| **Light amber** | `#FFCB83` | 1.0 | ~8% | Warm strokes, user containers |
+| **Dark golden** | `#E6B828` | 1.0 | ~3% | Chart data, deeper warm accent |
+| **Container fill** | `#F7F4ED` | 1.0 | ~8% | Cream interior fill |
+| **Blue wash (medium)** | `#D8E6FC` | 1.0 | ~5% | Panel/card background behind focal elements |
+| **Blue wash (light)** | `#D0E1FF` / `#E1EBFB` | 0.6-1.0 | ~3% | Softer background wash areas |
+| **Blue wash (pale)** | `#E3EDFF` / `#EEF5FC` / `#F2F7FC` | 1.0 | ~1% | Near-white background tint |
+| **Warm wash** | `#FFE6C2` | 0.6-1.0 | ~3% | Background fills for warm areas |
+| **Navy** | `#2D4770` | 1.0 | Rare | Deep accent |
+| **Purple** | `#7C65ED` / `#AC9EF2` | 1.0 | Data viz | Topic clusters in bubble charts, code syntax |
+| **Light purple** | `#E1DBFF` | 1.0 | Data viz | Bubble chart topic circle fills |
+| **Green** | `#65BB61` | 1.0 | Data viz | Positive ratings (checkmarks), code syntax |
+| **Light green** | `#C9F0C7` | 1.0 | Data viz | Status indicator fills |
+| **Amber warning** | `#E6B828` | 1.0 | Data viz | Caution indicators in QA tables |
+
+**Purple and green** are used in data visualization illustrations (bubble charts, QA rating tables, radar charts) — not limited to code syntax.
+
+**Hard rules:** No gradients. No drop shadows. No glows. Depth is created through line weight variation, opacity tiers, and layering.
+
+---
+
+## Corner radius system
+
+Illustrations follow a three-tier corner radius hierarchy:
+
+| Tier | Radius | Count | Used for |
 |---|---|---|---|
-| **Primary fill** | `#3784FF` | brand/primary | ~50% of all colored elements |
-| **Structure** | `#231F20` at 15-30% opacity | text/primary | All containers and outlines |
-| **Warm accent** | `#E5AE61` | brand/golden-sun variant | ~10% — secondary data, warm highlights |
-| **Container fill** | `#F7F4ED` | bg/surface | Container interiors |
-| **Blue wash** | `#D0E1FF` or `#E1EBFB` | brand/crystal-blue / illustration/wash-blue | Soft background areas |
-| **Warm wash** | `#FFE6C2` | brand/accent-warm variant | Secondary background fills |
-| **Navy** | `#2D4770` | — | Deep accent, very rare |
-| **Code purple** | `#7C65ED` / `#A297E9` | — | Code syntax only |
-| **Code green** | `#65BB61` | — | Code syntax only |
+| **Small** | 6-8px | ~88 uses | Inner UI elements: buttons, badges, input fields, small cards |
+| **Medium** | 24-32px | ~75 uses | Primary containers: message bubbles, flow nodes, card panels |
+| **Large** | 48-54px | ~57 uses | Outer containers: illustration component borders, large panel frames |
 
-**Hard rule:** No other colors. No gradients. No drop shadows. No glows. Depth is created ONLY through line weight variation and layering.
+Use the tier that matches the element's role in the hierarchy. Nesting follows outside-in: large outer → medium inner → small detail.
 
 ---
 
-## Composition patterns (5 types observed)
+## Stroke weight system
 
-### Pattern 1: Hexagonal icon grid
+| Weight | Count | Role |
+|---|---|---|
+| **3px** | 411 | **Default** — container outlines, icon strokes, standard elements |
+| **2px** | 117 | Secondary strokes, connecting lines, finer detail |
+| **4px** | 106 | Emphasis strokes, heavier containers, prominent elements |
+| **1-1.5px** | 108 | Fine detail, distant background elements, subtle connectors |
+| **6px** | 6 | Focal emphasis — shield outlines, key structural elements |
+| **Variable (1.8-2.8px)** | ~64 | Hand-drawn variation zone — the organic wobble range |
 
-**Used in:** Use case cards (B2B support, product teams)
+**Default to 3px.** Use weight variation for depth: heavier = closer/more important, lighter = farther/less important.
 
-- 3-5 hexagons arranged in a staggered grid
-- Each hexagon: hand-drawn gray stroke, ~40-60px diameter in the card
-- Inside each hexagon: one precise blue icon representing a concept
-- Hexagons slightly different sizes (not uniform — hand-drawn feel)
-- Diagonal arrangement, not a rigid grid — creates energy
+---
 
-**Canvas:** ~256 × 98 (wide landscape card format)
+## Gray opacity tiers
 
-### Pattern 2: Flow diagram
+The `#231F20` structural color operates at distinct opacity levels that create the depth hierarchy:
+
+| Opacity | Role | Examples |
+|---|---|---|
+| **10%** | Farthest background | Barely-visible grids, distant scaffolding |
+| **15%** | Background scaffolding | Hexagonal grids, outer panel edges |
+| **20%** | Standard containers | Primary gray container outlines (the workhorse) |
+| **30%** | Prominent structure | Important structural elements, card edges closer to foreground |
+| **40%** | Inner detail | List row separators, dot grid nodes |
+| **60-70%** | Charcoal monochrome mode | Homepage dev-section card illustrations (see Pattern 10) |
+
+---
+
+## Text color semantics
+
+Text within illustrations follows the semantic color system:
+
+| Text color | Role | Examples |
+|---|---|---|
+| `#3784FF` blue | Headings, labels, AI responses, system text | "AI Assistant", "Performance", "Top topics", "Meetings Booked" |
+| `#231F20` dark gray | Data labels, neutral body text, table content | Axis labels, descriptions, column headers |
+| `#E5AE61` / `#FFCB83` golden | User-generated content, questions, links | "Hi, where can I integrate Inkeep?", "Getting Started with Slack" link |
+| Multi-color | Code syntax highlighting | Purple for keywords, green for strings, golden for values |
+
+---
+
+## Composition patterns (11 types observed)
+
+### Pattern 1: Hub-and-spoke radial diagram
+
+**Used in:** Customer support use case card
+**Figma component:** `illustration/use-case/customer-support`
+**Canvas:** 548 × 558
+
+- Central focal element: blue-stroked rounded square with light blue wash fill, Inkeep logo icon inside
+- 5-6 satellite nodes arranged radially around center
+- Each satellite: gray hand-drawn rounded square (corner radius ~32px) + blue icon + text label below
+- Curved blue connector lines from center to each satellite, with small blue dots at connection points
+- Thin blue cross-grid lines behind the arrangement (faint, structural)
+
+### Pattern 2: Chat/conversation interface
+
+**Used in:** Customer service, Slack integration use case cards
+**Figma components:** `illustration/use-case/customer-service`, `illustration/use-case/slack-integration`
+**Canvas:** 548 × 558
+
+- Outer container: blue-stroked rounded rectangle (32px radius) with "AI Assistant" header + Inkeep logo
+- Horizontal blue divider line below header
+- User message bubble: golden stroke (`#FFCB83`) rounded rectangle, golden text
+- AI response bubbles: blue stroke rounded rectangles, blue text
+- Response may include bulleted lists, linked text (golden underline), numbered badges
+- Text input bar at bottom: blue stroke rounded rectangle with send button icon
+- **Slack variant:** Includes waveform visualization element (vertical blue bars of varying height) between two panels, gray outer container representing Slack UI chrome
+
+### Pattern 3: Flow diagram
 
 **Used in:** Documentation teams card, developer no-code view, agent workflow
+**Figma component:** `illustration/use-case/documentation-teams`
+**Canvas:** 548 × 558 (use case), varies for developer panels
 
-- Left-to-right or top-to-bottom flow
-- Nodes: hand-drawn rounded rectangles with cream fill
-- Connections: hand-drawn curved lines with slight wobble
-- Flow arrows: blue filled arrowheads, hand-drawn stems
-- Center focal element: larger, more detailed (often a blue-filled circle)
+- Top-to-bottom or left-to-right flow
+- Nodes: blue-stroked rounded rectangles (not gray) with blue text and optional golden badges
+- Center Inkeep logo node with blue wash fill
+- Vertical connecting lines: thin blue stroke
+- Action icon (sync/refresh) at connection points: blue filled circle
+- Lower container: blue stroke rounded rectangle with list items (gray stroke sub-containers)
 
-**Canvas:** Varies (256×98 for cards, 557×432 for developer panels)
+### Pattern 4: Product UI mockup (website/marketing)
 
-### Pattern 3: Product UI mockup
+**Used in:** Marketing teams, product teams, website pages
+**Figma components:** `illustration/use-case/marketing-teams`, `illustration/ui-screen/website-pages`
+**Canvas:** 548 × 558 (use case), 595 × 584 (UI screen)
 
-**Used in:** Developer TS view, visual builder, agent workforce panels
+- Outer gray container: hand-drawn stroke with window chrome dots (three small circles)
+- Inkeep logo node at top with gray curved connector to content below
+- Grid layout of content cards inside:
+  - Blog/article cards: blue stroke, with golden image placeholder (mountain/landscape icon in golden stroke frame)
+  - Content text: blue horizontal lines of varying length (representing text)
+  - Chat widget panel: blue stroke, includes AI Assistant header, message bubbles
+  - Image gallery: golden stroke rounded squares with golden image icons
+- Sync/refresh icon (blue filled circle) connecting Inkeep to the content
+- Blue filled checkmark badge on content cards that have been processed
 
-- Outer container: large rounded rectangle with hand-drawn gray stroke, cream/white fill
-- Dot grid background inside the container (~3-5% opacity gray dots)
-- Content: mix of text and small UI elements
-- For code editors: rounded rect with very light gray fill, multi-color syntax text
-- For flow diagrams: white card nodes connected by gray curved paths with blue arrowheads
+### Pattern 5: Data visualization (analytics panels)
 
-**Canvas:** ~560-650 × 430-610 (roughly 4:3 to 16:10)
+**Used in:** Product feature illustrations (analytics, topics, knowledge QA)
+**Figma components:** `illustration/product/analytics-*`, `illustration/product/knowledge-qa`, `illustration/product/topics-qa-*`
+**Canvas:** 649 × 836 (portrait — tall card format)
 
-### Pattern 4: Data visualization
+Composed of stacked/overlapping card panels:
 
-**Used in:** Key benefits (audits, reporting)
+**Bar chart panel:**
+- Gray hand-drawn outer container with cream fill
+- "Performance" heading in blue text
+- Horizontal bar chart: blue bars (primary data, `#3784FF` fill + stroke) and golden bars (secondary data, `#E5AE61`/`#FFCB83` fill + stroke)
+- Bars have both a light fill AND a bold stroke of the same hue — creates the hand-drawn bar effect
+- Gray axis lines, dark gray axis labels
 
-- Outer panel: light blue wash background (#D8E6FC area), hand-drawn gray container edge
-- Chart elements: bubble charts (blue + golden circles at varying sizes), radar charts (blue + golden polygon overlays), bar charts (blue bars with hand-drawn edges)
-- Data labels: clean dark text (#231F20), small sans-serif
-- Secondary cards stacked or overlapping the primary card
+**Radar/spider chart panel:**
+- Gray hand-drawn container, cream fill
+- Gray dashed concentric polygons (guide web)
+- Blue polygon overlay (primary data series) with blue fill at ~20% opacity + blue stroke
+- Golden polygon overlay (secondary data series) with golden fill at ~20% opacity + golden stroke
+- Small gray dots at data points
+- Blue text axis labels (Label 1, Label 2, etc.)
+- Date filter badge in upper right (gray stroke rounded rectangle)
 
-**Canvas:** 650 × 838 (portrait — tall card format)
+**Bubble chart panel (topics/knowledge QA):**
+- Gray hand-drawn outer container
+- Circles of varying sizes representing topics:
+  - Blue circles (large/medium): blue stroke + light blue fill (`#D8E6FC`) — primary topics
+  - Purple circles (small/medium): purple stroke (`#7C65ED`) + light purple fill (`#E1DBFF`) — secondary topics
+  - Blue text lines inside circles represent topic content
+- Gray hand-drawn tooltip card with text lines
+- Below: QA table with rows — blue text for questions, green checkmarks for good ratings, golden/amber warnings for issues
 
-### Pattern 5: Two-element scene
+### Pattern 6: Code editor panel
+
+**Used in:** Developer page (TypeScript view)
+**Figma component:** `illustration/dev-page/typescript`
+**Canvas:** 649 × 643
+
+- Tab bar at top: active tab ("TYPESCRIPT") has hand-drawn rounded outline, inactive tab ("VISUAL BUILDER") is plain text
+- Main container: gray hand-drawn rounded rectangle with cream/white fill
+- Inner code area: lighter gray container
+- Multi-color syntax-highlighted code in monospace font:
+  - Purple (`#7C65ED`): keywords (`import`, `const`, `model:`)
+  - Green (`#65BB61`): strings
+  - Golden (`#E5AE61`): values, property names
+  - Dark gray (`#231F20`): punctuation, structure
+
+### Pattern 7: Tree/hierarchy diagram
+
+**Used in:** Developer page (Visual Builder view)
+**Figma component:** `illustration/dev-page/visual-builder-complex`
+**Canvas:** 649 × 633
+
+- Tab bar at top (same as code editor, but "VISUAL BUILDER" active)
+- Outer container: cream fill with very faint dot grid background
+- Pill-shaped filter buttons at top left ("Agent", "MCP") with gray stroke
+- Tree structure flowing top-to-bottom:
+  - Root node: blue-stroked rounded rectangle with agent icon + "Help Agent" label + "Default" badge
+  - Child nodes: blue-stroked rounded rectangles with descriptions
+  - Leaf nodes: blue-stroked pill/capsule shapes with tool icons + names
+  - Connectors: gray curved Bezier paths between parent-child nodes
+  - Small gray circle dots at connection points on node edges
+
+### Pattern 8: Security/trust illustration
+
+**Used in:** Security page
+**Figma components:** `illustration/security/auth-password`, `illustration/security/shield-hexgrid`
+**Canvas:** 649 × 836
+
+**Auth/password variant:**
+- Stacked gray card panels (3-4 cards with slight offset for depth)
+- Golden stroke horizontal lines representing data fields
+- Purple dashed vertical lines on left edge (representing sidebar/tabs)
+- Focal element: blue-stroked capsule shape overlapping the cards
+  - Three blue asterisks (***) inside for password representation
+  - Blue lock icon overlapping the capsule edge
+
+**Shield/hexgrid variant:**
+- Background: tessellated hexagonal grid in gray stroke at 20% opacity
+- Small cream-filled dots (`#F7F4ED`) at hex grid vertices
+- Focal: large shield shape with blue stroke (6px weight) + light blue fill (`#D8E6FC`)
+- Inkeep logo icon centered inside shield (blue fill)
+- Orbit rings: two blue elliptical curves wrapping around the shield at ~50-80% opacity
+
+### Pattern 9: Meeting scheduler / calendar UI
+
+**Used in:** Product UI screens
+**Figma component:** `illustration/ui-screen/meeting-scheduler`
+**Canvas:** 649 × 600
+
+- Blue-stroked speech bubble at top with question text ("What day and time work best for you?")
+- Calendar widget: blue-stroked container with month navigation (< June 2025 >)
+  - Day grid: gray text for weekdays, blue text for dates
+  - Selected date: blue filled rounded square (8px radius)
+  - Blue send button (arrow icon) in bottom right
+- Meetings list below/overlapping: blue-stroked container with "Meetings Booked" heading
+  - List rows: gray hand-drawn rounded rectangles
+  - Each row: blue avatar icon + name text + role text
+  - Three-dot menu icons in gray
+
+### Pattern 10: Charcoal monochrome mini-illustrations
+
+**Used in:** Homepage developer section cards (Multi-Agent SDK, UI Components, RAG & data connectors, MCP and tools)
+**Figma component:** `illustration/homepage/dev-section`
+**Canvas:** 761 × 1057 (container for 4 cards in 2x2 grid)
+
+**This is a distinct illustration mode** — NOT the standard blue+gray dual-layer style:
+
+- **Monochrome only** — dark gray/charcoal outlines at 60-70% opacity, NO blue, NO golden
+- Heavier, rougher strokes (~2-3px, `#231F20` at 60-70%)
+- Simple line art: rounded pill/capsule shapes, connection lines, basic icons
+- Small format (~150×150px illustration area within each card)
+- Set on **colored card backgrounds**:
+  - Light blue (`#D8E6FC` area) — Multi-Agent SDK
+  - Warm peach (`#FFE6C2` area) — UI Components
+  - Light purple (`#E1DBFF` area) — RAG & data connectors
+  - Light cyan (`#DCF2FB` area) — MCP and tools
+- Each card has: mini illustration at top → bold heading → description → "SHOW MORE" link with arrow
+
+**Conceptual shorthand:**
+- Multi-Agent SDK: two agent pills connected by a curved line with circle node
+- UI Components: search bar pill + sparkle icon → results container
+- RAG: hexagonal graph structure → data card
+- MCP: three connected rounded rectangles in a vertical chain
+
+### Pattern 11: Process step icons
+
+**Used in:** Homepage process steps (Connect data, Create agents, Equip tools, Ship & monitor, Success)
+**Figma components:** `illustration/process/*`
+**Canvas:** 90-91 × 90-91 (square, very small)
+
+**Another distinct mode** — dense single-concept pictograms:
+
+- Light blue wash background (`#D0E1FF`) with large corner radius (~24px)
+- Blue-only elements: `#3784FF` fill and/or stroke, no gray, no golden
+- Dense composition — fills most of the tiny canvas, minimal whitespace
+- Single-concept icons: data cards cascading, agent nodes connected, hexagonal tool shape, browser window with chart, star with sparkle rays
+- These use fill + stroke of the same blue — contradicting the old "filled elements never have outlines" rule
+
+### Pattern 12: Two-element scene
 
 **Used in:** Sales card (two avatars with waveform), documentation card (input → sync → output)
 
@@ -126,6 +399,34 @@ The tension between rough gray containers and clean blue fills is what makes the
 - Minimal — only 3 elements total
 
 **Canvas:** 256 × 98 (wide card)
+
+---
+
+## Illustration size classes
+
+The Figma components fall into clear size tiers:
+
+| Class | Dimensions | Examples |
+|---|---|---|
+| **Micro** | 90-91px square | Process step icons |
+| **Small** | 256 × 98 | Use case card inline illustrations (wide landscape) |
+| **Medium** | 452-649 × 548-838 | Feature panels, product UI screens, security panels |
+| **Large** | 761 × 1057, 1345 × 740 | Homepage composite sections (dev cards, use case grid) |
+
+---
+
+## Depth and layering techniques
+
+Beyond the three-tier color system, illustrations use these techniques for spatial depth:
+
+| Technique | Description | Examples |
+|---|---|---|
+| **Stacked card panels** | Cards overlapping at slight offset (2-4 panels deep) | Analytics illustrations, auth/password security |
+| **Blue wash focal area** | Light blue fill (`#D8E6FC`) behind the most important element | Shield interior, hub center, active panel |
+| **Orbit rings** | Elliptical blue stroke curves wrapping around focal elements | Security shield |
+| **Dot grid nodes** | Small cream-filled circles at grid vertices | Security hexgrid |
+| **Bleeding/cropping** | Elements extend past the illustration boundary | Bubble charts cropped at edges, bar charts extending off-canvas |
+| **Opacity gradation** | Background elements at 10-15%, midground at 20-30%, foreground at full | Consistent across all illustration types |
 
 ---
 
@@ -254,32 +555,36 @@ When using Quiver (Option D in the graphics skill) to generate Inkeep-style illu
 ```
 Brand illustration style — "Imperfect Precision":
 
-TWO visual layers that MUST coexist:
-1. CONTAINERS: Hand-drawn, slightly irregular outlines in dark gray at low opacity.
-   Hexagons, circles, rounded rectangles — all with organic wobble, never perfectly
-   geometric. Stroke only (no fill, or very light cream fill). These are faint
-   scaffolding, not bold outlines.
-2. CONTENT: Precise, clean, geometric icons and symbols INSIDE the containers.
-   Solid blue (#3784FF) fill, no stroke. Person icons, globe icons, document icons,
-   gear icons, chat bubbles — whatever represents the concept. These are confident
-   and exact.
+THREE visual tiers that create depth:
 
-The contrast between rough containers and precise fills IS the style.
+1. BACKGROUND STRUCTURE: Hand-drawn outlines in dark gray (#231F20) at 10-30%
+   opacity. Hexagonal grids, outer card panels, background containers. Stroke
+   weight 2-3px, butt linecaps. Slightly irregular paths with organic wobble.
+   Fill: none or light cream (#F7F4ED). These are faint scaffolding.
 
-Colors (ONLY these):
-- Blue: #3784FF (primary fills for icons and active elements)
-- Dark gray: #231F20 at 15-20% opacity (container outlines only)
-- Golden amber: #E5AE61 (secondary accent, use sparingly)
-- Light blue wash: #D0E1FF (background fill areas)
-- Cream: #F7F4ED (container interior fills)
+2. ACTIVE CONTAINERS: Blue (#3784FF) stroke outlines at full opacity for focal
+   panels, chat interfaces, flow nodes, interactive elements. Stroke weight
+   3px (standard) or 6px (focal emphasis). Light blue wash fill (#D8E6FC)
+   behind the most important element. These draw attention.
+
+3. CONTENT: Precise, clean, geometric icons and symbols INSIDE containers.
+   Solid blue (#3784FF) fill. Person icons, globe icons, document icons,
+   gear icons, chat bubbles. Some filled elements also have a same-color
+   stroke for extra boldness. These carry meaning.
+
+Semantic color coding:
+- Blue (#3784FF): AI / system / Inkeep elements
+- Golden amber (#E5AE61, #FFCB83): Human / user / external content
+- Gray (#231F20 at opacity): Structure and scaffolding
+- Light blue wash (#D8E6FC, #D0E1FF): Background fill behind focal elements
 
 Rules:
-- No drop shadows
-- No gradients
-- No photorealistic elements
+- No drop shadows, no gradients, no photorealistic elements
 - Generous whitespace
-- Round linecaps on all strokes
-- Line weight variation for depth (thicker = foreground)
+- Butt linecaps (NONE), not round
+- Default stroke weight: 3px
+- Line weight variation for depth (heavier = closer/more important)
+- Corner radii: 6-8px inner, 24-32px containers, 48-54px outer
 - Maximum 5-7 distinct elements per illustration
 - Flat, minimal, hand-drawn technical style
 ```
@@ -288,14 +593,15 @@ Rules:
 
 | Content | Prompt |
 |---|---|
-| Use case: customer support | "Hand-drawn hexagonal containers in faint gray, arranged diagonally. Inside each: a precise blue icon — a chat bubble, a person silhouette, a checkmark, a document. Connected by faint dotted lines. Minimal, airy, generous whitespace." |
-| Feature: agent workflow | "Left-to-right flow diagram. Hand-drawn rounded rectangle nodes with cream fill. Blue arrows connecting them. First node has a lightning bolt icon, middle node has a gear, last node has a checkmark. Faint dot grid background." |
-| Concept: security/permissions | "A hand-drawn shield outline (slightly irregular, gray) centered on a hexagonal grid background (faint gray). Inside the shield: a precise blue lock icon. Orbit rings (hand-drawn gray curves) around the shield." |
-| Concept: data analytics | "Two overlapping hand-drawn card panels. Front panel: a bubble chart with blue and golden circles of varying sizes. Back panel: a radar/spider chart with blue and golden polygons. Faint gray card outlines, light blue wash background." |
+| Use case: customer support | "Central blue-stroked rounded square with Inkeep logo, light blue wash fill. Six satellite nodes arranged radially: gray rounded squares each containing a precise blue icon (chat, globe, billing, gear, person, bug). Curved blue connector lines with dots. Faint cross-grid behind." |
+| Use case: chat interface | "Blue-stroked chat panel container with header bar. Golden-stroked rounded rectangle for user message on right. Blue-stroked response bubbles on left with bulleted list. Text input bar at bottom with send icon. Alternating blue/golden semantic colors." |
+| Feature: agent workflow | "Top-to-bottom flow diagram. Blue-stroked rounded rectangle nodes with text. Gray curved Bezier connectors between nodes. Small circle dots at connection points. Tab bar at top. Pill-shaped filter buttons. Faint dot grid background." |
+| Concept: security/permissions | "Tessellated hexagonal grid in faint gray (20% opacity) with cream dots at vertices. Large shield shape centered: blue stroke at 6px weight, light blue wash fill. Inkeep logo inside. Two blue orbit ellipses wrapping around the shield." |
+| Concept: data analytics | "Two overlapping hand-drawn card panels on cream background. Front: bubble chart with blue circles (large, light blue fill) and purple circles (small, light purple fill). Blue tooltip card. Below: QA table rows with green checkmarks and golden warning icons." |
 
 ### The key construction question: how to get the "hand-drawn" quality
 
-The dual-stroke language requires organic, slightly irregular paths for containers — hexagons that aren't perfectly geometric, circles with subtle wobble. An agent building in Figma natively will produce rigid, perfect shapes. This is wrong — it loses the entire "imperfect" half of "Imperfect Precision."
+The three-tier system requires organic, slightly irregular paths for containers — hexagons that aren't perfectly geometric, circles with subtle wobble. An agent building in Figma natively will produce rigid, perfect shapes. This is wrong — it loses the entire "imperfect" half of "Imperfect Precision."
 
 **Rule: Use Quiver for ALL hand-drawn containers.** Generate the organic shapes via Quiver (hexagons, circles, rounded rects, flow lines), import as SVG into Figma, then add precise blue fills and text natively in Figma.
 
@@ -316,7 +622,7 @@ Do NOT try to create hand-drawn wobble with Figma vectorPaths — the effort-to-
 
 ### Dot grid backgrounds
 
-Many Inkeep illustrations use a subtle dot grid as background texture. Build in Figma:
+Some Inkeep illustrations use a subtle dot grid as background texture. Build in Figma:
 
 ```javascript
 // Create a dot grid at 3% opacity across a container
@@ -375,7 +681,7 @@ Measured from the existing illustrations:
 | Primary container (hexagon, card) | 30-40% of canvas width | The dominant structural element |
 | Icons inside containers | 40-60% of container width | Icon fills most of the container space |
 | Secondary containers | 60-80% of primary container | Smaller, background depth |
-| Connecting lines | 1-3px stroke weight | Thin, faint — structure not content |
+| Connecting lines | 2-3px stroke weight | Standard weight, not thin |
 | Dot grid spacing | ~12-16px between dots | Regular, subtle, 3-5% opacity |
 | Total element count | 3-7 per illustration | Never more than 7 — restraint over complexity |
 

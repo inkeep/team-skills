@@ -222,7 +222,7 @@ Default to the highest feasible level for each scenario. A scenario about visual
 
 **Video recording (default for all browser scenarios):** For every scenario that uses browser automation, create a video context before starting the scenario using `/browser`'s `helpers.createVideoContext(browser, { outputDir: '/tmp/playwright-videos' })`. This records everything automatically — no pre-planning needed. After the scenario completes (pass or fail):
 1. Close the page to finalize the recording: `const videoPath = await page.video().path(); await page.close();`
-2. Upload to Bunny Stream: `const result = await helpers.uploadToBunny(videoPath, { name: '<scenario-id>-<scenario-name>' });`
+2. Upload to Bunny Stream: load the `/media-upload` skill, then call `uploadToBunnyStream(videoPath, { name: '<scenario-id>-<scenario-name>' })`. Setup: `./secrets/setup.sh --skill media-upload`.
 3. Record the URL in the scenario's `evidence[]` field in `qa-progress.json`.
 
 Video evidence is valuable for both passing and failing scenarios — it shows reviewers exactly what QA tested and helps debug failures.

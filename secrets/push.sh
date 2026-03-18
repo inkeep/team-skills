@@ -11,7 +11,7 @@ set -euo pipefail
 #
 # Usage:
 #   ./push-secrets.sh --account company.1password.com              # push all skills
-#   ./push-secrets.sh --account company.1password.com --skill screengrabs  # push one skill
+#   ./push-secrets.sh --account company.1password.com --skill media-upload  # push one skill
 #
 # Prerequisites:
 #   - 1Password CLI: brew install 1password-cli

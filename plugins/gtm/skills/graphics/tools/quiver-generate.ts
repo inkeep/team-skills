@@ -162,9 +162,11 @@ async function vectorize(args: Record<string, string>): Promise<ScriptResult> {
     process.exit(1);
   }
 
+  // Vectorize API expects image as an object: {url: "..."} or {base64: "..."}
+  // NOT a flat data URI string (which is what imageToBase64 returns)
   const image = args.image.startsWith("http")
-    ? args.image
-    : imageToBase64(args.image);
+    ? { url: args.image }
+    : { base64: readFileSync(resolve(args.image)).toString("base64") };
 
   const vectorizeBody: Record<string, any> = {
     model: MODEL,

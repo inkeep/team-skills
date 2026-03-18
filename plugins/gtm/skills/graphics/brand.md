@@ -791,13 +791,12 @@ Master design files are team-maintained Figma files containing canonical compone
 
 | File | URL | Contains | Use for |
 |---|---|---|---|
-| BABCO Design Assets | https://www.figma.com/design/by048nPGeK3c6FKMvlmPCz/BABCO-Design-Assetts | Brand guide, color system, typography, logos, social assets, presentation templates, marketing graphics | All graphics — primary brand token and asset source |
-| Inkeep Design Assets | https://www.figma.com/design/D7NDSM2peo1iLhkjLxmGP5/Inkeep-Design-Assetts | Brand Assets master page — all atomic graphical elements (logos, icons, illustrations, backgrounds, third-party logos) | Primary source for logos, icons, illustrations, backgrounds |
+| Inkeep Design Assets | https://www.figma.com/design/D7NDSM2peo1iLhkjLxmGP5/Inkeep-Design-Assetts | Brand Assets master page — all atomic graphical elements (logos, icons, illustrations, backgrounds, third-party logos), design tokens (5 variable collections) | Primary source for all brand assets and tokens |
 | Inkeep Agent Graphics Workspace | https://www.figma.com/design/S5kGTPZ0kSjmSxusJ56QJH/Inkeep-Agent-Graphics-Workspace | Shared workspace for AI-generated graphics — one page per project, organized by date and medium | Default target for all new graphics creation (unless user specifies a different file) |
 
 ## Navigating Figma files via MCP
 
-The BABCO Design Assets file has many pages organized by section. **Always use the Figma MCP to navigate** — never the browser.
+**Always use the Figma MCP to navigate** — never the browser.
 
 ### How to discover pages and assets
 
@@ -806,46 +805,20 @@ The BABCO Design Assets file has many pages organized by section. **Always use t
 3. **Read a specific page** by its node ID to see what components and frames it contains.
 4. **Drill into nodes** to extract specific assets, styles, colors, and typography.
 
-### Page map (observed structure)
-
-This map is a snapshot to help you start in the right place. Always verify with the Figma MCP — pages may have been added or reorganized.
-
-| Section | Page | What's there | Good for |
-|---|---|---|---|
-| **COVER** | Full Brand Guide | Complete brand guide — colors, typography, logo usage, gradients | Brand tokens, color palette, typography rules |
-| **BRAND** | Final Logos | Official logo assets in various formats | Logo exports, logo usage reference |
-| | Inkeep Asks September 19-30 | Campaign-specific assets | Campaign reference |
-| | Use cases (x5) [on Vercel] | Use case page designs | Use case visual patterns |
-| **COMPLETE** | Tablecloth | Event tablecloth design | Event/trade show graphics |
-| | Sept 8 - Pre-built Agents | Agent-related marketing assets | Product marketing visuals |
-| | YouTube Banner | YouTube channel banner | Video/social banner dimensions |
-| | Presentation Template | Slide deck template designs | Presentation visual patterns |
-| | Integrations Page [on Vercel] | Integrations page design | Integration graphics |
-| | Sept 8 - OSS vs Enterprise | Comparison/positioning assets | Competitive graphics |
-| | Logos + Brand Lite | Logo variants and light brand kit | Quick logo access |
-| | Social Assets | Social media graphics | Social posts, cards |
-| | Social Banners | Social media banners | Banner dimensions, layouts |
-| | Get Demo [on Vercel] | Demo page design | CTA/demo graphics |
-| **POST LAUNCH** | *(various)* | Post-launch marketing assets | Campaign materials |
-| **ARCHIVE** | Logos + Brand Lite - Needs update | Outdated logo versions | Historical reference only |
-| | All Logo Amends | Logo revision history | Historical reference only |
-| | Internal QA - Aug 22 | QA screenshots | Not for production use |
-| **Graphics** | *(section)* | General graphics assets | Miscellaneous visuals |
-
 ### Key node IDs (known)
 
-| Page | Node ID | File |
-|---|---|---|
-| Full Brand Guide (Brand Guide frame) | `2454-979` | BABCO |
-| Brand Assets (master asset page) | `5003:63` | Inkeep Design Assets |
-| Logos section | `5003:64` | Inkeep Design Assets |
-| Icon Set section | `5006:187898` | Inkeep Design Assets |
-| Illustrations section | `5003:66` | Inkeep Design Assets |
-| Customers section | `5045:158` | Inkeep Design Assets |
-| Third-Party Logos section | `5003:70` | Inkeep Design Assets |
-| Decorative & Backgrounds section | `5003:69` | Inkeep Design Assets |
-| UI Elements section | `5003:68` | Inkeep Design Assets |
-| Brand Mascot section | `5003:65` | Inkeep Design Assets |
+| Page | Node ID |
+|---|---|
+| Brand Assets (master asset page) | `5003:63` |
+| Logos section | `5003:64` |
+| Icon Set section | `5006:187898` |
+| Illustrations section | `5003:66` |
+| Customers section | `5045:158` |
+| Third-Party Logos section | `5003:70` |
+| Decorative & Backgrounds section | `5003:69` |
+| UI Elements section | `5003:68` |
+| Brand Mascot section | `5003:65` |
+| Reference Examples section | `5097:4194` |
 
 > For other pages, use the Figma MCP to get their node IDs dynamically. Node IDs may change if pages are restructured.
 
@@ -861,13 +834,14 @@ This map is a snapshot to help you start in the right place. Always verify with 
 | Background, gradient, texture | Brand Assets → Decorative & Backgrounds (`background/`) | — |
 | Product UI mockup | Brand Assets → UI Elements (`ui/`) | — |
 | Mascot/Keepie | Brand Assets → Brand Mascot (`mascot/`) | — |
-| Brand colors, typography, spacing | Design tokens in the Graphics Workspace file | Fallback hex values in the Brand Tokens section above |
-| Social media graphic reference | Social Assets or Social Banners page (BABCO file) | — |
-| Presentation visual patterns | Presentation Template page (BABCO file) | — |
+| Brand colors, typography, spacing | Design tokens in the Inkeep Design Assets file | Fallback hex values in the Brand Tokens section above |
+| Need visual inspiration or style reference | Reference Examples (`_reference/` prefix) | Gradient swatches, UI screenshots, illustration variants. For style matching only — do NOT place in compositions. |
 
 ## Brand Assets Page
 
 The Brand Assets page in the Inkeep Design Assets file is a curated collection of all unique atomic graphical elements, organized for AI consumption.
+
+Production sections contain only **COMPONENT** nodes — every item is a published library component accessible via `importComponentByKeyAsync`. The Reference Examples section contains FRAME/INSTANCE items that are not published as library components.
 
 - **File key**: `D7NDSM2peo1iLhkjLxmGP5`
 - **Page node ID**: `5003:63`
@@ -890,6 +864,8 @@ All assets use **slash-separated hierarchical names**: `{section}/{subcategory}/
 
 > **Do not hardcode asset counts or specific names** — the library evolves. Always search dynamically using the path prefixes above.
 
+> Items prefixed with `_reference/` are in the **Reference Examples** section — non-publishable reference material (gradient swatches, UI screenshots, illustration variants, case study heroes). These are for visual inspiration only — do NOT clone or place them in compositions.
+
 ### How to find an asset
 
 Use `figma_execute` to search by name or prefix. Always scope searches to the Brand Assets page (`5003:63`) — never search the entire file.
@@ -908,6 +884,27 @@ const searchIcon = iconSet.findOne(n => n.name === 'iconset/search');
 ```
 
 ### How to use an asset
+
+### Preferred method: import from published library
+
+The Design Assets file is published as a team library. Use `importComponentByKeyAsync` for asset acquisition — no cross-file navigation needed:
+
+```javascript
+// Import by component key (preferred — no file navigation needed)
+const component = await figma.importComponentByKeyAsync(componentKey);
+const instance = component.createInstance();
+instance.x = targetX;
+instance.y = targetY;
+```
+
+**Discovering component keys:** Use the REST API to list all published components and their keys:
+`GET /v1/files/D7NDSM2peo1iLhkjLxmGP5/components` — each component in the response includes a `key` field.
+
+Or discover at runtime: navigate to Design Assets file, find the node by name, read `node.key`.
+
+### Fallback: cross-file clone
+
+If `importComponentByKeyAsync` fails (component key changed, library update pending, or asset is in Reference Examples and not published), fall back to the cross-file clone workflow:
 
 1. Navigate to the Brand Assets file (`figma_navigate`)
 2. Search the Brand Assets page (node `5003:63`) by name or prefix

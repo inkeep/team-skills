@@ -318,18 +318,19 @@ npx tsx scripts/annotate.ts \
 
 Images in PR markdown need permanent URLs.
 
-**Primary: Bunny Edge Storage** (programmatic, permanent CDN URLs):
+**Primary: Bunny Edge Storage** via `/media-upload` skill (programmatic, permanent CDN URLs):
+
+Load the `/media-upload` skill, then use `uploadToBunnyStorage()`:
 
 ```javascript
-const helpers = require('./lib/helpers');
-const result = await helpers.uploadToBunnyStorage(
+const result = await uploadToBunnyStorage(
   './tmp/screengrabs/dashboard-labeled.png',
   `pr-${prNumber}/dashboard-before.png`
 );
 // result.url → "https://{cdn-hostname}/pr-123/dashboard-before.png" (permanent)
 ```
 
-Requires `BUNNY_STORAGE_API_KEY`, `BUNNY_STORAGE_ZONE_NAME`, `BUNNY_STORAGE_HOSTNAME` env vars. Set up with `./secrets/setup.sh --skill screengrabs` (see [secrets/secrets.json](../../../../secrets/secrets.json)).
+Requires `BUNNY_STORAGE_API_KEY`, `BUNNY_STORAGE_ZONE_NAME`, `BUNNY_STORAGE_HOSTNAME` env vars. Setup: `./secrets/setup.sh --skill media-upload`.
 
 **Fallback: GitHub drag-and-drop** — drag images into the PR description editor on GitHub. GitHub generates permanent CDN URLs automatically.
 

@@ -166,9 +166,9 @@ npm run setup --prefix ~/.claude/plugins/marketplaces/inkeep-team-skills/plugins
 open "https://chromewebstore.google.com/detail/playwright-mcp-bridge/mmlmfjhmonkocbjadbfplnigmagldckm"
 ```
 
-## Optional: Screengrabs secrets (1Password)
+## Optional: Media upload secrets (1Password)
 
-Only needed if you use media upload helpers (`uploadToBunnyStorage()`, `uploadToBunny()`, `uploadToVimeo()`). All other skills work without any env vars.
+Only needed if you use media upload helpers (`uploadToBunnyStorage()`, `uploadToBunnyStream()`, `uploadToVimeo()` from the `/media-upload` skill). All other skills work without any env vars.
 
 ```bash
 # Per-project dep for capture + annotation
@@ -186,16 +186,18 @@ The script reads `secrets/secrets.json` to discover which 1Password items to pul
 
 ```bash
 ./secrets/setup.sh                              # pull all skills' secrets
-./secrets/setup.sh --skill screengrabs           # pull just screengrabs secrets
+./secrets/setup.sh --skill media-upload           # pull media upload secrets
 ./secrets/setup.sh --list                        # show available skills and their vars
-./secrets/setup.sh --skill screengrabs --dry-run # preview without writing
+./secrets/setup.sh --skill media-upload --dry-run # preview without writing
 ```
 
 **Current skills and their env vars** (defined in `secrets/secrets.json`):
 
 | Skill | 1Password Item | Env vars |
 |---|---|---|
-| `screengrabs` | Screengrabs | `BUNNY_STORAGE_API_KEY`, `BUNNY_STORAGE_ZONE_NAME`, `BUNNY_STORAGE_HOSTNAME`, `BUNNY_STREAM_API_KEY`, `BUNNY_STREAM_LIBRARY_ID`, `VIMEO_CLIENT_ID`, `VIMEO_CLIENT_SECRET`, `VIMEO_ACCESS_TOKEN` |
+| `media-upload` | Media Upload | `BUNNY_STREAM_API_KEY`, `BUNNY_STREAM_LIBRARY_ID`, `BUNNY_STORAGE_API_KEY`, `BUNNY_STORAGE_ZONE_NAME`, `BUNNY_STORAGE_HOSTNAME`, `VIMEO_ACCESS_TOKEN`, `VIMEO_CLIENT_ID`, `VIMEO_CLIENT_SECRET` |
+| `media-upload` | Media Upload | `BUNNY_STREAM_API_KEY`, `BUNNY_STREAM_LIBRARY_ID`, `BUNNY_STORAGE_API_KEY`, `BUNNY_STORAGE_ZONE_NAME`, `BUNNY_STORAGE_HOSTNAME`, `VIMEO_ACCESS_TOKEN`, `VIMEO_CLIENT_ID`, `VIMEO_CLIENT_SECRET` |
+| `screengrabs` | Media Upload | `BUNNY_STORAGE_API_KEY`, `BUNNY_STORAGE_ZONE_NAME`, `BUNNY_STORAGE_HOSTNAME` |
 
 <details>
 <summary>Don't have 1Password?</summary>

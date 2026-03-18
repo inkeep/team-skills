@@ -8,10 +8,10 @@ Impact: Off-brand presentations with inconsistent colors, fonts, or layouts
 
 ## Figma Design System
 
-The canonical brand assets live in the BABCO Design Assets Figma file:
+The canonical brand assets live in the Inkeep Design Assets Figma file:
 
-- **File URL**: https://www.figma.com/design/by048nPGeK3c6FKMvlmPCz/BABCO-Design-Assetts
-- **Brand Guide page**: node-id `2454-979`
+- **File URL**: https://www.figma.com/design/D7NDSM2peo1iLhkjLxmGP5/Inkeep-Design-Assetts
+- **Brand Assets page**: node-id `5003:63`
 
 Use the Figma MCP to pull current values. Always prefer live Figma data over the fallback tokens below.
 
@@ -20,13 +20,11 @@ Use the Figma MCP to pull current values. Always prefer live Figma data over the
 **Always use the Figma MCP for navigation** — never the browser.
 
 1. **List pages** — get the file's page tree to see all available pages and node IDs
-2. **Read the Brand Guide page** (node `2454-979`) — this is the primary brand token source
-3. Extract color styles — look for named styles like "Gradient - Dev", primary, secondary, background
+2. **Read the Brand Assets page** (node `5003:63`) — this contains logos, icons, illustrations, backgrounds
+3. Extract color styles — look for design token variables via `figma.variables.getLocalVariablesAsync()`
 4. Extract typography — font families, heading/body size scales, weight conventions
-5. If you need logos, navigate to the "Final Logos" page (get its node ID from the page tree)
+5. If you need logos, navigate to the Logos section (node `5003:64`)
 6. Export assets as needed for slide use
-
-The BABCO Design Assets file has many pages (Full Brand Guide, Final Logos, Social Assets, Presentation Template, etc.). For slides, the Brand Guide and Final Logos pages are most relevant. Use the page tree listing to find others if needed.
 
 ## Fallback Brand Tokens
 

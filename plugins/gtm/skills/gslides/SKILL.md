@@ -20,6 +20,8 @@ If any are missing, instruct the user to run:
 ```
 This registers `figma` and `google-slides` MCP servers, sets up gcloud ADC, and pulls Google OAuth credentials.
 
+**Visual asset creation** requires the `graphics` skill (available in the same `gtm` plugin). When the graphics skill is available, this skill delegates visual asset creation to it via subagent. When unavailable, slides are text-only — note the gap and move on.
+
 ## Workflow
 
 ### 1. Parse the request
@@ -84,22 +86,65 @@ If working from a cloned deck (master or prior version), read its existing slide
 
 Common slide types (for new decks or adding slides):
 
-| Slide Type | Purpose | When to Use |
-|---|---|---|
-| Title slide | Set context, company name, presentation title | Always first |
-| Problem/challenge | Frame the pain point | Customer/sales decks |
-| Solution overview | High-level value proposition | Customer/sales decks |
-| Feature deep-dive | Specific capability with visual | Product presentations |
-| Social proof | Customer logos, quotes, metrics | Sales decks |
-| Architecture/diagram | Technical overview | Technical audiences |
-| Comparison/matrix | Feature comparison or competitive positioning | Evaluation stage |
-| CTA/next steps | Clear call to action | Always last |
+| Slide Type | Purpose | When to Use | Typical visual need |
+|---|---|---|---|
+| Title slide | Set context, company name, presentation title | Always first | Hero illustration or branded background (optional) |
+| Problem/challenge | Frame the pain point | Customer/sales decks | Conceptual diagram or illustration |
+| Solution overview | High-level value proposition | Customer/sales decks | System diagram, before/after, or flowchart |
+| Feature deep-dive | Specific capability with visual | Product presentations | Product mockup or UI screenshot treatment |
+| Social proof | Customer logos, quotes, metrics | Sales decks | Metric callout cards, quote cards, logo wall |
+| Architecture/diagram | Technical overview | Technical audiences | Architecture diagram or data flow |
+| Comparison/matrix | Feature comparison or competitive positioning | Evaluation stage | Visual comparison layout (optional) |
+| CTA/next steps | Clear call to action | Always last | None (text-only) |
 
 Present the slide outline to the user for review before creating or modifying slides.
 
-### 5. Create or modify the presentation
+### 5. Create visual assets
+
+After the user confirms the slide outline, evaluate which slides need visual assets and delegate creation to the `graphics` skill via subagent.
+
+**Load:** `references/graphics-delegation.md`
+
+**a) Scan the outline for visual needs**
+
+Review each slide against the "Typical visual need" column in the table above. Build a list of graphics to create:
+
+| Slide | What the graphic should communicate | Graphic type |
+|---|---|---|
+| (fill per slide) | (key message / purpose) | (diagram, illustration, mockup, data viz, etc.) |
+
+If any slides need **product mockups or UI screenshots** (feature deep-dives), gather existing product screenshots, URLs, or spec paths now — the graphics subagent can't browse the product or ask the user. Pass these as content sources in the handoff.
+
+**b) Create a series brief**
+
+Before spawning any subagents, decide the locked visual constants for the deck. See `references/graphics-delegation.md` § Series brief. These decisions apply to every graphic in the deck:
+- Background treatment, illustration style, accent color, visual density, logo variant
+
+For sales decks targeting a specific prospect, also capture the prospect's company name and domain for brand personalization.
+
+**c) Skip delegation when:**
+- The slide only needs text, bullets, and brand-styled solid color backgrounds
+- A suitable image already exists as a public URL (user-provided or from master deck)
+- Working from a cloned deck where visuals are already in place and adequate
+- The "visual" is just a customer logo extractable directly from Figma
+
+**d) Delegate in parallel**
+
+For each graphic needed, spawn a subagent using the Agent tool. See `references/graphics-delegation.md` for the prompt template and handoff contract. Include the series brief and prospect context (if applicable) in every subagent prompt.
+
+Spawn all graphics subagents in parallel (multiple Agent tool calls in one message). Each subagent loads the `graphics` skill and produces a Figma frame + exported PNG.
+
+**e) Collect results and place images**
+
+When subagents return, collect the exported image URLs. These will be placed during slide creation (step 6) using `mcp__google-slides__add_image`.
+
+If any subagent fails, note the gap and proceed — the slide gets text-only content and you inform the user which visuals could not be created.
+
+### 6. Create or modify the presentation
 
 **Load:** `references/mcp-tools.md` for the full tool reference.
+
+**Place visual assets:** For each slide that has a graphic from step 5, use `mcp__google-slides__add_image` with the exported image URL during slide creation. Full-slide graphics: `x=0, y=0, width=720, height=405` (points). Inset graphics: position and size according to the slide layout.
 
 Choose the approach based on the starting point:
 
@@ -124,7 +169,7 @@ Best when creating fresh decks from scratch.
 4. Add images: `mcp__google-slides__add_image`
 5. Style text: `mcp__google-slides__update_text_style`
 
-### 6. Apply brand styling
+### 7. Apply brand styling
 
 After slides are created or modified, verify brand consistency:
 - Slide background colors match brand palette
@@ -136,7 +181,7 @@ For cloned decks, styling should already be correct — only verify and fix inco
 
 Use `mcp__google-slides__batch_update` for efficient bulk styling.
 
-### 7. Populate content
+### 8. Populate content
 
 For each slide:
 - Write concise, audience-appropriate copy
@@ -147,7 +192,7 @@ For each slide:
 
 For cloned decks, focus on customizing existing content (company name, specific pain points, tailored metrics) rather than rewriting everything.
 
-### 8. Review and deliver
+### 9. Review and deliver
 
 1. Get the presentation URL via `mcp__google-slides__get_presentation`
 2. Verify:
@@ -174,6 +219,7 @@ Should have:
 - [ ] Clear CTA on the final slide
 - [ ] Consistent layout patterns across slides
 - [ ] If cloned: all placeholder content replaced with actual content
+- [ ] Visual assets created for slides that need them (feature deep-dives, architecture diagrams, etc.)
 
 ## Anti-patterns
 
@@ -182,7 +228,9 @@ Should have:
 - **Leftover placeholders**: If cloning, ensure no "[Company Name]" or template text remains
 - **Wall of text**: Never put more than 6 lines of text on a single slide
 - **Generic visuals**: Use brand assets from Figma, not generic placeholders
+- **Text-only when visuals would communicate better**: If a slide type has a "Typical visual need" in the outline table, create the graphic — don't skip it because it's easier to write bullet points
 - **Feature dumps**: Lead with outcomes and pain points, not feature lists
+- **Visually inconsistent graphics across slides**: All graphics in a deck must share the same series brief (background, style, accent, density) — create it before spawning subagents
 - **Inconsistent styling**: All slides must use the same color palette and typography
 - **Missing context**: Every slide should be understandable without the presenter narrating
 - **Skipping the outline**: Always present the slide structure before creating slides

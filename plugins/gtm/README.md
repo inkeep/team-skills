@@ -59,13 +59,13 @@ npx skills update
 
 ## Skill secrets and MCP setup
 
-### Screengrabs (media upload)
+### Media upload
 
-`/screengrabs` needs media upload credentials:
+`/media-upload`, `/screengrabs`, `/motion-video`, and `/qa` need media upload credentials:
 
 ```bash
 brew install 1password-cli  # skip if already installed
-~/.claude/plugins/marketplaces/inkeep-team-skills/secrets/setup.sh --skill screengrabs --account inkeep.1password.com
+~/.claude/plugins/marketplaces/inkeep-team-skills/secrets/setup.sh --skill media-upload --account inkeep.1password.com
 ```
 
 ### Graphics (Figma design creation)

@@ -14,9 +14,9 @@ set -euo pipefail
 #
 # Usage:
 #   ./setup-secrets.sh                              # pull all skills
-#   ./setup-secrets.sh --skill screengrabs           # pull one skill
+#   ./setup-secrets.sh --skill media-upload           # pull one skill
 #   ./setup-secrets.sh --list                        # show available skills
-#   ./setup-secrets.sh --skill screengrabs --dry-run # preview without writing
+#   ./setup-secrets.sh --skill media-upload --dry-run # preview without writing
 #
 # Prerequisites:
 #   - 1Password CLI: brew install 1password-cli

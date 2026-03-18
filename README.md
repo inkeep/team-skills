@@ -21,6 +21,7 @@ Use by typing e.g. `/skill-name` in Claude Code or Cursor, e.g. `/research`.
 | `/analyze <decision/question>` | Deep, iterative analysis of decisions, trade-offs, and open questions. Reasons from multiple angles before converging on a recommendation. |
 | `/write-agent <goal>` | (advanced) Design and write Claude Code agents and prompts. |
 | `/screengrabs` | Capture, annotate, and embed before/after screenshots in GitHub PRs for UI changes. Requires Playwright. |
+| `/media-upload` | Upload video and files to Bunny CDN or Vimeo. Used by `/screengrabs`, `/qa`, `/browser`, and `/motion-video` for media hosting. |
 
 ## Team-specific skills
 
@@ -73,14 +74,14 @@ npx skills add inkeep/team-skills/plugins/shared -y
 
 ## Skill secrets (optional)
 
-Some skills (e.g. `/screengrabs`) need credentials for media uploads. These are managed via 1Password and a `secrets/` directory at the repo root.
+Some skills (e.g. `/media-upload`, `/screengrabs`) need credentials for media uploads. These are managed via 1Password and a `secrets/` directory at the repo root.
 
 ```bash
 # Pull all skill secrets
 ./secrets/setup.sh --account inkeep.1password.com
 
 # Pull just one skill's secrets
-./secrets/setup.sh --skill screengrabs --account inkeep.1password.com
+./secrets/setup.sh --skill media-upload --account inkeep.1password.com
 
 # See available skills and their env vars
 ./secrets/setup.sh --list

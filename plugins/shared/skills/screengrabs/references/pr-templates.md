@@ -118,16 +118,17 @@ Use when a change affects several different pages.
 
 Programmatic upload with permanent CDN URLs. Best for automated workflows.
 
+Load the `/media-upload` skill, then use `uploadToBunnyStorage()`:
+
 ```javascript
-const helpers = require('./lib/helpers');
-const result = await helpers.uploadToBunnyStorage(
+const result = await uploadToBunnyStorage(
   './tmp/screengrabs/dashboard-labeled.png',
   `pr-${prNumber}/dashboard-before.png`
 );
 // result.url → "https://{cdn-hostname}/pr-123/dashboard-before.png"
 ```
 
-Requires `BUNNY_STORAGE_API_KEY`, `BUNNY_STORAGE_ZONE_NAME`, `BUNNY_STORAGE_HOSTNAME` env vars.
+Requires `BUNNY_STORAGE_*` env vars. Setup: `./secrets/setup.sh --skill media-upload`.
 
 ### Method B: Drag and drop
 

@@ -25,12 +25,9 @@ Env vars are configured via Claude Code's `~/.claude/settings.json` `env` field 
 
 ## Video Upload Strategy
 
-| Use case | Function | Platform | Why |
-|---|---|---|---|
-| Internal (team demos, QA recordings) | `uploadToBunny()` | Bunny Stream | Cheapest, explicit VP8/WebM support, JIT encoding, independent company |
-| Customer-facing (docs, marketing) | `uploadToVimeo()` | Vimeo | Familiar platform, password-protected links, broad reach |
+Upload functions live in the shared `/media-upload` skill. Load it when you need to upload. See `/media-upload` SKILL.md for the platform routing table.
 
-Both accept WebM directly — no local conversion needed.
+Setup: `./secrets/setup.sh --skill media-upload`
 
 ## Usage
 

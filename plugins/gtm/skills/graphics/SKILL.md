@@ -234,7 +234,7 @@ Present the suggestion to the user: "Based on the content, I'd suggest a [type] 
 | Image editing (inpainting, background swap, style transfer, object removal) | **GPT Image edit (Option E)** | Modify existing raster images with natural language instructions |
 | Raster image FOR a slide/marketing layout | **GPT Image (Option E) → Figma (Option A)** | Generate raster image, place in Figma as image fill, compose with brand elements and text |
 | Tutorial walkthrough / UX highlight (SaaS "click here" guides) | **Figma (Option A)** — spotlight cutout pattern | Screenshot as image fill + boolean subtract overlay. See Pattern: Spotlight cutout in `tools/figma-console.md` |
-| 3D rendered objects (glassmorphic tiles, clay/plastic objects, metallic surfaces) | **Three.js (Option F)** | Programmatic 3D — exact brand colors, deterministic, free. **Load `tools/r3f/README.md`** for material presets, scene templates, and rendering pipeline. |
+| 3D rendered objects (glassmorphic tiles, clay/plastic objects, metallic surfaces) | **Three.js (Option F)** | Programmatic 3D — exact brand colors, deterministic, free. **Load `tools/r3f/README.md`** for scene setup, templates, and reference index to materials, staging, and advanced features. |
 | Integration icon tile (partner logo on 3D tile, batch-renderable) | **Three.js (Option F)** | Template scene → swap logo/color → batch render. Deterministic + free. |
 | 3D element FOR a slide/marketing layout | **Three.js (Option F) → Figma (Option A)** | Render 3D element with transparent background, place in Figma as image fill, compose with brand text and layout |
 
@@ -404,7 +404,7 @@ If `importComponentByKeyAsync` fails, fall back to the cross-file clone workflow
 
 **Load:** `brand.md` § Asset Library
 
-This file contains navigation strategy tables for both the BABCO Design Assets file (brand tokens) and the Inkeep Design Assets file (Brand Assets page). Use it to identify which pages to check if the Brand Assets page doesn't have what you need.
+This file contains navigation strategy tables for the Inkeep Design Assets file (Brand Assets page). Use it to identify which pages to check if the Brand Assets page doesn't have what you need.
 
 **c) Navigate the Figma file via MCP**
 
@@ -1143,9 +1143,24 @@ This hybrid approach is the right default for: slide deck hero images, marketing
 
 **Option F: Three.js 3D render (for programmatic 3D objects, glassmorphic tiles, brand-colored 3D)**
 
+**Before reaching for R3F, check whether the graphic actually needs a custom 3D render.** Most feature graphics (~70%) use reusable 3D textures composed in Figma — only hero metaphor objects and integration tiles require a custom R3F scene.
+
+| Feature type | Visual approach | Tool | R3F needed? |
+|---|---|---|---|
+| Abstract/infrastructure (CLI, webhooks, agents) | 3D metaphor object | R3F → Figma compose | **Yes** |
+| Integration announcement (n8n, Vercel, Slack) | 3D icon tile with partner logo | R3F → Figma compose | **Yes** |
+| Feature with compelling UI (logs, editor, dashboard) | Stylized UI mockup | Figma only | No |
+| API/developer feature (broadcasts API, SDK) | Code snippet as hero | Figma only | No |
+| Simple/minor feature (webhook ingester) | Typography + 3D texture from library | Figma only (reuse texture) | No |
+| Milestone/stat (1M users) | Giant number + 3D texture field | Figma only (reuse texture) | No |
+
+**If the routing says "Figma only":** Use the existing Option A workflow with pre-rendered 3D texture PNGs as atmospheric backgrounds (see `tools/r3f/staging.md` § "3D texture library"). No R3F scene needed.
+
+**If the routing says "R3F → Figma compose":** Write a custom R3F scene, render with `--mode compositing` (transparent PNG), and compose in Figma with text and layout. This is the default R3F workflow — see hybrid workflow below.
+
 Best for: 3D rendered objects with exact brand colors, batch-renderable integration tiles, glassmorphic/clay/metallic materials, any 3D asset where deterministic output and color precision matter. The agent writes the 3D scene as a React Three Fiber (R3F) TSX component — declarative scene graph with drei staging helpers, full control over every material, light, and camera property.
 
-**Load:** `tools/r3f/README.md` for material presets, scene templates, staging setup, and the full rendering pipeline reference.
+**Load:** `tools/r3f/README.md` for the rendering pipeline, scene template, and reference index to deeper files (materials, staging, advanced features).
 
 **Prerequisite:** `three`, `react`, `react-dom`, `@react-three/fiber`, `@react-three/drei`, `@react-three/postprocessing`, `@react-three/csg`, `playwright`, and `three-bvh-csg` are auto-installed on first use. For GPU-quality rendering, system Google Chrome must be installed (the script uses `channel: 'chrome'` for Metal GPU access on macOS). Optional: `MESHY_API_KEY` for AI-generated 3D meshes via Meshy.ai (only needed for text-to-3D generation, not for code-built scenes).
 
