@@ -31,7 +31,7 @@ The `figma-console` MCP communicates with Figma Desktop via a WebSocket bridge p
 
 **Each session (run the plugin):**
 
-Option A — automated (macOS): `bash scripts/launch-bridge.sh` opens the Graphics Workspace and triggers the bridge plugin via Cmd+Option+P.
+Option A — automated (macOS): `bash scripts/launch-bridge.sh` opens the Graphics Workspace and launches the bridge by name via menu automation (Plugins → Development → Figma Desktop Bridge).
 
 Option B — manual:
 1. Open your target Figma file in Figma Desktop

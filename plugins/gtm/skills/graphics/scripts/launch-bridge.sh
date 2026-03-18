@@ -4,14 +4,12 @@ set -euo pipefail
 # launch-bridge.sh — Open a Figma file and launch the Desktop Bridge plugin
 #
 # Opens a Figma file by key (defaults to the Graphics Workspace), waits for
-# the file to load, then triggers "Run last plugin" (Cmd+Option+P) via
-# AppleScript to start the Desktop Bridge.
+# the file to load, then launches "Figma Desktop Bridge" by name via
+# AppleScript menu navigation (Plugins → Development → Figma Desktop Bridge).
 #
 # Prerequisites:
 #   - Figma Desktop installed at /Applications/Figma.app
 #   - Desktop Bridge plugin imported (one-time setup — see README)
-#   - Desktop Bridge must be the LAST plugin you ran in Figma
-#     (Cmd+Option+P reruns the most recent plugin)
 #
 # Usage:
 #   ./launch-bridge.sh                          # opens Graphics Workspace
@@ -64,20 +62,29 @@ else
   sleep 3
 fi
 
-# --- Launch "Run last plugin" ---
-echo "Triggering 'Run last plugin' (Cmd+Option+P)..."
-osascript \
-  -e 'tell application "Figma" to activate' \
-  -e 'delay 0.5' \
-  -e 'tell application "System Events" to tell process "Figma" to keystroke "p" using {command down, option down}'
+# --- Launch Desktop Bridge by name ---
+echo "Launching Figma Desktop Bridge..."
+osascript -e '
+tell application "Figma" to activate
+delay 0.5
+tell application "System Events"
+  tell process "Figma"
+    click menu item "Figma Desktop Bridge" of menu 1 of menu item "Development" of menu 1 of menu bar item "Plugins" of menu bar 1
+  end tell
+end tell
+' 2>/dev/null
 
-echo ""
-echo "✅ Sent 'Run last plugin' to Figma."
-echo ""
-echo "   If the Desktop Bridge was your last plugin, it should now be connecting."
-echo "   Look for the green 'MCP Ready' status widget in Figma."
-echo ""
-echo "   If a DIFFERENT plugin launched instead:"
-echo "     1. Close that plugin"
-echo "     2. Right-click canvas → Plugins → Development → Figma Desktop Bridge"
-echo "     3. Then Cmd+Option+P will remember the bridge for next time"
+if [[ $? -eq 0 ]]; then
+  echo ""
+  echo "✅ Launched Figma Desktop Bridge."
+  echo "   Look for the green 'MCP Ready' status widget in Figma."
+else
+  echo ""
+  echo "⚠️  Could not launch the plugin via menu automation."
+  echo "   This usually means the plugin isn't imported yet."
+  echo ""
+  echo "   One-time setup:"
+  echo "     1. Right-click canvas → Plugins → Development → Import plugin from manifest..."
+  echo "     2. Select: $(npx figma-console-mcp@latest --print-path 2>/dev/null || echo 'run: npx figma-console-mcp@latest --print-path')"
+  echo "     3. Then re-run this script."
+fi
