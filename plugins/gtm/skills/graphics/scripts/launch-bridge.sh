@@ -9,7 +9,7 @@ set -euo pipefail
 #
 # The bridge only needs to run in the file you're creating designs in.
 # Brand assets are imported via component keys (tokens/figma.json) — the
-# Graphics & Icons file doesn't need to be open.
+# Inkeep Brand Assets file doesn't need to be open.
 #
 # Prerequisites:
 #   - Figma Desktop installed at /Applications/Figma.app
@@ -18,13 +18,13 @@ set -euo pipefail
 # Usage:
 #   ./launch-bridge.sh                          # opens Graphics Workspace + bridge
 #   ./launch-bridge.sh S5kGTPZ0kSjmSxusJ56QJH  # opens specific file + bridge
-#   ./launch-bridge.sh --both                   # opens Graphics Workspace + Graphics & Icons, bridge on both
+#   ./launch-bridge.sh --both                   # opens Graphics Workspace + Inkeep Brand Assets, bridge on both
 #   ./launch-bridge.sh --status                 # check if bridge is connected
 #
 # macOS only (uses osascript + open command).
 
 GRAPHICS_WORKSPACE="S5kGTPZ0kSjmSxusJ56QJH"  # Inkeep Agent Graphics Workspace
-DESIGN_ASSETS="D7NDSM2peo1iLhkjLxmGP5"       # Graphics & Icons (Brand Assets)
+DESIGN_ASSETS="D7NDSM2peo1iLhkjLxmGP5"       # Inkeep Brand Assets (Brand Assets)
 
 # --- Status check mode ---
 if [[ "${1:-}" == "--status" ]]; then
@@ -55,7 +55,7 @@ BOTH=false
 if [[ "${1:-}" == "--both" ]]; then
   BOTH=true
   FILES=("$GRAPHICS_WORKSPACE" "$DESIGN_ASSETS")
-  FILE_NAMES=("Graphics Workspace" "Graphics & Icons")
+  FILE_NAMES=("Graphics Workspace" "Inkeep Brand Assets")
 elif [[ -n "${1:-}" ]]; then
   FILES=("$1")
   FILE_NAMES=("$1")
@@ -114,8 +114,8 @@ done
 if $BOTH; then
   echo "Both files open with bridge running."
   echo "  Graphics Workspace — create designs here"
-  echo "  Graphics & Icons — for cross-file clone operations (fallback)"
+  echo "  Inkeep Brand Assets — for cross-file clone operations (fallback)"
 else
   echo "Ready. Bridge is running in ${FILE_NAMES[0]}."
-  echo "  Brand assets are imported via component keys — Graphics & Icons file not needed."
+  echo "  Brand assets are imported via component keys — Inkeep Brand Assets file not needed."
 fi

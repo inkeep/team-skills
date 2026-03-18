@@ -53,7 +53,7 @@ Option B — manual:
 2. If that fails, call `figma_reload_plugin` — fully reloads the plugin (equivalent to re-launching from the menu).
 3. Only if both fail, guide the user to manually re-launch: right-click canvas → Plugins → Development → Figma Desktop Bridge.
 
-**Multi-file connections:** The plugin can run in multiple Figma files simultaneously — each file gets its own WebSocket connection tracked by `fileKey`. To work across files (e.g., cloning assets from the Graphics & Icons file into the Graphics Workspace), the plugin must be running in **both** files. Verify with `figma_list_open_files` before cross-file operations. Use `figma_navigate` to switch the active file context.
+**Multi-file connections:** The plugin can run in multiple Figma files simultaneously — each file gets its own WebSocket connection tracked by `fileKey`. To work across files (e.g., cloning assets from the Inkeep Brand Assets file into the Graphics Workspace), the plugin must be running in **both** files. Verify with `figma_list_open_files` before cross-file operations. Use `figma_navigate` to switch the active file context.
 
 ### Default Graphics Workspace
 
@@ -96,7 +96,7 @@ Page naming: `[YYYY-MM-DD] {medium} — {project description}`. This prevents ov
 
 ### Design Tokens
 
-The Graphics & Icons file contains the canonical design token system as Figma variables across 5 collections. **Always use these tokens instead of hardcoding hex values.**
+The Inkeep Brand Assets file contains the canonical design token system as Figma variables across 5 collections. **Always use these tokens instead of hardcoding hex values.**
 
 **Load:** `/brand` for brand identity (principles, logo rules, typography, color usage, illustration style, composition patterns, element recipes). For applying tokens in Figma code, **Load:** `references/figma-patterns.md`. For full token values, read `tokens/marketing.md`.
 
@@ -399,7 +399,7 @@ Before creating from scratch, search for existing assets to build from. **Always
 
 **a) Check the Brand Assets page first**
 
-The Graphics & Icons file (`D7NDSM2peo1iLhkjLxmGP5`) has a curated **Brand Assets** page (node `5003:63`) with brand assets organized into sections (logos, icons, illustrations, customers, third-party logos, backgrounds, UI elements). Search here first for any reusable visual asset.
+The Inkeep Brand Assets file (`D7NDSM2peo1iLhkjLxmGP5`) has a curated **Brand Assets** page (node `5003:63`) with brand assets organized into sections (logos, icons, illustrations, customers, third-party logos, backgrounds, UI elements). Search here first for any reusable visual asset.
 
 Use `figma_execute` to search by hierarchical name:
 ```javascript
@@ -409,7 +409,7 @@ const asset = page.findOne(n => n.name.startsWith('logo/'));
 
 **Asset acquisition — preferred method:**
 
-The Graphics & Icons library is published. Use `importComponentByKeyAsync` to pull assets directly into your working file without cross-file navigation:
+The Inkeep Brand Assets library is published. Use `importComponentByKeyAsync` to pull assets directly into your working file without cross-file navigation:
 
 ```javascript
 // Preferred: import from published library (no file navigation needed)
@@ -419,7 +419,7 @@ const instance = comp.createInstance();
 
 Discover component keys via REST API: `GET /v1/files/D7NDSM2peo1iLhkjLxmGP5/components`.
 
-If `importComponentByKeyAsync` fails, fall back to the cross-file clone workflow: navigate to the Graphics & Icons file → search by name → `asset.clone()`.
+If `importComponentByKeyAsync` fails, fall back to the cross-file clone workflow: navigate to the Inkeep Brand Assets file → search by name → `asset.clone()`.
 
 **b) Check master design files for broader context**
 
@@ -680,7 +680,7 @@ Before starting, verify the Desktop Bridge plugin is running:
       - "Wait for the green 'MCP Ready' status widget to appear"
       - If the plugin isn't in the menu: "You need to import it first — run `npx figma-console-mcp@latest --print-path` in your terminal, then in Figma: Right-click → Plugins → Development → Import plugin from manifest... → select that path"
    - After the user confirms, call `figma_get_status` again to verify
-4. If cross-file operations are needed (e.g., cloning from Graphics & Icons), call `figma_list_open_files` to verify the plugin is running in **all** required files. If a file is missing, ask the user to open the plugin in that file too.
+4. If cross-file operations are needed (e.g., cloning from Inkeep Brand Assets), call `figma_list_open_files` to verify the plugin is running in **all** required files. If a file is missing, ask the user to open the plugin in that file too.
 
 Follow the five-phase workflow below. Do NOT try to build the entire graphic in one pass.
 

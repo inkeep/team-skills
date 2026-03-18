@@ -1,4 +1,4 @@
-Use when: Navigating the Figma Graphics & Icons file to find logos, icons, illustrations, backgrounds, and other brand assets
+Use when: Navigating the Figma Inkeep Brand Assets file to find logos, icons, illustrations, backgrounds, and other brand assets
 Priority: P0
 Impact: Wrong assets, missed existing components, unnecessary recreation of assets that already exist
 
@@ -19,7 +19,7 @@ Master design files are team-maintained Figma files containing canonical compone
 
 | File | URL | Contains | Use for |
 |---|---|---|---|
-| Graphics & Icons | https://www.figma.com/design/D7NDSM2peo1iLhkjLxmGP5/Graphics-%26-Icons | Brand Assets master page — all atomic graphical elements (logos, icons, illustrations, backgrounds, third-party logos), design tokens (5 variable collections) | Primary source for all brand assets and tokens |
+| Inkeep Brand Assets | https://www.figma.com/design/D7NDSM2peo1iLhkjLxmGP5/Inkeep-Brand-Assets | Brand Assets master page — all atomic graphical elements (logos, icons, illustrations, backgrounds, third-party logos), design tokens (5 variable collections) | Primary source for all brand assets and tokens |
 | Inkeep Agent Graphics Workspace | https://www.figma.com/design/S5kGTPZ0kSjmSxusJ56QJH/Inkeep-Agent-Graphics-Workspace | Shared workspace for AI-generated graphics — one page per project, organized by date and medium | Default target for all new graphics creation (unless user specifies a different file) |
 
 ## Navigating Figma files via MCP
@@ -62,18 +62,18 @@ Master design files are team-maintained Figma files containing canonical compone
 | Background, gradient, texture | Brand Assets → Decorative & Backgrounds (`background/`) | — |
 | Product UI mockup | Brand Assets → UI Elements (`ui/`) | — |
 | Mascot/Keepie | Brand Assets → Brand Mascot (`mascot/`) | — |
-| Brand colors, typography, spacing | Design tokens in the Graphics & Icons file | Token values in `tokens/marketing.md` |
+| Brand colors, typography, spacing | Design tokens in the Inkeep Brand Assets file | Token values in `tokens/marketing.md` |
 | Need visual inspiration or style reference | Reference Examples (`_reference/` prefix) | Gradient swatches, UI screenshots, illustration variants. For style matching only — do NOT place in compositions. |
 
 ## Brand Assets Page
 
-The Brand Assets page in the Graphics & Icons file is a curated collection of all unique atomic graphical elements, organized for AI consumption.
+The Brand Assets page in the Inkeep Brand Assets file is a curated collection of all unique atomic graphical elements, organized for AI consumption.
 
 Production sections contain only **COMPONENT** nodes — every item is a published library component accessible via `importComponentByKeyAsync`. The Reference Examples section contains FRAME/INSTANCE items that are not published as library components.
 
 - **File key**: `D7NDSM2peo1iLhkjLxmGP5`
 - **Page node ID**: `5003:63`
-- **URL**: https://www.figma.com/design/D7NDSM2peo1iLhkjLxmGP5/Graphics-%26-Icons?node-id=5003:63
+- **URL**: https://www.figma.com/design/D7NDSM2peo1iLhkjLxmGP5/Inkeep-Brand-Assets?node-id=5003:63
 
 ### Asset catalog
 
@@ -115,7 +115,7 @@ const searchIcon = iconSet.findOne(n => n.name === 'iconset/search');
 
 ### Preferred method: import from published library
 
-The Graphics & Icons file is published as a team library. Use `importComponentByKeyAsync` for asset acquisition — no cross-file navigation needed:
+The Inkeep Brand Assets file is published as a team library. Use `importComponentByKeyAsync` for asset acquisition — no cross-file navigation needed:
 
 ```javascript
 // Import by component key (preferred — no file navigation needed)
@@ -129,7 +129,7 @@ instance.y = targetY;
 
 1. **Pre-computed lookup** — read `tokens/figma.json`. Contains every component's `key`, `id`, and `fileKey` indexed by name. No API call needed.
 2. **REST API** — `GET /v1/files/D7NDSM2peo1iLhkjLxmGP5/components` — each component in the response includes a `key` field.
-3. **Runtime discovery** — navigate to Graphics & Icons file, find the node by name, read `node.key`.
+3. **Runtime discovery** — navigate to Inkeep Brand Assets file, find the node by name, read `node.key`.
 
 ### Fallback: cross-file clone
 
