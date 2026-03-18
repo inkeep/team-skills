@@ -95,40 +95,35 @@ See [secrets/secrets.json](secrets/secrets.json) for the full mapping.
 
 ### `/graphics` setup
 
-`/graphics` requires extra setup beyond secrets — two MCP servers and a Figma Desktop plugin. The setup script handles most of it:
+`/graphics` needs API keys + a Figma Desktop plugin. MCP servers are bundled with the GTM plugin — they register automatically.
 
 ```bash
 ./secrets/setup.sh --skill graphics --account inkeep.1password.com
 ```
 
-This automatically:
-1. Pulls API keys (Quiver, OpenAI, Gemini, Brandfetch) from 1Password → `~/.claude/settings.json`
-2. Registers `figma` + `figma-console` MCP servers in `~/.claude.json`
-3. Prompts for your Figma Personal Access Token (create at [figma.com/settings](https://www.figma.com/settings) → Security → Personal access tokens, check all scopes under **Files** and **Design systems**)
-4. Prints Desktop Bridge setup instructions
+This pulls all credentials (Quiver, OpenAI, Gemini, Brandfetch, Figma) from 1Password → `~/.claude/settings.json` and verifies the Figma token works.
 
-**One manual step** the script can't automate — import the Figma Desktop Bridge plugin:
+**One manual step** — import the Figma Desktop Bridge plugin (one-time):
 
 1. Open **Figma Desktop** (not browser)
 2. Right-click canvas → Plugins → Development → **Import plugin from manifest...**
 3. Select the path from: `npx figma-console-mcp@latest --print-path`
 
-After import, **launch the plugin each session** before using `/graphics`: right-click canvas → Plugins → Development → Figma Desktop Bridge → wait for green "MCP Ready."
+**Each session:** Launch the plugin before using `/graphics` — right-click canvas → Plugins → Development → Figma Desktop Bridge → wait for green "MCP Ready."
 
 **Then restart Claude Code** (MCP servers load at startup).
 
-**Verify:** Run `/graphics Create a test blue circle` — if a circle appears in your Figma file, you're set.
+**Verify:** `/graphics Create a test blue circle` — if a circle appears in Figma, you're set.
 
 <details>
 <summary>Troubleshooting</summary>
 
 | Problem | Fix |
 |---|---|
-| `/graphics` says MCP tools not found | Restart Claude Code (MCP servers load at startup) |
-| Figma token prompt was skipped | Re-run from a normal terminal (not Claude Code's terminal), or set manually: see `jq` command printed by the script |
-| Bridge plugin not connecting | Make sure Figma **Desktop** app (not browser). Re-launch plugin from Plugins menu. Check `figma_get_status` in Claude Code. |
+| MCP tools not found | Restart Claude Code (MCP servers load at startup) |
+| Bridge plugin not connecting | Make sure you're using Figma **Desktop** (not browser). Re-launch plugin from Plugins menu. |
 | "Permission denied" on Figma file | Ask team admin to share the [Graphics Workspace](https://www.figma.com/design/S5kGTPZ0kSjmSxusJ56QJH/) |
-| Auth errors after ~90 days | Figma tokens expire. Regenerate at [figma.com/settings](https://www.figma.com/settings) and update `~/.claude.json` |
+| Auth errors after ~90 days | Figma token expired. Ask a team admin to regenerate in 1Password, then re-run `setup.sh` |
 
 </details>
 

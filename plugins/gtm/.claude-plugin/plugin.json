@@ -5,5 +5,19 @@
   "author": {
     "name": "Inkeep"
   },
-  "repository": "https://github.com/inkeep/team-skills"
+  "repository": "https://github.com/inkeep/team-skills",
+  "mcpServers": {
+    "figma": {
+      "type": "http",
+      "url": "https://mcp.figma.com/mcp"
+    },
+    "figma-console": {
+      "type": "stdio",
+      "command": "npx",
+      "args": ["-y", "figma-console-mcp@latest"],
+      "env": {
+        "ENABLE_MCP_APPS": "true"
+      }
+    }
+  }
 }
