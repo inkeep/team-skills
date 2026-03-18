@@ -1,0 +1,72 @@
+---
+name: brand
+description: Inkeep brand identity — principles, logo rules, typography, color usage, text style rules, size minimums. Background knowledge for visual creation skills (graphics, motion-video, gslides). Loaded automatically by consumer skills.
+user-invocable: false
+---
+
+# Inkeep Brand
+
+Background knowledge for all visual creation. Consumer skills (`/graphics`, `/motion-video`, `/gslides`) load this for Inkeep-specific brand guidance.
+
+## Brand Principles
+
+1. **Human + AI Collaboration** — Technology feels cooperative and understandable. Visuals emphasize partnership, not replacement.
+2. **Developer Clarity** — Structure and readability before decoration. Clear hierarchy, logical organization, precise communication.
+3. **Imperfect Precision** — Hand-drawn visuals introduce warmth into technical environments. Slight irregularities create approachability.
+4. **Practical Intelligence** — Visuals explain systems and outcomes, not abstract concepts. Every graphic serves a functional purpose.
+
+## Logo Selection
+
+Always lead with the **Primary full-color logo** (icon + wordmark) on light backgrounds. Use the white version on dark backgrounds. Monochrome is a **last resort** — only when backgrounds are too busy for color. Minimum clear space = 1x the icon height on all sides. **Never** distort, rotate, recolor, or add effects to the logo.
+
+## Typography
+
+| Font | Use for | Rules |
+|---|---|---|
+| **Neue Haas Grotesk Display Pro** | H1, H2, card titles, testimonial quotes | 400 for headings, 300 for descriptions, 500 for interactive |
+| **JetBrains Mono** | Tags, eyebrows, buttons, H3, H4 | Always 500, **always uppercase** for UI labels |
+| **Noto Serif** | Body copy, descriptions, long-form | 300 for body, 400 for bios |
+
+**Never mix more than 2 typefaces in a single component.**
+
+## Color Usage
+
+- **Page backgrounds** — always warm cream (#FBF9F4). Never use pure white (#FFFFFF) as a page background.
+- **Card surfaces** — use cream (#F7F4ED) for contrast against page background
+- **Feature cards** — rotate through warm-peach, warm-gray, light-blue, light-purple for visual variety
+- **Accent colors** (Golden Sun, Orange Light) — use sparingly, never for primary UI
+- **Blue icons on blue backgrounds** — **NEVER**. Blue icons disappear on blue. Use white or dark variants instead.
+
+## Text Style Rules
+
+- **Titles in sentence case** — only first letter capitalized
+- **"Agent" always capitalized** — it's a brand term
+- **Tagline**: "The Agent Platform for Customer Operations"
+- **URL format**: `inkeep.com/path` (no https://)
+
+## Logo & Watermark Timing (video/slides)
+
+- Logo appears in the **first 5 seconds**
+- Watermark present in content frames (small icon, reduced opacity, bottom-right)
+- Watermark excluded from intro/outro scenes
+- Outro logo is large and prominent
+
+## Size Minimums
+
+- **Headlines**: 48px minimum (for readability across mediums)
+- **Body text**: 24px minimum
+
+## Deep Reference
+
+Load these when you need detailed guidance beyond the compact rules above:
+
+- `references/brand-guide.md` — full visual identity: illustration style, icon rules, diagram rules, gradient tiers, decorative elements, what feels dated
+- `references/composition-guide.md` — layout and hierarchy: Z-pattern, split layout, visual hierarchy ratios, color restraint, background texture, content coverage, edge bleed, brand system consistency
+- `references/element-patterns.md` — reusable element recipes: product mockup treatment, code-as-visual, badge system, metric callout, logo composition, quote card, section headers, button variants, integration logo cards
+- `references/motion-philosophy.md` — animation principles: smooth not snappy, do's and don'ts, standard motion patterns
+
+## Token Values
+
+Read `.claude/design-system/manifest.md` for all token values (colors, typography, spacing, radius, shadows). Check `.claude/design-system/figma.json` for Figma component keys and node IDs (for `importComponentByKeyAsync`). Check `.claude/design-system/assets/` for exported SVG/PNG brand assets.
+
+If these files don't exist in the repo, the qualitative guidance in this skill and its references still applies. Token values can be pulled from the Figma MCP, or run the generation scripts in `scripts/` to produce them.

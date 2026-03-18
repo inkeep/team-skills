@@ -56,9 +56,49 @@ Determine what to build before writing code.
 
 **1c. Load brand references:**
 
-- **Load:** `brand/design-tokens.md` — colors, typography, spacing values
-- **Load:** `brand/motion-language.md` — easing curves, timing, animation patterns
+- **Load:** `/brand` — brand identity, principles, color usage, typography rules, text style rules
+- **Load:** `brand/motion-language.md` — easing curves, timing, animation patterns (Remotion-specific)
+- For token values: read `.claude/design-system/manifest.md`
 - For product demos: **Load:** `references/product-demo-patterns.md` — how to compose walkthrough scenes
+- For advanced Remotion features: **Load** the `remotion-best-practices` skill, then read the relevant rule file. Use when the video needs any of these:
+
+| Feature | Rule file |
+|---|---|
+| 3D content (Three.js / R3F) | `rules/3d.md` |
+| Audio (trimming, volume, pitch, speed) | `rules/audio.md` |
+| Captions / subtitles | `rules/subtitles.md` → links to display, import, transcribe |
+| Charts / data visualization | `rules/charts.md` |
+| Dynamic duration / metadata | `rules/calculate-metadata.md` |
+| Font loading (Google / local) | `rules/fonts.md` |
+| GIF / animated image sync | `rules/gifs.md` |
+| Lottie animations | `rules/lottie.md` |
+| Maps (Mapbox) | `rules/maps.md` |
+| Measuring text / fitting to containers | `rules/measuring-text.md` |
+| Parametrizable compositions (Zod) | `rules/parameters.md` |
+| Scene transitions (@remotion/transitions) | `rules/transitions.md` |
+| Text animations (typewriter, highlight) | `rules/text-animations.md` |
+| Transparent video rendering | `rules/transparent-videos.md` |
+| Video embedding (trim, loop, speed) | `rules/videos.md` |
+
+**1d. Collect visual assets:**
+
+For each scene in the video, consider whether it needs visual assets beyond text and existing logos:
+
+| Scene content | Asset needed? |
+|---|---|
+| Feature callout with a concept (e.g., "Knowledge-First") | Likely — custom icon or illustration |
+| Integration or partner mention | Likely — third-party logo via `/graphics` |
+| "How it works" or architecture explanation | Likely — diagram or flow illustration |
+| Metric or statistic as hero visual | Maybe — styled chart or metric card |
+| Product UI walkthrough | Maybe — polished mockup for intro frame |
+| Premium intro/outro | Maybe — 3D rendered logo tile |
+| Text-only headline or announcement | No — existing components suffice |
+
+Check `remotion-videos/public/` and the brand asset library for existing assets.
+
+**If assets are missing** → **Load:** `references/graphics-delegation.md` for the full capabilities catalog, subagent prompt template, and return contract. Spawn `/graphics` subagents in parallel for each missing asset.
+
+**If all assets exist** → proceed to Phase 2.
 
 ### Phase 2: Set up composition
 
@@ -109,7 +149,7 @@ Build the composition scene by scene.
 
 **3b. For intro/outro frames:**
 
-**Load:** `brand/assets.md` — contains logo file paths and usage rules.
+**Logo assets:** Check `remotion-videos/public/images/logos/` for available logo files. Use `staticFile()` to reference them.
 
 - Intro: logo animation in first 5 seconds
 - Content frames: small watermark (40px, 0.4 opacity, bottom-right)
@@ -223,7 +263,7 @@ All videos MUST import tokens from `remotion-videos/src/styles/brand.ts`:
 | `RADIUS` | 5 border radius values |
 | `colors` | Legacy alias (azureBlue, morningMist, etc.) |
 
-For full brand specs: **[brand/design-tokens.md](brand/design-tokens.md)** | **[brand/assets.md](brand/assets.md)** | **[brand/motion-language.md](brand/motion-language.md)**
+For full brand identity: Load `/brand`. For token values: `.claude/design-system/manifest.md`. For motion patterns: **[brand/motion-language.md](brand/motion-language.md)**
 
 ### Built-in primitives
 

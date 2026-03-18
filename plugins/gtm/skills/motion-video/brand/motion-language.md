@@ -219,25 +219,9 @@ return (
 
 ## Animation Philosophy
 
-### Principles
+For animation principles, do's/don'ts, and standard motion patterns, load `/brand` then `references/motion-philosophy.md`.
 
-1. **Smooth, not snappy** - Use ease-out curves, not linear or bounce
-2. **Subtle movement** - Y-offset of 20-30px, not dramatic slides
-3. **Sequential, not simultaneous** - Stagger elements for visual hierarchy
-4. **Purpose-driven** - Every animation should guide attention
-
-### Do's and Don'ts
-
-| Do | Don't |
-|----|-------|
-| Use consistent easing curves | Mix different easing styles |
-| Stagger related elements | Animate everything at once |
-| Keep Y-offset subtle (20-30px) | Use large dramatic movements |
-| Draw underlines left-to-right | Use bounce or spring effects |
-| Fade logos to 0.75-0.9 opacity | Leave logos at full opacity |
-| Use viewport triggers on scroll | Auto-play all animations |
-
-### Section Transitions
+### Section Transitions (Remotion implementation)
 
 Between sections, use a simple opacity fade with slight scale:
 

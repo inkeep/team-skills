@@ -1,12 +1,12 @@
 ---
 name: graphics
-description: Create on-brand graphics and visual assets as native editable Figma designs. Use when asked to create graphics, visuals, diagrams, charts, social images, slide assets, marketing materials, or any visual asset that should follow the brand. Creates native Figma objects (frames, text, shapes, auto-layout) for full editability. Can also generate SVG via Quiver.ai (AI-generated vector art), photorealistic raster images via GPT Image 1.5, hand-coded SVG, D2, or Mermaid when code output is specifically needed. Requires figma and figma-console MCP servers. Quiver.ai requires QUIVERAI_API_KEY. GPT Image requires OPENAI_API_KEY.
+description: Create on-brand graphics and visual assets as native editable Figma designs. Use when asked to create graphics, visuals, diagrams, charts, social images, slide assets, marketing materials, or any visual asset that should follow the brand. Creates native Figma objects (frames, text, shapes, auto-layout) for full editability. Can also generate SVG via Quiver.ai (AI-generated vector art), photorealistic raster images via AI image generation (GPT Image 1.5 + Gemini 3.1 Flash Image), 3D renders via R3F/Three.js, hand-coded SVG, D2, or Mermaid. Requires figma and figma-console MCP servers. Quiver.ai requires QUIVERAI_API_KEY. Image gen requires OPENAI_API_KEY and GOOGLE_AI_API_KEY.
 argument-hint: "[description of graphic needed] (optional: existing Figma URL or asset reference)"
 ---
 
 # On-Brand Graphics Generator
 
-Create visual assets as native editable Figma designs that follow the Inkeep brand. Primary use case: graphical assets for slide decks, marketing materials, social media, and documentation. Can also generate AI-powered SVGs via Quiver.ai for illustrations, logos, icons, and complex vector art. Can generate photorealistic raster images and edit existing images via GPT Image 1.5.
+Create visual assets as native editable Figma designs that follow the Inkeep brand. Primary use case: graphical assets for slide decks, marketing materials, social media, and documentation. Can also generate AI-powered SVGs via Quiver.ai for illustrations, logos, icons, and complex vector art. Can generate photorealistic raster images via AI image generation (GPT Image 1.5 + Gemini 3.1 Flash Image — multi-provider with reference image support). Can render deterministic 3D scenes via R3F/Three.js.
 
 ## Prerequisites
 
@@ -14,7 +14,7 @@ This skill requires two MCP servers:
 - **figma** (official, HTTP) — read designs, brand tokens, screenshots, design context. Authenticates via OAuth on first use (Claude Code prompts automatically).
 - **figma-console** (southleft/figma-console-mcp, stdio) — create and modify native Figma objects. Requires a Figma Personal Access Token + the Desktop Bridge plugin.
 
-**If MCP servers or credentials are missing** (including `QUIVERAI_API_KEY` for SVG generation, `OPENAI_API_KEY` for raster generation, and `BRANDFETCH_API_KEY` for third-party logo fetching), instruct the user to run:
+**If MCP servers or credentials are missing** (including `QUIVERAI_API_KEY` for SVG generation, `OPENAI_API_KEY` for GPT Image generation, `GOOGLE_AI_API_KEY` for Gemini image generation, and `BRANDFETCH_API_KEY` for third-party logo fetching), instruct the user to run:
 ```bash
 ./secrets/setup.sh --skill graphics --account inkeep.1password.com
 ```
@@ -94,7 +94,7 @@ Page naming: `[YYYY-MM-DD] {medium} — {project description}`. This prevents ov
 
 The Inkeep Design Assets file contains the canonical design token system as Figma variables across 5 collections. **Always use these tokens instead of hardcoding hex values.**
 
-**Load:** `brand.md` for the full token reference — includes all collections, semantic usage guidance, typography rules, design patterns (feature card, testimonial, hero section), and code examples.
+**Load:** `/brand` for brand identity (principles, logo rules, typography, color usage, illustration style, composition patterns, element recipes). For applying tokens in Figma code, **Load:** `references/figma-patterns.md`. For full token values, read `.claude/design-system/manifest.md`.
 
 | Collection | What it covers | Key usage rules |
 |---|---|---|
@@ -115,7 +115,7 @@ rect.fills = [figma.variables.setBoundVariableForPaint(
 
 **Why tokens matter:** `figma_lint_design` flags hardcoded colors as warnings. Variable binding ensures brand consistency cascades automatically.
 
-**If working in a file without tokens** (user specified a different target): fall back to hardcoded hex values from `brand.md`.
+**If working in a file without tokens** (user specified a different target): fall back to hex values from `.claude/design-system/manifest.md`.
 
 **Why a shared workspace?** Figma has no API to create new files. The workspace prevents: (1) polluting brand asset files with work-in-progress, (2) requiring the user to create a new file for every request, (3) agents working in random/personal Drafts files that aren't team-accessible.
 
@@ -195,7 +195,7 @@ The standard files also contain **design guidelines specific to each medium** (t
 | Comparison between options/products | **Split layout or comparison table** — side-by-side with pros/cons |
 | Step-by-step process or workflow | **Sequential diagram** — numbered steps with flow arrows |
 | Customer quote or testimonial | **Quote card** — speaker photo + quote text |
-| Product feature or UI explanation | **Annotated product mockup** — simplified UI with callouts. **Load:** `brand.md` § Artifact Recipes for the full mockup treatment (float, shadow, round corners, bleed) — adapt proportions to your target format's dimensions. |
+| Product feature or UI explanation | **Annotated product mockup** — simplified UI with callouts. Load `/brand` then `references/element-patterns.md` for the full mockup treatment (float, shadow, round corners, bleed) — adapt proportions to your target format's dimensions. |
 | Tutorial, walkthrough, or "click here" guide | **Spotlight cutout** — screenshot with dimmed overlay + highlighted target element (see Pattern: Spotlight cutout in `tools/figma-console.md`) |
 | Abstract concept or architecture | **Illustration or diagram** — visual metaphor for the concept |
 | List of criteria or evaluation rubric | **Data grid or scorecard** — structured table with ratings |
@@ -229,35 +229,52 @@ Present the suggestion to the user: "Based on the content, I'd suggest a [type] 
 | System architecture, flowcharts, sequence diagrams | **D2/Mermaid (Option C)** | Purpose-built diagram languages with automatic layout |
 | Converting a raster image to SVG | **Quiver vectorize (Option D)** | AI-powered raster-to-vector conversion |
 | Illustration FOR a slide/marketing layout | **Quiver (Option D) → Figma (Option A)** | Generate the illustration with Quiver, import into Figma, compose with brand elements and text — see hybrid workflow in Option D |
-| Photorealistic images, product mockups, realistic scenes | **GPT Image (Option E)** | AI-generated raster — photographic quality, studio lighting, realistic materials |
-| Hero images with photographic quality | **GPT Image (Option E)** | Raster output at up to 1536x1024; use `--quality high` for best results |
-| Image editing (inpainting, background swap, style transfer, object removal) | **GPT Image edit (Option E)** | Modify existing raster images with natural language instructions |
-| Raster image FOR a slide/marketing layout | **GPT Image (Option E) → Figma (Option A)** | Generate raster image, place in Figma as image fill, compose with brand elements and text |
+| Photorealistic images, product mockups, realistic scenes | **AI Image Gen (Option E)** | Multi-provider raster generation — GPT Image or Gemini. See provider routing below. |
+| 3D hero elements (dark tiles, glass objects, atmospheric renders) | **AI Image Gen (Option E)** | Faster than R3F with comparable quality. Feed brand assets as references for on-brand results. |
+| Abstract atmospheric backgrounds (gradients, particles, volumetric light) | **AI Image Gen (Option E)** | Generate as raster, place in Figma as background image fill. |
+| Image editing (inpainting, background swap, style transfer, object removal) | **AI Image Gen edit (Option E)** | GPT Image edit endpoint for surgical modifications. |
+| Raster image FOR a slide/marketing layout | **AI Image Gen (Option E) → Figma (Option A)** | Generate raster element, place in Figma as image fill, compose with brand text and layout. |
+| 2D brand illustration → 3D concept | **AI Image Gen (Option E)** | Feed design system illustration as reference → generate 3D interpretation. Gemini excels here. |
 | Tutorial walkthrough / UX highlight (SaaS "click here" guides) | **Figma (Option A)** — spotlight cutout pattern | Screenshot as image fill + boolean subtract overlay. See Pattern: Spotlight cutout in `tools/figma-console.md` |
-| 3D rendered objects (glassmorphic tiles, clay/plastic objects, metallic surfaces) | **Three.js (Option F)** | Programmatic 3D — exact brand colors, deterministic, free. **Load `tools/r3f/README.md`** for scene setup, templates, and reference index to materials, staging, and advanced features. |
-| Integration icon tile (partner logo on 3D tile, batch-renderable) | **Three.js (Option F)** | Template scene → swap logo/color → batch render. Deterministic + free. |
-| 3D element FOR a slide/marketing layout | **Three.js (Option F) → Figma (Option A)** | Render 3D element with transparent background, place in Figma as image fill, compose with brand text and layout |
+| 3D objects needing **exact hex-color determinism** | **Three.js (Option F)** | Same code = same render. Use when brand color precision is non-negotiable. |
+| **Parameterized batch 3D** (loop over configs programmatically) | **Three.js (Option F)** | Code-driven parameter sweeps — image gen can't guarantee identical scenes. |
+| 3D texture library (render once, reuse as Figma backgrounds) | **Three.js (Option F)** | One-time renders stored as reusable PNG assets. |
+| Precise geometric branded shape (logo carved into surface) | **Three.js (Option F)** with CSG | Image gen can't carve exact shapes — use `@react-three/csg` boolean operations. |
+| Infographic (compound: data + illustration + text) | **Figma (Option A)** | Decompose into sub-elements per this routing table. Data viz → Figma primitives, illustrations → Quiver, text → Figma. |
+| Badge / trust seal (SOC 2, G2 Leader, etc.) | **Figma (Option A)** | Simple shape + text + optional icon. Native Figma elements. |
+| Brand-styled technical diagram | **D2/Mermaid (Option C) → Figma (Option A)** | Generate structure in D2, export SVG, import into Figma via `createNodeFromSvg`, apply brand colors/typography. |
 
-**Do NOT use GPT Image for:**
+**Quiver (Option D) vs AI Image Gen (Option E) — illustration boundary:**
+- **Flat/stylized illustrations** (hand-drawn containers, brand icons, the "Imperfect Precision" style) → **Quiver**. Produces editable SVG that matches the brand illustration system. Scales infinitely.
+- **Photorealistic 3D elements** (glass objects, dark tiles, metallic surfaces, atmospheric effects) → **Image gen**. Quiver can't do 3D, glass, or photorealism.
+- **Abstract decorative patterns** → **Quiver** if the pattern needs to scale (backgrounds that tile at different sizes) or ship as code. **Image gen** if the pattern needs volumetric effects, particle systems, or film grain that SVG can't express.
+- **2D brand illustration → 3D conversion** → **Image gen** with the original Quiver/Figma illustration as a reference image input.
+
+**Do NOT use AI Image Gen for:**
 - Vector graphics (icons, logos, illustrations that need to scale) — use Quiver (Option D). Raster images pixelate when scaled; SVGs scale infinitely.
 - Editable layouts, text-heavy designs — use Figma (Option A). Raster images can't be edited by designers.
-- Diagrams, flowcharts, architecture — use D2/Mermaid (Option C). GPT Image can't produce structured, accurate diagrams.
+- Diagrams, flowcharts, architecture — use D2/Mermaid (Option C). Image gen can't produce structurally accurate diagrams.
 - Assets that ship as code (inline SVGs, repo-committed graphics) — use Quiver or hand-coded SVG. Raster files are large and not code-editable.
+- Text rendering — NEVER put text in generated images. Figma handles all text. Image gen produces visual elements only.
 
 **Do NOT use Quiver for:**
-- Graphics that must include the Inkeep brand mark — Quiver will hallucinate a logo. Use Figma for brand mark placement; Quiver can generate surrounding artwork.
-- Data visualizations (charts, graphs) — Quiver can't hit exact data values. Use hand-coded SVG or D2.
+- Reproducing an existing brand mark (Inkeep or third-party) — Quiver will hallucinate rather than reproduce. For **novel** logo/icon design, Quiver IS the right tool. For placing existing logos, clone from Figma Brand Assets or fetch via `fetch-logo.ts`.
+- Data visualizations (charts, graphs) — Quiver can't hit exact data values. Use Figma (Option A) with native primitives — see `content-types/data-visualization.md` for code recipes.
 - Precise text layout (body copy, tables, feature lists) — Quiver renders text as vector paths, not `<text>` elements. Result is non-editable and imprecise for multi-line copy.
 - SVGs that developers will hand-edit — Quiver output is machine-generated paths (clean but not semantic). Hand-coded SVG is better for human-maintained files.
 - Exact reproduction of an existing Figma component — use Figma to clone it.
 
+**Quiver vs Figma shapes for illustrations:**
+- **Figma shapes OK:** box-and-arrow flow diagrams, Venn diagrams, simple grids, progress bars, basic icon compositions from circles/rectangles, any layout where the shapes are purely geometric and few (<10 elements).
+- **Use Quiver:** anything with organic curves, hand-drawn style, complex path work, stylized illustrations, decorative patterns, abstract art, or the "Imperfect Precision" brand illustration style. If the illustration would take >15 minutes to build from Figma shapes, use Quiver.
+
 **Do NOT use Three.js for:**
-- Quick concept exploration — use GPT Image (Option E). Writing an R3F scene has more overhead than a text prompt.
+- One-off 3D renders — try AI Image Gen (Option E) first. See Option F for the full decision framework.
 - 2D illustrations, icons, or vector art — use Quiver (Option D). Three.js is for 3D rendering, not flat graphics.
 - Text-heavy layouts — use Figma (Option A). Three.js text rendering (Text3D) is not designed for body copy.
 - Diagrams or flowcharts — use D2/Mermaid (Option C). Three.js is spatial, not diagrammatic.
-- One-off images where visual polish matters more than color precision — use GPT Image (Option E). GPT Image produces more consistently polished output without scene-building effort.
-- Precise geometric shapes from AI text prompts — Meshy/Tripo produce organic forms, not exact geometry. Use CSG boolean operations (`@react-three/csg` declarative or `three-bvh-csg` imperative) for shape carving, or load a pre-built .glb model for complex branded shapes like the logo.
+
+**This skill produces static graphics only.** For animated/motion assets (GIFs, videos, Lottie animations), this skill is out of scope.
 
 - **Existing asset**: if user provides a Figma URL or file reference, use it as the starting point (skip step 2)
 - **Content**: what the graphic should depict or communicate
@@ -402,7 +419,7 @@ If `importComponentByKeyAsync` fails, fall back to the cross-file clone workflow
 
 **b) Check master design files for broader context**
 
-**Load:** `brand.md` § Asset Library
+**Load:** `references/figma-assets.md`
 
 This file contains navigation strategy tables for the Inkeep Design Assets file (Brand Assets page). Use it to identify which pages to check if the Brand Assets page doesn't have what you need.
 
@@ -411,7 +428,7 @@ This file contains navigation strategy tables for the Inkeep Design Assets file 
 Use the Figma MCP to systematically search for relevant existing assets:
 
 1. **List pages** — get the file's page tree to see all available pages and their node IDs
-2. **Match pages to task** — use the navigation strategy table in `brand.md` § Asset Library to identify which pages are most relevant
+2. **Match pages to task** — use the navigation strategy table in `references/figma-assets.md` to identify which pages are most relevant
 3. **Read relevant pages** — call the Figma MCP with the page's node ID to see its frames, components, and assets
 4. **Drill into promising nodes** — inspect specific frames or components that look relevant to your task
 5. **Extract what you need** — get colors, dimensions, layout structure, typography, and export assets
@@ -461,12 +478,12 @@ The script returns a structured profile:
 
 If `--domain` is omitted, the script uses the Brandfetch Search API to resolve the company name to a domain (requires `BRANDFETCH_CLIENT_ID` env var). Falls back to naive domain inference if Search API is unavailable.
 
-**When to use `fetch-brand.ts` vs `fetch-logo.ts`:**
+**Logo acquisition priority (always follow this order):**
 
-| Scenario | Script |
-|---|---|
-| Only need the logo SVG (e.g., logo wall, integration grid) | `fetch-logo.ts` |
-| Need the logo + brand colors + fonts (e.g., comparison graphic, case study hero) | `fetch-brand.ts` |
+1. **First:** Check Figma Brand Assets page (node `5003:63`) — Inkeep logos AND curated third-party logos are here. Clone, don't recreate.
+2. **If not in Brand Assets:** `fetch-logo.ts` (logo SVG only) or `fetch-brand.ts` (logo + brand colors + fonts). Use `fetch-brand.ts` when you also need the company's color palette (comparison graphics, case study heroes).
+3. **If fetch fails:** Create a styled text pill placeholder (brand name in a rounded rectangle) and flag it for the user to replace manually. NEVER approximate a logo with shapes.
+4. **For AI image gen with logos:** Export the logo as PNG from step 1 or 2, then feed it as a `--reference` image. Both GPT and Gemini preserve logos faithfully when given as references.
 
 **Record the brand profile in the Asset Manifest** (section h below).
 
@@ -474,7 +491,7 @@ If `--domain` is omitted, the script uses the Brandfetch Search API to resolve t
 
 Use the Figma MCP to extract brand tokens from the design system.
 
-**Load:** `brand.md` for the Figma file URL and fallback token values.
+**Load:** `references/figma-assets.md` for the Figma file URL. For token values, read `.claude/design-system/manifest.md`.
 
 Extract:
 - **Color palette**: primary, secondary, accent, background, text colors with exact hex values
@@ -541,7 +558,7 @@ Write out an asset manifest listing what was found and what's missing:
 
 ⛔ **Mark task "Graphics: Plan composition" as `in_progress`. Verify that "Graphics: Collect assets & brand tokens" is `completed` — if not, go back and complete Step 2 first. Do NOT plan without knowing what assets are available.**
 
-**Load:** `brand.md` — the complete brand system: design rules, token values, artifact recipes (product mockup, code-as-visual, badge, metric callout, logo composition, quote card), composition patterns (Z-pattern, split layout, visual hierarchy, color restraint, background texture, edge bleed), and asset library navigation. Use this to inform every composition decision below.
+**Load:** `/brand` — the complete brand system: design rules, element recipes (product mockup, code-as-visual, badge, metric callout, logo composition, quote card), composition patterns (Z-pattern, split layout, visual hierarchy, color restraint, background texture, edge bleed). Load the reference files as needed: `references/brand-guide.md` for visual identity, `references/composition-guide.md` for layout, `references/element-patterns.md` for element recipes. Use these to inform every composition decision below.
 
 **If the graphic includes illustrations, visual metaphors, or decorative elements in the Inkeep hand-drawn style:**
 **Load:** `content-types/illustration.md` for the dual-stroke visual language (hand-drawn gray containers + precise blue fills), color palette, composition patterns, Quiver generation instructions, and the blue swoosh underline signature element.
@@ -803,7 +820,7 @@ Fix any issues now — it's much easier to fix individual atoms than after compo
 
    **Critical rule:** If any child is set to Fill, the parent auto-switches from Hug to Fixed on that axis (circular dependency prevention).
 
-   Use spacing values from the brand tokens spacing scale (see `brand.md`) — never ad-hoc pixel values.
+   Use spacing values from the brand tokens spacing scale (see `.claude/design-system/manifest.md`) — never ad-hoc pixel values.
 
 2. **Build the layout structure** — section frames (header, content, footer, etc.) with auto-layout for editability. Stack layers bottom-to-top: `bg` → structure containers → content (text, images) → branding (logo) → decorative overlays. This ordering must be consistent across all frames.
 3. **Move atoms into the composition** — move or clone verified atoms from the working frame into their correct sections, position according to the composition plan
@@ -1034,69 +1051,113 @@ bun tools/quiver-generate.ts vectorize \
 
 Use this when you need to convert an existing raster asset (screenshot, PNG export, photo) into clean, editable SVG. The vectorization preserves structure and separates elements into layers.
 
-**Option E: AI-generated raster images via GPT Image 1.5 (for photorealistic images, mockups, image editing)**
+**Option E: AI Image Generation (multi-provider — GPT Image + Gemini)**
 
-Best for: photorealistic product shots, hero images, editorial illustrations with photographic quality, image editing (inpainting, background replacement, style transfer, object removal). GPT Image 1.5 is #1 on LM Arena (Elo 1268) — best-in-class for photorealism and text-in-image rendering.
+Best for: photorealistic 3D hero elements, glass/material objects, atmospheric backgrounds, image editing, and any visual element that Figma/Quiver/D2 can't produce. This is a raster pipeline — outputs are PNGs composited into Figma for final assembly with text and brand elements.
 
-**Load:** `tools/openai-image.md` for full API details, script usage, and parameter reference.
+**Two providers, each with distinct strengths:**
 
-**Prerequisite:** `OPENAI_API_KEY` must be set. If missing, the script will error with setup instructions. Pull from 1Password: `./secrets/setup.sh --skill graphics --account inkeep.1password.com`
+| Provider | Model | Best for | Key advantage |
+|---|---|---|---|
+| **GPT Image 1.5** (OpenAI) | `gpt-image-1.5` | Transparent compositing elements, image editing, structured illustrations | Only model with native `background: "transparent"` |
+| **Gemini 3.1 Flash Image** (Google) | `gemini-3.1-flash-image-preview` | 3D hero objects, glass/material quality, abstract art, 2D→3D conversion | Native reference image input, conversational editing, 4K output |
 
-**Generation workflow:**
+**Load:** `tools/openai-image.md` for GPT Image API details. `tools/gemini-image.md` for Gemini API details.
 
-1. **Craft the prompt** — be specific about subject, setting, lighting, camera perspective, and materials:
+**Prerequisites:** `OPENAI_API_KEY` and `GOOGLE_AI_API_KEY` must be set. If missing: `./secrets/setup.sh --skill graphics --account inkeep.1password.com`
 
-   **Good prompt:**
+### Provider routing — which model to use
+
+| Signal in the task | Provider | Why |
+|---|---|---|
+| Output needs **transparent background** (element for Figma compositing) | **GPT Image** | Only model with native `background: "transparent"` parameter |
+| **Image editing** (inpaint, mask-based modification, surgical changes) | **GPT Image** | Mask-based precision via edit endpoint |
+| **Structured illustration** (needs correct layout topology, readable labels) | **GPT Image** | Better structural accuracy |
+| **3D hero element** (dark tile, glass prism, metallic object) | **Both in parallel** | Quality is 50/50 — generate on both, let user pick direction |
+| **Abstract atmospheric** (gradients, volumetric light, particle effects) | **Both in parallel** | Subjective aesthetic — GPT leans cinematic, Gemini leans clean/designed |
+| **Glass/material quality** is the priority | **Gemini** | Better refraction, transmission, caustic rendering |
+| **2D brand asset → 3D interpretation** | **Gemini** | Dramatically better at converting flat illustrations into 3D scenes |
+| **Batch series** (10+ similar images, icon swaps) | **Either + reference image** | Both achieve consistent batches when first output anchors subsequent generations |
+| **Iterative refinement** ("make it warmer", "shift the glow") | **Gemini** | Native multi-turn conversational editing |
+| Not sure / quality matters most | **Both in parallel** | ~45s wall clock for two outputs. Cheap insurance. |
+
+When routing says "both in parallel," the script generates on GPT and Gemini concurrently and outputs two files. Present both to the user: "GPT version (left) vs Gemini version (right) — which direction?"
+
+### Reference image workflow (brand asset anchoring)
+
+**Feeding brand assets from the design system as references dramatically improves on-brand quality.** Both models support reference images — Gemini natively in the generation call, GPT via the edit endpoint.
+
+**When to use references:**
+- Generating a 3D hero element → feed the most relevant brand illustration as style DNA
+- Generating a batch series → generate image #1 without reference, then use it as reference for #2-N
+- Preserving a logo on a 3D surface → feed the logo as reference (both models preserve it faithfully)
+- Matching the brand's visual language → feed any illustration from the design system that captures the intended aesthetic
+
+**How to find the right reference:**
+1. Check the design system manifest for the most semantically relevant asset — illustrations, backgrounds, gradients, or logos that match the visual intent
+2. Export the SVG as PNG: `sips -s format png -Z 1024 path/to/asset.svg --out /tmp/reference.png`
+3. Pass to the script: `--reference /tmp/reference.png`
+
+**How references work per provider:**
+- **GPT Image:** Reference is sent via the `/v1/images/edits` endpoint (not `/generations`). The model treats it as style guidance while generating new content. Set `input_fidelity: "high"` for faithful style transfer.
+- **Gemini:** Reference is sent as `inlineData` alongside the text prompt in the `generateContent` call. Up to 14 reference images (10 object + 4 character). The model uses them as visual context.
+
+### Generation workflow
+
+1. **Craft the prompt** — be specific about subject, materials, lighting, camera, and negative constraints:
+
    ```
-   "A close-up product photograph of artisan coffee beans spilling from a burlap sack
-   onto a dark wooden table, warm directional lighting from the left, shallow depth of field"
+   "A premium dark matte rounded-corner tile (#1A1A1A, thick volumetric slab, chamfered edges)
+   floating at a slight angle against a very dark background (#0D0D0D). On the tile face: a
+   glowing blue hexagonal shape (#3784FF) inset into the surface like a glass element. Behind
+   the tile: blue rim glow (#3784FF). Below: dark reflective floor with blurred reflections.
+   Single warm spotlight from top-right. FOV ~30°. Resend product photography quality. No text."
    ```
 
-   **Bad prompt:**
-   ```
-   "coffee beans"
-   ```
+   Include hex colors, lighting direction, camera perspective, material descriptions, and negative constraints. Vague prompts produce vague results.
 
-   For brand-consistent images, include hex colors and style direction:
-   ```
-   "A hero image for a tech company website. Warm cream background (#FBF9F4),
-   subtle geometric patterns in blue (#3784FF). Clean, modern, minimal. No text."
-   ```
+2. **Choose provider and generate:**
 
-2. **Generate** — default is `--quality high` for best results:
    ```bash
+   # GPT Image (transparent element for Figma compositing)
    bun tools/image-generate.ts generate \
-     --prompt "A photorealistic product shot of a laptop on a marble desk" \
+     --prompt "..." \
+     --provider gpt \
      --quality high \
-     --size 1536x1024 \
-     --output product-shot.png
-   ```
+     --background transparent \
+     --output hero-element.png
 
-   For exploration, generate 2-3 variants:
-   ```bash
+   # Gemini (3D hero with brand asset reference)
    bun tools/image-generate.ts generate \
-     --prompt "Abstract hero image with geometric shapes" \
-     --n 3 \
-     --output hero-variants.png
+     --prompt "..." \
+     --provider gemini \
+     --reference /tmp/brand-illustration.png \
+     --output hero-3d.png
+
+   # Both in parallel (50/50 quality scenarios — let user pick)
+   bun tools/image-generate.ts generate \
+     --prompt "..." \
+     --provider both \
+     --reference /tmp/brand-ref.png \
+     --output hero-compare.png
+   # Produces: hero-compare-gpt.png + hero-compare-gemini.png
    ```
-   Each image at high quality costs ~$0.17-0.25. Don't generate more variants than needed.
 
 3. **Review output** — use the Read tool on the PNG to visually inspect:
    - Does the image match the prompt intent?
-   - Are brand colors accurate (if specified)?
-   - Is the composition and lighting appropriate for the use case?
-   - Any artifacts, unwanted text, or quality issues?
+   - Are brand colors close to specified hex values?
+   - Is the lighting and atmosphere appropriate?
+   - Any artifacts, unwanted elements, or quality issues?
 
    **If the output misses — iteration strategy:**
-   - **Wrong lighting/mood:** Add explicit lighting direction ("warm light from left", "soft diffused studio lighting")
-   - **Wrong composition:** Specify camera angle ("shot from above", "eye-level", "close-up macro")
-   - **Wrong colors:** Include hex codes directly in the prompt
-   - **Unwanted elements:** Add negative constraints ("no text", "no people", "no watermarks")
-   - **Too generic:** Add material/texture descriptions ("matte finish", "brushed metal", "rough linen")
+   - **Wrong lighting/mood:** Add explicit direction ("warm spotlight from top-right, no fill light, let shadows go dark")
+   - **Wrong composition:** Specify camera ("slightly above center, FOV ~30°, object at 40% of frame")
+   - **Wrong colors:** Include hex codes AND color names ("brand blue #3784FF", "near-black #1A1A1A")
+   - **Wrong materials:** Describe physics ("matte roughness 0.9", "glass transmission with chromatic aberration", "brushed metal")
+   - **Not brand-enough:** Add a reference image from the design system
+   - **Gemini-specific:** Use conversational follow-up ("make the rim glow warmer", "increase the glass refraction")
 
-   **Autonomous retry for objective failures** (wrong subject, completely off-prompt): fix the prompt and regenerate (up to 2 retries). **Aesthetic judgment goes to the user** — show the image and let them direct refinement.
-
-**Editing workflow** (inpainting, background replacement, style transfer):
+**Editing workflow** (GPT Image only — Gemini uses conversational editing instead):
 
 ```bash
 # Replace background
@@ -1105,60 +1166,52 @@ bun tools/image-generate.ts edit \
   --image original.png \
   --output new-background.png
 
-# Targeted edit with mask (transparent areas = edit region)
+# Targeted edit with mask
 bun tools/image-generate.ts edit \
   --prompt "Fill the masked area with a potted plant" \
   --image room.png \
   --mask area-to-fill.png \
   --output with-plant.png
-
-# Style transfer
-bun tools/image-generate.ts edit \
-  --prompt "Apply a warm, vintage film photography look while preserving the subject" \
-  --image modern-photo.png \
-  --output vintage-style.png
 ```
 
-**Transparent background** (for compositing in Figma):
+**Transparent background** (GPT Image only — Gemini does not support native transparency):
 
 ```bash
 bun tools/image-generate.ts generate \
-  --prompt "A coffee cup, studio lighting, isolated object" \
+  --prompt "A glass hexagonal prism, studio lighting, isolated object" \
+  --provider gpt \
   --background transparent \
-  --output-format png \
-  --output coffee-cup.png
+  --output glass-element.png
 ```
 
-**Hybrid workflow: GPT Image → Figma (for composed graphics)**
+**Hybrid workflow: Image Gen → Figma (the default for all production graphics)**
 
-When the final deliverable needs both a photorealistic image AND brand elements, text, or precise layout — generate the raster image with GPT Image, then place it in Figma:
+Image gen produces visual elements. Figma does all text, layout, badges, logos, and final assembly. This separation is intentional — image gen handles what Figma can't (photorealistic 3D, atmospheric effects, glass materials), while Figma handles what image gen can't (precise text, brand tokens, editable layout).
 
-1. **Generate the image** with GPT Image (steps above) — use `--background transparent` if the image will be layered over other elements
-2. **Export** the PNG to a location accessible to Figma
-3. **Place in Figma** — use `figma_execute` to create an image fill on a rectangle, or guide the user to drag-and-drop the PNG into their Figma file
-4. **Compose in Figma** using the Option A workflow — add brand logos, text, layout structure around the raster image
-5. **Apply brand consistency** — verify the raster image looks right alongside Figma-native elements
+1. **Generate the visual element** — use `--background transparent` (GPT) if the element will be layered, or generate a full dark-background scene if it IS the background
+2. **Place in Figma** — create a rectangle with image fill, or guide the user to drag-and-drop the PNG
+3. **Compose in Figma** using the Option A workflow — add brand logos (cloned from design system), text (using brand fonts), layout structure, and badges around the generated element
+4. **Apply brand consistency** — verify the generated element looks right alongside Figma-native elements
 
-This hybrid approach is the right default for: slide deck hero images, marketing materials that need both photography and text, social graphics with product mockups, any graphic that needs photorealistic imagery alongside brand elements and precise text layout.
+**Option F: Three.js 3D render (for deterministic 3D, exact brand colors, parameterized batches)**
 
-**Option F: Three.js 3D render (for programmatic 3D objects, glassmorphic tiles, brand-colored 3D)**
+**Before reaching for R3F, try AI Image Gen (Option E) first.** Image gen with a brand asset reference produces Resend-quality 3D renders in ~15-45 seconds vs 30-60 minutes to write and iterate an R3F scene. Most 3D hero elements that previously required R3F can now be generated faster at comparable quality via Option E.
 
-**Before reaching for R3F, check whether the graphic actually needs a custom 3D render.** Most feature graphics (~70%) use reusable 3D textures composed in Figma — only hero metaphor objects and integration tiles require a custom R3F scene.
+**Use R3F (Option F) only when you need:**
+- **Exact hex-color determinism** — same code = same render, every time. Image gen approximates colors; R3F is pixel-exact.
+- **Parameterized batch rendering** — loop over configs in code (swap icon, change color, adjust angle) for 10+ variations with guaranteed visual consistency. Image gen achieves good batch consistency with reference images but can still drift.
+- **3D texture library assets** — render atmospheric textures (hexagonal facets, ribbed spheres, bokeh) once and store as reusable PNGs for Figma backgrounds. This is a one-time investment, not a per-graphic workflow.
+- **Interactive iteration** — live browser preview, tweak code, refresh. Useful when learning/exploring 3D techniques.
 
-| Feature type | Visual approach | Tool | R3F needed? |
-|---|---|---|---|
-| Abstract/infrastructure (CLI, webhooks, agents) | 3D metaphor object | R3F → Figma compose | **Yes** |
-| Integration announcement (n8n, Vercel, Slack) | 3D icon tile with partner logo | R3F → Figma compose | **Yes** |
-| Feature with compelling UI (logs, editor, dashboard) | Stylized UI mockup | Figma only | No |
-| API/developer feature (broadcasts API, SDK) | Code snippet as hero | Figma only | No |
-| Simple/minor feature (webhook ingester) | Typography + 3D texture from library | Figma only (reuse texture) | No |
-| Milestone/stat (1M users) | Giant number + 3D texture field | Figma only (reuse texture) | No |
+| Scenario | Try first | Fall back to R3F if |
+|---|---|---|
+| One-off 3D hero element | **Image gen (Option E)** | Brand color must be pixel-exact, not "close enough" |
+| Integration tile series (10+ tiles) | **Image gen + reference anchoring** | Need guaranteed pixel-identical lighting/materials across all tiles |
+| Abstract 3D background | **Image gen (Option E)** | Need to render once and reuse as a library texture |
+| 3D concept exploration | **Image gen (Option E)** | — (image gen is always faster for exploration) |
+| Precise geometric branded shape | **R3F with CSG** | — (image gen can't carve exact shapes) |
 
-**If the routing says "Figma only":** Use the existing Option A workflow with pre-rendered 3D texture PNGs as atmospheric backgrounds (see `tools/r3f/staging.md` § "3D texture library"). No R3F scene needed.
-
-**If the routing says "R3F → Figma compose":** Write a custom R3F scene, render with `--mode compositing` (transparent PNG), and compose in Figma with text and layout. This is the default R3F workflow — see hybrid workflow below.
-
-Best for: 3D rendered objects with exact brand colors, batch-renderable integration tiles, glassmorphic/clay/metallic materials, any 3D asset where deterministic output and color precision matter. The agent writes the 3D scene as a React Three Fiber (R3F) TSX component — declarative scene graph with drei staging helpers, full control over every material, light, and camera property.
+Best for: 3D rendered objects with exact brand colors, parameterized batch rendering, and reusable 3D texture library assets. The agent writes the 3D scene as a React Three Fiber (R3F) TSX component — declarative scene graph with drei staging helpers, full control over every material, light, and camera property.
 
 **Load:** `tools/r3f/README.md` for the rendering pipeline, scene template, and reference index to deeper files (materials, staging, advanced features).
 
@@ -1307,8 +1360,9 @@ Must have:
 - [ ] For Figma: visual checkpoint completed at each workflow phase
 - [ ] For Quiver: brand colors and style constraints passed via `instructions` parameter (never generate without brand instructions)
 - [ ] For Quiver: SVG output reviewed — verify hex colors in source match brand palette
-- [ ] For GPT Image: output visually inspected via Read tool before delivering
-- [ ] For GPT Image: quality set to `high` unless user explicitly requested lower
+- [ ] For AI Image Gen: output visually inspected via Read tool before delivering
+- [ ] For AI Image Gen: correct provider chosen per routing table (GPT for transparency/editing, Gemini for 3D/glass, both for 50/50 scenarios)
+- [ ] For AI Image Gen: reference image from design system used when generating brand-adjacent content
 
 Should have:
 - [ ] Plan reviewed by user before generation
@@ -1318,8 +1372,9 @@ Should have:
 - [ ] For SVG: clean, well-structured code
 - [ ] For Quiver: reference images used when generating icon sets or matching existing brand style
 - [ ] For Quiver: prompt uses 5-component structure (subject + style + palette + composition + constraints)
-- [ ] For GPT Image: brand colors included as hex codes in the prompt when brand consistency matters
-- [ ] For GPT Image: `--background transparent` used when image will be composited in Figma
+- [ ] For AI Image Gen: brand colors included as hex codes in the prompt when brand consistency matters
+- [ ] For AI Image Gen: `--background transparent` (GPT only) used when element will be composited in Figma
+- [ ] For AI Image Gen: "both in parallel" used for 3D hero elements and abstract art where quality is subjective
 - [ ] Multiple sizes if needed for different contexts
 
 ## Anti-patterns
@@ -1327,7 +1382,7 @@ Should have:
 - **One-shot generation**: Never try to build the entire graphic in one pass. INSTEAD: one `figma_execute` call per element → screenshot → verify → next element. Build atoms individually in a working frame, then compose into the final layout.
 - **Placeholder content**: Never leave "Icon here", empty shapes, or "TODO" labels. INSTEAD: search Brand Assets page (logos, icons, third-party logos), then SVG logo sources (`tools/logo-sources.md`). If truly unfindable, create a styled text pill and flag it for the user to replace.
 - **Skipping visual checkpoints**: Don't assume it looks right. INSTEAD: `figma_capture_screenshot` after creating each atom, after each dimensional change, and before delivering. Run `figma_lint_design` at Step 5 to catch what screenshots miss (hardcoded colors, contrast, unnamed layers).
-- **Creating from scratch when a Figma component exists**: INSTEAD: always search Brand Assets page (node `5003:63`) first — it has curated logos, icons, illustrations, customer assets, third-party logos, and backgrounds. Check `brand.md` § Asset Library navigation table for which section to search.
+- **Creating from scratch when a Figma component exists**: INSTEAD: always search Brand Assets page (node `5003:63`) first — it has curated logos, icons, illustrations, customer assets, third-party logos, and backgrounds. Check `references/figma-assets.md` navigation table for which section to search.
 - **Generating SVG when Figma-native is better**: Default to Figma designs for slide/marketing assets — they're editable and reusable. Use SVG only when code output is specifically needed.
 - **Approximate colors**: Use exact hex values from the brand, not "close enough" colors
 - **Unnamed layers**: Every Figma layer should have a descriptive name, not "Frame 47" or "Rectangle 12"
@@ -1344,8 +1399,10 @@ Should have:
 - **Vague Quiver prompts**: "A nice icon" wastes credits and produces random output. Use the 5-component prompt structure: subject + style + color palette + composition + constraints.
 - **Skipping Quiver output review**: Always read and verify the generated SVG before delivering — check hex values in the SVG source against the brand palette, not just visual impression
 - **Generating too many Quiver variants**: Each variant costs 1 credit. Use `--n 2` or `--n 3` for exploration, not `--n 16`. For brand-consistent work, one well-prompted generation often suffices.
-- **Using GPT Image for vector assets**: GPT Image produces raster PNGs that pixelate when scaled. For icons, logos, or illustrations that need to work at multiple sizes, use Quiver (Option D) for SVG output.
-- **Using GPT Image for editable layouts**: Raster images can't be edited by designers in Figma. Use Figma (Option A) for layouts with text, brand elements, and precise positioning. Use the hybrid workflow (GPT Image → Figma) when you need both.
-- **GPT Image without visual inspection**: Always Read the output PNG before delivering. The agent can see images — verify the result matches intent before showing the user.
-- **Excessive GPT Image variants at high quality**: Each high-quality image costs $0.17-0.25. Use `--n 2` or `--n 3` for exploration, not `--n 10`. Use `--quality medium` ($0.04) for rapid iteration, then `--quality high` for the final version.
-- **Vague GPT Image prompts**: "A nice photo" produces generic stock imagery. Include subject, lighting direction, camera perspective, materials, and negative constraints for photorealistic quality.
+- **Using image gen for vector assets**: Image gen produces raster PNGs that pixelate when scaled. For icons, logos, or illustrations that need to work at multiple sizes, use Quiver (Option D) for SVG output.
+- **Using image gen for text or layouts**: NEVER put text in generated images — Figma handles all text. Image gen produces visual elements only, which are composited in Figma.
+- **Image gen without visual inspection**: Always Read the output PNG before delivering. The agent can see images — verify the result matches intent before showing the user.
+- **Defaulting to one provider**: Use the provider routing table. GPT for transparency/editing, Gemini for 3D/glass quality, both in parallel for 50/50 scenarios. Don't always use GPT just because it's the existing default.
+- **Image gen without reference images**: When generating brand-adjacent content (3D tiles, atmospheric backgrounds, illustrations), always check the design system for a relevant reference asset. A matching reference dramatically improves on-brand quality on both providers.
+- **Reaching for R3F before trying image gen**: Image gen with a brand asset reference produces comparable 3D quality in seconds. Try Option E first; only fall back to R3F when exact color determinism or parameterized batch rendering is required.
+- **Vague image gen prompts**: "A nice photo" produces generic stock imagery. Include subject, materials, lighting direction, camera perspective, hex colors, and negative constraints.

@@ -22,7 +22,7 @@ Pass this series brief to **every** subagent in the deck. This is how parallel s
 
 ## Prospect/customer context (sales decks)
 
-When creating a sales deck personalized for a specific prospect or customer, include their company details so the graphics skill can fetch real brand data via `fetch-brand.ts`:
+When creating a sales deck personalized for a specific prospect or customer, include their company details so the graphics skill can fetch their real brand data:
 
 - **Company name**: the prospect's company name
 - **Domain**: their website domain (e.g., `stripe.com`)
@@ -57,7 +57,7 @@ Spawn using the **Agent tool** with `subagent_type: "general-purpose"`. The prom
 Load the `graphics` skill and follow its full workflow.
 
 Create a slide deck graphic:
-- **Type**: [diagram / illustration / product mockup / data visualization / metric callout / quote card / logo wall]
+- **Type**: [diagram / illustration / icon set / product mockup / data visualization / metric callout / quote card / logo wall / code block / 3D render / photorealistic image]
 - **Message**: [what this graphic should communicate to the audience]
 - **Audience**: [who will see this slide — prospects, technical team, executives, etc.]
 - **Content**: [specific elements — prefix each with "User-provided:" or "Inferred from [source]:"]
@@ -74,7 +74,7 @@ Series brief (apply to ALL graphics in this deck):
 
 [If sales deck for a specific prospect:]
 Prospect: [company name] ([domain]). Their brand appears in: [which graphics and how].
-Use `fetch-brand.ts` to pull their real brand colors and logo — do not guess.
+Pull their real brand colors and logo — do not guess.
 
 Export as PNG at 4x scale from Figma. Return using this format:
 
@@ -113,16 +113,43 @@ Figma canvas coordinates map to Google Slides points:
 - **Full-slide placement** (960x540 Figma canvas): `x=0, y=0, width=720, height=405` (points)
 - **Inset graphics**: calculate position and size using the same formula based on where the graphic should appear on the slide
 
+## What `/graphics` can generate for your slides
+
+Describe what you need — `/graphics` handles tool selection internally.
+
+| What you need | Output | Slide example |
+|---|---|---|
+| Conceptual illustration | On-brand hand-drawn style SVG | Solution overview — "How Inkeep connects to your stack" |
+| Matching icon set | Consistent SVG icons | Feature comparison — each capability gets its own icon |
+| Decorative background | SVG pattern | Title slide — organic pattern instead of flat color |
+| Chart (bar, donut, sparkline) | Brand-styled PNG | Metrics — "50% reduction in tickets" with donut chart |
+| Metric callout (big number) | Styled number card | Social proof — "99.9% uptime" hero visual |
+| Data comparison table | Styled grid | Competitive comparison — feature matrix |
+| Third-party logo | Real SVG logo | Integration slide showing partner ecosystem |
+| Logo wall | Grid of logos | Social proof — "Trusted by" logo wall |
+| Prospect's brand (sales decks) | Logo + brand colors | Personalized title slide with prospect's identity |
+| Polished product mockup | Styled screenshot PNG | Feature deep-dive — product UI as hero visual |
+| Tutorial spotlight | Overlay + highlight PNG | Demo walkthrough — highlight a specific panel |
+| Syntax-highlighted code | Styled code block PNG | Developer slide showing integration code |
+| Photorealistic image | Raster PNG | Title slide hero — abstract AI-themed backdrop |
+| Image editing (cleanup, bg swap) | Modified PNG | Clean up a product screenshot for a slide |
+| 3D rendered accent | PNG with transparency | Title slide — premium 3D logo tile |
+| Architecture diagram | Auto-laid-out SVG | System overview for technical audience |
+| Flowchart | Structured SVG | Process — "How a support query flows" |
+
 ## Decision table: delegate vs. skip
 
 | Situation | Action |
 |---|---|
-| Slide type has a visual need AND no existing image | **Delegate** — spawn a graphics subagent |
-| Slide type has a visual need BUT user provided an image URL | **Skip** — use the provided URL directly |
-| Slide type has a visual need BUT cloned deck already has adequate visual | **Skip** — keep existing visual, update only if outdated |
+| Slide needs an illustration, diagram, chart, or custom visual | **Delegate** — spawn a graphics subagent |
+| Slide needs a polished product mockup | **Delegate** |
+| Slide needs third-party logos not in the asset library | **Delegate** |
+| Slide needs a photorealistic image or 3D accent | **Delegate** |
+| User provided an image URL | **Skip** — use the URL directly |
+| Cloned deck already has adequate visual | **Skip** — keep existing, update only if outdated |
 | Slide only needs text, bullets, solid color backgrounds | **Skip** — no graphic needed |
-| Visual is just a customer logo | **Skip** — extract from Figma directly (no subagent needed) |
-| Graphics skill is unavailable | **Skip** — proceed text-only, note the gap to the user |
+| Visual is just a customer logo extractable from Figma | **Skip** — pull directly, no subagent needed |
+| Graphics skill is unavailable | **Skip** — proceed text-only, note the gap |
 
 ## Parallel execution
 

@@ -51,10 +51,7 @@ Mandatory checks for all Inkeep Remotion videos. Videos must pass all items befo
 ## Content Guidelines
 
 ### Text Style
-- [ ] **Titles in sentence case** - Only first letter capitalized
-- [ ] **"Agent" always capitalized** - It's a brand term
-- [ ] **Tagline correct**: "The Agent Platform for Customer Operations"
-- [ ] **URL format**: `inkeep.com/path` (no https://)
+For text style rules (sentence case, "Agent" capitalization, tagline, URL format), see `/brand` SKILL.md.
 
 ### LinkedIn Optimization
 - [ ] **Format**: 1080×1080 (square)

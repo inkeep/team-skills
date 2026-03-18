@@ -1,31 +1,31 @@
 # OpenAI GPT Image 1.5 API Reference
 
-Use when: Generating raster images via Option E or editing existing images (inpainting, style transfer, background replacement)
-Priority: P0 (when using Option E)
+Use when: Using Option E with `--provider gpt` — transparent compositing elements, mask-based image editing, structured illustrations
+Priority: P0 (when using Option E with GPT provider)
 Impact: Wrong API usage, failed generation, wasted credits
 
 ---
 
 ## Overview
 
-GPT Image 1.5 is #1 on LM Arena (Elo 1268) for AI image generation. It produces photorealistic raster images (PNG/JPEG/WebP) from text prompts and can edit existing images via inpainting, background replacement, style transfer, and object removal. This is a different modality from Quiver (SVG vectors) — use it for photographic quality, not scalable vector art.
+GPT Image 1.5 is one of two providers in Option E (alongside Gemini 3.1 Flash Image). It produces photorealistic raster images and is the **only provider with native transparent background support** — making it the default for compositing elements that will be placed in Figma.
 
 - **API base:** `https://api.openai.com/v1`
 - **Model:** `gpt-image-1.5`
 - **Auth:** Bearer token via `OPENAI_API_KEY` environment variable
 - **Docs:** https://platform.openai.com/docs/guides/image-generation
 
-## When to use GPT Image vs other options
+## When to use GPT Image vs Gemini
 
-See the routing table in SKILL.md Step 1 for the full decision matrix. Summary:
+See the provider routing table in SKILL.md Option E. Summary:
 
-**GPT Image excels at:** photorealistic images, product mockups in realistic scenes, hero images, editorial illustrations, image editing (inpainting, background swap, style transfer, object removal), text-in-image rendering (~98% accuracy).
+**GPT Image wins on:** transparent background compositing (`--background transparent`), mask-based image editing (surgical inpainting), structured illustrations with correct layout topology.
 
-**GPT Image is NOT for:** vector graphics (use Quiver), editable layouts (use Figma), diagrams (use D2/Mermaid), scalable assets (raster pixelates when scaled — use SVG for assets that need multiple sizes).
+**Use Gemini instead for:** 3D hero elements with glass/material quality, abstract atmospheric backgrounds, 2D→3D brand asset conversion, conversational iterative editing. Use `--provider both` when quality is subjective.
 
 ## Script usage
 
-The script lives at `tools/image-generate.ts`. Run with bun (zero external dependencies).
+The script lives at `tools/image-generate.ts`. GPT is the default provider (`--provider gpt`).
 
 ### Generate an image
 
