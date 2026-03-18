@@ -63,6 +63,7 @@ Load these when you need detailed guidance beyond the compact rules above:
 - `references/brand-guide.md` — full visual identity: illustration style, icon rules, diagram rules, gradient tiers, decorative elements, what feels dated
 - `references/composition-guide.md` — layout and hierarchy: Z-pattern, split layout, visual hierarchy ratios, color restraint, background texture, content coverage, edge bleed, brand system consistency
 - `references/element-patterns.md` — reusable element recipes: product mockup treatment, code-as-visual, badge system, metric callout, logo composition, quote card, section headers, button variants, integration logo cards
+- `references/product-representation.md` — product fidelity spectrum (6 levels), decision framework, product vs marketing design tokens, surface-specific guidance, the "cleaning up" process, anti-patterns
 - `references/motion-philosophy.md` — animation principles: smooth not snappy, do's and don'ts, standard motion patterns
 
 ## Token Values
