@@ -2,6 +2,18 @@
 
 Plugin for the Inkeep GTM team. Includes all [shared skills](../shared/) plus GTM-specific ones.
 
+## Prerequisites
+
+Install these before setting up skills. You may already have some of them.
+
+| Prerequisite | Needed for | Install |
+|---|---|---|
+| **Claude Code** | Everything | [Install guide](https://docs.anthropic.com/en/docs/claude-code/overview) |
+| **1Password CLI** | API keys for graphics, video, slides | `brew install 1password-cli` then open 1Password desktop app → Settings → Developer → enable **"Integrate with 1Password CLI"** ([docs](https://developer.1password.com/docs/cli/get-started/)) |
+| **1Password vault access** | API keys | Ask your team admin for access to the **Shared** vault |
+| **Figma Desktop** | `/graphics`, `/gslides` | [Download](https://www.figma.com/downloads/) — must be the desktop app, not browser Figma |
+| **gcloud CLI** | `/gslides` only | `brew install --cask google-cloud-sdk` |
+
 ## Quick setup (Claude Code)
 
 Skills auto-update every session.
@@ -40,20 +52,23 @@ npx skills update
 
 | Skill | Purpose |
 |---|---|
-| `/cold-email` | Generate cold outbound emails tailored to B2B personas. Supports 19 persona archetypes (Founder-CEO, CTO, VP Eng, etc.). Enriches prospects via Crustdata MCP when given a LinkedIn URL. |
-| `/gslides` | Create branded Google Slides presentations using Figma brand assets and Google Slides MCP. Supports customer decks, sales presentations, internal updates, and product overviews. |
-| `/graphics` | Create on-brand graphics as native editable Figma designs. Also supports SVG, D2, and Mermaid output. Uses Figma brand tokens and figma-console-mcp for native Figma object creation. |
+| `/graphics` | Create on-brand visuals — blog thumbnails, social images, slide assets, diagrams, charts, illustrations, icons, or any branded graphic. |
+| `/motion-video` | Create on-brand marketing videos — product demos, feature announcements, blog-to-video conversions, social video content. |
+| `/gslides` | Create on-brand Google Slides presentations — sales decks, customer decks, internal updates, product overviews. |
+| `/animate` | Add animations to the marketing site — scroll reveals, hero animations, entrance effects, product demos. |
+| `/cold-email` | Generate cold outbound emails for B2B personas. Supports 19 archetypes. Enriches prospects via Crustdata MCP when given a LinkedIn URL. |
+| `/brand` | *(background knowledge, not a command)* — Full brand identity loaded automatically by `/graphics`, `/motion-video`, `/gslides`, and `/animate`. Includes colors, typography, illustration style, composition patterns, element recipes, messaging principles, and vocabulary. |
 
-### General Purpose
+### General purpose (shared with eng)
 
 | Skill | Purpose |
 |---|---|
-| `/research` | Deep research across web + OSS code bases with formal reports and evidence files |
+| `/research` | Deep research across web + OSS codebases with formal reports and evidence files |
 | `/analyze` | Deep analysis of decisions, trade-offs, and open questions |
 | `/write-skill` | Author or update Agent Skills (SKILL.md + supporting files) |
 | `/write-agent` | Design Claude Code agents and agent prompts (.claude/agents/*.md) |
-
-**Shared:** `research`, `analyze`, `screengrabs`, `write-skill`, `write-agent`
+| `/screengrabs` | Capture and embed before/after screenshots in GitHub PRs |
+| `/media-upload` | Upload video and files to Bunny CDN or Vimeo |
 
 ---
 
@@ -66,6 +81,14 @@ npx skills update
 ```bash
 brew install 1password-cli  # skip if already installed
 ~/.claude/plugins/marketplaces/inkeep-team-skills/secrets/setup.sh --skill media-upload --account inkeep.1password.com
+```
+
+### Motion video
+
+`/motion-video` needs a Gemini API key (for visual verification):
+
+```bash
+./secrets/setup.sh --skill motion-video --account inkeep.1password.com
 ```
 
 ### Graphics (Figma design creation)
