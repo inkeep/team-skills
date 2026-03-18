@@ -22,6 +22,7 @@ Detect what capabilities are available before starting work. For each capability
 | macOS computer use | Check if `mcp__peekaboo__*` tools are available | Skip OS-level testing; document gap |
 | Claude CLI subprocess | Detected by `/implement` during Phase 2 execution | `/implement` handles degradation internally — if subprocess unavailable, it provides manual iteration instructions. Ship does not need to detect this. |
 | Docker execution (`--implement-docker`) | User passes `--implement-docker` (optionally with compose file path) | Host execution (default). When passed, forwarded to `/implement` as `--docker` in Phase 2. The skill auto-discovers the compose file if no path given. |
+| Isolated app env | Probe for repo-local isolated env support. Strong signals: `scripts/isolated-env.sh` exists, `docker-compose.isolated.yml` exists, and the repo exposes `pnpm setup-dev --isolated <name>` or an equivalent setup entrypoint. Mark `isolatedEnv: true` only when `/ship` can both provision or attach the env and capture exports from `./scripts/isolated-env.sh env <name>`. | Continue without isolated env support. App-dependent commands use the repo's default env and parallel runs may need manual port coordination. |
 | /spec skill | Check skill availability | Require SPEC.md as input (no interactive spec authoring) |
 | /explore skill | Check skill availability | Use direct codebase exploration (Glob, Grep, Read) |
 

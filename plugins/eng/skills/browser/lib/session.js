@@ -4,8 +4,90 @@
 
 const fs = require('fs');
 const path = require('path');
+const os = require('os');
+const { execFileSync } = require('child_process');
 
-const SESSION_FILE = process.env.PW_SESSION_FILE || '/tmp/playwright-session.json';
+function looksLikeGlobalSkillPath(dir) {
+  return dir.includes(`${path.sep}.claude${path.sep}skills${path.sep}`);
+}
+
+function resolveGitRoot(dir) {
+  if (!dir || !fs.existsSync(dir)) return null;
+  try {
+    return execFileSync('git', ['-C', dir, 'rev-parse', '--show-toplevel'], {
+      encoding: 'utf8',
+      stdio: ['ignore', 'pipe', 'ignore'],
+    }).trim();
+  } catch {
+    return null;
+  }
+}
+
+function resolveProjectDir() {
+  if (process.env.CLAUDE_PROJECT_DIR) {
+    return path.resolve(process.env.CLAUDE_PROJECT_DIR);
+  }
+
+  if (process.env.PW_SESSION_ROOT) {
+    return path.resolve(process.env.PW_SESSION_ROOT);
+  }
+
+  const candidates = [
+    process.env.OLDPWD,
+    process.env.PWD,
+    process.cwd(),
+  ]
+    .filter(Boolean)
+    .map(dir => path.resolve(dir));
+
+  const seen = new Set();
+  const uniqueCandidates = candidates.filter((dir) => {
+    if (seen.has(dir)) return false;
+    seen.add(dir);
+    return true;
+  });
+
+  for (const candidate of uniqueCandidates) {
+    const gitRoot = resolveGitRoot(candidate);
+    if (gitRoot && !looksLikeGlobalSkillPath(gitRoot)) {
+      return gitRoot;
+    }
+  }
+
+  for (const candidate of uniqueCandidates) {
+    if (fs.existsSync(candidate) && !looksLikeGlobalSkillPath(candidate)) {
+      return candidate;
+    }
+  }
+
+  for (const candidate of uniqueCandidates) {
+    const gitRoot = resolveGitRoot(candidate);
+    if (gitRoot) {
+      return gitRoot;
+    }
+  }
+
+  return null;
+}
+
+function resolveSessionFile() {
+  if (process.env.PW_SESSION_FILE) {
+    return path.resolve(process.env.PW_SESSION_FILE);
+  }
+
+  const projectDir = resolveProjectDir();
+  if (!projectDir) {
+    return path.join(os.tmpdir(), 'playwright-session.json');
+  }
+
+  return path.join(projectDir, 'tmp', 'browser', 'playwright-session.json');
+}
+
+function ensureSessionDir() {
+  fs.mkdirSync(path.dirname(SESSION_FILE), { recursive: true });
+}
+
+const SESSION_FILE = resolveSessionFile();
 const DEFAULT_IDLE_TIMEOUT_MS = 600000; // 10 minutes
 const DEFAULT_START_TIMEOUT_MS = 15000; // 15 seconds
 
@@ -135,6 +217,7 @@ async function connectToSession(sessionInfo, options = {}) {
     try {
       const state = await context.storageState();
       state._lastUrl = page.url();
+      ensureSessionDir();
       fs.writeFileSync(SESSION_STATE_FILE, JSON.stringify(state));
     } catch {}
   }
@@ -168,6 +251,7 @@ async function startSession(options = {}) {
   cleanupStaleSession();
 
   const serverScript = path.join(__dirname, '..', 'scripts', 'session-server.js');
+  ensureSessionDir();
   const env = {
     ...process.env,
     PW_SESSION_FILE: SESSION_FILE,

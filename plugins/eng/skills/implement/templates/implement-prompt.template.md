@@ -45,12 +45,13 @@ Focus on:
 ### 2. Check status
 
 Read `tmp/ship/spec.json` for user stories and their completion status.
+Treat stories with `status: "blocked"` as unavailable until a human resets them.
 
 Read `tmp/ship/progress.txt` for learnings from previous iterations.
 
 ### 3. Select story
 
-Select the highest-priority incomplete story (`passes: false`).
+Select the highest-priority incomplete story (`passes: false`) whose `status` is not `"blocked"`.
 
 ### 4. Implement
 
@@ -116,7 +117,7 @@ Append to `tmp/ship/progress.txt` using this format:
 If stuck on a story:
 1. Set `notes` on that story in `tmp/ship/spec.json` with the blocker description
 2. Log the blocker to `tmp/ship/progress.txt`
-3. Move to the next story
+3. Do NOT change `attemptCount` yourself — `implement.sh` tracks retry counts and will block the story when its retry budget is exhausted
 
 ### 10. Completion check
 
@@ -145,12 +146,13 @@ You are implementing a feature based on spec.json. Follow this workflow exactly 
 ### 1. Check status
 
 Read `tmp/ship/spec.json` for user stories, their completion status, and the `implementationContext` field. This is your sole implementation reference — pay close attention to every detail in implementationContext: architecture, constraints, design decisions, integration points, and non-goals.
+Treat stories with `status: "blocked"` as unavailable until a human resets them.
 
 Read `tmp/ship/progress.txt` for learnings from previous iterations.
 
 ### 2. Select story
 
-Select the highest-priority incomplete story (`passes: false`).
+Select the highest-priority incomplete story (`passes: false`) whose `status` is not `"blocked"`.
 
 ### 3. Implement
 
@@ -216,7 +218,7 @@ Append to `tmp/ship/progress.txt` using this format:
 If stuck on a story:
 1. Set `notes` on that story in `tmp/ship/spec.json` with the blocker description
 2. Log the blocker to `tmp/ship/progress.txt`
-3. Move to the next story
+3. Do NOT change `attemptCount` yourself — `implement.sh` tracks retry counts and will block the story when its retry budget is exhausted
 
 ### 9. Completion check
 

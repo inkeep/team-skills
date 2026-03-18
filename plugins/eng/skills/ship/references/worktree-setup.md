@@ -68,6 +68,29 @@ Run the repo's quality gate commands to confirm the worktree is healthy:
 
 Use the commands discovered during capability detection, not hardcoded defaults.
 
+## Provision isolated app env (when supported)
+
+If capability detection marks `isolatedEnv: true`, provision or attach the repo's isolated app env after the worktree is ready and before Phase 1 activates Ship state:
+
+```bash
+<path-to-skill>/scripts/ship-setup-isolated-env.sh --feature "<feature-name>"
+```
+
+What this helper does:
+- derives a stable env name from the feature slug unless you pass `--name`
+- prefers `pnpm setup-dev --isolated <name>` when the repo exposes it
+- otherwise falls back to `./scripts/isolated-env.sh setup <name>`
+- captures `./scripts/isolated-env.sh env <name>` into `${CLAUDE_SHIP_DIR:-tmp/ship}/isolated-env.sh`
+- writes `${CLAUDE_SHIP_DIR:-tmp/ship}/isolated-env.json` so `ship-init-state.sh` can record the active env in `state.json`
+
+From that point on, app-dependent repo commands can run under:
+
+```bash
+source ${CLAUDE_SHIP_DIR:-tmp/ship}/isolated-env.sh && <command>
+```
+
+Use the sourced env only for repo or app commands that talk to backing services, dev servers, or browser and integration targets. Do not prefix generic git-only steps with it.
+
 ## Cleanup (after PR is merged)
 
 From the main repo:
@@ -76,6 +99,14 @@ git worktree remove ../<feature-name>
 git branch -d feat/<feature-name>
 git worktree prune
 ```
+
+If the user wants the isolated app env torn down too, use the repo's own teardown command:
+
+```bash
+./scripts/isolated-env.sh down <feature-name>
+```
+
+Do not auto-destroy isolated envs by default. Leave them running unless the user explicitly asks for teardown.
 
 ## Troubleshooting
 

@@ -33,7 +33,7 @@ echo "State file created. Running Claude subprocess..."
 echo ""
 
 # Run Claude in subprocess mode — ask it to read the state file
-RESPONSE=$(env -u CLAUDECODE -u CLAUDE_CODE_ENTRYPOINT claude \
+RESPONSE=$(env -u ANTHROPIC_API_KEY -u CLAUDECODE -u CLAUDE_CODE_ENTRYPOINT claude \
   -p "Read the file tmp/ship/state.json and tell me: what phase is the ship workflow at? Just output the phase name, nothing else." \
   --dangerously-skip-permissions \
   --max-turns 5 \

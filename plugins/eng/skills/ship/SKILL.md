@@ -53,9 +53,12 @@ All execution state lives in `tmp/ship/` (gitignored). The only committed artifa
 
 | File | What it holds | Created | Updated | Read by |
 |---|---|---|---|---|
-| `tmp/ship/state.json` | Workflow state — current phase, feature name, spec path, PR #, branch, capabilities, quality gates, amendments | Phase 1 (Ship) | Every phase transition (Ship) | Stop hook (re-injection), Ship (re-entry) |
+| `tmp/ship/state.json` | Workflow state — current phase, feature name, spec path, PR #, branch, capabilities, quality gates, amendments, phaseHistory, phaseMetrics | Phase 1 (Ship) | Every phase transition (Ship); stop hook also repairs phase state/history and updates metrics | Stop hook (re-injection), Ship (re-entry) |
 | `tmp/ship/loop.md` | Loop control — iteration counter, max iterations, completion promise, session_id (for isolation) | Phase 1 (Ship) | Each re-entry (stop hook increments iteration, stamps session_id) | Stop hook (block/allow exit) |
+| `tmp/ship/metrics.json` | Run metrics snapshot — per-phase timestamps, durations, and iteration counts | Stop hook | Each re-entry (overwritten) | Debugging, run analysis |
 | `tmp/ship/last-prompt.md` | Last re-injection prompt — the full prompt the stop hook constructed on its most recent re-entry, for debugging | Stop hook | Each re-entry (overwritten) | Debugging only |
+| `tmp/ship/isolated-env.sh` | Source-able exports for a repo-local isolated app env used by app-dependent commands during Ship phases | Phase 0 (`ship-setup-isolated-env.sh`) | Rewritten when the env is provisioned or re-attached | `/implement`, `/qa`, browser/integration commands |
+| `tmp/ship/isolated-env.json` | Metadata for the active isolated app env — env name, env file, teardown command, state file | Phase 0 (`ship-setup-isolated-env.sh`) | Rewritten when the env is provisioned or re-attached | `ship-init-state.sh`, Ship recovery/debugging |
 | `tmp/ship/spec.json` | User stories — acceptance criteria, priority, pass/fail status | Phase 2 (/implement) | Each iteration (sets `passes: true`) | implement.sh, iterations, Ship |
 | `tmp/ship/progress.txt` | Iteration log — what was done, learnings, blockers | Phase 2 start (implement.sh) | Each iteration (append) | Iterations, Ship |
 | `tmp/ship/review-output.md` | Latest portable local review summary from the pre-push review gate | Pre-push local review gate | Each local review pass (overwrite) | Ship, user |
@@ -66,10 +69,11 @@ All execution state lives in `tmp/ship/` (gitignored). The only committed artifa
 
 | Event | state.json | Other files |
 |---|---|---|
+| **Phase 0 isolated env setup** | — | `ship-setup-isolated-env.sh` writes `tmp/ship/isolated-env.sh` and `tmp/ship/isolated-env.json` when the repo supports isolated app envs |
 | **Phase 1 end** | **Run** `ship-init-state.sh` — creates both `state.json` and `loop.md` (see Phase 1, Step 3) | — |
 | **Phase 2 start** | — | `/implement` creates `tmp/ship/spec.json`, `tmp/ship/implement-prompt.md`, `tmp/ship/progress.txt` |
 | **Pre-push local review gate** | — | `run-local-review.sh` stages the portable review bundle into `tmp/ship/pr-review-plugin/` and overwrites `tmp/ship/review-output.md` with the latest markdown summary |
-| **Any phase → next** | Set `currentPhase` to next phase, append completed phase to `completedPhases`, refresh `lastUpdated` | — |
+| **Any phase → next** | Set `currentPhase` to next phase, append completed phase to `completedPhases`, refresh `lastUpdated` | Stop hook validates contiguous phases, repairs `phaseHistory`, and refreshes metrics on re-entry |
 | **User amendment** (any phase) | Append to `amendments[]`: `{"description": "...", "status": "pending"}` | — |
 | **Iteration completes a story** | — | `tmp/ship/spec.json`: set story `passes: true`. `tmp/ship/progress.txt`: append iteration log. |
 | **PR created** (after pre-push local review) | Set `prNumber` | Draft PR created on GitHub |
@@ -84,7 +88,21 @@ The PR body is a living document — not write-once. A draft PR with a stub body
 
 Load `/pr` skill for all PR body work — writing the full body and updating it after subsequent phases. The skill owns the template, section guidance, and principles (self-contained, stateless).
 
-**Update rule:** After any phase that changes code or documentation, check whether the PR description is now stale and re-load `/pr` skill to update it. Phase 6 verifies the description is comprehensive and current.
+### Stop hook enforcement
+
+The stop hook does more than re-inject context. On every re-entry it:
+
+- Validates that `currentPhase` is a known value and that `completedPhases` has no gaps.
+- Repairs corrupted phase state by rolling back to the earliest incomplete phase.
+- Maintains `phaseHistory` entries as phases start and complete.
+- Maintains `phaseMetrics` and writes `tmp/ship/metrics.json` with per-phase durations and iteration counts.
+- Refuses to advance past a phase when its artifact gate is missing:
+  - Phase 2 → branch diff present and configured quality gates passing
+  - Phase 3 → `tmp/ship/qa-progress.json` exists with at least one scenario
+  - Phase 4 → branch diff includes a `.md` or `.mdx` change
+  - Phase 5 → `prNumber` is set unless GitHub capability was explicitly unavailable
+
+**Update rule:** After any phase that changes code or documentation, check whether the PR description is now stale and re-load `/pr` to update it. Phase 6 verifies the description is comprehensive and current.
 
 ---
 
@@ -174,6 +192,8 @@ Now that you have a feature name, establish an isolated working directory so all
 
 Record results. If any capability is unavailable, briefly state what's missing as a negotiation checkpoint — the user may be able to fix it before work proceeds.
 
+If capability detection marks `isolatedEnv: true`, return to the worktree setup reference and run `<path-to-skill>/scripts/ship-setup-isolated-env.sh --feature "<feature-name>"` from the repo root before entering Phase 1. This provisions or attaches the repo's isolated app env and writes `${CLAUDE_SHIP_DIR:-tmp/ship}/isolated-env.{sh,json}` for later phases.
+
 #### Step 4: Calibrate workflow to scope
 
 Assess the task and determine the appropriate depth for each phase. **Every phase is always executed** — scope calibration adjusts rigor, not whether a phase runs. The sole exception: a missing capability from Step 2 (e.g., no GitHub CLI → skip PR creation and `/review`).
@@ -245,6 +265,8 @@ Do not proceed until the user confirms the SPEC.md is ready for implementation. 
 
 Run `<path-to-skill>/scripts/ship-init-state.sh` with values from Phase 0 (capabilities, scope) and Phase 1 (feature name, spec path, branch). **Do not manually write `state.json` or `loop.md` by hand — always use the script.** Hand-written JSON/YAML is the #1 cause of stop hook failures. See the reference for the full argument list and defaults.
 
+If Phase 0 provisioned an isolated app env, keep `--isolated-env true` in this invocation. The script automatically imports `${CLAUDE_SHIP_DIR:-tmp/ship}/isolated-env.json` so `state.json` records the active env name, source file, and teardown command.
+
 After the script runs, verify both files exist:
 
 ```bash
@@ -273,6 +295,7 @@ Load `/implement` skill to handle the full implementation lifecycle — from spe
 - Quality gate command overrides from Phase 0 (which may differ from pnpm defaults)
 - Browser availability from Phase 0 (if browser tools are unavailable, pass `--no-browser` so `/implement` adapts criteria)
 - Docker execution from Phase 0 (if `--implement-docker` was passed, forward to `/implement` as `--docker`, including the compose file path if one was provided)
+- If `${CLAUDE_SHIP_DIR:-tmp/ship}/isolated-env.sh` exists and `state.json.isolatedEnv.active` is true, tell `/implement` to prefix repo/app commands with `source ${CLAUDE_SHIP_DIR:-tmp/ship}/isolated-env.sh && ...`. Use this only for repo commands that talk to app services, databases, dev servers, or integration targets. Do not prefix generic git-only commands with it.
 
 Wait for `/implement` to complete. If it reports that automated execution is unavailable and hands off to the user, wait for the user to signal completion. When they do, re-read the SPEC.md, spec.json, and progress.txt to re-ground yourself.
 
@@ -326,6 +349,8 @@ After Phase 2 and the pre-push local review gate complete and before entering Ph
 Load `/qa` skill with the SPEC.md path (or PR number if no spec). `/qa` handles the full manual QA lifecycle: tool detection, test plan derivation, execution with available tools (browser, macOS, bash), result recording, and gap documentation.
 
 If scope calibration indicated a lightweight scope (bug fix / config change), pass that context so `/qa` calibrates depth accordingly. If ship is running in a worktree or container (isolated environment), pass `--delegated` so `/qa` skips tool-availability negotiation checkpoints and operates autonomously.
+
+If `${CLAUDE_SHIP_DIR:-tmp/ship}/isolated-env.sh` exists and `state.json.isolatedEnv.active` is true, tell `/qa` and any browser or integration commands it runs to wrap repo/app commands with `source ${CLAUDE_SHIP_DIR:-tmp/ship}/isolated-env.sh && ...`. Keep generic git-only steps outside that sourced env.
 
 **Phase 3 exit gate — verify before proceeding to Phase 4:**
 
@@ -453,6 +478,7 @@ These govern your behavior throughout:
 - **Bypassing /ship for "small" work.** Scope calibration (Phase 0, Step 4) adjusts depth for every task size — bug fixes get a light SPEC.md and calibrated testing. The workflow always runs; rigor scales. Implementing directly outside /ship means no spec (requirements lost on compaction), no state persistence, no QA, no PR, no review loop. A 4-file security fix still needs a spec that captures what "fixed" looks like, tests that verify it, and a PR that documents it.
 - **Skipping `/implement` for "simple" changes.** `/implement` always runs — it owns spec.json conversion, the implementation prompt, and the iteration loop. Even small changes benefit from the structured prompt and verification cycle. Direct implementation outside `/implement` loses the spec.json tracking, progress log, and quality gate loop.
 - **Hand-writing state files.** Never manually write `tmp/ship/state.json` or `tmp/ship/loop.md` as raw JSON/YAML. Always use `ship-init-state.sh`. Hand-written files are the #1 cause of stop hook failures — malformed JSON, missing fields, wrong YAML frontmatter — and the resulting bug (hook silently exits, loop never activates) is invisible until context compaction, when it's too late.
+- **Assuming isolated app env wiring without persisting it.** If the repo supports isolated envs, do not rely on memory or shell history. Run `ship-setup-isolated-env.sh` so `${CLAUDE_SHIP_DIR:-tmp/ship}/isolated-env.sh` and `.json` survive compaction and later phases can source the same env deterministically.
 - **Outputting a false completion promise.** Never output `<complete>SHIP COMPLETE</complete>` until ALL phases have genuinely completed and all Phase 6 verification checks pass. The ship loop is designed to continue until genuine completion — do not lie to exit.
 - **Rushing or skipping phases due to context concerns.** Never compress, abbreviate, or skip Phases 3-6 because you feel context is running low. The ship loop's stop hook automatically saves state and reboots you into the correct phase with full context. A clean reboot that re-enters at the right phase produces better outcomes than a compressed pass through multiple phases on fumes. Every phase loads its skill, runs its checklist, and completes fully — context pressure is never a valid reason to skip or abbreviate. If you catch yourself thinking "context is running low, let me quickly cover the remaining phases" — stop. That thought is the anti-pattern.
 
@@ -472,6 +498,7 @@ These govern your behavior throughout:
 | `references/state-initialization.md` | Activating execution state (Phase 1, Step 3) | Stop hook cannot recover context, loop cannot activate |
 | `references/pr-creation.md` | Creating draft PR after implementation (between Phase 2 and Phase 3) | QA results lost on compaction (no PR to post to), /qa cannot post checklist as PR comment |
 | `references/completion-checklist.md` | Final verification (Phase 6) | Incomplete work ships as "done" |
+| `scripts/ship-setup-isolated-env.sh` | Provisioning or attaching repo-local isolated app envs before Phase 1 | Parallel Ship runs share app ports or backing services unintentionally |
 | `/review` skill `scripts/fetch-pr-feedback.sh` | Fetching review feedback and CI/CD status (Phase 5, via /review). Canonical copies live in the `/review` skill — do not duplicate. | Agent uses wrong/deprecated `gh` commands, misses inline review comments |
 | `/review` skill `scripts/investigate-ci-failures.sh` | Investigating CI/CD failures with logs (Phase 5, via /review). Canonical copies live in the `/review` skill — do not duplicate. | Agent struggles to find run IDs, fetch logs, or compare with main |
 | `/debug` skill | Diagnosing root cause of failures encountered during implementation (Phase 2) or testing (Phase 3) — when the cause isn't obvious from the error | Shotgun debugging: fixing symptoms without understanding root cause, wasted iteration cycles |

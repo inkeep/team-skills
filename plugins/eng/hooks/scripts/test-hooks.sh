@@ -55,26 +55,80 @@ assert_file_not_exists() {
   fi
 }
 
-make_state_file() {
-  local dir="$1" phase="${2:-Phase 2}"
-  mkdir -p "${dir}/tmp/ship"
-  cat > "${dir}/tmp/ship/state.json" << EOF
-{
-  "currentPhase": "$phase",
-  "featureName": "test-feature",
-  "specPath": ".claude/specs/test/SPEC.md",
-  "specJsonPath": "tmp/ship/spec.json",
-  "branch": "feat/test-feature",
-  "worktreePath": "../test-feature",
-  "prNumber": 42,
-  "qualityGates": { "test": "pnpm test --run", "typecheck": "pnpm typecheck", "lint": "pnpm lint" },
-  "completedPhases": ["Phase 0", "Phase 1"],
-  "capabilities": { "gh": true, "browser": false, "peekaboo": false, "docker": false },
-  "scopeCalibration": "feature",
-  "amendments": [],
-  "lastUpdated": "$(date -u +%Y-%m-%dT%H:%M:%SZ)"
+assert_jq_equals() {
+  local label="$1" path="$2" query="$3" expected="$4"
+  local actual=""
+  actual=$(jq -r "$query" "$path" 2>/dev/null || echo "__jq_error__")
+  if [[ "$actual" == "$expected" ]]; then
+    echo "  PASS: $label"
+    PASS=$((PASS + 1))
+  else
+    echo "  FAIL: $label (expected '$expected', got '$actual')"
+    FAIL=$((FAIL + 1))
+  fi
 }
-EOF
+
+assert_jq_nonempty() {
+  local label="$1" path="$2" query="$3"
+  local actual=""
+  actual=$(jq -r "$query" "$path" 2>/dev/null || echo "__jq_error__")
+  if [[ -n "$actual" && "$actual" != "null" && "$actual" != "__jq_error__" ]]; then
+    echo "  PASS: $label"
+    PASS=$((PASS + 1))
+  else
+    echo "  FAIL: $label (query '$query' returned '$actual')"
+    FAIL=$((FAIL + 1))
+  fi
+}
+
+make_state_file() {
+  local dir="$1" phase="${2:-Phase 2}" pr_number="${3:-42}"
+  mkdir -p "${dir}/tmp/ship"
+  local completed_json='["Phase 0","Phase 1"]'
+  case "$phase" in
+    "Phase 0") completed_json='[]' ;;
+    "Phase 1") completed_json='["Phase 0"]' ;;
+    "Phase 2") completed_json='["Phase 0","Phase 1"]' ;;
+    "Phase 3") completed_json='["Phase 0","Phase 1","Phase 2"]' ;;
+    "Phase 4") completed_json='["Phase 0","Phase 1","Phase 2","Phase 3"]' ;;
+    "Phase 5") completed_json='["Phase 0","Phase 1","Phase 2","Phase 3","Phase 4"]' ;;
+    "Phase 6") completed_json='["Phase 0","Phase 1","Phase 2","Phase 3","Phase 4","Phase 5"]' ;;
+    "completed") completed_json='["Phase 0","Phase 1","Phase 2","Phase 3","Phase 4","Phase 5","Phase 6"]' ;;
+  esac
+
+  jq -n \
+    --arg phase "$phase" \
+    --arg pr "$pr_number" \
+    --arg now "$(date -u +%Y-%m-%dT%H:%M:%SZ)" \
+    --argjson completed "$completed_json" \
+    '
+    def phase_history($completed; $phase; $now):
+      ($completed + (if $phase == "completed" then [] else [$phase] end))
+      | [ .[] as $phaseName
+          | {
+              phase: $phaseName,
+              startedAt: $now,
+              completedAt: (if ($completed | index($phaseName)) != null then $now else null end)
+            }
+        ];
+
+    {
+      currentPhase: $phase,
+      featureName: "test-feature",
+      specPath: ".claude/specs/test/SPEC.md",
+      specJsonPath: "tmp/ship/spec.json",
+      branch: "feat/test-feature",
+      worktreePath: "../test-feature",
+      prNumber: (if $pr == "null" then null else ($pr | tonumber) end),
+      qualityGates: { test: "", typecheck: "", lint: "" },
+      completedPhases: $completed,
+      capabilities: { gh: true, browser: false, peekaboo: false, docker: false },
+      scopeCalibration: "feature",
+      amendments: [],
+      phaseHistory: phase_history($completed; $phase; $now),
+      lastUpdated: $now
+    }
+    ' > "${dir}/tmp/ship/state.json"
 }
 
 make_loop_file() {
@@ -95,6 +149,50 @@ make_transcript() {
   local path="$1" text="$2"
   # Create a JSONL transcript with an assistant message
   echo '{"role":"assistant","message":{"content":[{"type":"text","text":"'"$text"'"}]}}' > "$path"
+}
+
+init_feature_repo() {
+  local dir="$1"
+  mkdir -p "$dir/.claude/specs/test"
+  echo "# Test Spec" > "$dir/.claude/specs/test/SPEC.md"
+  (
+    cd "$dir"
+    git init -q -b main
+    git add -A
+    git commit -q -m "initial commit"
+    git checkout -q -b feat/test-feature
+  )
+}
+
+add_code_change() {
+  local dir="$1"
+  echo "feature work" > "$dir/src-change.ts"
+}
+
+add_docs_change() {
+  local dir="$1"
+  mkdir -p "$dir/docs"
+  echo "# Docs" > "$dir/docs/guide.md"
+}
+
+write_qa_progress() {
+  local dir="$1"
+  cat > "$dir/tmp/ship/qa-progress.json" << 'EOF'
+{
+  "scenarios": [
+    {
+      "id": "QA-001",
+      "category": "integration",
+      "name": "Happy path",
+      "verifies": "Phase gate sees at least one QA scenario",
+      "whyManual": "Fixture coverage",
+      "status": "validated",
+      "notes": "",
+      "evidence": []
+    }
+  ]
+}
+EOF
 }
 
 echo "=== Ship Hook Unit Tests ==="
@@ -123,6 +221,8 @@ assert_output_contains "Block includes phase" "$OUTPUT" "Phase 2"
 assert_output_contains "Block includes feature name" "$OUTPUT" "test-feature"
 assert_output_contains "Block includes branch" "$OUTPUT" "feat/test-feature"
 assert_output_contains "Block includes spec path" "$OUTPUT" "specs/test/SPEC.md"
+assert_file_exists "Metrics file created on block" "$PROJ/tmp/ship/metrics.json"
+assert_jq_equals "Phase 2 metrics iteration starts at 1" "$PROJ/tmp/ship/metrics.json" '.phaseMetrics["Phase 2"].iterations' "1"
 
 # Test 2b: Loop active, agent outputs <input> -> allow exit, keep loop file
 PROJ="$TMPDIR/t2b"
@@ -163,11 +263,18 @@ assert_output_contains "Promise but not completed -> continues" "$OUTPUT" "not.*
 PROJ="$TMPDIR/t4"
 make_state_file "$PROJ" "completed"
 make_loop_file "$PROJ"
+init_feature_repo "$PROJ"
+add_code_change "$PROJ"
+add_docs_change "$PROJ"
+write_qa_progress "$PROJ"
+(cd "$PROJ" && git add src-change.ts docs/guide.md && git commit -q -m "feat: complete workflow artifacts")
 TRANSCRIPT="$TMPDIR/transcript4.jsonl"
 make_transcript "$TRANSCRIPT" "Everything is done. <complete>SHIP COMPLETE</complete>"
 OUTPUT=$(echo '{"transcript_path":"'"$TRANSCRIPT"'"}' \
   | (cd "$PROJ" && "$SCRIPT_DIR/ship-stop-hook.sh") 2>&1)
 assert_file_not_exists "Completed -> loop file removed" "$PROJ/tmp/ship/loop.md"
+assert_file_exists "Completed run writes metrics.json" "$PROJ/tmp/ship/metrics.json"
+assert_jq_nonempty "Completed metrics record Phase 6 completion" "$PROJ/tmp/ship/metrics.json" '.phaseMetrics["Phase 6"].completedAt'
 
 # Test 5: Max iterations reached -> allow exit
 PROJ="$TMPDIR/t5"
@@ -196,6 +303,10 @@ else
   echo "  FAIL: Iteration should be 4, got $CURRENT_ITER"
   FAIL=$((FAIL + 1))
 fi
+assert_jq_equals "Phase 2 metrics track repeated loop iterations" "$PROJ/tmp/ship/metrics.json" '.phaseMetrics["Phase 2"].iterations' "1"
+OUTPUT=$(echo '{"transcript_path":"'"$TRANSCRIPT"'"}' \
+  | (cd "$PROJ" && "$SCRIPT_DIR/ship-stop-hook.sh") 2>/dev/null)
+assert_jq_equals "Phase 2 metrics increment on the next loop pass" "$PROJ/tmp/ship/metrics.json" '.phaseMetrics["Phase 2"].iterations' "2"
 
 # Test 7: Corrupted state file (non-numeric iteration) -> allow exit + cleanup
 PROJ="$TMPDIR/t7"
@@ -217,12 +328,86 @@ assert_file_not_exists "Corrupted state -> loop file removed" "$PROJ/tmp/ship/lo
 # Test 8: Quality gates included in re-injection
 PROJ="$TMPDIR/t8"
 make_state_file "$PROJ"
+jq '.qualityGates = {"test":"pnpm test --run","typecheck":"pnpm typecheck","lint":"pnpm lint"}' \
+  "${PROJ}/tmp/ship/state.json" > "${PROJ}/tmp/ship/state.tmp" \
+  && mv "${PROJ}/tmp/ship/state.tmp" "${PROJ}/tmp/ship/state.json"
 make_loop_file "$PROJ"
 TRANSCRIPT="$TMPDIR/transcript8.jsonl"
 make_transcript "$TRANSCRIPT" "continuing work"
 OUTPUT=$(echo '{"transcript_path":"'"$TRANSCRIPT"'"}' \
   | (cd "$PROJ" && "$SCRIPT_DIR/ship-stop-hook.sh") 2>/dev/null)
 assert_output_contains "Quality gates in prompt" "$OUTPUT" "pnpm test"
+
+# Test 8b: Phase gap is repaired to the earliest missing phase
+PROJ="$TMPDIR/t8b_gap"
+make_state_file "$PROJ" "Phase 5"
+make_loop_file "$PROJ"
+init_feature_repo "$PROJ"
+add_code_change "$PROJ"
+(cd "$PROJ" && git add src-change.ts && git commit -q -m "feat: implementation work")
+jq '.currentPhase = "Phase 5" | .completedPhases = ["Phase 0","Phase 1","Phase 2"] | .phaseHistory = []' \
+  "${PROJ}/tmp/ship/state.json" > "${PROJ}/tmp/ship/state.tmp" \
+  && mv "${PROJ}/tmp/ship/state.tmp" "${PROJ}/tmp/ship/state.json"
+TRANSCRIPT="$TMPDIR/transcript8b_gap.jsonl"
+make_transcript "$TRANSCRIPT" "continue"
+OUTPUT=$(echo '{"transcript_path":"'"$TRANSCRIPT"'"}' \
+  | (cd "$PROJ" && "$SCRIPT_DIR/ship-stop-hook.sh") 2>/dev/null)
+assert_output_contains "Gap repair adds validation summary" "$OUTPUT" "PHASE VALIDATION"
+assert_output_contains "Gap repair resumes at earliest missing phase" "$OUTPUT" "CURRENT: Phase 3"
+REPAIRED_PHASE=$(jq -r '.currentPhase' "${PROJ}/tmp/ship/state.json")
+if [[ "$REPAIRED_PHASE" == "Phase 3" ]]; then
+  echo "  PASS: Gap repair rewrites currentPhase to Phase 3"
+  PASS=$((PASS + 1))
+else
+  echo "  FAIL: Gap repair should rewrite currentPhase to Phase 3, got $REPAIRED_PHASE"
+  FAIL=$((FAIL + 1))
+fi
+
+# Test 8c: Phase 3 gate blocks advancement when qa-progress.json is missing
+PROJ="$TMPDIR/t8c_phase3_gate"
+make_state_file "$PROJ" "Phase 4"
+make_loop_file "$PROJ"
+init_feature_repo "$PROJ"
+add_code_change "$PROJ"
+(cd "$PROJ" && git add src-change.ts && git commit -q -m "feat: implementation work")
+TRANSCRIPT="$TMPDIR/transcript8c_phase3_gate.jsonl"
+make_transcript "$TRANSCRIPT" "continue"
+OUTPUT=$(echo '{"transcript_path":"'"$TRANSCRIPT"'"}' \
+  | (cd "$PROJ" && "$SCRIPT_DIR/ship-stop-hook.sh") 2>/dev/null)
+assert_output_contains "Phase 3 gate is reported" "$OUTPUT" "BLOCKING EXIT GATE (Phase 3)"
+assert_output_contains "Phase 3 gate mentions qa-progress" "$OUTPUT" "qa-progress.json"
+ROLLED_BACK_PHASE=$(jq -r '.currentPhase' "${PROJ}/tmp/ship/state.json")
+if [[ "$ROLLED_BACK_PHASE" == "Phase 3" ]]; then
+  echo "  PASS: Phase 3 gate rewrites currentPhase to Phase 3"
+  PASS=$((PASS + 1))
+else
+  echo "  FAIL: Phase 3 gate should rewrite currentPhase to Phase 3, got $ROLLED_BACK_PHASE"
+  FAIL=$((FAIL + 1))
+fi
+
+# Test 8d: Phase 5 gate blocks advancement when prNumber is missing
+PROJ="$TMPDIR/t8d_phase5_gate"
+make_state_file "$PROJ" "Phase 6" "null"
+make_loop_file "$PROJ"
+init_feature_repo "$PROJ"
+add_code_change "$PROJ"
+add_docs_change "$PROJ"
+write_qa_progress "$PROJ"
+(cd "$PROJ" && git add src-change.ts docs/guide.md && git commit -q -m "feat: implementation and docs")
+TRANSCRIPT="$TMPDIR/transcript8d_phase5_gate.jsonl"
+make_transcript "$TRANSCRIPT" "continue"
+OUTPUT=$(echo '{"transcript_path":"'"$TRANSCRIPT"'"}' \
+  | (cd "$PROJ" && "$SCRIPT_DIR/ship-stop-hook.sh") 2>/dev/null)
+assert_output_contains "Phase 5 gate is reported" "$OUTPUT" "BLOCKING EXIT GATE (Phase 5)"
+assert_output_contains "Phase 5 gate mentions missing prNumber" "$OUTPUT" "state.json.prNumber is empty"
+ROLLED_BACK_PHASE=$(jq -r '.currentPhase' "${PROJ}/tmp/ship/state.json")
+if [[ "$ROLLED_BACK_PHASE" == "Phase 5" ]]; then
+  echo "  PASS: Phase 5 gate rewrites currentPhase to Phase 5"
+  PASS=$((PASS + 1))
+else
+  echo "  FAIL: Phase 5 gate should rewrite currentPhase to Phase 5, got $ROLLED_BACK_PHASE"
+  FAIL=$((FAIL + 1))
+fi
 
 # Test 9: Pending amendments mentioned
 PROJ="$TMPDIR/t9"

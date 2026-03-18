@@ -84,7 +84,9 @@ Take a SPEC.md and convert it to `tmp/ship/spec.json`. Create `tmp/ship/` if it 
       ],
       "priority": 1,
       "passes": false,
-      "notes": ""
+      "notes": "",
+      "attemptCount": 0,
+      "status": "pending"
     }
   ]
 }
@@ -176,7 +178,7 @@ Frontend stories are NOT complete until visually verified. The iteration agent w
 1. **Each user story becomes one JSON entry**
 2. **IDs**: Sequential (US-001, US-002, etc.)
 3. **Priority**: Based on dependency order, then document order
-4. **All stories**: `passes: false` and empty `notes`
+4. **All stories**: `passes: false`, empty `notes`, `attemptCount: 0`, and `status: "pending"`
 5. **branchName**: Derive from feature name, kebab-case, prefixed with `implement/`
 6. **Always add**: "Typecheck passes" to every story's acceptance criteria
 
@@ -608,7 +610,7 @@ If the same story fails across 2 consecutive implement.sh runs with the same blo
 
 1. **Story too large** → split into smaller stories in spec.json
 2. **Criteria ambiguous** → rewrite criteria to be more specific
-3. **External dependency blocking** → skip the story, set `notes` explaining the blocker
+3. **External dependency blocking** → skip the story, set `notes` explaining the blocker and, if you want another automated attempt later, reset `status` to `"pending"`
 4. **Wrong implementation approach** → add guidance to `tmp/ship/progress.txt` suggesting an alternative
 5. **Code defect blocking the story** (test fails, runtime error, type error the iteration agent can't resolve) → Load `/debug` skill to diagnose the root cause between runs. Apply the fix, then re-invoke implement.sh.
 
@@ -630,7 +632,7 @@ Tell the user:
 
 ### Phase 3 checklist
 
-- [ ] All stories in `tmp/ship/spec.json` have `passes: true` (or stuck stories documented with `notes`)
+- [ ] All stories in `tmp/ship/spec.json` have `passes: true` (or blocked stories documented with `notes`, `attemptCount`, and `status: "blocked"`)
 - [ ] `tmp/ship/progress.txt` reviewed — no unresolved blockers
 - [ ] Quality gates pass: typecheck, lint, test
 

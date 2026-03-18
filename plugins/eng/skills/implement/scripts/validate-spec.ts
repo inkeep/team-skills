@@ -20,6 +20,8 @@ interface UserStory {
   priority: number;
   passes: boolean;
   notes: string;
+  attemptCount?: number;
+  status?: 'pending' | 'blocked' | 'completed';
 }
 
 interface SpecJson {
@@ -93,6 +95,26 @@ function validateStory(raw: unknown, index: number): string[] {
   // passes — boolean
   if (typeof story.passes !== 'boolean') {
     errors.push(`${prefix}.passes: must be a boolean (got ${typeof story.passes})`);
+  }
+
+  // attemptCount — optional non-negative integer
+  if (story.attemptCount !== undefined) {
+    if (typeof story.attemptCount !== 'number') {
+      errors.push(`${prefix}.attemptCount: must be a number (got ${typeof story.attemptCount})`);
+    } else if (!Number.isInteger(story.attemptCount) || story.attemptCount < 0) {
+      errors.push(`${prefix}.attemptCount: must be a non-negative integer (got ${story.attemptCount})`);
+    }
+  }
+
+  // status — optional lifecycle marker used by implement.sh retry budgeting
+  if (story.status !== undefined) {
+    if (typeof story.status !== 'string') {
+      errors.push(`${prefix}.status: must be a string (got ${typeof story.status})`);
+    } else if (!['pending', 'blocked', 'completed'].includes(story.status)) {
+      errors.push(
+        `${prefix}.status: must be one of pending, blocked, completed (got "${story.status}")`,
+      );
+    }
   }
 
   return errors;
@@ -169,6 +191,14 @@ function semanticChecks(spec: SpecJson): string[] {
     );
     if (!hasTypecheck) {
       errors.push(`${story.id}: Missing "Typecheck passes" acceptance criterion`);
+    }
+
+    if (story.status === 'blocked' && story.passes) {
+      errors.push(`${story.id}: blocked stories cannot also have passes: true`);
+    }
+
+    if (story.status === 'completed' && !story.passes) {
+      errors.push(`${story.id}: completed stories must have passes: true`);
     }
   }
 
