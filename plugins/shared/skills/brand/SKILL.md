@@ -73,9 +73,9 @@ Load the reference files relevant to what you're building:
 
 All token values and brand assets live in this skill:
 
-- `references/marketing-tokens.md` — marketing brand tokens (colors, typography, spacing, radius, shadows) extracted from Figma
-- `references/product-tokens.md` — product UI tokens (semantic colors, component variants, canvas tokens) extracted from `agents-manage-ui`
-- `assets/figma.json` — Figma component keys and node IDs (for `importComponentByKeyAsync`)
+- `tokens/marketing.md` — marketing brand tokens (colors, typography, spacing, radius, shadows) from Figma
+- `tokens/product.md` — product UI tokens (semantic colors, component variants, canvas tokens) from `agents-manage-ui`
+- `tokens/figma.json` — Figma component keys and node IDs (for `importComponentByKeyAsync`)
 - `assets/` — SVGO-optimized SVGs and PNGs organized by Figma section hierarchy (`logos/`, `icon-set/`, `illustrations/`, `decorative-and-backgrounds/`, `fonts/`)
 
 **Regeneration** (when Figma or product code changes):

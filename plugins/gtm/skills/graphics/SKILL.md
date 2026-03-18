@@ -195,7 +195,7 @@ The standard files also contain **design guidelines specific to each medium** (t
 | Comparison between options/products | **Split layout or comparison table** — side-by-side with pros/cons |
 | Step-by-step process or workflow | **Sequential diagram** — numbered steps with flow arrows |
 | Customer quote or testimonial | **Quote card** — speaker photo + quote text |
-| Product feature or UI explanation | **Annotated product mockup** — simplified UI with callouts. Load `/brand` then `references/element-patterns.md` for the full mockup treatment (float, shadow, round corners, bleed) — adapt proportions to your target format's dimensions. |
+| Product feature or UI explanation | **Annotated product mockup** — simplified UI with callouts. **Load:** `/brand` → `references/product-representation.md` (fidelity decision) → `tokens/product.md` (product UI tokens for inside the mockup) → `references/element-patterns.md` (styling recipe). **Critical:** product mockups use product tokens inside (Inter, white bg, 8px radii) and marketing tokens outside (Neue Haas, cream, 32px radii). |
 | Tutorial, walkthrough, or "click here" guide | **Spotlight cutout** — screenshot with dimmed overlay + highlighted target element (see Pattern: Spotlight cutout in `tools/figma-console.md`) |
 | Abstract concept or architecture | **Illustration or diagram** — visual metaphor for the concept |
 | List of criteria or evaluation rubric | **Data grid or scorecard** — structured table with ratings |
@@ -558,7 +558,7 @@ Write out an asset manifest listing what was found and what's missing:
 
 ⛔ **Mark task "Graphics: Plan composition" as `in_progress`. Verify that "Graphics: Collect assets & brand tokens" is `completed` — if not, go back and complete Step 2 first. Do NOT plan without knowing what assets are available.**
 
-**Load:** `/brand` — the complete brand system: design rules, element recipes (product mockup, code-as-visual, badge, metric callout, logo composition, quote card), composition patterns (Z-pattern, split layout, visual hierarchy, color restraint, background texture, edge bleed). Load the reference files as needed: `references/brand-guide.md` for visual identity, `references/composition-guide.md` for layout, `references/element-patterns.md` for element recipes. Use these to inform every composition decision below.
+**Load:** `/brand` and load any reference files relevant to your task following the skill's reference loading guidance for your content. This is important for ensuring you are fully grounded and can leverage brand assets, tokens, and guidance. Use these to inform every composition decision below.
 
 **If the graphic includes illustrations, visual metaphors, or decorative elements in the Inkeep hand-drawn style:**
 **Load:** `content-types/illustration.md` for the dual-stroke visual language (hand-drawn gray containers + precise blue fills), color palette, composition patterns, Quiver generation instructions, and the blue swoosh underline signature element.

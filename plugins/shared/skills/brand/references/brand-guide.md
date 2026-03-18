@@ -60,6 +60,42 @@ When generating text content (headlines, labels, CTAs):
 - **Button labels:** Imperative, concise, uppercase JetBrains Mono (e.g., "GET A DEMO →", "START BUILDING")
 - **Tone:** Clear and direct, confident but not aggressive, human-first
 
+### Messaging principles
+
+- **Not sales-ey.** Never sound like a marketing brochure. Be direct, provide substance, let the product and customer stories speak for themselves.
+- **Go n+1 deeper.** When making a bold claim, go one layer deeper than competitors. Don't say "scale your support" — speak to what's actually going through the reader's mind (e.g., "Trust" with AI systems, not "deflection rates"). Find the visceral, honest version of the value.
+- **Humble formidability.** Sound like an expert who doesn't need to announce it. Approachable, practical, knowledgeable — authority without arrogance. Companies want partners who can help them navigate uncertainty, not vendors reciting feature lists.
+
+### Emotional territory
+
+Inkeep's emotional anchor is **trust and control**. The customer should feel they own their AI agents and can trust them. "Trust" is the single most repeated word across all marketing surfaces. When writing headlines or descriptions, orient around trust, confidence, and the customer's agency — not speed, scale, or innovation. The customer is framed as a **builder** (they create, ship, deploy) and Inkeep is the platform that enables them. The narrative enemy is fragmentation and complexity, not a competitor.
+
+### Brand vocabulary
+
+| Prefer | Avoid |
+|---|---|
+| "teams" | "companies", "organizations", "businesses" |
+| "build", "ship", "deploy", "create" | "unlock", "unleash", "supercharge", "discover" |
+| "your teams", "your agents", "your data" | "our platform", "we provide" |
+| "knowledge", "knowledge base" | "data" (when referring to content sources) |
+| "empower", "enable", "help" | "replace", "automate away" |
+| "zero code", "no code" | "easy", "simple", "seamless" |
+| "Agents" (capital A) | "bots", "AI assistants" (as primary term) |
+| Specific metrics with company attribution | Uncontextualized percentages ("10x faster") |
+| (no adjective needed) | "revolutionary", "game-changing", "cutting-edge", "next-gen", "industry-leading" |
+| (no urgency needed) | "limited time", "don't miss out", "join thousands" |
+| "AI Agents" in headlines | "AI-powered" as a primary modifier (OK in descriptions) |
+
+### Value framing
+
+Lead with **outcomes** ("Scale support and maintain a high bar"), then capabilities ("Create Agents that provide personalized support"), then features ("PII removal & data controls"). Never lead with features in headlines — across any medium.
+
+### Social proof phrasing
+
+The canonical social proof phrase is **"Trusted by leading teams."** Use this exact phrasing (not "trusted by 1000+ companies", not "used by enterprises") wherever social proof appears — graphics, slides, videos.
+
+For marketing-site-specific copy conventions (headline formulas, CTA vocabulary, page patterns), see `references/copy-patterns.md`.
+
 ---
 
 ## Illustration Style

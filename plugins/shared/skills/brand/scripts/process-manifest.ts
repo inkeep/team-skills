@@ -1,8 +1,8 @@
 #!/usr/bin/env bun
 /**
  * Process a raw Figma manifest JSON into the brand skill directory:
- *   1. references/marketing-tokens.md  — design token manifest
- *   2. assets/figma.json               — component key, node ID, file key
+ *   1. tokens/marketing.md      — design token manifest
+ *   2. tokens/figma.json               — component key, node ID, file key
  *   3. assets/{logos,icons,...}/*.svg   — SVGO-optimized SVGs
  *   4. assets/{logos,icons,...}/*.png   — AI-vision-optimized PNGs (from SVG via sharp)
  *
@@ -11,8 +11,8 @@
  *
  * The input JSON is produced by generate-manifest.js running in figma_execute.
  * All output goes into the skill directory (relative to this script's location):
- *   ../references/marketing-tokens.md
- *   ../assets/figma.json
+ *   ../tokens/marketing.md
+ *   ../tokens/figma.json
  *   ../assets/{section}/{component}.svg
  *   ../assets/{section}/{component}.png
  *
@@ -21,7 +21,7 @@
  * Token resolution for image export (in order):
  *   1. FIGMA_ACCESS_TOKEN env var
  *   2. ~/.claude.json mcpServers.figma-console.env.FIGMA_ACCESS_TOKEN
- *   3. Skip image export if no token found (marketing-tokens.md still generated)
+ *   3. Skip image export if no token found (marketing.md still generated)
  */
 
 import { existsSync, mkdirSync, readFileSync } from "node:fs";
@@ -32,7 +32,7 @@ import sharp from "sharp";
 // Resolve skill root (one level up from scripts/)
 const SCRIPT_DIR = dirname(new URL(import.meta.url).pathname);
 const SKILL_ROOT = resolve(SCRIPT_DIR, "..");
-const REFERENCES_DIR = join(SKILL_ROOT, "references");
+const TOKENS_DIR = join(SKILL_ROOT, "tokens");
 const ASSETS_DIR = join(SKILL_ROOT, "assets");
 
 // ============================================================
@@ -596,11 +596,11 @@ console.log(
   `Processing: ${manifest.components.length} components, ${tokenCount} tokens`
 );
 console.log(`Skill root: ${SKILL_ROOT}`);
-console.log(`  references/ → ${REFERENCES_DIR}`);
+console.log(`  references/ → ${TOKENS_DIR}`);
 console.log(`  assets/     → ${ASSETS_DIR}`);
 
 // Ensure output dirs exist
-if (!existsSync(REFERENCES_DIR)) mkdirSync(REFERENCES_DIR, { recursive: true });
+if (!existsSync(TOKENS_DIR)) mkdirSync(TOKENS_DIR, { recursive: true });
 if (!existsSync(ASSETS_DIR)) mkdirSync(ASSETS_DIR, { recursive: true });
 
 // Step 1: Export assets (if token available and not skipped)
@@ -652,9 +652,9 @@ if (flags.skipAssets) {
   assetIndex = svgIndex;
 }
 
-// Step 2: Generate marketing-tokens.md
+// Step 2: Generate marketing.md
 const md = generateMarkdown(manifest, assetIndex);
-const mdPath = join(REFERENCES_DIR, "marketing-tokens.md");
+const mdPath = join(TOKENS_DIR, "marketing.md");
 await Bun.write(mdPath, md);
 
 // Step 3: Generate figma.json (component keys + node IDs for importComponentByKeyAsync)
@@ -669,7 +669,7 @@ for (const c of manifest.components) {
     fileKey: manifest.file.key,
   };
 }
-const figmaJsonPath = join(ASSETS_DIR, "figma.json");
+const figmaJsonPath = join(TOKENS_DIR, "figma.json");
 await Bun.write(figmaJsonPath, JSON.stringify(figmaPointers, null, 2));
 
 console.log(`\n=== Complete ===`);

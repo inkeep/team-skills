@@ -61,6 +61,12 @@ These ratios are relative and scale to any canvas size. The key is maintaining t
 
 ---
 
+## Radius hierarchy
+
+Border radius scales with element prominence: hero/showcase elements use the largest radii (`radius/2xl` 47px, `radius/3xl` 54px), feature cards use `radius/lg-alt` (32px), standard cards use `radius/md-alt` (20px), list-level cards use `radius/md` (8px), with `radius/pill` for buttons and badges. The brand's signature aesthetic uses **aggressively large radii** compared to typical SaaS sites — this softness is intentional and part of the approachable, non-corporate identity.
+
+---
+
 ## Color restraint
 
 **Maximum 3 colors in the surround area** (background, heading text, one accent). The product mockup or visual element inside can have its own color palette — that's fine. The problem is when the badge, heading, subtitle, logo, and mockup surround ALL use different accent colors, creating visual noise.

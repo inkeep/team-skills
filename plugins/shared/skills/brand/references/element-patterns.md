@@ -61,6 +61,17 @@ When displaying integration/partner logos in a grid:
 
 ---
 
+## Trusted logos (social proof)
+
+When displaying customer/partner logos in "Trusted by" sections (marquees, grids):
+- Display at `opacity: 0.75` with full `grayscale(100%)` CSS filter
+- Hover increases opacity to 0.9 and brightness but **keeps grayscale** — logos never appear in full color
+- This keeps visual hierarchy focused on Inkeep's brand colors, preventing a rainbow of third-party brand colors from competing
+
+**Distinct from integration logo cards** (above): integration cards show logos on pastel-colored card backgrounds in dark monochrome rendering. Trusted logos float freely with CSS grayscale filter and no card container.
+
+---
+
 ## Common design patterns
 
 ### Feature card

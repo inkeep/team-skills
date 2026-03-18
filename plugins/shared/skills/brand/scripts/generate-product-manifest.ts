@@ -73,7 +73,7 @@ function parseArgs(): Config {
   const ref = flagValue('--ref', 'main');
   const prefix = flagValue('--prefix', 'agents-manage-ui');
 
-  // Output path: first positional arg, or default to ../references/product-tokens.md
+  // Output path: first positional arg, or default to ../tokens/product.md
   const flagIndices = new Set<number>();
   for (const flag of ['--repo', '--ref', '--prefix']) {
     const idx = args.indexOf(flag);
@@ -81,9 +81,9 @@ function parseArgs(): Config {
   }
   const positional = args.filter((_, i) => !flagIndices.has(i));
 
-  // Default output: sibling references/ directory (skill-relative)
+  // Default output: sibling tokens/ directory (skill-relative)
   const scriptDir = import.meta.dirname ?? import.meta.dir ?? '.';
-  const defaultOutput = resolve(scriptDir, '..', 'references', 'product-tokens.md');
+  const defaultOutput = resolve(scriptDir, '..', 'tokens', 'product.md');
   const outputPath = positional[0] || defaultOutput;
 
   return { repo, ref, prefix, outputPath };
@@ -533,9 +533,9 @@ function emitTable(headers: string[], rows: string[][]) {
 
 emit('# Inkeep Product Design Tokens');
 emit();
-emit('Product UI tokens extracted from `agents-manage-ui` source code. Use these when creating product mockups (fidelity levels 1–3). For marketing tokens (the surround, headlines, backgrounds), use `manifest.md`.');
+emit('Product UI tokens extracted from `agents-manage-ui` source code. Use these when creating product mockups (fidelity levels 1–3). For marketing tokens (the surround, headlines, backgrounds), use `tokens/marketing.md`.');
 emit();
-emit('> **Two-layer rule:** Inside the product mockup → these tokens. Outside the mockup → marketing tokens from `manifest.md`. See `references/product-representation.md` for the full framework.');
+emit('> **Two-layer rule:** Inside the product mockup → these tokens. Outside the mockup → marketing tokens from `tokens/marketing.md`. See `references/product-representation.md` for the decision framework.');
 emit();
 emit('---');
 emit();
