@@ -30,6 +30,10 @@ The `figma-console` MCP communicates with Figma Desktop via a WebSocket bridge p
 4. The plugin now appears permanently in **Plugins → Development → Figma Desktop Bridge**
 
 **Each session (run the plugin):**
+
+Option A — automated (macOS): `bash scripts/launch-bridge.sh` opens the Graphics Workspace and triggers the bridge plugin via Cmd+Option+P.
+
+Option B — manual:
 1. Open your target Figma file in Figma Desktop
 2. Right-click canvas → **Plugins → Development → Figma Desktop Bridge**
 3. Wait for the green "MCP Ready" status widget
