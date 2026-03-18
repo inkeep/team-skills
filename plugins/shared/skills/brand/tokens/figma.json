@@ -1,0 +1,1182 @@
+{
+  "iconset/b2b-customer-support": {
+    "key": "ee1aa63766a703bb0e536f96c9f96f1da548a7fa",
+    "id": "5097:4320",
+    "fileKey": "D7NDSM2peo1iLhkjLxmGP5"
+  },
+  "iconset/b2c-customer-service": {
+    "key": "bf00a18bba9e44eec548b22d0f01407b5247e238",
+    "id": "5097:4321",
+    "fileKey": "D7NDSM2peo1iLhkjLxmGP5"
+  },
+  "iconset/documentation-teams": {
+    "key": "f6a4025325910671e8e22a47801ffd3394092f91",
+    "id": "5097:4345",
+    "fileKey": "D7NDSM2peo1iLhkjLxmGP5"
+  },
+  "iconset/marketing-teams": {
+    "key": "dcc97e919d987a6d1bc0a94108db72315193f462",
+    "id": "5097:4363",
+    "fileKey": "D7NDSM2peo1iLhkjLxmGP5"
+  },
+  "iconset/product-teams": {
+    "key": "4b36256acc152aa656ee060b7ac6311cdcc48692",
+    "id": "5097:4366",
+    "fileKey": "D7NDSM2peo1iLhkjLxmGP5"
+  },
+  "iconset/sales-teams": {
+    "key": "9c5767cc5358100bd92c97d687678d40617ccb51",
+    "id": "5097:4367",
+    "fileKey": "D7NDSM2peo1iLhkjLxmGP5"
+  },
+  "iconset/agent-workforce": {
+    "key": "f5e6d1624df238fbd4b00d0efbbf06ab95ad6b73",
+    "id": "5097:4314",
+    "fileKey": "D7NDSM2peo1iLhkjLxmGP5"
+  },
+  "iconset/ai-chat-sparkle": {
+    "key": "705b93eb3575718f1c61b1de36c17960ff5c3751",
+    "id": "5097:4315",
+    "fileKey": "D7NDSM2peo1iLhkjLxmGP5"
+  },
+  "iconset/ai-unified-search": {
+    "key": "0cf1f94fea4bbf83db29c871b69d1420e5abf47f",
+    "id": "5097:4316",
+    "fileKey": "D7NDSM2peo1iLhkjLxmGP5"
+  },
+  "iconset/ask-ai-assistant": {
+    "key": "0df60c800898e542bf8e0d6c434a2bfbb31a0276",
+    "id": "5097:4319",
+    "fileKey": "D7NDSM2peo1iLhkjLxmGP5"
+  },
+  "iconset/build-trust": {
+    "key": "e74230b4d1afc9e336e02dd958ffeca8c5a6a779",
+    "id": "5097:4324",
+    "fileKey": "D7NDSM2peo1iLhkjLxmGP5"
+  },
+  "iconset/content-marketer": {
+    "key": "89e6bacf566579a0c63f9d3be6778841da873cb7",
+    "id": "5097:4340",
+    "fileKey": "D7NDSM2peo1iLhkjLxmGP5"
+  },
+  "iconset/developer-framework": {
+    "key": "f70f4e0b531db096124ee5dbb4adfdce9e12370e",
+    "id": "5097:4342",
+    "fileKey": "D7NDSM2peo1iLhkjLxmGP5"
+  },
+  "iconset/docs-writer": {
+    "key": "1d035c5997905b117c892492976d30ec63cd557e",
+    "id": "5097:4344",
+    "fileKey": "D7NDSM2peo1iLhkjLxmGP5"
+  },
+  "iconset/enterprise": {
+    "key": "495e2c071207d00a07c4c7a81efe72be918d109b",
+    "id": "5097:4348",
+    "fileKey": "D7NDSM2peo1iLhkjLxmGP5"
+  },
+  "iconset/no-code-agent-studio": {
+    "key": "b2413ec19d306a4f165a92656035efd09a8c7df7",
+    "id": "5097:4364",
+    "fileKey": "D7NDSM2peo1iLhkjLxmGP5"
+  },
+  "iconset/visual-builder": {
+    "key": "b54dd77c0b0e9341edd2ff93277d9c852b71163f",
+    "id": "5097:4372",
+    "fileKey": "D7NDSM2peo1iLhkjLxmGP5"
+  },
+  "iconset/action/arrow-downward": {
+    "key": "9cf399abdaf570ad616144b98d928cbf82325f06",
+    "id": "5097:4301",
+    "fileKey": "D7NDSM2peo1iLhkjLxmGP5"
+  },
+  "iconset/action/arrow-left": {
+    "key": "58bdab3cfbe4813502c19c8d908ecd35871eb4f8",
+    "id": "5097:4302",
+    "fileKey": "D7NDSM2peo1iLhkjLxmGP5"
+  },
+  "iconset/action/arrow-prominent": {
+    "key": "b0799080dd4f687ea921b4c28ecbcc6d63f7d86a",
+    "id": "5097:4303",
+    "fileKey": "D7NDSM2peo1iLhkjLxmGP5"
+  },
+  "iconset/action/arrow-right": {
+    "key": "f0caab6029caa03363581ac8f9748d364ace3ab4",
+    "id": "5097:4304",
+    "fileKey": "D7NDSM2peo1iLhkjLxmGP5"
+  },
+  "iconset/action/arrow-straight": {
+    "key": "92dc73bd85f2c3a8d0d40b5ab861af0610631cc4",
+    "id": "5097:4305",
+    "fileKey": "D7NDSM2peo1iLhkjLxmGP5"
+  },
+  "iconset/action/arrow-upward": {
+    "key": "0fddb53e9043c45b3172d0b2b7a33a8a6f3f15ae",
+    "id": "5097:4306",
+    "fileKey": "D7NDSM2peo1iLhkjLxmGP5"
+  },
+  "iconset/action/chevron-down": {
+    "key": "a6a256b1df4d35e96736114c14b3c8a5044a1efb",
+    "id": "5103:4533",
+    "fileKey": "D7NDSM2peo1iLhkjLxmGP5"
+  },
+  "iconset/action/close": {
+    "key": "3b65b21e13393ef16c00f5e60c893d807db0179e",
+    "id": "5097:4307",
+    "fileKey": "D7NDSM2peo1iLhkjLxmGP5"
+  },
+  "iconset/action/down": {
+    "key": "d72fec0ad15d59e6f1d405760a02b248ae61363a",
+    "id": "5097:4308",
+    "fileKey": "D7NDSM2peo1iLhkjLxmGP5"
+  },
+  "iconset/action/tick": {
+    "key": "c450068fc4d551da8f289003e9c7221db55b9278",
+    "id": "5097:4309",
+    "fileKey": "D7NDSM2peo1iLhkjLxmGP5"
+  },
+  "iconset/action/trend-down": {
+    "key": "b0cceed9279d3bc3ffaf5fe1bb541ca6bb24a48d",
+    "id": "5097:4310",
+    "fileKey": "D7NDSM2peo1iLhkjLxmGP5"
+  },
+  "iconset/action/trend-up": {
+    "key": "96a4dd7c3e07adb92acce3587d863f9ac9ca7ffc",
+    "id": "5097:4311",
+    "fileKey": "D7NDSM2peo1iLhkjLxmGP5"
+  },
+  "iconset/action/up": {
+    "key": "891f0e6f114fd79b326bdb040f9a0b86174c66bc",
+    "id": "5097:4312",
+    "fileKey": "D7NDSM2peo1iLhkjLxmGP5"
+  },
+  "iconset/action/x": {
+    "key": "ea6c38cce632d56011af6e17aba8b3d431b6b37d",
+    "id": "5097:4313",
+    "fileKey": "D7NDSM2peo1iLhkjLxmGP5"
+  },
+  "iconset/arrow-circle-left": {
+    "key": "d481a5472febfc233e80cd37718546c3691d60cc",
+    "id": "5097:4317",
+    "fileKey": "D7NDSM2peo1iLhkjLxmGP5"
+  },
+  "iconset/arrow-circle-right": {
+    "key": "ecb2a6fdb4b382c886da688e96780bd82056ad5d",
+    "id": "5097:4318",
+    "fileKey": "D7NDSM2peo1iLhkjLxmGP5"
+  },
+  "iconset/circle-minus": {
+    "key": "3e647101907c18e2ad8430ae77aa41e5813bfeb5",
+    "id": "5097:4338",
+    "fileKey": "D7NDSM2peo1iLhkjLxmGP5"
+  },
+  "iconset/send-circle": {
+    "key": "dfbbfd24a233d06119392d3f199ee2e551529247",
+    "id": "5097:4369",
+    "fileKey": "D7NDSM2peo1iLhkjLxmGP5"
+  },
+  "iconset/bullet/01-outline": {
+    "key": "358f44e09b799a6ca23736125bc551e14cae26cc",
+    "id": "5097:4325",
+    "fileKey": "D7NDSM2peo1iLhkjLxmGP5"
+  },
+  "iconset/bullet/02-thin-crescent": {
+    "key": "d0a28bf1f0e6245ded0023531fd039d984a4719d",
+    "id": "5097:4326",
+    "fileKey": "D7NDSM2peo1iLhkjLxmGP5"
+  },
+  "iconset/bullet/03-quarter": {
+    "key": "6dfed2cbcceeba0bae6165afe78fc91b9b2b77f5",
+    "id": "5097:4327",
+    "fileKey": "D7NDSM2peo1iLhkjLxmGP5"
+  },
+  "iconset/bullet/04-crescent": {
+    "key": "c723e896ca282c31fb7240454e3e882358d60c57",
+    "id": "5097:4328",
+    "fileKey": "D7NDSM2peo1iLhkjLxmGP5"
+  },
+  "iconset/bullet/05-half": {
+    "key": "72d72f29ee74695b820f04d8d931aa07998e1bd1",
+    "id": "5097:4329",
+    "fileKey": "D7NDSM2peo1iLhkjLxmGP5"
+  },
+  "iconset/bullet/06-filled": {
+    "key": "0a32bd954a96a9328e5e32f10a2b22d7e66627a6",
+    "id": "5097:4330",
+    "fileKey": "D7NDSM2peo1iLhkjLxmGP5"
+  },
+  "iconset/bullet/07-crescent-filled": {
+    "key": "1ece7038b490a6a3d8606648e6ff3fe669829e81",
+    "id": "5097:4331",
+    "fileKey": "D7NDSM2peo1iLhkjLxmGP5"
+  },
+  "iconset/bullet/08-three-quarter": {
+    "key": "32bf889d1216bb8f1095c335ba2d4a73bd3551a8",
+    "id": "5097:4332",
+    "fileKey": "D7NDSM2peo1iLhkjLxmGP5"
+  },
+  "iconset/bullet/09-bean": {
+    "key": "b94da979f16e17380c6631573dbb238660b6abef",
+    "id": "5097:4333",
+    "fileKey": "D7NDSM2peo1iLhkjLxmGP5"
+  },
+  "iconset/bullet/10-ellipse": {
+    "key": "37a38610b8e0da2abf2100c306f96391c69153c3",
+    "id": "5097:4334",
+    "fileKey": "D7NDSM2peo1iLhkjLxmGP5"
+  },
+  "iconset/feature/content-writer-pen": {
+    "key": "013a7ba4c99f97e2999c6b98b7b777fcf205c845",
+    "id": "5097:4352",
+    "fileKey": "D7NDSM2peo1iLhkjLxmGP5"
+  },
+  "iconset/feature/copy": {
+    "key": "dc735131a145438ff8e2c077cf9be33bd5cc0d9a",
+    "id": "5097:4353",
+    "fileKey": "D7NDSM2peo1iLhkjLxmGP5"
+  },
+  "iconset/feature/headset": {
+    "key": "759cb7f246a0ca425d786e064ea95c43cbabe30a",
+    "id": "5097:4354",
+    "fileKey": "D7NDSM2peo1iLhkjLxmGP5"
+  },
+  "iconset/feature/mcp": {
+    "key": "44c8e21f6b0f197758488742cb93b6e924037397",
+    "id": "5097:4355",
+    "fileKey": "D7NDSM2peo1iLhkjLxmGP5"
+  },
+  "iconset/feature/multi-agent-architecture": {
+    "key": "6b5832bdc47266c0abb5395bec7bf5b9d31783bb",
+    "id": "5097:4356",
+    "fileKey": "D7NDSM2peo1iLhkjLxmGP5"
+  },
+  "iconset/feature/polygon": {
+    "key": "b8a9af631ec2bd7115b7e3ab9a638ed189b80edd",
+    "id": "5097:4357",
+    "fileKey": "D7NDSM2peo1iLhkjLxmGP5"
+  },
+  "iconset/feature/profile": {
+    "key": "2e827dc04e0eab7f87055d90990cc5e885c77d59",
+    "id": "5097:4358",
+    "fileKey": "D7NDSM2peo1iLhkjLxmGP5"
+  },
+  "iconset/feature/ui-component-library": {
+    "key": "b3ab0f8e6b4134ad0898a7d555cde70afe668c06",
+    "id": "5097:4359",
+    "fileKey": "D7NDSM2peo1iLhkjLxmGP5"
+  },
+  "iconset/account": {
+    "key": "6903af32d34ff07609b48b65eef181beff5a80d8",
+    "id": "5097:4300",
+    "fileKey": "D7NDSM2peo1iLhkjLxmGP5"
+  },
+  "iconset/blog": {
+    "key": "213e59bb519f8e895a2a38a48015d0e896490c92",
+    "id": "5097:4322",
+    "fileKey": "D7NDSM2peo1iLhkjLxmGP5"
+  },
+  "iconset/doc-search": {
+    "key": "a95949d47080141897ebed0a8785d8a724c3c729",
+    "id": "5097:4335",
+    "fileKey": "D7NDSM2peo1iLhkjLxmGP5"
+  },
+  "iconset/chat-bubbles": {
+    "key": "178875316d1341e84de624e47a3f35b089e43bc2",
+    "id": "5097:4336",
+    "fileKey": "D7NDSM2peo1iLhkjLxmGP5"
+  },
+  "iconset/circle-hamburger": {
+    "key": "5c3b550ab2aedb41471bf9e9a1698e75495251a5",
+    "id": "5097:4337",
+    "fileKey": "D7NDSM2peo1iLhkjLxmGP5"
+  },
+  "iconset/circle-person": {
+    "key": "04073a5cbaa6af03b850b388d1b3dac440b9e012",
+    "id": "5097:4339",
+    "fileKey": "D7NDSM2peo1iLhkjLxmGP5"
+  },
+  "iconset/list-cursor": {
+    "key": "60dd1df39c154b8e45c846d02807f24409989047",
+    "id": "5097:4341",
+    "fileKey": "D7NDSM2peo1iLhkjLxmGP5"
+  },
+  "iconset/docs": {
+    "key": "0cba26885522f73cd8b52815c4c33b32a20f95bd",
+    "id": "5097:4343",
+    "fileKey": "D7NDSM2peo1iLhkjLxmGP5"
+  },
+  "iconset/documents": {
+    "key": "80fdf697c33673e8153b0b3615ea28aaf19bd38e",
+    "id": "5097:4346",
+    "fileKey": "D7NDSM2peo1iLhkjLxmGP5"
+  },
+  "iconset/edit-document": {
+    "key": "8a6c78e5e3b09e68d5ff7e1d86e2c2b3e7119c5d",
+    "id": "5097:4347",
+    "fileKey": "D7NDSM2peo1iLhkjLxmGP5"
+  },
+  "iconset/flowchart": {
+    "key": "1f7708fa5749dc8e050722e5eb3516e6d8f32ce8",
+    "id": "5097:4360",
+    "fileKey": "D7NDSM2peo1iLhkjLxmGP5"
+  },
+  "iconset/search": {
+    "key": "ed661352e70abf4c35170cfb36434474d9cf291e",
+    "id": "5097:4368",
+    "fileKey": "D7NDSM2peo1iLhkjLxmGP5"
+  },
+  "iconset/shopping-star": {
+    "key": "612460a124f52702a77048271128d30894a11005",
+    "id": "5097:4370",
+    "fileKey": "D7NDSM2peo1iLhkjLxmGP5"
+  },
+  "iconset/voice-person": {
+    "key": "88f6e4bebfc519b3537367b4f9ea549321d6062a",
+    "id": "5097:4373",
+    "fileKey": "D7NDSM2peo1iLhkjLxmGP5"
+  },
+  "iconset/webpage-chat": {
+    "key": "98b4e4c3eb5f36286adff5afb45c9ac2c4af0510",
+    "id": "5097:4374",
+    "fileKey": "D7NDSM2peo1iLhkjLxmGP5"
+  },
+  "iconset/webpage-cms": {
+    "key": "3344ebe81aafbf73fb1303017f625fba5d128941",
+    "id": "5097:4375",
+    "fileKey": "D7NDSM2peo1iLhkjLxmGP5"
+  },
+  "iconset/padlock": {
+    "key": "41a5fc4fba6278a33a1f1ca54adb2d076367eff0",
+    "id": "5123:62",
+    "fileKey": "D7NDSM2peo1iLhkjLxmGP5"
+  },
+  "iconset/brand-mark-outline": {
+    "key": "4f428754ee958ca667377d84bbe1039688fcce3a",
+    "id": "5097:4323",
+    "fileKey": "D7NDSM2peo1iLhkjLxmGP5"
+  },
+  "iconset/brand-mark-stroke": {
+    "key": "34896a0dfb40892840d34925da46f30265a4acd1",
+    "id": "5103:4497",
+    "fileKey": "D7NDSM2peo1iLhkjLxmGP5"
+  },
+  "iconset/hex-person": {
+    "key": "6ecf19e20b28c338aa55a32b714a7b62651c2d7f",
+    "id": "5097:4361",
+    "fileKey": "D7NDSM2peo1iLhkjLxmGP5"
+  },
+  "iconset/hex-puzzle": {
+    "key": "f5b04213f2b906842b2a686a16c959d3a7ad64cf",
+    "id": "5097:4362",
+    "fileKey": "D7NDSM2peo1iLhkjLxmGP5"
+  },
+  "iconset/inkeep-mark/black": {
+    "key": "20dbbdd7f3255d315ca78a80df31c26af9a45be1",
+    "id": "5103:4502",
+    "fileKey": "D7NDSM2peo1iLhkjLxmGP5"
+  },
+  "iconset/inkeep-mark/color": {
+    "key": "d7bb3531a9a7d0e457c5df1f3c5782aaafb44b1b",
+    "id": "5103:4506",
+    "fileKey": "D7NDSM2peo1iLhkjLxmGP5"
+  },
+  "iconset/password-lock": {
+    "key": "4908b721c22af9e93c82a3feed2d473c709c13ad",
+    "id": "5097:4365",
+    "fileKey": "D7NDSM2peo1iLhkjLxmGP5"
+  },
+  "iconset/favicon/filled-blue": {
+    "key": "55b7d73939dc3e34fea600048fbf939827511b1c",
+    "id": "5097:4349",
+    "fileKey": "D7NDSM2peo1iLhkjLxmGP5"
+  },
+  "iconset/favicon/filled-light": {
+    "key": "123356ac32e9e51003711ce18a526bd4e8fd8e64",
+    "id": "5097:4350",
+    "fileKey": "D7NDSM2peo1iLhkjLxmGP5"
+  },
+  "iconset/favicon/outline-interlocking": {
+    "key": "3e717695f8c471db2f24c0ebc59557d5f48f48da",
+    "id": "5097:4351",
+    "fileKey": "D7NDSM2peo1iLhkjLxmGP5"
+  },
+  "iconset/status/deploy": {
+    "key": "4a0def5bc6f204928273928b5affc4934b0f8a85",
+    "id": "5103:4514",
+    "fileKey": "D7NDSM2peo1iLhkjLxmGP5"
+  },
+  "iconset/status/in-progress": {
+    "key": "78998f711481699b98e77d671f7d83d057ab901b",
+    "id": "5103:4518",
+    "fileKey": "D7NDSM2peo1iLhkjLxmGP5"
+  },
+  "iconset/status/not-started": {
+    "key": "3762cc513fb4ffad1b65960a0da2abeff4b61591",
+    "id": "5103:4522",
+    "fileKey": "D7NDSM2peo1iLhkjLxmGP5"
+  },
+  "iconset/status/review": {
+    "key": "6bb0cd382a167725a7c5ca6c3e413304d8f8ded9",
+    "id": "5103:4526",
+    "fileKey": "D7NDSM2peo1iLhkjLxmGP5"
+  },
+  "iconset/inkeep-mark/white": {
+    "key": "75a07863d799489aeddfcf74b35f9b8b108858f5",
+    "id": "5103:4510",
+    "fileKey": "D7NDSM2peo1iLhkjLxmGP5"
+  },
+  "iconset/ticket/feature-request": {
+    "key": "18e0e4ffe81086d55d02cb3727ef72a49afcb6ed",
+    "id": "5122:489",
+    "fileKey": "D7NDSM2peo1iLhkjLxmGP5"
+  },
+  "iconset/ticket/bug": {
+    "key": "72523b124bb0ffffaa84d242c144c3d209a22e33",
+    "id": "5122:493",
+    "fileKey": "D7NDSM2peo1iLhkjLxmGP5"
+  },
+  "iconset/ticket/globe": {
+    "key": "0c68249cd733d10d0fd85b437bea7906e10299fe",
+    "id": "5122:497",
+    "fileKey": "D7NDSM2peo1iLhkjLxmGP5"
+  },
+  "iconset/ticket/technical-guidance": {
+    "key": "3e222019d0c5386f0f2dfadb8c7654f2a2a6d87b",
+    "id": "5122:502",
+    "fileKey": "D7NDSM2peo1iLhkjLxmGP5"
+  },
+  "iconset/ticket/billing": {
+    "key": "dc8647511c626e4268b97225d20a0e9009b0359f",
+    "id": "5122:507",
+    "fileKey": "D7NDSM2peo1iLhkjLxmGP5"
+  },
+  "logo/dual-mark-outline/black": {
+    "key": "3e0f5d1d6712c1527965073c325cbf255e7f89a5",
+    "id": "5097:4195",
+    "fileKey": "D7NDSM2peo1iLhkjLxmGP5"
+  },
+  "logo/dual-mark/black": {
+    "key": "866d5fd65c321bf08b8db82c7a1f285d79155770",
+    "id": "5003:13680",
+    "fileKey": "D7NDSM2peo1iLhkjLxmGP5"
+  },
+  "logo/with-dot-com/black": {
+    "key": "5d3e38bb9de55a84bef420a59d0276f3540e3c78",
+    "id": "5003:12703",
+    "fileKey": "D7NDSM2peo1iLhkjLxmGP5"
+  },
+  "logo/favicon/app-icon-blue": {
+    "key": "4a3d82a8410299e2a4699532a50583b447ff1bce",
+    "id": "5097:4198",
+    "fileKey": "D7NDSM2peo1iLhkjLxmGP5"
+  },
+  "logo/favicon/filled-color": {
+    "key": "0eaa9bff3387b4d07211917fe89038cd2f13944b",
+    "id": "5097:4199",
+    "fileKey": "D7NDSM2peo1iLhkjLxmGP5"
+  },
+  "logo/favicon/outline-black": {
+    "key": "95a6d8c699f28a91521c62968dc257ac16158b30",
+    "id": "5097:4200",
+    "fileKey": "D7NDSM2peo1iLhkjLxmGP5"
+  },
+  "logo/black": {
+    "key": "e8ec48bd537634554535592e9e1c610c1c6908ec",
+    "id": "5103:4451",
+    "fileKey": "D7NDSM2peo1iLhkjLxmGP5"
+  },
+  "logo/full-color": {
+    "key": "3fd0a94c37e4ca3edfdc5b6fe622f1c2bca6ccf3",
+    "id": "5103:4439",
+    "fileKey": "D7NDSM2peo1iLhkjLxmGP5"
+  },
+  "logo/icon/black": {
+    "key": "736baa85ba605491b983480c3194e25f247602f8",
+    "id": "5103:4472",
+    "fileKey": "D7NDSM2peo1iLhkjLxmGP5"
+  },
+  "logo/icon/color": {
+    "key": "e2d18d8a6071fbec006f491e4cab7538ab7654be",
+    "id": "5103:4467",
+    "fileKey": "D7NDSM2peo1iLhkjLxmGP5"
+  },
+  "logo/wordmark/dotcom-black": {
+    "key": "130f9f240b90394f95ca4c188f4d37a1e4f98391",
+    "id": "5103:4484",
+    "fileKey": "D7NDSM2peo1iLhkjLxmGP5"
+  },
+  "logo/white": {
+    "key": "58ec7320caffa07763ff73031913043dbec7b880",
+    "id": "5103:4463",
+    "fileKey": "D7NDSM2peo1iLhkjLxmGP5"
+  },
+  "logo/icon/white": {
+    "key": "b29d11129a6ee5eef8c6068ff238c6f8820ae584",
+    "id": "5103:4476",
+    "fileKey": "D7NDSM2peo1iLhkjLxmGP5"
+  },
+  "logo/wordmark/white": {
+    "key": "89d6f66758095d8bf81a02a28c0dbeb06db0985d",
+    "id": "5103:4492",
+    "fileKey": "D7NDSM2peo1iLhkjLxmGP5"
+  },
+  "logo/dual-mark-outline/white": {
+    "key": "9b9e04f836f35c77ec7c6e05dc91b6331f5878c4",
+    "id": "5097:4196",
+    "fileKey": "D7NDSM2peo1iLhkjLxmGP5"
+  },
+  "logo/dual-mark/white": {
+    "key": "755c54cbf369846bd1e73f4f3150e4143ccc9596",
+    "id": "5097:4197",
+    "fileKey": "D7NDSM2peo1iLhkjLxmGP5"
+  },
+  "logo/with-dot-com/white": {
+    "key": "1ed6f89c44fec9f88f47ecf6a595dc00f158307e",
+    "id": "5003:12716",
+    "fileKey": "D7NDSM2peo1iLhkjLxmGP5"
+  },
+  "logo/favicon/white-on-dark": {
+    "key": "73f182b0fbbc5f848e5b94d0bf8ee95b1b26e64a",
+    "id": "5097:4201",
+    "fileKey": "D7NDSM2peo1iLhkjLxmGP5"
+  },
+  "illustration/use-case/customer-service": {
+    "key": "edcee7270f2ce8af39fa08983e68b99a352da0e5",
+    "id": "5097:4225",
+    "fileKey": "D7NDSM2peo1iLhkjLxmGP5"
+  },
+  "illustration/use-case/customer-support": {
+    "key": "dda5ece0dda9fe0f56db6d46c5d844a952572b0d",
+    "id": "5097:4226",
+    "fileKey": "D7NDSM2peo1iLhkjLxmGP5"
+  },
+  "illustration/use-case/documentation-teams": {
+    "key": "20669c70d70735d9a413b420029b7a374bcf30a8",
+    "id": "5097:4227",
+    "fileKey": "D7NDSM2peo1iLhkjLxmGP5"
+  },
+  "illustration/use-case/marketing-teams": {
+    "key": "c4e710f009a3fa8cb0c00021f8aade5ba6db7f1e",
+    "id": "5097:4228",
+    "fileKey": "D7NDSM2peo1iLhkjLxmGP5"
+  },
+  "illustration/use-case/product-teams": {
+    "key": "0bfafb480e9290fc057e6bb1ff790ecf6f7f71a8",
+    "id": "5097:4229",
+    "fileKey": "D7NDSM2peo1iLhkjLxmGP5"
+  },
+  "illustration/use-case/slack-integration": {
+    "key": "aad33a2a3fe8fe15686805a4c8e35da58a2c4c7b",
+    "id": "5097:4230",
+    "fileKey": "D7NDSM2peo1iLhkjLxmGP5"
+  },
+  "illustration/product/analytics-detailed": {
+    "key": "a5e6daf730232d14d21479bfbe60b1c25fa3ab02",
+    "id": "5097:4215",
+    "fileKey": "D7NDSM2peo1iLhkjLxmGP5"
+  },
+  "illustration/product/analytics-labeled-rows": {
+    "key": "4c5fc43ccfed00faa3390cef32d1ee8fa9979ac8",
+    "id": "5097:4216",
+    "fileKey": "D7NDSM2peo1iLhkjLxmGP5"
+  },
+  "illustration/product/analytics-overview": {
+    "key": "5e1a3895cb26cfc99a0ae353650cd5081feb8541",
+    "id": "5097:4217",
+    "fileKey": "D7NDSM2peo1iLhkjLxmGP5"
+  },
+  "illustration/product/knowledge-qa": {
+    "key": "e2824fa9d48ef0b26e8b826d056e3f72a69cfa3c",
+    "id": "5097:4218",
+    "fileKey": "D7NDSM2peo1iLhkjLxmGP5"
+  },
+  "illustration/product/topics-qa-detailed": {
+    "key": "559bfd8de1012fdd3c44b45e6e4702e75ccdb3f6",
+    "id": "5097:4219",
+    "fileKey": "D7NDSM2peo1iLhkjLxmGP5"
+  },
+  "illustration/product/topics-qa-overview": {
+    "key": "d3b7a078406d5e995bffd600a5e35b3595fc6f12",
+    "id": "5097:4221",
+    "fileKey": "D7NDSM2peo1iLhkjLxmGP5"
+  },
+  "illustration/dev-page/integrations-overview": {
+    "key": "1203435a2c25a156e09052249c5f0bb21411c6ce",
+    "id": "5097:4203",
+    "fileKey": "D7NDSM2peo1iLhkjLxmGP5"
+  },
+  "illustration/dev-page/mcp-tools": {
+    "key": "d655dc1732a2d6c102d79e1fafcfb713d9a8b2c8",
+    "id": "5097:4204",
+    "fileKey": "D7NDSM2peo1iLhkjLxmGP5"
+  },
+  "illustration/dev-page/typescript": {
+    "key": "df2ef0824f258474dc447538bd8f41b422e6485f",
+    "id": "5097:4205",
+    "fileKey": "D7NDSM2peo1iLhkjLxmGP5"
+  },
+  "illustration/dev-page/visual-builder-complex": {
+    "key": "d7390cef9258901854247a529856535cec4c3c95",
+    "id": "5097:4207",
+    "fileKey": "D7NDSM2peo1iLhkjLxmGP5"
+  },
+  "illustration/dev-page/visualize": {
+    "key": "7daca4b967e1f65c0c7fd21f536d8603d68048b7",
+    "id": "5097:4206",
+    "fileKey": "D7NDSM2peo1iLhkjLxmGP5"
+  },
+  "illustration/security/auth-password": {
+    "key": "fb981273ecedd956842aa17c5f1272656e4c087f",
+    "id": "5097:4220",
+    "fileKey": "D7NDSM2peo1iLhkjLxmGP5"
+  },
+  "illustration/security/shield-hexgrid": {
+    "key": "dc3b0a55856b0490a97d520b9e5fa7b78d24c522",
+    "id": "5097:4222",
+    "fileKey": "D7NDSM2peo1iLhkjLxmGP5"
+  },
+  "illustration/process/connect-data": {
+    "key": "06227a94cfc38d2b6bc6e06bfcd963191371568b",
+    "id": "5097:4210",
+    "fileKey": "D7NDSM2peo1iLhkjLxmGP5"
+  },
+  "illustration/process/create-agents": {
+    "key": "a9b0ded1c335d2ef8ed2bb134a134dfa5f595e3c",
+    "id": "5097:4211",
+    "fileKey": "D7NDSM2peo1iLhkjLxmGP5"
+  },
+  "illustration/process/equip-tools": {
+    "key": "021d60d23c8241a43035d8f90f5c98d907c191d2",
+    "id": "5097:4212",
+    "fileKey": "D7NDSM2peo1iLhkjLxmGP5"
+  },
+  "illustration/process/ship-and-monitor": {
+    "key": "d9d928d9096d36293e513f50cc38295a0b870742",
+    "id": "5097:4213",
+    "fileKey": "D7NDSM2peo1iLhkjLxmGP5"
+  },
+  "illustration/process/success": {
+    "key": "d83957abbb554e6cc530126bcfae87980d6640f7",
+    "id": "5097:4214",
+    "fileKey": "D7NDSM2peo1iLhkjLxmGP5"
+  },
+  "illustration/homepage/dev-section": {
+    "key": "8a72e344da7e20fbcf07d4589261e8d1f1d05e38",
+    "id": "5097:4208",
+    "fileKey": "D7NDSM2peo1iLhkjLxmGP5"
+  },
+  "illustration/homepage/use-cases": {
+    "key": "281f406d010f5523daaaabd69ffee7979b7bbfbb",
+    "id": "5097:4209",
+    "fileKey": "D7NDSM2peo1iLhkjLxmGP5"
+  },
+  "illustration/ui-screen/analytics-performance": {
+    "key": "795bd20fb58c432c77c8beed740e35054fcf033d",
+    "id": "5104:4544",
+    "fileKey": "D7NDSM2peo1iLhkjLxmGP5"
+  },
+  "illustration/ui-screen/assistant-chat": {
+    "key": "dd13be6ba7b4038711735e1be69e4b4aecb559d6",
+    "id": "5104:4538",
+    "fileKey": "D7NDSM2peo1iLhkjLxmGP5"
+  },
+  "illustration/ui-screen/auth-credentials": {
+    "key": "4b867f8a643b56ea8867ec584b61befea815724c",
+    "id": "5104:4545",
+    "fileKey": "D7NDSM2peo1iLhkjLxmGP5"
+  },
+  "illustration/ui-screen/copilot-panel": {
+    "key": "172ba503d7b812372220cdb373688913c73d3290",
+    "id": "5104:4539",
+    "fileKey": "D7NDSM2peo1iLhkjLxmGP5"
+  },
+  "illustration/ui-screen/documentation-workflow": {
+    "key": "d10c33934b9a7c9b5ddf324145ec6184c6941a9c",
+    "id": "5104:4542",
+    "fileKey": "D7NDSM2peo1iLhkjLxmGP5"
+  },
+  "illustration/ui-screen/integrations-honeycomb": {
+    "key": "a7dc3247bfcbbd9179f0244bc0bd61b41f2042b7",
+    "id": "5104:4543",
+    "fileKey": "D7NDSM2peo1iLhkjLxmGP5"
+  },
+  "illustration/ui-screen/meeting-scheduler": {
+    "key": "a68695bfb4153f667a02eaf0ff4a8ddf50b1920d",
+    "id": "5104:4540",
+    "fileKey": "D7NDSM2peo1iLhkjLxmGP5"
+  },
+  "illustration/ui-screen/security-shield-sketch": {
+    "key": "7f86c654169f02228bc104247f241c2c82a7ae32",
+    "id": "5104:4547",
+    "fileKey": "D7NDSM2peo1iLhkjLxmGP5"
+  },
+  "illustration/ui-screen/topics-sentiment": {
+    "key": "fe87f8599271cd7366ab4b9130eed921fb009172",
+    "id": "5104:4546",
+    "fileKey": "D7NDSM2peo1iLhkjLxmGP5"
+  },
+  "illustration/ui-screen/website-pages": {
+    "key": "ecd802690a7ebef4645ec246d3a0e13e2dbb4b42",
+    "id": "5104:4541",
+    "fileKey": "D7NDSM2peo1iLhkjLxmGP5"
+  },
+  "illustration/ui-screen/chat-widget": {
+    "key": "eefa05cde498ef33de018002e21621833458ed3a",
+    "id": "5097:4231",
+    "fileKey": "D7NDSM2peo1iLhkjLxmGP5"
+  },
+  "illustration/ui-screen/data-viz/topics": {
+    "key": "222ba3135179812727026d178b11b9887e8d1fd2",
+    "id": "5097:4233",
+    "fileKey": "D7NDSM2peo1iLhkjLxmGP5"
+  },
+  "illustration/ui-screen/security-shield": {
+    "key": "85e39db8fee721a1350d34cf39930c0c9b1611dc",
+    "id": "5097:4232",
+    "fileKey": "D7NDSM2peo1iLhkjLxmGP5"
+  },
+  "illustration/depth-protrusion": {
+    "key": "8df239c4857ec6aa37a230eeeadab742419b141b",
+    "id": "5113:219",
+    "fileKey": "D7NDSM2peo1iLhkjLxmGP5"
+  },
+  "customer/anthropic": {
+    "key": "98282393e53d975f1a6efecb473dc327bc8ab2b7",
+    "id": "5097:4376",
+    "fileKey": "D7NDSM2peo1iLhkjLxmGP5"
+  },
+  "customer/clay": {
+    "key": "1fbe559bee82495804c7040a85c345f579d4f186",
+    "id": "5097:4377",
+    "fileKey": "D7NDSM2peo1iLhkjLxmGP5"
+  },
+  "customer/clerk": {
+    "key": "50d950cc8301ddc94fa7c01a8e8072de56bfb8fb",
+    "id": "5097:4378",
+    "fileKey": "D7NDSM2peo1iLhkjLxmGP5"
+  },
+  "customer/fingerprint-icon": {
+    "key": "3002d62c660d8a75cbe1e6c55ff145c25d3a9efd",
+    "id": "5104:4536",
+    "fileKey": "D7NDSM2peo1iLhkjLxmGP5"
+  },
+  "customer/midjourney": {
+    "key": "ae74ee533b98d90d024614651525d15f60792dd7",
+    "id": "5097:4379",
+    "fileKey": "D7NDSM2peo1iLhkjLxmGP5"
+  },
+  "customer/neon": {
+    "key": "5bfd2a20bde0c7c7369ddb4c3fc61f1bc4e91dd5",
+    "id": "5097:4380",
+    "fileKey": "D7NDSM2peo1iLhkjLxmGP5"
+  },
+  "customer/payabli-icon": {
+    "key": "7814b0248a68f1ec127d81e5a1856e946bf590fc",
+    "id": "5104:4534",
+    "fileKey": "D7NDSM2peo1iLhkjLxmGP5"
+  },
+  "customer/pinecone": {
+    "key": "412740877773b9a6f482804fb289974733084e75",
+    "id": "5097:4381",
+    "fileKey": "D7NDSM2peo1iLhkjLxmGP5"
+  },
+  "customer/posthog": {
+    "key": "752fd5cf1e5439d254da4bc5eb13e7d684c0c364",
+    "id": "5097:4382",
+    "fileKey": "D7NDSM2peo1iLhkjLxmGP5"
+  },
+  "customer/posthog-color": {
+    "key": "1dab5cefb0c7a6a015900180da5d9482bb4f6145",
+    "id": "5097:4383",
+    "fileKey": "D7NDSM2peo1iLhkjLxmGP5"
+  },
+  "customer/posthog-icon": {
+    "key": "47e2e1b7e4f5d0750e3101070a130d9c84a210b3",
+    "id": "5104:4535",
+    "fileKey": "D7NDSM2peo1iLhkjLxmGP5"
+  },
+  "customer/postman": {
+    "key": "7978936474f440f55f2bf88654470c6f4c84c6f7",
+    "id": "5097:4384",
+    "fileKey": "D7NDSM2peo1iLhkjLxmGP5"
+  },
+  "customer/postman-monochrome": {
+    "key": "f8039662fb9e8308c818e976b4577c2da049775a",
+    "id": "5097:4385",
+    "fileKey": "D7NDSM2peo1iLhkjLxmGP5"
+  },
+  "customer/render": {
+    "key": "b6c36f7a53eafa37f64a9bcbfeb54add8bebfaab",
+    "id": "5097:4386",
+    "fileKey": "D7NDSM2peo1iLhkjLxmGP5"
+  },
+  "customer/solana": {
+    "key": "b565ed1c3a6c83dd4464c00538f981400317f256",
+    "id": "5097:4387",
+    "fileKey": "D7NDSM2peo1iLhkjLxmGP5"
+  },
+  "customer/solana-gradient": {
+    "key": "f091c1b4d3ad32a5e46137e6209b6d8dad886a07",
+    "id": "5097:4388",
+    "fileKey": "D7NDSM2peo1iLhkjLxmGP5"
+  },
+  "customer/teleport": {
+    "key": "a1a22630a146c93771945075346432768f6cd4e7",
+    "id": "5097:4389",
+    "fileKey": "D7NDSM2peo1iLhkjLxmGP5"
+  },
+  "background/dots/scattered-hexagons": {
+    "key": "c67d26eb291f504f3eef2172b65fa3e9a44f8f18",
+    "id": "5097:4235",
+    "fileKey": "D7NDSM2peo1iLhkjLxmGP5"
+  },
+  "background/footer/developer": {
+    "key": "1ffb35afcd4a5e6f8507d0360b7429d0a674ebe6",
+    "id": "5097:4236",
+    "fileKey": "D7NDSM2peo1iLhkjLxmGP5"
+  },
+  "background/footer/normal": {
+    "key": "88c328f645b091b718ed016dbb4a9ca466635b99",
+    "id": "5097:4237",
+    "fileKey": "D7NDSM2peo1iLhkjLxmGP5"
+  },
+  "background/grid": {
+    "key": "2b0ad900e8f95646482543498a51fb3b2a935c0a",
+    "id": "5097:4238",
+    "fileKey": "D7NDSM2peo1iLhkjLxmGP5"
+  },
+  "background/accent-hex/large": {
+    "key": "1e4aeebaba6a92763b64135cfe59b495b23cbe26",
+    "id": "5097:4239",
+    "fileKey": "D7NDSM2peo1iLhkjLxmGP5"
+  },
+  "background/accent-hex/small": {
+    "key": "2c12980b1d86f78f9d0b31df155f95f0f4daa441",
+    "id": "5097:4240",
+    "fileKey": "D7NDSM2peo1iLhkjLxmGP5"
+  },
+  "background/texture/lavender-light": {
+    "key": "85ae0a35dbc66a31e127e40e859cc38486071012",
+    "id": "5097:4241",
+    "fileKey": "D7NDSM2peo1iLhkjLxmGP5"
+  },
+  "background/texture/lavender-purple": {
+    "key": "9f749e590a0cd6dfb1f3351e75d1bbc91aa6177e",
+    "id": "5097:4242",
+    "fileKey": "D7NDSM2peo1iLhkjLxmGP5"
+  },
+  "background/texture/warm-orange": {
+    "key": "e3e08a740c48cff0d913c30df0a0692a9bb3c7d3",
+    "id": "5097:4243",
+    "fileKey": "D7NDSM2peo1iLhkjLxmGP5"
+  },
+  "decorative/arrow-down-blue": {
+    "key": "567f1f867b0ec620ebbb3cbb5ac28a81d087bc77",
+    "id": "5097:4244",
+    "fileKey": "D7NDSM2peo1iLhkjLxmGP5"
+  },
+  "decorative/arrow-down-long-orange": {
+    "key": "a60cc34aedce8121b63eb231757c54a109276bed",
+    "id": "5097:4245",
+    "fileKey": "D7NDSM2peo1iLhkjLxmGP5"
+  },
+  "decorative/arrow-down-orange": {
+    "key": "494f858dfa4034e636eaea57af0046f1c8b36353",
+    "id": "5097:4246",
+    "fileKey": "D7NDSM2peo1iLhkjLxmGP5"
+  },
+  "decorative/arrow-gray": {
+    "key": "a411c431104047606d2e6d8e63cccb5c3253fab1",
+    "id": "5097:4247",
+    "fileKey": "D7NDSM2peo1iLhkjLxmGP5"
+  },
+  "decorative/arrow-down-right-orange": {
+    "key": "4a94c25bfaf9a0e03f7a1c92955df59b746bd3a7",
+    "id": "5097:4248",
+    "fileKey": "D7NDSM2peo1iLhkjLxmGP5"
+  },
+  "decorative/line-accent": {
+    "key": "87eb446cfedd7405d23ecef9843f0160ca17d24d",
+    "id": "5097:4252",
+    "fileKey": "D7NDSM2peo1iLhkjLxmGP5"
+  },
+  "decorative/line-blue": {
+    "key": "5327017518c1624173b95820bab781348bd1d36f",
+    "id": "5097:4253",
+    "fileKey": "D7NDSM2peo1iLhkjLxmGP5"
+  },
+  "decorative/line-curve": {
+    "key": "5c1abc7a6fed711de6a823127764e33b68af02ee",
+    "id": "5097:4254",
+    "fileKey": "D7NDSM2peo1iLhkjLxmGP5"
+  },
+  "decorative/line-orange": {
+    "key": "366cbef825749605638f668e353e9b7a38a96745",
+    "id": "5097:4255",
+    "fileKey": "D7NDSM2peo1iLhkjLxmGP5"
+  },
+  "decorative/line-wave": {
+    "key": "81d26e8a60626f711a7ed4c56f9469bbb6f5d0b7",
+    "id": "5097:4256",
+    "fileKey": "D7NDSM2peo1iLhkjLxmGP5"
+  },
+  "decorative/dotted-lines": {
+    "key": "0c4582cab267bb30a8e2e8d53aa23213795f1528",
+    "id": "5115:232",
+    "fileKey": "D7NDSM2peo1iLhkjLxmGP5"
+  },
+  "decorative/orbital-arcs": {
+    "key": "5f60dbd7f683b96414390bf609f301c4e9582b81",
+    "id": "5123:67",
+    "fileKey": "D7NDSM2peo1iLhkjLxmGP5"
+  },
+  "decorative/depth-frost": {
+    "key": "895d2d1007482d4f47214086695f867e1f37a74f",
+    "id": "5097:4249",
+    "fileKey": "D7NDSM2peo1iLhkjLxmGP5"
+  },
+  "decorative/hand-drawn-dash": {
+    "key": "11963eaabfef2ff57ff05db90b1ec024821c4a96",
+    "id": "5097:4250",
+    "fileKey": "D7NDSM2peo1iLhkjLxmGP5"
+  },
+  "decorative/sketch-arrow": {
+    "key": "a5c57ce0996c8e14bca1e6cf2b84ecaf7620b6b7",
+    "id": "5097:4251",
+    "fileKey": "D7NDSM2peo1iLhkjLxmGP5"
+  },
+  "decorative/integration-strip": {
+    "key": "4a0e6aace0b51f4423aa4697267acca9f067a857",
+    "id": "5097:4257",
+    "fileKey": "D7NDSM2peo1iLhkjLxmGP5"
+  },
+  "decorative/splash-orange": {
+    "key": "81cb2a1f73dc04de1f9c9798c4c28f2f42ccb190",
+    "id": "5097:4258",
+    "fileKey": "D7NDSM2peo1iLhkjLxmGP5"
+  },
+  "decorative/scribble-loop": {
+    "key": "fea4aa7440b77033e819e17372b96a1b1fcbf6a8",
+    "id": "5097:4259",
+    "fileKey": "D7NDSM2peo1iLhkjLxmGP5"
+  },
+  "decorative/brand-hex-ring": {
+    "key": "f7348c8b457c0b5debd120f59b2ed07dce9ea740",
+    "id": "5113:220",
+    "fileKey": "D7NDSM2peo1iLhkjLxmGP5"
+  },
+  "decorative/brand-blob-ring": {
+    "key": "d1894854ee8def06b5bb9039b24aa0604c30f584",
+    "id": "5113:221",
+    "fileKey": "D7NDSM2peo1iLhkjLxmGP5"
+  },
+  "decorative/ripples": {
+    "key": "ea71a1516f3db9c8e8b24b4a4aff9e04c802559e",
+    "id": "5119:331",
+    "fileKey": "D7NDSM2peo1iLhkjLxmGP5"
+  },
+  "decorative/circle-orange": {
+    "key": "bf991184c600aba8b3774a99cff318381a353d0c",
+    "id": "5119:334",
+    "fileKey": "D7NDSM2peo1iLhkjLxmGP5"
+  },
+  "background/gradient/square/01": {
+    "key": "47758b6c0aa3c4ad0264e13cbc8411ae543d7848",
+    "id": "5104:4555",
+    "fileKey": "D7NDSM2peo1iLhkjLxmGP5"
+  },
+  "background/gradient/square/02": {
+    "key": "f7c431496dfd1ff3ba8d5d6b1e63840581d6733d",
+    "id": "5104:4556",
+    "fileKey": "D7NDSM2peo1iLhkjLxmGP5"
+  },
+  "background/gradient/square/03": {
+    "key": "b941c985e5e9dcc14ec983f7737b5ef70f05237e",
+    "id": "5104:4557",
+    "fileKey": "D7NDSM2peo1iLhkjLxmGP5"
+  },
+  "background/gradient/square/04": {
+    "key": "6a2488d438b137d2de7c66bc785160e6e872915f",
+    "id": "5104:4558",
+    "fileKey": "D7NDSM2peo1iLhkjLxmGP5"
+  },
+  "background/gradient/square/06": {
+    "key": "acb8c7367cdbedd3a019642b86db870e43733622",
+    "id": "5104:4559",
+    "fileKey": "D7NDSM2peo1iLhkjLxmGP5"
+  },
+  "background/gradient/square/07": {
+    "key": "30ef6756f0a28c4933231f53b1c35d0cd7fd71b0",
+    "id": "5104:4560",
+    "fileKey": "D7NDSM2peo1iLhkjLxmGP5"
+  },
+  "background/gradient/square/08": {
+    "key": "9f3df6bb8517ce18d906182b3e6347efdff9bedc",
+    "id": "5104:4561",
+    "fileKey": "D7NDSM2peo1iLhkjLxmGP5"
+  },
+  "background/gradient/square/09": {
+    "key": "a408711039a08115b780b799a0822f8324de557d",
+    "id": "5104:4562",
+    "fileKey": "D7NDSM2peo1iLhkjLxmGP5"
+  },
+  "background/gradient/square/11": {
+    "key": "e750e10ddfed2c1be9d744b5ded58043f02184fc",
+    "id": "5104:4563",
+    "fileKey": "D7NDSM2peo1iLhkjLxmGP5"
+  },
+  "background/gradient/square/12": {
+    "key": "472c73e9f2b416c635502f25bbe52c19132cf1cc",
+    "id": "5104:4564",
+    "fileKey": "D7NDSM2peo1iLhkjLxmGP5"
+  },
+  "background/gradient/square/13": {
+    "key": "988d5fba177138b73cc254b24dda911a900da646",
+    "id": "5104:4565",
+    "fileKey": "D7NDSM2peo1iLhkjLxmGP5"
+  },
+  "background/gradient/square/14": {
+    "key": "b0dbc50866c5eea96d1a1cb23580eb19317fc5d8",
+    "id": "5104:4566",
+    "fileKey": "D7NDSM2peo1iLhkjLxmGP5"
+  },
+  "background/gradient/square/15": {
+    "key": "f98ec86026274cc31263987d3cfcb2386e5aacd3",
+    "id": "5104:4567",
+    "fileKey": "D7NDSM2peo1iLhkjLxmGP5"
+  },
+  "background/gradient/square/blue-dark": {
+    "key": "56e81e06480bffdbbb6911991809fda74110b037",
+    "id": "5104:4568",
+    "fileKey": "D7NDSM2peo1iLhkjLxmGP5"
+  },
+  "background/gradient/square/blue-saturated": {
+    "key": "3e0ad12dea201a316830907d60afafed825196e8",
+    "id": "5104:4569",
+    "fileKey": "D7NDSM2peo1iLhkjLxmGP5"
+  },
+  "background/gradient/square/blue-white-fade": {
+    "key": "0b40935974f904158bc8ae4aa25576fb8ec8dcdb",
+    "id": "5104:4570",
+    "fileKey": "D7NDSM2peo1iLhkjLxmGP5"
+  },
+  "background/gradient/wide/16": {
+    "key": "4ab7025a8f567c5c889d3e7a6360d70d103a2cb6",
+    "id": "5104:4571",
+    "fileKey": "D7NDSM2peo1iLhkjLxmGP5"
+  },
+  "background/gradient/wide/17": {
+    "key": "de58257500f05313ae920b4e1eca75415beb9073",
+    "id": "5104:4572",
+    "fileKey": "D7NDSM2peo1iLhkjLxmGP5"
+  },
+  "background/gradient/wide/18": {
+    "key": "67cd0465c3bf5a4f6a395824bbf4cd2174684597",
+    "id": "5104:4573",
+    "fileKey": "D7NDSM2peo1iLhkjLxmGP5"
+  },
+  "background/gradient/wide/19": {
+    "key": "fbcc4658008265029ba9f2dd884eeb9f61e4092b",
+    "id": "5104:4574",
+    "fileKey": "D7NDSM2peo1iLhkjLxmGP5"
+  },
+  "background/gradient/wide/20": {
+    "key": "6eae76cd436779a5bf9e4ea576efa27f24dfdbcd",
+    "id": "5104:4575",
+    "fileKey": "D7NDSM2peo1iLhkjLxmGP5"
+  },
+  "background/gradient/wide/21": {
+    "key": "5009843bf7d5ad82e6e2922beb1094f59a138f1a",
+    "id": "5104:4576",
+    "fileKey": "D7NDSM2peo1iLhkjLxmGP5"
+  },
+  "background/gradient/wide/22": {
+    "key": "0ee1dd693f9164c906c382ec357d3286c41fbf2c",
+    "id": "5104:4577",
+    "fileKey": "D7NDSM2peo1iLhkjLxmGP5"
+  },
+  "background/gradient/wide/23": {
+    "key": "502eaf60c096270c8b148c8420cce1ae33bd901b",
+    "id": "5104:4578",
+    "fileKey": "D7NDSM2peo1iLhkjLxmGP5"
+  },
+  "background/gradient/wide/24": {
+    "key": "f70d35b445c40d5c5ad94663769d9f61f468a1e4",
+    "id": "5104:4579",
+    "fileKey": "D7NDSM2peo1iLhkjLxmGP5"
+  },
+  "background/gradient/wide/25": {
+    "key": "6eba8a73b81608847075ad22a874dbbb7e175472",
+    "id": "5104:4580",
+    "fileKey": "D7NDSM2peo1iLhkjLxmGP5"
+  },
+  "background/gradient/wide/26": {
+    "key": "0e7d346fbaa96a9a50d37e0a60f2a758a2cdc160",
+    "id": "5104:4581",
+    "fileKey": "D7NDSM2peo1iLhkjLxmGP5"
+  },
+  "background/gradient/wide/27": {
+    "key": "3003bf7eed9d20f4fd4421c6249c06d5b5c94f3a",
+    "id": "5104:4582",
+    "fileKey": "D7NDSM2peo1iLhkjLxmGP5"
+  },
+  "background/gradient/wide/28": {
+    "key": "2cfb221c7de9e2c93e40fb0cc2122e9a534f0aa9",
+    "id": "5104:4583",
+    "fileKey": "D7NDSM2peo1iLhkjLxmGP5"
+  },
+  "background/gradient/wide/29": {
+    "key": "fb48f332228d50cb7a3ac0bd0adfbea275143241",
+    "id": "5104:4584",
+    "fileKey": "D7NDSM2peo1iLhkjLxmGP5"
+  },
+  "background/gradient/wide/30": {
+    "key": "2dd964de77fe2e99b4e4da2376173518dfd07063",
+    "id": "5104:4585",
+    "fileKey": "D7NDSM2peo1iLhkjLxmGP5"
+  },
+  "background/gradient/wide/blue-bright": {
+    "key": "04d08ae50c02ed647b003695496528afa6d00780",
+    "id": "5104:4586",
+    "fileKey": "D7NDSM2peo1iLhkjLxmGP5"
+  },
+  "background/gradient/wide/blue-dark-swirl": {
+    "key": "440edfc6f722e24e8c8d502cded8e927fde7e9a1",
+    "id": "5104:4587",
+    "fileKey": "D7NDSM2peo1iLhkjLxmGP5"
+  },
+  "background/gradient/wide/blue-mist-light": {
+    "key": "7e697acc9096d85a6fbbbdfd4010383ba2b52f6a",
+    "id": "5104:4588",
+    "fileKey": "D7NDSM2peo1iLhkjLxmGP5"
+  },
+  "background/gradient/wide/blue-white-glow": {
+    "key": "00c4d5a9359edb5068c7bffc90c844fc778b01cd",
+    "id": "5104:4589",
+    "fileKey": "D7NDSM2peo1iLhkjLxmGP5"
+  },
+  "ui/search-bar": {
+    "key": "9481b97c8b3d5c6e77376988f7d06f0adaa9835a",
+    "id": "5097:4234",
+    "fileKey": "D7NDSM2peo1iLhkjLxmGP5"
+  },
+  "ui/brand-node": {
+    "key": "161640f5829b86a472ab42db126e5c1c5bcffd9f",
+    "id": "5121:370",
+    "fileKey": "D7NDSM2peo1iLhkjLxmGP5"
+  },
+  "ui/data-viz/topic-bubbles": {
+    "key": "96ecaea3548a4082afb3e5eee1ecbde1b8bc63aa",
+    "id": "5121:426",
+    "fileKey": "D7NDSM2peo1iLhkjLxmGP5"
+  },
+  "ui/data-viz/qa-rating-table": {
+    "key": "2721009f4701633bd5bf7a224ab73784e28e1b02",
+    "id": "5121:476",
+    "fileKey": "D7NDSM2peo1iLhkjLxmGP5"
+  },
+  "mascot/keepie/default": {
+    "key": "3a5d1486ad8deadfb5b0cf5a3dd863e02a6f87a4",
+    "id": "5097:4202",
+    "fileKey": "D7NDSM2peo1iLhkjLxmGP5"
+  }
+}
