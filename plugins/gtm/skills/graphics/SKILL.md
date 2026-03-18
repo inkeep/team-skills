@@ -205,11 +205,13 @@ Present the suggestion to the user: "Based on the content, I'd suggest a [type] 
 
   Use the content analysis to pre-fill the Creative Brief in Step 1b — extract the key message, hero content, audience, and tone from the content rather than asking the user for them from scratch.
 
-- **Third-party brand detection**: If the graphic features, compares, or showcases a non-Inkeep brand — competitor comparison ("Inkeep vs Zendesk"), case study hero, integration spotlight, partner material — flag it for **brand profile fetching** in Step 2f. Common triggers:
-  - Blog post title contains "vs", "alternative", or a competitor name
-  - Case study content names a customer company
-  - Request mentions a specific third-party company
-  - Integration or partner showcase featuring external brands
+- **Third-party brand detection**: If the graphic features, compares, or showcases a non-Inkeep brand, flag it for **brand profile fetching** in Step 2f. Common triggers:
+  - Comparison graphic — blog title contains "vs", "alternative", or a competitor name
+  - Case study hero — content names a customer company
+  - Customer testimonial / quote card — speaker's company brand color can tint the card background or accent
+  - Integration or partner showcase — external brand logos with their real colors
+  - Multi-brand diagram — each company's node colored with their brand color
+  - Request mentions any specific third-party company by name
 
   When detected, note the brand name(s) and domain(s) so Step 2f can fetch their colors, fonts, and company data via `scripts/fetch-brand.ts`. This replaces guessing brand colors or defaulting everything to the Inkeep palette.
 
@@ -232,6 +234,9 @@ Present the suggestion to the user: "Based on the content, I'd suggest a [type] 
 | Image editing (inpainting, background swap, style transfer, object removal) | **GPT Image edit (Option E)** | Modify existing raster images with natural language instructions |
 | Raster image FOR a slide/marketing layout | **GPT Image (Option E) → Figma (Option A)** | Generate raster image, place in Figma as image fill, compose with brand elements and text |
 | Tutorial walkthrough / UX highlight (SaaS "click here" guides) | **Figma (Option A)** — spotlight cutout pattern | Screenshot as image fill + boolean subtract overlay. See Pattern: Spotlight cutout in `tools/figma-console.md` |
+| 3D rendered objects (glassmorphic tiles, clay/plastic objects, metallic surfaces) | **Three.js (Option F)** | Programmatic 3D — exact brand colors, deterministic, free. **Load `tools/r3f/README.md`** for material presets, scene templates, and rendering pipeline. |
+| Integration icon tile (partner logo on 3D tile, batch-renderable) | **Three.js (Option F)** | Template scene → swap logo/color → batch render. Deterministic + free. |
+| 3D element FOR a slide/marketing layout | **Three.js (Option F) → Figma (Option A)** | Render 3D element with transparent background, place in Figma as image fill, compose with brand text and layout |
 
 **Do NOT use GPT Image for:**
 - Vector graphics (icons, logos, illustrations that need to scale) — use Quiver (Option D). Raster images pixelate when scaled; SVGs scale infinitely.
@@ -245,6 +250,14 @@ Present the suggestion to the user: "Based on the content, I'd suggest a [type] 
 - Precise text layout (body copy, tables, feature lists) — Quiver renders text as vector paths, not `<text>` elements. Result is non-editable and imprecise for multi-line copy.
 - SVGs that developers will hand-edit — Quiver output is machine-generated paths (clean but not semantic). Hand-coded SVG is better for human-maintained files.
 - Exact reproduction of an existing Figma component — use Figma to clone it.
+
+**Do NOT use Three.js for:**
+- Quick concept exploration — use GPT Image (Option E). Writing an R3F scene has more overhead than a text prompt.
+- 2D illustrations, icons, or vector art — use Quiver (Option D). Three.js is for 3D rendering, not flat graphics.
+- Text-heavy layouts — use Figma (Option A). Three.js text rendering (Text3D) is not designed for body copy.
+- Diagrams or flowcharts — use D2/Mermaid (Option C). Three.js is spatial, not diagrammatic.
+- One-off images where visual polish matters more than color precision — use GPT Image (Option E). GPT Image produces more consistently polished output without scene-building effort.
+- Precise geometric shapes from AI text prompts — Meshy/Tripo produce organic forms, not exact geometry. Use CSG boolean operations (`@react-three/csg` declarative or `three-bvh-csg` imperative) for shape carving, or load a pre-built .glb model for complex branded shapes like the logo.
 
 - **Existing asset**: if user provides a Figma URL or file reference, use it as the starting point (skip step 2)
 - **Content**: what the graphic should depict or communicate
@@ -372,6 +385,20 @@ Use `figma_execute` to search by hierarchical name:
 const page = figma.root.findOne(n => n.id === '5003:63');
 const asset = page.findOne(n => n.name.startsWith('logo/'));
 ```
+
+**Asset acquisition — preferred method:**
+
+The Design Assets library is published. Use `importComponentByKeyAsync` to pull assets directly into your working file without cross-file navigation:
+
+```javascript
+// Preferred: import from published library (no file navigation needed)
+const comp = await figma.importComponentByKeyAsync(componentKey);
+const instance = comp.createInstance();
+```
+
+Discover component keys via REST API: `GET /v1/files/D7NDSM2peo1iLhkjLxmGP5/components`.
+
+If `importComponentByKeyAsync` fails, fall back to the cross-file clone workflow: navigate to the Design Assets file → search by name → `asset.clone()`.
 
 **b) Check master design files for broader context**
 
@@ -1113,6 +1140,60 @@ When the final deliverable needs both a photorealistic image AND brand elements,
 5. **Apply brand consistency** — verify the raster image looks right alongside Figma-native elements
 
 This hybrid approach is the right default for: slide deck hero images, marketing materials that need both photography and text, social graphics with product mockups, any graphic that needs photorealistic imagery alongside brand elements and precise text layout.
+
+**Option F: Three.js 3D render (for programmatic 3D objects, glassmorphic tiles, brand-colored 3D)**
+
+Best for: 3D rendered objects with exact brand colors, batch-renderable integration tiles, glassmorphic/clay/metallic materials, any 3D asset where deterministic output and color precision matter. The agent writes the 3D scene as a React Three Fiber (R3F) TSX component — declarative scene graph with drei staging helpers, full control over every material, light, and camera property.
+
+**Load:** `tools/r3f/README.md` for material presets, scene templates, staging setup, and the full rendering pipeline reference.
+
+**Prerequisite:** `three`, `react`, `react-dom`, `@react-three/fiber`, `@react-three/drei`, `@react-three/postprocessing`, `@react-three/csg`, `playwright`, and `three-bvh-csg` are auto-installed on first use. For GPU-quality rendering, system Google Chrome must be installed (the script uses `channel: 'chrome'` for Metal GPU access on macOS). Optional: `MESHY_API_KEY` for AI-generated 3D meshes via Meshy.ai (only needed for text-to-3D generation, not for code-built scenes).
+
+**Rendering pipeline:**
+
+1. **Write the scene** — create a TSX file using R3F + drei. Scenes are declarative React components:
+
+   ```tsx
+   import { Canvas } from '@react-three/fiber';
+   import { Environment, ContactShadows, RoundedBox, MeshTransmissionMaterial } from '@react-three/drei';
+   import { createRoot } from 'react-dom/client';
+
+   function Scene() {
+     return (
+       <Canvas gl={{ preserveDrawingBuffer: true, antialias: true }} camera={{ position: [0.5, 1.5, 5], fov: 32 }} shadows>
+         <Environment preset="studio" environmentIntensity={0.8} />
+         {/* ... scene objects using brand material presets from tools/r3f/README.md ... */}
+         <ContactShadows position={[0, -0.5, 0]} opacity={0.3} scale={10} blur={2.5} />
+         <RenderSignal />
+       </Canvas>
+     );
+   }
+   createRoot(document.getElementById('root')!).render(<Scene />);
+   ```
+
+   Use the **brand material presets** from `tools/r3f/README.md`: `inkeepBlueClay` for matte plastic, `inkeepGlass` (drei `MeshTransmissionMaterial`) for glassmorphic, `inkeepGoldenAccent` for warm accents. Use drei's `<Environment preset="studio">` for brand-consistent lighting.
+
+2. **Render to PNG:**
+   ```bash
+   bun tools/r3f/render.ts render \
+     --scene my-scene.tsx \
+     --output 3d-element.png \
+     --width 1280 --height 720 --scale 2
+   ```
+
+   The script bundles the scene via Bun, serves locally, launches system Chrome (GPU-accelerated), waits for the render signal, and captures a screenshot at 2560×1440 (2x retina).
+
+   For transparent backgrounds (compositing in Figma): add `--mode compositing`.
+
+3. **Review output** — use the Read tool on the PNG to visually inspect:
+   - Do materials match the intended style (glass, clay, metallic)?
+   - Are brand colors correct?
+   - Is the composition and lighting appropriate?
+   - Any WebGL artifacts?
+
+   **If the output misses:** Adjust material properties (roughness, metalness, transmission), light positions/intensities, or camera angle in the scene file and re-render. Each render takes ~5 seconds.
+
+**Hybrid workflow: Three.js → Figma** — render with `--mode compositing` for transparent PNG, import into Figma, compose with brand text and layout. See `tools/r3f/README.md` § "Hybrid workflow: Three.js → Figma" for the full step-by-step.
 
 ### 5. Apply brand consistency
 
