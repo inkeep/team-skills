@@ -58,16 +58,26 @@ Always lead with the **Primary full-color logo** (icon + wordmark) on light back
 
 ## Deep Reference
 
-Load these when you need detailed guidance beyond the compact rules above:
+Load the reference files relevant to what you're building:
 
-- `references/brand-guide.md` — full visual identity: illustration style, icon rules, diagram rules, gradient tiers, decorative elements, what feels dated
-- `references/composition-guide.md` — layout and hierarchy: Z-pattern, split layout, visual hierarchy ratios, color restraint, background texture, content coverage, edge bleed, brand system consistency
-- `references/element-patterns.md` — reusable element recipes: product mockup treatment, code-as-visual, badge system, metric callout, logo composition, quote card, section headers, button variants, integration logo cards
-- `references/product-representation.md` — product fidelity spectrum (6 levels), decision framework, product vs marketing design tokens, surface-specific guidance, the "cleaning up" process, anti-patterns
-- `references/motion-philosophy.md` — animation principles: smooth not snappy, do's and don'ts, standard motion patterns
+| If your content includes... | Load |
+|---|---|
+| Any layout or arrangement decisions (almost always) | `references/composition-guide.md` — Z-pattern, split layout, visual hierarchy, color restraint, edge bleed, content coverage, brand system consistency |
+| Product mockups, code blocks, badges, metric callouts, logos, quotes, headers, buttons | `references/element-patterns.md` — reusable element recipes with exact brand styling |
+| Illustrations, icons, diagrams, or gradient backgrounds | `references/brand-guide.md` — illustration style, icon rules, diagram rules, gradient tiers, decorative elements, what feels dated |
+| Product screenshots or UI representations | `references/product-representation.md` — fidelity spectrum (6 levels), decision framework, cleaning-up techniques, brand-product bridging |
+| Animation or motion (video scenes, slide transitions) | `references/motion-philosophy.md` — principles, do's/don'ts, standard motion patterns |
+| Marketing website copy (headlines, CTAs, landing pages) | `references/copy-patterns.md` — headline formulas, CTA conventions, value framing hierarchy, use case page patterns |
 
-## Token Values
+## Token Values & Assets
 
-Read `.claude/design-system/manifest.md` for all token values (colors, typography, spacing, radius, shadows). Check `.claude/design-system/figma.json` for Figma component keys and node IDs (for `importComponentByKeyAsync`). Check `.claude/design-system/assets/` for exported SVG/PNG brand assets.
+All token values and brand assets live in this skill:
 
-If these files don't exist in the repo, the qualitative guidance in this skill and its references still applies. Token values can be pulled from the Figma MCP, or run the generation scripts in `scripts/` to produce them.
+- `references/marketing-tokens.md` — marketing brand tokens (colors, typography, spacing, radius, shadows) extracted from Figma
+- `references/product-tokens.md` — product UI tokens (semantic colors, component variants, canvas tokens) extracted from `agents-manage-ui`
+- `assets/figma.json` — Figma component keys and node IDs (for `importComponentByKeyAsync`)
+- `assets/` — SVGO-optimized SVGs and PNGs organized by Figma section hierarchy (`logos/`, `icon-set/`, `illustrations/`, `decorative-and-backgrounds/`, `fonts/`)
+
+**Regeneration** (when Figma or product code changes):
+- Marketing tokens + assets: `bun scripts/process-manifest.ts <raw-manifest.json>` (requires Figma export first via `generate-manifest.js`)
+- Product tokens: `bun scripts/generate-product-manifest.ts` (fetches from GitHub, no local clone needed)

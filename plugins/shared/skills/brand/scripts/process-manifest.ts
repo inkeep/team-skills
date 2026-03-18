@@ -1,36 +1,39 @@
 #!/usr/bin/env bun
 /**
- * Process a raw Figma manifest JSON into:
- *   1. A markdown manifest (tokens + components)
- *   2. Exported SVG files organized by section hierarchy
- *   3. PNG thumbnails converted locally via resvg-js (no second API call)
- *   4. figma.json with Figma-specific pointers
+ * Process a raw Figma manifest JSON into the brand skill directory:
+ *   1. references/marketing-tokens.md  — design token manifest
+ *   2. assets/figma.json               — component key, node ID, file key
+ *   3. assets/{logos,icons,...}/*.svg   — SVGO-optimized SVGs
+ *   4. assets/{logos,icons,...}/*.png   — AI-vision-optimized PNGs (from SVG via sharp)
  *
- * Usage: bun process-manifest.ts <input.json> <output-dir> [--skip-assets] [--png-max 768]
- *
- * Output structure:
- *   <output-dir>/
- *     manifest.md          — markdown manifest with tokens + components
- *     figma.json           — component key, node ID, file key
- *     assets/
- *       svg/               — source-quality SVGs (for code use)
- *       png/               — AI-vision-optimized PNGs (for multimodal models)
- *       icon-set/          — section folders mirror Figma hierarchy
- *       logos/
- *       ...
+ * Usage:
+ *   bun process-manifest.ts <input.json> [--skip-assets] [--png-max 768]
  *
  * The input JSON is produced by generate-manifest.js running in figma_execute.
+ * All output goes into the skill directory (relative to this script's location):
+ *   ../references/marketing-tokens.md
+ *   ../assets/figma.json
+ *   ../assets/{section}/{component}.svg
+ *   ../assets/{section}/{component}.png
+ *
+ * SVGs are optimized with svgo before writing. Requires: npx svgo (auto-detected).
  *
  * Token resolution for image export (in order):
  *   1. FIGMA_ACCESS_TOKEN env var
  *   2. ~/.claude.json mcpServers.figma-console.env.FIGMA_ACCESS_TOKEN
- *   3. Skip image export if no token found (manifest.md still generated)
+ *   3. Skip image export if no token found (marketing-tokens.md still generated)
  */
 
-import { existsSync, mkdirSync, readFileSync, readdirSync } from "fs";
-import { join, dirname, relative } from "path";
-import { homedir } from "os";
+import { existsSync, mkdirSync, readFileSync } from "node:fs";
+import { join, dirname, resolve } from "node:path";
+import { homedir } from "node:os";
 import sharp from "sharp";
+
+// Resolve skill root (one level up from scripts/)
+const SCRIPT_DIR = dirname(new URL(import.meta.url).pathname);
+const SKILL_ROOT = resolve(SCRIPT_DIR, "..");
+const REFERENCES_DIR = join(SKILL_ROOT, "references");
+const ASSETS_DIR = join(SKILL_ROOT, "assets");
 
 // ============================================================
 // Types
@@ -501,6 +504,44 @@ async function exportAssets(
 }
 
 // ============================================================
+// SVGO optimization
+// ============================================================
+
+async function optimizeSvg(svgPath: string): Promise<boolean> {
+  try {
+    const proc = Bun.spawn(
+      ["npx", "svgo", "--quiet", svgPath],
+      { stdout: "pipe", stderr: "pipe" }
+    );
+    await proc.exited;
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+async function optimizeSvgDir(dir: string): Promise<{ optimized: number; failed: number }> {
+  let optimized = 0;
+  let failed = 0;
+
+  async function walk(d: string) {
+    const entries = await Array.fromAsync(new Bun.Glob("**/*.svg").scan({ cwd: d, absolute: true }));
+    const BATCH = 20;
+    for (let i = 0; i < entries.length; i += BATCH) {
+      const batch = entries.slice(i, i + BATCH);
+      const results = await Promise.all(batch.map(f => optimizeSvg(f)));
+      for (const ok of results) {
+        if (ok) optimized++;
+        else failed++;
+      }
+    }
+  }
+
+  await walk(dir);
+  return { optimized, failed };
+}
+
+// ============================================================
 // Main
 // ============================================================
 
@@ -518,14 +559,16 @@ for (let i = 0; i < args.length; i++) {
   }
 }
 
-if (positional.length < 2) {
+if (positional.length < 1) {
   console.error(
-    "Usage: bun process-manifest.ts <input.json> <output-dir> [--skip-assets] [--png-max 768]"
+    "Usage: bun process-manifest.ts <input.json> [--skip-assets] [--png-max 768]"
   );
+  console.error("");
+  console.error("Output goes into the skill directory (../references/ and ../assets/).");
   process.exit(1);
 }
 
-const [inputPath, outputDir] = positional;
+const [inputPath] = positional;
 
 // Load and normalize manifest
 const raw = await Bun.file(inputPath).json();
@@ -552,14 +595,17 @@ const tokenCount = manifest.tokens
 console.log(
   `Processing: ${manifest.components.length} components, ${tokenCount} tokens`
 );
-console.log(`Output: ${outputDir}`);
+console.log(`Skill root: ${SKILL_ROOT}`);
+console.log(`  references/ → ${REFERENCES_DIR}`);
+console.log(`  assets/     → ${ASSETS_DIR}`);
 
-// Ensure output dir exists
-if (!existsSync(outputDir)) mkdirSync(outputDir, { recursive: true });
+// Ensure output dirs exist
+if (!existsSync(REFERENCES_DIR)) mkdirSync(REFERENCES_DIR, { recursive: true });
+if (!existsSync(ASSETS_DIR)) mkdirSync(ASSETS_DIR, { recursive: true });
 
 // Step 1: Export assets (if token available and not skipped)
-// SVG from Figma API → then local SVG→PNG conversion via resvg-js (no second API call)
-let pngIndex: Record<string, string> | null = null;
+// SVG from Figma API → SVGO optimize → local SVG→PNG conversion via sharp
+let assetIndex: Record<string, string> | null = null;
 const token = resolveToken();
 
 if (flags.skipAssets) {
@@ -569,20 +615,23 @@ if (flags.skipAssets) {
     "\nSkipping asset export (no FIGMA_ACCESS_TOKEN found — set env var or configure in ~/.claude.json)"
   );
 } else {
-  // Export SVGs from Figma (single API pass)
-  console.log("\n--- SVG Export (from Figma API) ---");
-  const svgDir = join(outputDir, "assets", "svg");
-  const svgIndex = await exportAssets(manifest, svgDir, token, "svg", 1);
+  // Export SVGs from Figma into section-based directories (matching Figma hierarchy)
+  console.log("\n--- SVG Export (from Figma API → assets/{section}/) ---");
+  const svgIndex = await exportAssets(manifest, ASSETS_DIR, token, "svg", 1);
 
-  // Convert SVGs → PNGs locally via resvg-js (no API calls, instant)
-  console.log(`\n--- PNG Conversion (local, resvg-js, ${flags.pngMax}px max) ---`);
-  const pngDir = join(outputDir, "assets", "png");
+  // Optimize SVGs with SVGO
+  console.log("\n--- SVGO Optimization ---");
+  const svgoResult = await optimizeSvgDir(ASSETS_DIR);
+  console.log(`  ${svgoResult.optimized} optimized, ${svgoResult.failed} failed`);
+
+  // Convert SVGs → PNGs locally via sharp (side by side in same directory)
+  console.log(`\n--- PNG Conversion (local, sharp, ${flags.pngMax}px max) ---`);
   let converted = 0;
-  let failed = 0;
+  let pngFailed = 0;
   for (const [name, relPath] of Object.entries(svgIndex)) {
-    const svgPath = join(svgDir, relPath);
+    const svgPath = join(ASSETS_DIR, relPath);
     const pngRelPath = relPath.replace(/\.svg$/, ".png");
-    const pngPath = join(pngDir, pngRelPath);
+    const pngPath = join(ASSETS_DIR, pngRelPath);
     try {
       const svgData = readFileSync(svgPath);
       const pngData = await sharp(svgData, { density: 150 })
@@ -594,25 +643,21 @@ if (flags.skipAssets) {
       await Bun.write(pngPath, pngData);
       converted++;
     } catch (e: any) {
-      failed++;
+      pngFailed++;
       console.log(`  WARN: ${name}: ${e.message}`);
     }
   }
-  console.log(`  ${converted} converted, ${failed} failed`);
+  console.log(`  ${converted} converted, ${pngFailed} failed`);
 
-  // Build PNG index (same structure as SVG index but .png extension)
-  pngIndex = {};
-  for (const [name, relPath] of Object.entries(svgIndex)) {
-    pngIndex[name] = relPath.replace(/\.svg$/, ".png");
-  }
+  assetIndex = svgIndex;
 }
 
-// Step 2: Generate markdown (references PNG paths for AI readability)
-const md = generateMarkdown(manifest, pngIndex);
-const mdPath = join(outputDir, "manifest.md");
+// Step 2: Generate marketing-tokens.md
+const md = generateMarkdown(manifest, assetIndex);
+const mdPath = join(REFERENCES_DIR, "marketing-tokens.md");
 await Bun.write(mdPath, md);
 
-// Step 3: Generate figma.json (Figma-specific pointers for agents composing in Figma)
+// Step 3: Generate figma.json (component keys + node IDs for importComponentByKeyAsync)
 const figmaPointers: Record<
   string,
   { key: string; id: string; fileKey: string }
@@ -624,19 +669,18 @@ for (const c of manifest.components) {
     fileKey: manifest.file.key,
   };
 }
-const figmaJsonPath = join(outputDir, "figma.json");
+const figmaJsonPath = join(ASSETS_DIR, "figma.json");
 await Bun.write(figmaJsonPath, JSON.stringify(figmaPointers, null, 2));
 
 console.log(`\n=== Complete ===`);
 console.log(
-  `Manifest: ${mdPath} (${md.length} chars, ${md.split("\n").length} lines)`
+  `Marketing tokens: ${mdPath} (${md.length} chars, ${md.split("\n").length} lines)`
 );
 console.log(
   `  ${manifest.components.length} components, ${tokenCount} tokens`
 );
 console.log(`Figma pointers: ${figmaJsonPath}`);
-if (pngIndex) {
-  console.log(`Assets: ${Object.keys(pngIndex).length} files (SVG + PNG)`);
-  console.log(`  SVG: assets/svg/ (for code use)`);
-  console.log(`  PNG: assets/png/ (for AI vision)`);
+if (assetIndex) {
+  console.log(`Assets: ${Object.keys(assetIndex).length} files (SVG + PNG, SVGO-optimized)`);
+  console.log(`  Written to: ${ASSETS_DIR}/{section}/{component}.{svg,png}`);
 }

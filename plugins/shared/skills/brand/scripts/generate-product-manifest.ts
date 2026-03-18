@@ -73,25 +73,18 @@ function parseArgs(): Config {
   const ref = flagValue('--ref', 'main');
   const prefix = flagValue('--prefix', 'agents-manage-ui');
 
-  // Output path is the first positional arg (not a flag or flag value)
+  // Output path: first positional arg, or default to ../references/product-tokens.md
   const flagIndices = new Set<number>();
   for (const flag of ['--repo', '--ref', '--prefix']) {
     const idx = args.indexOf(flag);
     if (idx !== -1) { flagIndices.add(idx); flagIndices.add(idx + 1); }
   }
   const positional = args.filter((_, i) => !flagIndices.has(i));
-  const outputPath = positional[0];
 
-  if (!outputPath) {
-    console.error('Usage: bun generate-product-manifest.ts <output-path> [--repo owner/repo] [--ref branch] [--prefix subdir]');
-    console.error('');
-    console.error('Defaults: --repo inkeep/agents --ref main --prefix agents-manage-ui');
-    console.error('');
-    console.error('Examples:');
-    console.error('  bun generate-product-manifest.ts .claude/design-system/product-manifest.md');
-    console.error('  bun generate-product-manifest.ts /tmp/manifest.md --ref feat/new-ui');
-    process.exit(1);
-  }
+  // Default output: sibling references/ directory (skill-relative)
+  const scriptDir = import.meta.dirname ?? import.meta.dir ?? '.';
+  const defaultOutput = resolve(scriptDir, '..', 'references', 'product-tokens.md');
+  const outputPath = positional[0] || defaultOutput;
 
   return { repo, ref, prefix, outputPath };
 }
