@@ -17,7 +17,7 @@ import * as THREE from 'three';
 // Use frames={8} when MeshTransmissionMaterial is in the scene (needs multiple
 // frames to converge its internal FBO).
 
-export function RenderSignal({ frames = 1 }: { frames?: number }) {
+export function RenderSignal({ frames = 8 }: { frames?: number }) {
   const count = useRef(0);
   useFrame(() => {
     count.current++;

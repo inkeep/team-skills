@@ -60,7 +60,7 @@ bun tools/r3f/render.ts render \
 - `chrome`: Force system Chrome — best quality (Metal/ANGLE GPU rendering). Requires Google Chrome installed.
 - `swiftshader`: Force CPU-only rendering — works anywhere but glass/transmission materials render with reduced quality
 
-**Default output resolution:** `--scale 2` (2560x1440 from 1280x720 viewport) with `multisampling={8}` on EffectComposer is the quality sweet spot. Higher scale factors (3x, 4x) show negligible improvement when multisampling is enabled. Use `--scale 2` unless you specifically need 4K output (`--scale 3` = 3840x2160).
+**Default output resolution:** `--scale 2` (2560x1440 from 1280x720 viewport). Use `--scale 3` for 4K (3840x2160).
 
 **Module resolution:** The render script automatically symlinks `node_modules` to the scene file's directory before bundling (and cleans up after). Scene files can live anywhere — `/tmp/`, a project directory, etc. — without manual dependency setup.
 
@@ -109,27 +109,16 @@ Beyond the components documented in the staging section, these drei components a
 | **`Decal`** | Project texture onto mesh surface | Logos on product surfaces, stickers on devices. |
 | **`MeshDistortMaterial`** | Simplex noise distortion on PBR material | Animated organic blob shapes for backgrounds. |
 
-```tsx
-// Reflective floor (one component)
-import { MeshReflectorMaterial } from '@react-three/drei';
-<mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -0.5, 0]}>
-  <planeGeometry args={[10, 10]} />
-  <MeshReflectorMaterial blur={[300, 100]} resolution={1024} mixBlur={1} mixStrength={0.5} mirror={0.5} />
-</mesh>
+See "Composition patterns" section below for code examples of `MeshReflectorMaterial`, `Backdrop`, and `GradientTexture` with Inkeep-specific values.
 
+```tsx
 // One-line soft shadows (add anywhere in Canvas)
 import { SoftShadows } from '@react-three/drei';
 <SoftShadows size={25} samples={16} focus={0} />
 
-// Bake shadows once (add anywhere in Canvas)
+// Bake shadows once (add anywhere in Canvas — free perf win for static renders)
 import { BakeShadows } from '@react-three/drei';
 <BakeShadows />
-
-// Studio backdrop
-import { Backdrop } from '@react-three/drei';
-<Backdrop floor={0.25} segments={20} receiveShadow>
-  <meshStandardMaterial color="#FBF9F4" />
-</Backdrop>
 ```
 
 ## Custom shader materials (`three-custom-shader-material`)
@@ -168,26 +157,7 @@ Every scene TSX file must:
 import { useRef } from 'react';
 import { useFrame } from '@react-three/fiber';
 
-function RenderSignal() {
-  const done = useRef(false);
-  useFrame(() => {
-    if (!done.current) {
-      done.current = true;
-      requestAnimationFrame(() => {
-        (window as any).status = 'ready';
-      });
-    }
-  });
-  return null;
-}
-```
-
-Place `<RenderSignal />` inside `<Canvas>` as the last child. It waits one frame for postprocessing to complete, then signals Playwright to capture.
-
-**When using `MeshTransmissionMaterial`:** The transmission material renders to an internal FBO that takes multiple frames to converge. Use this enhanced version that waits 8 frames:
-
-```tsx
-function RenderSignal({ frames = 1 }: { frames?: number }) {
+function RenderSignal({ frames = 8 }: { frames?: number }) {
   const count = useRef(0);
   useFrame(() => {
     count.current++;
@@ -199,10 +169,9 @@ function RenderSignal({ frames = 1 }: { frames?: number }) {
   });
   return null;
 }
-
-// Standard scenes: <RenderSignal />
-// Scenes with MeshTransmissionMaterial: <RenderSignal frames={8} />
 ```
+
+Place `<RenderSignal />` inside `<Canvas>` as the last child. Default waits 8 frames — enough for `MeshTransmissionMaterial` and postprocessing to converge. Import from `tools/r3f/components.tsx` instead of inlining if preferred.
 
 The render script handles bundling (via `bun build --target browser`), serving, and screenshot capture.
 
@@ -241,6 +210,38 @@ import { MeshTransmissionMaterial } from '@react-three/drei';
 ```
 
 Glass-like with light refraction and chromatic aberration. Better visual quality than vanilla `MeshPhysicalMaterial` — the chromatic aberration and anisotropic blur create a more realistic glass effect. Requires `<Environment>` for reflections (see standard staging below). Best on GPU (Chrome mode).
+
+### `inkeepGlassHero` — Maximum quality glass (Tier 1 hero images)
+
+For hero images where glass quality is the focal point, enable iridescence, dispersion, and backside rendering. These are native MeshPhysicalMaterial props that pass through to MeshTransmissionMaterial — achieves 70-80% of Blender glass quality.
+
+```tsx
+<MeshTransmissionMaterial
+  color="#3784FF"
+  roughness={0.05}
+  transmission={0.92}
+  thickness={0.8}
+  chromaticAberration={0.06}
+  anisotropicBlur={0.2}
+  clearcoat={0.8}
+  clearcoatRoughness={0.03}
+  envMapIntensity={2.5}
+  ior={1.25}
+  // Hero-quality additions:
+  iridescence={0.8}                    // rainbow color-shift based on viewing angle (r141+)
+  iridescenceIOR={1.3}                 // thin-film IOR (1.0-2.333)
+  iridescenceThicknessRange={[100, 400]} // nanometer thickness range
+  dispersion={0.3}                     // true spectral chromatic aberration (r164+)
+  backside={true}                      // render back face refraction (two-bounce glass)
+  backsideThickness={0.5}              // back face thickness
+  samples={16}                         // refraction samples (higher = smoother)
+  resolution={1024}                    // FBO buffer resolution
+/>
+```
+
+**When to use hero vs standard glass:**
+- **Standard (`inkeepGlass`)** — most renders. Fast, good quality.
+- **Hero (`inkeepGlassHero`)** — Tier 1 blog covers, launch announcements. `backside` doubles render cost. `iridescence` adds rainbow edge color-shift. `dispersion` adds spectral color separation through the glass volume. Use `<RenderSignal frames={8} />` — these features need multiple frames to converge.
 
 ### `inkeepGlassVanilla` — Fallback glass (no drei dependency)
 
@@ -356,6 +357,63 @@ const isCompositing = mode === 'compositing';
 
 **Why conditional unmount, not `enabled={false}`:** When `<EffectComposer>` unmounts, R3F automatically resumes its default rendering pipeline with full alpha support. Using `enabled={false}` leaves the component mounted with dynamic priority switching, which is less reliable.
 
+## Rendering quality tiers
+
+The pipeline supports two rendering approaches. Choose based on the quality/time tradeoff:
+
+| Tier | Renderer | Time | Quality | Use for |
+|------|----------|------|---------|---------|
+| **Standard (rasterization)** | R3F default (WebGLRenderer) | ~3s | Good — 70-80% of Blender for glass, full PBR | Most renders: blog covers, social graphics, batch rendering |
+| **Hero (path tracing)** | `three-gpu-pathtracer` via `@react-three/gpu-pathtracer` | ~2-5 min | Near-Blender — physically correct GI, caustics, emissive lighting | Tier 1 launches, hero images, cases where visual quality is the focal point |
+
+### When to use path tracing
+
+Path tracing produces Blender-competitive output by tracing light rays through the scene. Benefits:
+- **Emissive surfaces illuminate nearby geometry** — a glowing screen naturally lights the keyboard below it
+- **Global illumination** — indirect light bouncing creates realistic ambient lighting
+- **Physically correct caustics** — light concentration patterns through glass emerge naturally
+- **Multi-bounce refraction** — unlimited bounces through glass objects
+
+```tsx
+import { Pathtracer, usePathtracer } from '@react-three/gpu-pathtracer';
+
+function Scene() {
+  return (
+    <Canvas gl={{ preserveDrawingBuffer: true }} camera={{ position: [0, 1, 4], fov: 32 }}>
+      <Pathtracer
+        samples={3000}        // convergence quality (2000-5000 for clean results)
+        bounces={8}           // light bounces (higher = more realistic GI)
+        resolutionFactor={1}  // render at full resolution
+      >
+        <Environment preset="studio" />
+        {/* Scene content — same components as rasterized scenes */}
+        <GlassTile />
+        <EmissiveScreen />    {/* This WILL illuminate nearby surfaces */}
+      </Pathtracer>
+
+      <PathtraceSignal samples={3000} />
+    </Canvas>
+  );
+}
+
+// Custom render signal for path tracing — wait for convergence
+function PathtraceSignal({ samples }: { samples: number }) {
+  const { progress } = usePathtracer();
+  const signaled = useRef(false);
+  useFrame(() => {
+    if (!signaled.current && progress >= 1) {
+      signaled.current = true;
+      (window as any).status = 'ready';
+    }
+  });
+  return null;
+}
+```
+
+**Prerequisites:** `@react-three/gpu-pathtracer` (auto-installed). Requires Three.js r180+. Works with WebGL2 in headless Chrome — same pipeline as rasterized renders.
+
+**Limitations:** No postprocessing (SSAO, Bloom) — path tracing handles lighting naturally. No `MeshTransmissionMaterial` — use standard `meshPhysicalMaterial` with `transmission` and `ior` instead. Render time scales with `samples` × scene complexity.
+
 ## Standard Canvas setup
 
 ```tsx
@@ -409,6 +467,28 @@ The render script serves files from `tools/r3f/assets/` at the `/assets/` URL pa
 ```
 
 The `<Environment>` provides the primary illumination. Add directional lights for key/fill/rim to supplement, not replace.
+
+### RectAreaLight (emissive surface approximation)
+
+To fake a glowing screen or surface that illuminates nearby objects without path tracing, co-locate a `RectAreaLight` with an emissive mesh:
+
+```tsx
+import { RectAreaLightUniformsLib } from 'three/examples/jsm/lights/RectAreaLightUniformsLib.js';
+RectAreaLightUniformsLib.init(); // call once before using RectAreaLight
+
+// Glowing screen that lights up the keyboard below
+<group position={[0, 1, 0]}>
+  {/* Visual: emissive plane */}
+  <mesh>
+    <planeGeometry args={[1.2, 0.8]} />
+    <meshStandardMaterial emissive="#3784FF" emissiveIntensity={2} color="#3784FF" />
+  </mesh>
+  {/* Light: co-located RectAreaLight casts actual illumination */}
+  <rectAreaLight width={1.2} height={0.8} intensity={5} color="#3784FF" />
+</group>
+```
+
+**Limitations:** RectAreaLight only works with `meshStandardMaterial` and `meshPhysicalMaterial`. Does NOT cast shadows. For physically correct emissive lighting, use the path tracer instead.
 
 ### ContactShadows (replaces ShadowMaterial ground plane)
 
@@ -672,11 +752,11 @@ const mode = (window as any).__R3F_MODE__ || 'full';
 const isCompositing = mode === 'compositing';
 
 // === RENDER SIGNAL ===
-function RenderSignal() {
-  const done = useRef(false);
+function RenderSignal({ frames = 8 }: { frames?: number }) {
+  const count = useRef(0);
   useFrame(() => {
-    if (!done.current) {
-      done.current = true;
+    count.current++;
+    if (count.current === frames) {
       requestAnimationFrame(() => {
         (window as any).status = 'ready';
         console.log('R3F scene rendered successfully');
@@ -694,14 +774,23 @@ function GlassTile() {
       <RoundedBox args={[1.4, 1.4, 0.14]} radius={0.08} smoothness={6} castShadow>
         <MeshTransmissionMaterial
           color={TILE_COLOR}
-          roughness={0.1}
-          transmission={0.7}
-          thickness={0.4}
-          chromaticAberration={0.03}
-          anisotropicBlur={0.1}
-          clearcoat={0.3}
-          clearcoatRoughness={0.1}
-          envMapIntensity={1.5}
+          roughness={0.05}
+          transmission={0.92}
+          thickness={0.8}
+          chromaticAberration={0.06}
+          anisotropicBlur={0.2}
+          clearcoat={0.8}
+          clearcoatRoughness={0.03}
+          envMapIntensity={2.5}
+          ior={1.25}
+          iridescence={0.8}
+          iridescenceIOR={1.3}
+          iridescenceThicknessRange={[100, 400]}
+          dispersion={0.3}
+          backside={true}
+          backsideThickness={0.5}
+          samples={16}
+          resolution={1024}
         />
       </RoundedBox>
       {/* White icon on tile */}
@@ -935,6 +1024,16 @@ function BrandModel({ url, color = '#3784FF' }: { url: string; color?: string })
 
 Place .glb files in `tools/r3f/assets/` — the render script serves them at `/assets/`.
 
+**Optimize .glb files with `gltfjsx`** (5.7K stars, pmndrs) before committing:
+
+```bash
+# Convert .glb → optimized R3F JSX component + Draco compression (70-90% size reduction)
+npx gltfjsx model.glb --transform --types
+# Outputs: Model.tsx (typed R3F component) + model-transformed.glb (compressed)
+```
+
+The `--transform` flag applies Draco mesh compression and texture resizing. The generated `.tsx` component provides typed props and automatic `useGLTF.preload()`. Use this for every .glb model in the asset pipeline.
+
 **Three geometry tiers:**
 
 | Tier | Source | When to use | Quality |
@@ -994,3 +1093,143 @@ await Bun.write('/tmp/meshy-model.glb', glbData);
 
 **Cost:** ~10-20 credits per model (~$0.10-0.20). Preview: ~60s. Refine (with textures): ~2min.
 **Formats:** GLB, OBJ, FBX, STL, USDZ.
+
+---
+
+## Composition patterns (from Resend deep-dive)
+
+These patterns are extracted from pixel-level analysis of 12 Resend 3D marketing graphics. See `~/reports/3d-depth-graphics-patterns/evidence/resend-deep-dive.md` for the full analysis.
+
+### The composition formula (used in 8/12 Resend images)
+
+```
+┌──────────────────────────────────────────────────────┐
+│                                                      │
+│   ┌─────────┐                    [New]               │
+│   │         │                                        │
+│   │  3D     │              Feature                   │
+│   │ Object  │              Title                     │
+│   │         │                                        │
+│   └─────────┘                                        │
+│   ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░  │ ← reflective floor
+│   ▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓  │ ← warm gradient horizon
+└──────────────────────────────────────────────────────┘
+```
+
+1. **3D object: left 40-60%** of the frame. Never centered — asymmetric placement creates visual energy.
+2. **Title text: right-center** with generous padding. Rendered into the image file (or composited in Figma).
+3. **"New" badge** — small pill above the title. White background, dark text, rounded rectangle.
+4. **Reflective floor** — dark surface with 10-15% reflectivity. Grounds the object. Use `MeshReflectorMaterial`.
+5. **Warm gradient horizon** — background transitions from warm amber/brown (~20-30% from bottom) to pure dark/light at edges. Never flat.
+6. **30%+ negative space** — the object never fills the frame. Breathing room IS the design.
+
+### Lighting for premium feel
+
+The single biggest quality differentiator between amateur and professional 3D is lighting:
+
+```tsx
+// WRONG: flat, even lighting (looks amateur)
+<ambientLight intensity={1.0} />
+
+// RIGHT: single dominant key light + minimal fill (looks premium)
+<ambientLight intensity={0.2} />
+<directionalLight position={[4, 6, 3]} intensity={1.2} color="#fff5e6" castShadow />
+// No fill light — let shadows go dark
+```
+
+**Key principle:** Single dominant light source, NOT even illumination. Shadows going to near-black is what creates the premium, editorial feel. Add rim/edge light from behind for metallic definition on brass/gold edges.
+
+### Reflective floor setup
+
+```tsx
+import { MeshReflectorMaterial } from '@react-three/drei';
+
+<mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -0.5, 0]}>
+  <planeGeometry args={[20, 20]} />
+  <MeshReflectorMaterial
+    blur={[300, 100]}
+    resolution={1024}
+    mixBlur={1}
+    mixStrength={0.3}    // subtle, not mirror — 0.1-0.4 range
+    mirror={0.5}
+    color="#FBF9F4"      // warm cream for Inkeep (dark for Resend-style)
+  />
+</mesh>
+```
+
+### Background: never flat
+
+```tsx
+import { GradientTexture } from '@react-three/drei';
+
+// Warm cream with subtle gradient (Inkeep style)
+<mesh position={[0, 0, -5]} scale={[20, 15, 1]}>
+  <planeGeometry />
+  <meshBasicMaterial>
+    <GradientTexture stops={[0, 0.4, 1]} colors={['#F5F0E8', '#FBF9F4', '#FFFFFF']} />
+  </meshBasicMaterial>
+</mesh>
+
+// Or use Backdrop for a curved cyclorama
+import { Backdrop } from '@react-three/drei';
+<Backdrop floor={0.25} segments={20} receiveShadow>
+  <meshStandardMaterial color="#FBF9F4" />
+</Backdrop>
+```
+
+### Text integration
+
+Resend renders the blog title INTO the 3D image — it's not HTML overlaid on top. This gives the 3D artist control over text size, font, and position relative to the 3D objects.
+
+**For our pipeline:** Use the **Figma hybrid workflow** — render the 3D scene with `--mode compositing` (transparent background), import into Figma, and compose the title text alongside the 3D element. This gives us editable text (brand fonts, precise sizing) with the 3D render underneath. See "Hybrid workflow: Three.js → Figma" above.
+
+### Material restraint
+
+Across 12 Resend images spanning 2 years, they use only **4 materials**:
+1. Dark matte body (near-black, roughness ~0.9)
+2. Brass/copper accent (metalness ~0.25, warm)
+3. Glass with iridescent refraction
+4. Emissive screens (green CRT glow)
+
+**The principle:** Pick 3-4 materials that define your brand's 3D personality and use them consistently across every render. For Inkeep: warm cream clay, golden accent, brand blue glass, and brand blue emissive.
+
+### Visual consistency across a series
+
+When creating multiple 3D graphics (e.g., a launch week with 5 feature announcements), lock these elements:
+- **Same background treatment** (gradient, floor reflectivity)
+- **Same camera angle and FOV**
+- **Same lighting setup**
+- **Same material palette**
+
+Vary only the **3D object** (the feature metaphor) and the **title text**. This creates visual cohesion across a series — the viewer recognizes the format immediately.
+
+## Storytelling framework: concept → object
+
+**The core principle: every 3D object should be a physical metaphor for the software concept it represents.** Do not use random decorative shapes — each object should communicate something about the feature.
+
+### How to map a feature to a 3D object
+
+Ask: "If this software feature were a physical object on a desk, what would it look like?"
+
+| Software concept | Physical metaphor | Why it works |
+|---|---|---|
+| API endpoint | Machine with inputs/outputs, pipes, connectors | Data flows through a pipeline |
+| Schedule/timing | Clock, calendar, timer device | Time is the core concept |
+| Integration | Two objects connected by glass tube or bridge | Data flows between systems |
+| Search | Magnifying glass, lens, telescope | You look through it to find things |
+| Analytics | Dashboard with gauges, charts on a screen | Measuring and displaying data |
+| CLI / terminal | Retro computer, keyboard, CRT monitor | You type commands |
+| Agent / AI | Robot, brain, neural network sculpture | Autonomous entity |
+| Knowledge base | Library, filing cabinet, book stack | Organized information storage |
+| Workflow | Conveyor belt, assembly line, Rube Goldberg machine | Steps in sequence |
+| Security / auth | Lock, vault, shield, key | Protection and access control |
+
+### What NOT to do
+
+- **No random floating shapes without meaning.** Every pill, sphere, and ring should either represent something specific OR be explicitly decorative depth (and kept minimal — 3-5 accents max).
+- **No generic compositions.** "Here's a 3D blob and some pills" communicates nothing. "Here's a calendar machine with glass tube tracks connecting to a send button" communicates "scheduling + delivery."
+- **No literal screenshots turned 3D.** Don't extrude a UI screenshot. Instead, build a physical metaphor that captures the essence of the feature.
+
+### The meaning test
+
+For each 3D element in the scene, ask: "If I remove this, does the viewer lose understanding of what the feature does?" If yes, the element is meaningful. If no, it's decoration — keep it minimal and secondary.

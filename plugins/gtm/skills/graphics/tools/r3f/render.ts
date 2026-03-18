@@ -43,6 +43,8 @@ async function ensureDeps() {
   try { require.resolve('@react-three/csg'); } catch { missing.push('@react-three/csg'); }
   try { require.resolve('three-bvh-csg'); } catch { missing.push('three-bvh-csg'); }
   try { require.resolve('three-custom-shader-material'); } catch { missing.push('three-custom-shader-material'); }
+  try { require.resolve('three-gpu-pathtracer'); } catch { missing.push('three-gpu-pathtracer'); }
+  try { require.resolve('@react-three/gpu-pathtracer'); } catch { missing.push('@react-three/gpu-pathtracer'); }
   if (missing.length > 0) {
     console.log(`Installing missing dependencies: ${missing.join(', ')}...`);
     const result = Bun.spawnSync(['bun', 'add', ...missing], { cwd: resolve(dirname(new URL(import.meta.url).pathname), '..') });
