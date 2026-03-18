@@ -94,7 +94,7 @@ Page naming: `[YYYY-MM-DD] {medium} — {project description}`. This prevents ov
 
 The Inkeep Design Assets file contains the canonical design token system as Figma variables across 5 collections. **Always use these tokens instead of hardcoding hex values.**
 
-**Load:** `/brand` for brand identity (principles, logo rules, typography, color usage, illustration style, composition patterns, element recipes). For applying tokens in Figma code, **Load:** `references/figma-patterns.md`. For full token values, read `.claude/design-system/manifest.md`.
+**Load:** `/brand` for brand identity (principles, logo rules, typography, color usage, illustration style, composition patterns, element recipes). For applying tokens in Figma code, **Load:** `references/figma-patterns.md`. For full token values, read `tokens/marketing.md`.
 
 | Collection | What it covers | Key usage rules |
 |---|---|---|
@@ -115,7 +115,7 @@ rect.fills = [figma.variables.setBoundVariableForPaint(
 
 **Why tokens matter:** `figma_lint_design` flags hardcoded colors as warnings. Variable binding ensures brand consistency cascades automatically.
 
-**If working in a file without tokens** (user specified a different target): fall back to hex values from `.claude/design-system/manifest.md`.
+**If working in a file without tokens** (user specified a different target): fall back to hex values from `tokens/marketing.md`.
 
 **Why a shared workspace?** Figma has no API to create new files. The workspace prevents: (1) polluting brand asset files with work-in-progress, (2) requiring the user to create a new file for every request, (3) agents working in random/personal Drafts files that aren't team-accessible.
 
@@ -215,7 +215,7 @@ Present the suggestion to the user: "Based on the content, I'd suggest a [type] 
 
   When detected, note the brand name(s) and domain(s) so Step 2f can fetch their colors, fonts, and company data via `scripts/fetch-brand.ts`. This replaces guessing brand colors or defaulting everything to the Inkeep palette.
 
-- **Output format**: choose based on the graphic type and what happens to it next:
+- **Output format**: choose based on the graphic type and what happens to it next. **When the chosen format involves an external AI API (Quiver, GPT Image, Gemini),** load `/brand` `references/create-brand-packet.md` and follow it to assemble brand context for the API call:
 
 | Graphic type | Best format | Why |
 |---|---|---|
@@ -491,7 +491,7 @@ If `--domain` is omitted, the script uses the Brandfetch Search API to resolve t
 
 Use the Figma MCP to extract brand tokens from the design system.
 
-**Load:** `references/figma-assets.md` for the Figma file URL. For token values, read `.claude/design-system/manifest.md`.
+**Load:** `references/figma-assets.md` for the Figma file URL. For token values, read `tokens/marketing.md`.
 
 Extract:
 - **Color palette**: primary, secondary, accent, background, text colors with exact hex values
@@ -820,7 +820,7 @@ Fix any issues now — it's much easier to fix individual atoms than after compo
 
    **Critical rule:** If any child is set to Fill, the parent auto-switches from Hug to Fixed on that axis (circular dependency prevention).
 
-   Use spacing values from the brand tokens spacing scale (see `.claude/design-system/manifest.md`) — never ad-hoc pixel values.
+   Use spacing values from the brand tokens spacing scale (see `tokens/marketing.md`) — never ad-hoc pixel values.
 
 2. **Build the layout structure** — section frames (header, content, footer, etc.) with auto-layout for editability. Stack layers bottom-to-top: `bg` → structure containers → content (text, images) → branding (logo) → decorative overlays. This ordering must be consistent across all frames.
 3. **Move atoms into the composition** — move or clone verified atoms from the working frame into their correct sections, position according to the composition plan

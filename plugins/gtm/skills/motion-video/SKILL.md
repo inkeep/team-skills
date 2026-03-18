@@ -58,7 +58,7 @@ Determine what to build before writing code.
 
 - **Load:** `/brand` and load any reference files relevant to your task following the skill's reference loading guidance for your content. This is important for ensuring you are fully grounded and can leverage brand assets, tokens, and guidance.
 - **Load:** `brand/motion-language.md` — easing curves, timing, animation patterns (Remotion-specific)
-- For token values: read `.claude/design-system/manifest.md`
+- For token values: read `tokens/marketing.md` (from the `/brand` skill)
 - For product demos: **Load:** `references/product-demo-patterns.md` — how to compose walkthrough scenes
 - For advanced Remotion features: **Load** the `remotion-best-practices` skill, then read the relevant rule file. Use when the video needs any of these:
 
@@ -263,7 +263,7 @@ All videos MUST import tokens from `remotion-videos/src/styles/brand.ts`:
 | `RADIUS` | 5 border radius values |
 | `colors` | Legacy alias (azureBlue, morningMist, etc.) |
 
-For full brand identity: Load `/brand`. For token values: `.claude/design-system/manifest.md`. For motion patterns: **[brand/motion-language.md](brand/motion-language.md)**
+For full brand identity: Load `/brand`. For token values: `tokens/marketing.md` (from `/brand`). For motion patterns: **[brand/motion-language.md](brand/motion-language.md)**
 
 ### Built-in primitives
 

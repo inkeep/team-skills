@@ -6,7 +6,7 @@ Impact: Off-brand illustrations, wrong icon style, misused gradients, dated-look
 
 # Brand Guide
 
-Full Inkeep visual identity guidance. For compact essentials, see SKILL.md. For exact token values, see `.claude/design-system/manifest.md`.
+Full Inkeep visual identity guidance. For compact essentials, see SKILL.md. For exact token values, see `tokens/marketing.md`.
 
 ## Logo Rules
 

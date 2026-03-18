@@ -10,9 +10,9 @@
  *   bun generate-product-manifest.ts <output-path> [--repo owner/repo] [--ref branch] [--prefix subdir]
  *
  * Examples:
- *   bun generate-product-manifest.ts .claude/design-system/product-manifest.md
+ *   bun generate-product-manifest.ts                           # defaults to ../tokens/product.md
  *   bun generate-product-manifest.ts /tmp/manifest.md --ref feat/new-ui
- *   bun generate-product-manifest.ts ./manifest.md --repo inkeep/agents --prefix agents-manage-ui
+ *   bun generate-product-manifest.ts ./out.md --repo inkeep/agents --prefix agents-manage-ui
  *
  * Defaults:
  *   --repo    inkeep/agents

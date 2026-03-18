@@ -69,6 +69,7 @@ Load the reference files relevant to what you're building:
 | Charts, graphs, or data visualization | `references/data-visualization.md` — data series colors, labeling standards, chart type selection, data integrity rules |
 | Animation or motion (video scenes, slide transitions) | `references/motion-philosophy.md` — principles, do's/don'ts, standard motion patterns |
 | Marketing website copy (headlines, CTAs, landing pages) | `references/copy-patterns.md` — headline formulas, CTA conventions, value framing hierarchy, use case page patterns |
+| Delegating to subagents or external APIs (Quiver, GPT Image, Gemini, etc.) | `references/create-brand-packet.md` — how to assemble brand context for downstream AI processes, series briefs for parallel outputs, verification after boundary crossings |
 
 ## Token Values & Assets
 

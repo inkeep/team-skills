@@ -62,7 +62,7 @@ Master design files are team-maintained Figma files containing canonical compone
 | Background, gradient, texture | Brand Assets → Decorative & Backgrounds (`background/`) | — |
 | Product UI mockup | Brand Assets → UI Elements (`ui/`) | — |
 | Mascot/Keepie | Brand Assets → Brand Mascot (`mascot/`) | — |
-| Brand colors, typography, spacing | Design tokens in the Inkeep Design Assets file | Token values in `.claude/design-system/manifest.md` |
+| Brand colors, typography, spacing | Design tokens in the Inkeep Design Assets file | Token values in `tokens/marketing.md` |
 | Need visual inspiration or style reference | Reference Examples (`_reference/` prefix) | Gradient swatches, UI screenshots, illustration variants. For style matching only — do NOT place in compositions. |
 
 ## Brand Assets Page
@@ -127,7 +127,7 @@ instance.y = targetY;
 
 **Discovering component keys (fastest → slowest):**
 
-1. **Pre-computed lookup** — read `.claude/design-system/figma.json`. Contains every component's `key`, `id`, and `fileKey` indexed by name. No API call needed.
+1. **Pre-computed lookup** — read `tokens/figma.json`. Contains every component's `key`, `id`, and `fileKey` indexed by name. No API call needed.
 2. **REST API** — `GET /v1/files/D7NDSM2peo1iLhkjLxmGP5/components` — each component in the response includes a `key` field.
 3. **Runtime discovery** — navigate to Design Assets file, find the node by name, read `node.key`.
 

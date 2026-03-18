@@ -10,7 +10,7 @@ Impact: Off-brand presentations with inconsistent colors, fonts, or layouts
 
 Load `/brand` for all Inkeep brand identity guidance — principles, logo rules, typography, color usage, text style rules, and element patterns. The brand skill's reference files provide deep guidance on composition (Z-pattern, split layout, visual hierarchy) and element recipes (section headers, badges, quote cards).
 
-For exact token values (all colors, spacing, radii, shadows, typography scale), read `.claude/design-system/manifest.md`.
+For exact token values (all colors, spacing, radii, shadows, typography scale), read `tokens/marketing.md` (from the `/brand` skill).
 
 ## Figma Design System
 

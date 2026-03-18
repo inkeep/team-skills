@@ -4,6 +4,8 @@ Use when: Step 5 (Create visual assets) — spawning subagents to create graphic
 Priority: P0
 Impact: Missing or off-brand visuals; slides without graphics where they would communicate better
 
+When delegating, follow `/brand` `references/create-brand-packet.md` to assemble brand context for each subagent.
+
 ---
 
 ## Series brief (deck-wide visual consistency)

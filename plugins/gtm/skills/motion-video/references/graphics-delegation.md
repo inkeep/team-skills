@@ -6,7 +6,23 @@ Impact: Video uses placeholder visuals or skips scenes that need icons/illustrat
 
 When a video needs visual assets (icons, illustrations, diagrams, backgrounds) that don't exist in `remotion-videos/public/` or the brand asset library, delegate creation to the `/graphics` skill via subagent.
 
-This follows the same pattern `/gslides` uses for slide graphics.
+This follows the same pattern `/gslides` uses for slide graphics. When delegating, follow `/brand` `references/create-brand-packet.md` to assemble brand context for each subagent.
+
+## Series brief (video-wide visual consistency)
+
+When creating multiple assets for a single video, all subagents must share the same visual decisions. Before spawning any subagents, create a **series brief** that locks the visual constants:
+
+| Decision | Options | How to choose |
+|---|---|---|
+| **Background treatment** | Warm cream (`#FBF9F4`) / dark / transparent | Match the video's scene backgrounds — transparent is typical for overlay assets |
+| **Illustration style** | Hand-drawn (dual-stroke) / abstract geometric / none | Use hand-drawn when any scene needs a conceptual illustration; "none" if all assets are icons or mockups |
+| **Accent color** | Pick one from the brand card background palette | Use the same accent across all assets in the video — don't rotate per-asset |
+| **Visual density** | Sparse / moderate / dense | Match the video's overall tone |
+| **Logo variant** | Primary / icon-only / none | Match what the video's intro/outro uses — don't mix variants |
+
+Pass this series brief to **every** subagent in the video. This is how parallel subagents produce coherent output without seeing each other's work.
+
+---
 
 ## Delegation contract
 
@@ -21,7 +37,8 @@ Spawn using the **Agent tool** with `subagent_type: "general-purpose"`. The prom
 3. **Target format**: "video asset" — transparent background, SVG preferred for vectors, PNG at 4x for raster
 4. **What the asset represents**: the concept, feature, or element it depicts
 5. **Size guidance**: approximate dimensions needed in the video (e.g., "40x40 icon", "400px wide illustration")
-6. **Export instruction**: "Export as SVG if vector, PNG at 4x if raster. Save to `remotion-videos/public/images/generated/`."
+6. **Series brief**: the locked visual decisions for this video (see above). Same for every subagent.
+7. **Export instruction**: "Export as SVG if vector, PNG at 4x if raster. Save to `remotion-videos/public/images/generated/`."
 
 ### Prompt template
 
@@ -33,7 +50,13 @@ Create a video asset:
 - **Represents**: [what this asset depicts — e.g., "Zendesk integration", "knowledge graph", "AI agent workflow"]
 - **Size**: [approximate dimensions — e.g., "40x40 icon", "600x400 illustration"]
 - **Format**: Transparent background. SVG preferred for icons/illustrations. PNG at 4x for raster/photos.
-- **Style**: Follow Inkeep brand illustration style (hand-drawn technical, blue + cream palette).
+
+Series brief (apply to ALL assets in this video):
+- **Background**: [warm cream #FBF9F4 / dark / transparent]
+- **Illustration style**: [hand-drawn (dual-stroke) / abstract geometric / none]
+- **Accent color**: [hex code from brand palette]
+- **Visual density**: [sparse / moderate / dense]
+- **Logo variant**: [primary / icon-only / none]
 
 Export the final asset. Return using this format:
 
