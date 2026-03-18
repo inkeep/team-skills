@@ -172,6 +172,98 @@ skill-name/
 └── templates/            # Reusable output templates
 ```
 
+## Cross-Cutting Patterns
+
+### Shared skills (cross-team)
+
+When a skill is useful to multiple teams, create it in `plugins/shared/skills/` and symlink it into each team plugin that needs it:
+
+```bash
+# Create the skill
+mkdir -p plugins/shared/skills/my-skill
+# ... add SKILL.md, references/, etc.
+
+# Symlink into team plugins (use relative paths)
+cd plugins/eng/skills && ln -s ../../shared/skills/my-skill my-skill
+cd plugins/gtm/skills && ln -s ../../shared/skills/my-skill my-skill
+```
+
+Symlinks must use **relative paths** (`../../shared/skills/my-skill`) — absolute paths break when the repo is cloned to a different location. Only symlink into the plugins that actually need the skill.
+
+### Background knowledge skills
+
+Skills with `user-invocable: false` in frontmatter are not commands — they're background knowledge loaded by other skills. They appear in the agent's context when a consumer skill says "Load `/skill-name`."
+
+Use this pattern when knowledge needs to be shared across multiple skills but isn't meaningful as a standalone command. The consumer skill owns the workflow; the background skill provides reference material.
+
+### Cross-skill dependencies
+
+When one skill depends on another, the consumer skill references it with a `Load` directive:
+
+```markdown
+**Load:** `/other-skill` and follow its reference loading guidance.
+```
+
+The downstream skill loads via the Skill tool at runtime — no import, no symlink needed between the skills themselves. The plugin system handles resolution.
+
+For subagent delegation (spawning a `general-purpose` subagent that needs a skill), the subagent must load the skill itself — skills don't inherit from the parent:
+
+```markdown
+Spawn using the Agent tool. Start the prompt with:
+"Load the `/skill-name` skill and follow its full workflow."
+```
+
+### Adding secrets for a new skill
+
+Skills that need API keys follow this flow:
+
+1. **Add to `secrets/secrets.json`** — map the skill name to a 1Password item and list its env vars:
+   ```json
+   "my-skill": {
+     "item": "My Skill Credentials",
+     "vars": ["MY_API_KEY", "MY_SECRET"]
+   }
+   ```
+
+2. **Create the 1Password item** — in the shared vault, create a Secure Note (not API Credential — that adds junk fields). Add fields with labels matching the `vars` names exactly.
+
+3. **Push to 1Password** (if creating for the team):
+   ```bash
+   ./secrets/push.sh --account inkeep.1password.com
+   ```
+
+4. **Test the pull:**
+   ```bash
+   ./secrets/setup.sh --skill my-skill --account inkeep.1password.com --dry-run
+   ```
+
+### Adding MCP servers for a skill
+
+If a skill needs MCP servers (Figma, Google Slides, etc.), create a setup script:
+
+1. **Create `secrets/mcp-setup/my-skill.sh`** — registers MCP servers in `~/.claude.json` under the project scope. See `secrets/mcp-setup/graphics.sh` or `secrets/mcp-setup/gslides.sh` for examples.
+
+2. **Reference it in `secrets/secrets.json`:**
+   ```json
+   "my-skill": {
+     "item": "My Skill Credentials",
+     "vars": ["MY_API_KEY"],
+     "setup": "mcp-setup/my-skill.sh"
+   }
+   ```
+
+The setup script runs automatically after secrets are pulled. It should be idempotent (safe to re-run) and check for prerequisites (missing CLIs, missing auth) with clear error messages.
+
+### Context assembly for downstream AI
+
+When a skill delegates to subagents or external APIs, brand and task context must be explicitly assembled and passed — it doesn't flow automatically. See `/brand` `references/create-brand-packet.md` for the framework. The key principles:
+
+- **Subagents** (Claude) can load skills themselves — instruct them to load the relevant skills, don't summarize skill content in the prompt.
+- **External APIs** (image generation, evaluation models) cannot load skills — compile exact values (hex codes, not token names) into the API's input format.
+- **Parallel subagents** need a series brief — locked visual/style decisions passed identically to all subagents to ensure consistent output.
+
+For detailed guidance on skill design patterns, use `/write-skill`.
+
 ## Troubleshooting
 
 **Skills not updating after edits:**
