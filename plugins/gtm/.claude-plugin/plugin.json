@@ -1,7 +1,7 @@
 {
   "name": "gtm",
   "description": "Skills for the Inkeep GTM team",
-  "version": "1.2.137",
+  "version": "1.2.138",
   "author": {
     "name": "Inkeep"
   },
@@ -14,7 +14,10 @@
     "figma-console": {
       "type": "stdio",
       "command": "npx",
-      "args": ["-y", "figma-console-mcp@latest"],
+      "args": [
+        "-y",
+        "figma-console-mcp@latest"
+      ],
       "env": {
         "ENABLE_MCP_APPS": "true"
       }
