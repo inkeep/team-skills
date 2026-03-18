@@ -187,4 +187,38 @@ echo "  ────────────────────────
 echo "  MCP servers are loaded at startup. Exit Claude Code"
 echo "  and reopen it for /graphics to work."
 echo ""
+# --- 4. Verify Figma token ---
+#
+# Quick API call to confirm the token works. Non-blocking — just prints a warning if it fails.
+
+if [[ -n "$PROJECT_PATH" ]]; then
+  VERIFY_TOKEN=$(jq -r --arg path "$PROJECT_PATH" \
+    '.projects[$path].mcpServers["figma-console"].env.FIGMA_ACCESS_TOKEN // ""' \
+    "$CLAUDE_JSON" 2>/dev/null || echo "")
+
+  if [[ -n "$VERIFY_TOKEN" && "$VERIFY_TOKEN" != "figd_PLACEHOLDER" ]]; then
+    echo "  Verifying Figma token..."
+    HTTP_STATUS=$(curl -s -o /dev/null -w "%{http_code}" \
+      "https://api.figma.com/v1/me" \
+      -H "X-Figma-Token: $VERIFY_TOKEN" 2>/dev/null || echo "000")
+
+    if [[ "$HTTP_STATUS" == "200" ]]; then
+      FIGMA_USER=$(curl -s "https://api.figma.com/v1/me" \
+        -H "X-Figma-Token: $VERIFY_TOKEN" 2>/dev/null | \
+        python3 -c "import json,sys; print(json.load(sys.stdin).get('email','?'))" 2>/dev/null || echo "?")
+      echo "  ✅ Figma token valid (${FIGMA_USER})"
+    elif [[ "$HTTP_STATUS" == "403" ]]; then
+      echo "  ⚠️  Figma token returned 403. It may be expired or have insufficient scopes."
+      echo "     Regenerate at: https://www.figma.com/settings"
+      echo "     Required scopes: all under 'Files' and 'Design systems'"
+    else
+      echo "  ⚠️  Figma API returned HTTP $HTTP_STATUS. Token may be invalid."
+    fi
+  else
+    echo "  ⚠️  No Figma token configured. /graphics won't work until you add one."
+    echo "     Create at: https://www.figma.com/settings → Security → Personal access tokens"
+  fi
+fi
+
+echo ""
 echo "=== Graphics MCP Setup Complete ==="

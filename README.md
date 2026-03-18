@@ -72,22 +72,65 @@ npx skills add inkeep/team-skills/plugins/gtm -y    # GTM
 npx skills add inkeep/team-skills/plugins/shared -y
 ```
 
-## Skill secrets (optional)
+## Skill secrets
 
-Some skills (e.g. `/media-upload`, `/screengrabs`) need credentials for media uploads. These are managed via 1Password and a `secrets/` directory at the repo root.
+Some skills need API credentials. These are managed via 1Password:
 
 ```bash
-# Pull all skill secrets
-./secrets/setup.sh --account inkeep.1password.com
+# Prerequisites
+brew install 1password-cli
+# Then: 1Password app → Settings → Developer → Enable "Integrate with 1Password CLI"
 
-# Pull just one skill's secrets
-./secrets/setup.sh --skill media-upload --account inkeep.1password.com
+# Pull secrets for a skill
+./secrets/setup.sh --skill graphics --account inkeep.1password.com
+
+# Or pull all at once
+./secrets/setup.sh --account inkeep.1password.com
 
 # See available skills and their env vars
 ./secrets/setup.sh --list
 ```
 
-See [secrets/secrets.json](secrets/secrets.json) for the full mapping. Requires 1Password CLI (`brew install 1password-cli`).
+See [secrets/secrets.json](secrets/secrets.json) for the full mapping.
+
+### `/graphics` setup
+
+`/graphics` requires extra setup beyond secrets — two MCP servers and a Figma Desktop plugin. The setup script handles most of it:
+
+```bash
+./secrets/setup.sh --skill graphics --account inkeep.1password.com
+```
+
+This automatically:
+1. Pulls API keys (Quiver, OpenAI, Gemini, Brandfetch) from 1Password → `~/.claude/settings.json`
+2. Registers `figma` + `figma-console` MCP servers in `~/.claude.json`
+3. Prompts for your Figma Personal Access Token (create at [figma.com/settings](https://www.figma.com/settings) → Security → Personal access tokens, check all scopes under **Files** and **Design systems**)
+4. Prints Desktop Bridge setup instructions
+
+**One manual step** the script can't automate — import the Figma Desktop Bridge plugin:
+
+1. Open **Figma Desktop** (not browser)
+2. Right-click canvas → Plugins → Development → **Import plugin from manifest...**
+3. Select the path from: `npx figma-console-mcp@latest --print-path`
+
+After import, **launch the plugin each session** before using `/graphics`: right-click canvas → Plugins → Development → Figma Desktop Bridge → wait for green "MCP Ready."
+
+**Then restart Claude Code** (MCP servers load at startup).
+
+**Verify:** Run `/graphics Create a test blue circle` — if a circle appears in your Figma file, you're set.
+
+<details>
+<summary>Troubleshooting</summary>
+
+| Problem | Fix |
+|---|---|
+| `/graphics` says MCP tools not found | Restart Claude Code (MCP servers load at startup) |
+| Figma token prompt was skipped | Re-run from a normal terminal (not Claude Code's terminal), or set manually: see `jq` command printed by the script |
+| Bridge plugin not connecting | Make sure Figma **Desktop** app (not browser). Re-launch plugin from Plugins menu. Check `figma_get_status` in Claude Code. |
+| "Permission denied" on Figma file | Ask team admin to share the [Graphics Workspace](https://www.figma.com/design/S5kGTPZ0kSjmSxusJ56QJH/) |
+| Auth errors after ~90 days | Figma tokens expire. Regenerate at [figma.com/settings](https://www.figma.com/settings) and update `~/.claude.json` |
+
+</details>
 
 ## Update
 
