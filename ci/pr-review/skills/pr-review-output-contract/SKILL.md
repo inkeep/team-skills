@@ -106,7 +106,7 @@ Every finding **must** include at least one reference (outside of the line numbe
 
 **In-repo reference rule:** All references to files within this repo (code, skills, AGENTS.md, reviewer agents, etc.) **must** include specific line number(s) and a brief (<1 sentence) description of what's at those lines that relates to the issue or fix. This makes the reasoning traceable — a reader should be able to click through and immediately see the justification.
 
-**Use markdown hyperlinks** `[text](url)` for ALL references. The `pr-context` skill provides the GitHub URL base pattern for constructing links.
+**Use the reference format that matches the current review context.** When `pr-context` provides a GitHub URL base pattern, use markdown hyperlinks `[text](url)` for in-repo references. In local review mode, where `pr-context` explicitly says no GitHub URL base is available, use repo-relative `path:line — description` strings for in-repo references instead. External docs should still use markdown hyperlinks.
 
 | Type | Format | Example |
 |------|--------|---------|
@@ -123,6 +123,18 @@ Use the pattern from `pr-context`:
 ```
 https://github.com/{repo}/blob/{sha}/{path}#L{line}
 https://github.com/{repo}/blob/{sha}/{path}#L{start}-L{end}
+```
+
+**Local review mode:**
+
+If `pr-context` says there is no GitHub URL base, use plain repo-relative references for in-repo citations:
+```json
+{
+  "references": [
+    "src/api/users.ts:28 — parameterized query pattern",
+    "ci/pr-review/agents/pr-review-security-iam.md:42-55 — auth checklist"
+  ]
+}
 ```
 
 **Examples:**

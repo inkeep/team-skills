@@ -58,6 +58,7 @@ All execution state lives in `tmp/ship/` (gitignored). The only committed artifa
 | `tmp/ship/last-prompt.md` | Last re-injection prompt — the full prompt the stop hook constructed on its most recent re-entry, for debugging | Stop hook | Each re-entry (overwritten) | Debugging only |
 | `tmp/ship/spec.json` | User stories — acceptance criteria, priority, pass/fail status | Phase 2 (/implement) | Each iteration (sets `passes: true`) | implement.sh, iterations, Ship |
 | `tmp/ship/progress.txt` | Iteration log — what was done, learnings, blockers | Phase 2 start (implement.sh) | Each iteration (append) | Iterations, Ship |
+| `tmp/ship/review-output.md` | Latest portable local review summary from the pre-push review gate | Pre-push local review gate | Each local review pass (overwrite) | Ship, user |
 | `tmp/ship/qa-progress.json` | QA scenarios and results — status, notes | Phase 3 (/qa) | Each scenario execution (/qa) | /pr (renders Manual QA), Ship (phase gate) |
 | SPEC.md *(committed)* | Product + tech spec — requirements, design, decisions, non-goals | Phase 1 (/spec or user) | Phase 1 only | All phases, iterations |
 
@@ -67,10 +68,11 @@ All execution state lives in `tmp/ship/` (gitignored). The only committed artifa
 |---|---|---|
 | **Phase 1 end** | **Run** `ship-init-state.sh` — creates both `state.json` and `loop.md` (see Phase 1, Step 3) | — |
 | **Phase 2 start** | — | `/implement` creates `tmp/ship/spec.json`, `tmp/ship/implement-prompt.md`, `tmp/ship/progress.txt` |
+| **Pre-push local review gate** | — | `run-local-review.sh` stages the portable review bundle into `tmp/ship/pr-review-plugin/` and overwrites `tmp/ship/review-output.md` with the latest markdown summary |
 | **Any phase → next** | Set `currentPhase` to next phase, append completed phase to `completedPhases`, refresh `lastUpdated` | — |
 | **User amendment** (any phase) | Append to `amendments[]`: `{"description": "...", "status": "pending"}` | — |
 | **Iteration completes a story** | — | `tmp/ship/spec.json`: set story `passes: true`. `tmp/ship/progress.txt`: append iteration log. |
-| **PR created** (after Phase 2) | Set `prNumber` | Draft PR created on GitHub |
+| **PR created** (after pre-push local review) | Set `prNumber` | Draft PR created on GitHub |
 | **Phase 3 QA execution** | — | `/qa` creates `tmp/ship/qa-progress.json` with planned scenarios, then updates status incrementally during execution |
 | **Phase 6 → completed** | Set `currentPhase: "completed"` | Stop hook deletes `loop.md` |
 | **Stop hook re-entry** | — | `loop.md`: iteration incremented. Prompt re-injected from `state.json` + SKILL.md. |
@@ -78,7 +80,7 @@ All execution state lives in `tmp/ship/` (gitignored). The only committed artifa
 
 ### PR description
 
-The PR body is a living document — not write-once. A draft PR with a stub body is created after Phase 2 (implementation). The full PR body is written after Phase 3 (testing is complete) by loading `/pr`. It then evolves as documentation and review phases proceed.
+The PR body is a living document — not write-once. A draft PR with a stub body is created after implementation and the pre-push local review gate. The full PR body is written after Phase 3 (testing is complete) by loading `/pr`. It then evolves as documentation and review phases proceed.
 
 Load `/pr` skill for all PR body work — writing the full body and updating it after subsequent phases. The skill owns the template, section guidance, and principles (self-contained, stateless).
 
@@ -123,14 +125,15 @@ Before starting Phase 0, create a task for every phase using `TaskCreate`. This 
 Create these tasks in order:
 
 1. **Phase 0: Detect context and starting point** — Recovery check, feature name, worktree, capability detection, scope calibration
-2. **Phase 1: Spec authoring and handoff** — Scaffold spec, investigate, Load /spec skill, validate, activate state
-3. **Phase 2: Implementation** — Build understanding, Load /implement skill, post-implementation review
-4. **Create draft PR** — Push branch, create draft PR, set prNumber in state.json
-5. **Phase 3: Testing** — Load /qa skill, run test plan, verify exit gate
-6. **Write PR body** — Capture screenshots if applicable, Load /pr skill to write full body
-7. **Phase 4: Documentation** — Load /docs skill, write/update all affected documentation surfaces
-8. **Phase 5: Review iteration loop** — Mark PR ready, Load /review skill, iterate until all threads resolved and CI green
-9. **Phase 6: Completion** — Run completion checklist, report to user, output completion promise
+2. **Phase 1: Spec authoring and handoff** — Scaffold spec, investigate, load `/spec`, validate, activate state
+3. **Phase 2: Implementation** — Build understanding, load `/implement`, post-implementation review
+4. **Pre-push local review gate** — Run portable local review, evaluate findings, and fix validated issues before pushing
+5. **Create draft PR** — Push branch, create draft PR, set prNumber in state.json
+6. **Phase 3: Testing** — Load `/qa`, run test plan, verify exit gate
+7. **Write PR body** — Capture screenshots if applicable, load `/pr` to write full body
+8. **Phase 4: Documentation** — Load `/docs`, write/update all affected documentation surfaces
+9. **Phase 5: Review iteration loop** — Mark PR ready, load `/review`, iterate until all threads resolved and CI green
+10. **Phase 6: Completion** — Run completion checklist, report to user, output completion promise
 
 As each phase begins, mark its task `in_progress`. When the phase completes, mark it `completed`.
 
@@ -281,9 +284,38 @@ After implementation completes, verify that you are satisfied with the output be
 
 ---
 
+### Pre-push local review gate
+
+Before pushing the branch or creating a draft PR, run the portable local review gate. Do not assume the target repo vendors the review plugin — stage the bundle into `tmp/ship/` first, then execute the staged copy.
+
+Run it from the repo root via this skill's helper script:
+
+```bash
+<path-to-skill>/scripts/run-local-review.sh
+```
+
+If the branch targets something other than the auto-detected base, pass `--target <branch>` explicitly.
+
+If Docker execution is active for this `/ship` run, execute the same helper in Docker mode so the review runs inside the repo sandbox rather than on the host:
+
+```bash
+<path-to-skill>/scripts/run-local-review.sh --docker [compose-file]
+```
+
+The helper stages the portable review plugin into `${CLAUDE_SHIP_DIR:-tmp/ship}/pr-review-plugin/`, then runs `${CLAUDE_SHIP_DIR:-tmp/ship}/pr-review-plugin/scripts/pr-review.sh` either on the host or inside the Docker sandbox. This mirrors the `/implement` pattern: the container consumes staged artifacts from the bind-mounted repo, not the host plugin install.
+
+The helper auto-detects the target branch by default (PR base branch if available, otherwise the repo default branch / `origin/HEAD`, then `main`). It writes the latest markdown summary to `${CLAUDE_SHIP_DIR:-tmp/ship}/review-output.md`, stores run artifacts under `${CLAUDE_SHIP_DIR:-tmp/ship}/local-review-runs/`, and updates `${CLAUDE_SHIP_DIR:-tmp/ship}/local-review-latest.txt`. Read the summary after each pass and evaluate the findings like any other reviewer feedback:
+
+- Do not blindly apply every suggestion. Validate each one against the diff, codebase patterns, and the spec.
+- Fix high-confidence issues you agree with directly. If the right fix is unclear, investigate before changing code.
+- Keep the loop bounded. Run at most **2 total local-review passes** before pushing. The first pass establishes the baseline; run a second pass only if you made fixes from the first pass.
+- Exit the gate when the latest summary is no longer a clear blocker, or when remaining disagreements are conscious, evidence-backed decisions you are willing to carry into external review.
+
+---
+
 ### Create draft PR
 
-After Phase 2 completes and before entering Phase 3. Do not update `currentPhase` — this is Phase 2's final act.
+After Phase 2 and the pre-push local review gate complete and before entering Phase 3. Do not update `currentPhase` — this is still pre-Phase-3 transition work.
 
 **Load:** `references/pr-creation.md` — push the branch, create a draft PR with a stub body, and set `prNumber` in `tmp/ship/state.json`. If `gh` is unavailable, set `prNumber: null` and continue — the workflow adapts (see the reference file for degradation).
 
@@ -443,4 +475,3 @@ These govern your behavior throughout:
 | `/review` skill `scripts/fetch-pr-feedback.sh` | Fetching review feedback and CI/CD status (Phase 5, via /review). Canonical copies live in the `/review` skill — do not duplicate. | Agent uses wrong/deprecated `gh` commands, misses inline review comments |
 | `/review` skill `scripts/investigate-ci-failures.sh` | Investigating CI/CD failures with logs (Phase 5, via /review). Canonical copies live in the `/review` skill — do not duplicate. | Agent struggles to find run IDs, fetch logs, or compare with main |
 | `/debug` skill | Diagnosing root cause of failures encountered during implementation (Phase 2) or testing (Phase 3) — when the cause isn't obvious from the error | Shotgun debugging: fixing symptoms without understanding root cause, wasted iteration cycles |
-

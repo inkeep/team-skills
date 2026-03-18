@@ -1,4 +1,4 @@
-Use when: After Phase 2 (Implementation) — creating the draft PR so subsequent phases can post results as PR comments
+Use when: After implementation and the pre-push local review gate — creating the draft PR so subsequent phases can post results as PR comments
 Priority: P0
 Impact: Without early PR creation, /qa cannot post its checklist as a PR comment and QA results are lost on context compaction
 
@@ -6,7 +6,7 @@ Impact: Without early PR creation, /qa cannot post its checklist as a PR comment
 
 # Draft PR Creation
 
-Create a draft PR with a stub body after implementation completes. This gives subsequent phases (QA testing, documentation) a PR to post results to. The full PR body is written later by `/pr` after testing is complete.
+Create a draft PR with a stub body after implementation and the pre-push local review gate complete. This gives subsequent phases (QA testing, documentation) a PR to post results to. The full PR body is written later by `/pr` after testing is complete.
 
 ## Steps
 
