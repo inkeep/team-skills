@@ -171,7 +171,7 @@ export function IconBrowser({ groups: initialGroups, allIcons: initialIcons }: I
   const handleDrop = useCallback(
     async (e: React.DragEvent, targetSection: string) => {
       e.preventDefault();
-      e.currentTarget.classList.remove("ring-2", "ring-[#3784FF]");
+      e.currentTarget.classList.remove("ring-2", "ring-primary");
       const iconKey = e.dataTransfer.getData("text/plain");
       if (!iconKey) return;
 
@@ -186,11 +186,11 @@ export function IconBrowser({ groups: initialGroups, allIcons: initialIcons }: I
   const handleDragOver = useCallback((e: React.DragEvent) => {
     e.preventDefault();
     e.dataTransfer.dropEffect = "move";
-    e.currentTarget.classList.add("ring-2", "ring-[#3784FF]");
+    e.currentTarget.classList.add("ring-2", "ring-primary");
   }, []);
 
   const handleDragLeave = useCallback((e: React.DragEvent) => {
-    e.currentTarget.classList.remove("ring-2", "ring-[#3784FF]");
+    e.currentTarget.classList.remove("ring-2", "ring-primary");
   }, []);
 
   return (
@@ -205,7 +205,7 @@ export function IconBrowser({ groups: initialGroups, allIcons: initialIcons }: I
         onBatchDelete={() => setDeleteTarget("__batch__")}
       />
 
-      <p className="text-xs text-gray-500 mb-8">
+      <p className="text-xs text-muted-foreground mb-8">
         Click to select. Right-click for actions. Drag icons between sections to move them.
       </p>
 
@@ -226,30 +226,30 @@ export function IconBrowser({ groups: initialGroups, allIcons: initialIcons }: I
               <Checkbox
                 checked={allInGroupSelected}
                 onCheckedChange={() => handleSelectGroup(group.icons)}
-                className="data-[state=checked]:bg-[#3784FF] data-[state=checked]:border-[#3784FF]"
+                className="data-[state=checked]:bg-primary data-[state=checked]:border-primary"
               />
-              <h2 className="text-lg font-semibold text-gray-800">
+              <h2 className="text-lg font-semibold text-foreground">
                 {group.name}
               </h2>
-              <span className="text-sm text-[#3784FF] font-medium">
+              <span className="text-sm text-primary font-medium">
                 {group.count}
               </span>
               {selectedInGroup > 0 && (
-                <span className="text-xs text-green-600">
+                <span className="text-xs text-primary/70">
                   ({selectedInGroup} selected)
                 </span>
               )}
             </div>
 
             {group.description && (
-              <p className="text-xs mb-3 max-w-3xl text-gray-500">
+              <p className="text-xs mb-3 max-w-3xl text-muted-foreground">
                 {group.description}
               </p>
             )}
 
             <div
               className={`rounded-2xl p-6 transition-all duration-200 ${
-                isDarkBg ? "bg-gray-800" : "bg-gray-50"
+                isDarkBg ? "bg-secondary" : "bg-muted"
               }`}
               onDrop={(e) => handleDrop(e, folderName)}
               onDragOver={handleDragOver}
@@ -322,7 +322,7 @@ export function IconBrowser({ groups: initialGroups, allIcons: initialIcons }: I
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction onClick={submitDelete} className="bg-red-600 hover:bg-red-700">
+            <AlertDialogAction onClick={submitDelete} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
               Delete
             </AlertDialogAction>
           </AlertDialogFooter>

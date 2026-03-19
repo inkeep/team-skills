@@ -102,8 +102,8 @@ export function DownloadToolbar({
 
   return (
     <div className="sticky top-0 z-50">
-      <div className="bg-white border border-gray-200 rounded-xl px-4 py-3 mb-6 flex items-center gap-3 flex-wrap shadow-lg">
-        <span className="text-sm text-[#3784FF] font-medium">
+      <div className="bg-card border border-border rounded-xl px-4 py-3 mb-6 flex items-center gap-3 flex-wrap shadow-lg">
+        <span className="text-sm text-primary font-medium">
           {count} selected
         </span>
 
@@ -114,7 +114,7 @@ export function DownloadToolbar({
           Clear
         </Button>
 
-        <div className="h-6 w-px bg-gray-200" />
+        <div className="h-6 w-px bg-border" />
 
         {/* Download SVG */}
         <Button size="sm" variant="outline" onClick={() => download("svg")} disabled={downloading} className="text-xs">
@@ -123,7 +123,7 @@ export function DownloadToolbar({
 
         {/* Download PNG */}
         <Popover>
-          <PopoverTrigger className="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-xs font-medium border border-input bg-background shadow-xs hover:bg-accent hover:text-accent-foreground h-8 px-3 disabled:opacity-50" disabled={downloading}>
+          <PopoverTrigger className="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-xs font-medium border border-input bg-card shadow-xs hover:bg-accent hover:text-accent-foreground h-8 px-3 cursor-pointer disabled:opacity-50" disabled={downloading}>
             ↓ PNG
           </PopoverTrigger>
           <PopoverContent className="w-64 p-3" side="bottom">
@@ -142,7 +142,7 @@ export function DownloadToolbar({
                 <input
                   type="number" min="8" max="4096" placeholder="e.g. 1024"
                   value={customSize} onChange={(e) => setCustomSize(e.target.value)}
-                  className="flex-1 h-8 rounded-md border border-input px-2 text-xs focus:outline-none focus:ring-1 focus:ring-[#3784FF]"
+                  className="flex-1 h-8 rounded-md border border-input bg-background px-2 text-xs focus:outline-none focus:ring-1 focus:ring-ring"
                 />
                 <span className="text-xs text-muted-foreground">px</span>
               </div>
@@ -153,12 +153,12 @@ export function DownloadToolbar({
           </PopoverContent>
         </Popover>
 
-        <div className="h-6 w-px bg-gray-200" />
+        <div className="h-6 w-px bg-border" />
 
         {/* Move to section */}
         {sections.length > 0 && (
           <Popover>
-            <PopoverTrigger className="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-xs font-medium border border-input bg-background shadow-xs hover:bg-accent hover:text-accent-foreground h-8 px-3">
+            <PopoverTrigger className="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-xs font-medium border border-input bg-card shadow-xs hover:bg-accent hover:text-accent-foreground h-8 px-3 cursor-pointer">
               Move to…
             </PopoverTrigger>
             <PopoverContent className="w-48 p-2 max-h-64 overflow-y-auto" side="bottom">
@@ -176,7 +176,7 @@ export function DownloadToolbar({
         )}
 
         {/* Delete */}
-        <Button size="sm" variant="outline" onClick={onBatchDelete} className="text-xs text-red-500 hover:text-red-600 hover:bg-red-50">
+        <Button size="sm" variant="outline" onClick={onBatchDelete} className="text-xs text-destructive hover:text-destructive hover:bg-destructive/10">
           Delete
         </Button>
       </div>

@@ -15,9 +15,9 @@ export default function Home() {
   return (
     <main className="max-w-7xl mx-auto px-6 py-10">
       <h1 className="text-3xl font-bold mb-2">Icon Preview</h1>
-      <p className="text-gray-400 text-sm mb-8">
+      <p className="text-muted-foreground text-sm mb-8">
         {styleGroups
-          ? `${uniqueGroups} style groups from classification. Click to copy, Shift+click to select for download.`
+          ? `${uniqueGroups} style groups from classification. Click to select, right-click for actions.`
           : `${uniqueGroups} groups from folder structure. Add classification JSON for style-based grouping.`}
       </p>
 
@@ -27,7 +27,7 @@ export default function Home() {
         <Stat value={classified} label="Classified" />
       </div>
 
-      <p className="text-xs text-gray-400 mb-2">
+      <p className="text-xs text-muted-foreground mb-2">
         Click to select · Right-click for actions · Drag between sections to move
       </p>
 
@@ -45,9 +45,9 @@ export default function Home() {
 
 function Stat({ value, label }: { value: number; label: string }) {
   return (
-    <div className="bg-white border border-gray-200 rounded-lg px-5 py-3 shadow-sm">
-      <div className="text-2xl font-bold text-[#3784FF]">{value}</div>
-      <div className="text-xs text-gray-500 mt-0.5">{label}</div>
+    <div className="bg-card border border-border rounded-lg px-5 py-3 shadow-sm">
+      <div className="text-2xl font-bold text-primary">{value}</div>
+      <div className="text-xs text-muted-foreground mt-0.5">{label}</div>
     </div>
   );
 }

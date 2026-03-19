@@ -105,15 +105,15 @@ export function IconCard({
           className={`
             group relative w-20 h-20 rounded-lg flex items-center justify-center
             cursor-pointer transition-all duration-150 p-1.5
-            ${darkBg ? "bg-[#3a3a3a] hover:bg-[#444]" : "bg-white hover:bg-gray-50"}
+            ${darkBg ? "bg-secondary hover:bg-secondary/80" : "bg-card hover:bg-accent"}
             ${selected
-              ? "ring-2 ring-[#3784FF] ring-offset-2 ring-offset-transparent"
-              : "hover:ring-1 hover:ring-gray-300"
+              ? "ring-2 ring-primary ring-offset-2 ring-offset-transparent"
+              : "hover:ring-1 hover:ring-border"
             }
           `}
         >
           {selected && (
-            <div className="absolute top-1 right-1 w-4 h-4 rounded-sm bg-[#3784FF] border-2 border-[#3784FF] flex items-center justify-center z-10">
+            <div className="absolute top-1 right-1 w-4 h-4 rounded-sm bg-primary border-2 border-primary flex items-center justify-center z-10">
               <svg width="10" height="10" viewBox="0 0 10 10" fill="none">
                 <path d="M2 5L4 7L8 3" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
               </svg>
@@ -128,7 +128,7 @@ export function IconCard({
             draggable={false}
           />
 
-          <div className="absolute bottom-0 left-0 right-0 text-center text-[8px] py-0.5 px-1 truncate rounded-b-lg transition-opacity duration-150 opacity-0 group-hover:opacity-100 bg-black/85 text-white">
+          <div className="absolute bottom-0 left-0 right-0 text-center text-[8px] py-0.5 px-1 truncate rounded-b-lg transition-opacity duration-150 opacity-0 group-hover:opacity-100 bg-popover text-popover-foreground shadow-sm">
             {displayName}
           </div>
         </div>
@@ -181,7 +181,7 @@ export function IconCard({
 
         <ContextMenuItem
           onClick={() => onDelete?.(iconKey)}
-          className="text-red-500 focus:text-red-500"
+          className="text-destructive focus:text-destructive"
         >
           Delete
         </ContextMenuItem>

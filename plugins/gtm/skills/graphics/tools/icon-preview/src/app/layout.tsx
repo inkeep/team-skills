@@ -17,7 +17,7 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en" className={cn("font-sans", geist.variable)}>
-      <body className="bg-[#FAFAFA] text-gray-900 antialiased">
+      <body className="bg-background text-foreground antialiased">
         {children}
       </body>
     </html>
