@@ -65,11 +65,31 @@ Flags can be combined: `search --skill eng:spec --branch feat/auth "credential"`
 
 **Scoring:** Text terms are weighted: `lastUserMessages` (3x), `firstUserMessages` (2x), `continuationSummaries` (2x), structured fields like skills/files/PRs/branches (1x). Results are sorted by score then recency.
 
-The output is JSON — read it and synthesize human-readable summaries per Step 4.
+The output is JSON — read it and synthesize human-readable summaries per Step 5.
 
-## Step 3: Grep fallback (Layer 2)
+## Step 3: Semantic search (Layer 2)
 
-If the search subcommand returns no matches (the keyword may be buried in the middle of a conversation, not captured in bookends or summaries):
+If the keyword search returns few or weak matches, or the user's query is conceptual rather than keyword-based (e.g. "the conversation where we were figuring out how to handle credential refresh"), use episodic-memory for semantic vector search:
+
+```bash
+episodic-memory search "credential refresh flow for browser extensions"
+```
+
+This embeds the query using a local MiniLM model and searches against 384-dimensional vectors of every user/assistant exchange across all sessions. It finds conversations by meaning, not just keyword overlap.
+
+**When to use semantic vs keyword search:**
+- User gives exact terms ("posthog", "PR #2212", "manage-schema.ts") → keyword search (Layer 1) first
+- User describes a concept or activity ("the one where we were debugging auth") → semantic search
+- Keyword search returns 0 results or nothing relevant → try semantic search
+- Both can be run and results merged — they're complementary
+
+**Dependency:** Requires [episodic-memory](https://github.com/obra/episodic-memory) installed at `~/.claude/oss-repos/episodic-memory/` with `npm link`. Run `episodic-memory sync` periodically to index new sessions (runs automatically via SessionStart hook if installed as a plugin).
+
+**First-time setup:** The initial sync embeds all sessions (~5-10 minutes). After that, incremental syncs are fast.
+
+## Step 4: Grep fallback (Layer 3)
+
+If both keyword and semantic search return no matches (the keyword may be buried in the middle of a conversation, not captured in bookends, summaries, or embedding text):
 
 ```bash
 grep -rl "KEYWORD" ~/.claude/projects/*/*.jsonl
@@ -79,7 +99,7 @@ For each hit, extract first + last user messages using `head`/`tail` and inline 
 
 Compression does NOT delete messages from the JSONL file — it only affects the live context window. The full history is always on disk, so grep always searches complete content.
 
-## Step 4: Present results
+## Step 5: Present results
 
 For every match, synthesize a human-readable summary and explain **why** this session matches the query. Do NOT just dump raw field values — interpret them.
 
