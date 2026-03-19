@@ -1151,34 +1151,65 @@ If the graphic involves a **novel composition** (not adapting a template or exis
 
 Skip this for template-based work (blog covers using established patterns, social images from existing layouts, icon variations). The intent is to catch fundamental direction issues before polish investment — not to add a gate on every graphic.
 
-#### Phase E: Self-critique → Polish (iteration loop)
+#### Phase E: Self-critique → Elevate → Polish (3-pass iteration loop)
 
-**Goal:** Iteratively improve the graphic before it reaches the reviewer. The reviewer evaluates polished work, not first drafts.
+**Goal:** Iteratively push the graphic from correct to rich to exceptional before it reaches the reviewer. The Build Spec is your floor, not your ceiling — meeting success criteria means the graphic is correct, not that it's done. Each pass ratchets quality upward.
+
+**Load:** `references/craft-elevation.md` for per-element elevation strategies, the visual depth stack, and contextual elevation prompts.
 
 **Before major revisions:** If the user requests substantial changes to a composed design (not minor tweaks), duplicate the current frame and rename it as a version snapshot (e.g., "Intelligence Layer — v1"). Work on the copy. This provides safe rollback and enables side-by-side comparison when evaluating changes with the user.
 
-**Self-critique loop (min 1 iteration, max 3):**
+**Three-pass self-critique (all 3 passes are mandatory, not optional):**
 
-1. **Capture at two resolutions:**
-   - Full resolution: `figma_capture_screenshot` at default scale
-   - Thumbnail: export at 400px width (`node.exportAsync({ format: 'PNG', constraint: { type: 'WIDTH', value: 400 } })`)
+Each pass captures at two resolutions before evaluating:
+- Full resolution: `figma_capture_screenshot` at default scale
+- Thumbnail: export at 400px width (`node.exportAsync({ format: 'PNG', constraint: { type: 'WIDTH', value: 400 } })`)
 
-2. **Evaluate against the Build Spec's success criteria.** For each criterion in the spec, assess: does the current output meet it? Be honest — "close enough" is not passing.
+**Pass 1: Structural correctness — "Is it right?"**
 
-3. **Identify the weakest element.** You MUST identify at least one area for improvement per iteration. If you can't find one, you're not looking critically enough. Common blindspots:
-   - Elements that technically exist but look generic (colored circles instead of illustrated avatars, plain text instead of styled UI elements)
-   - Composition that reads at full size but collapses at 400px thumbnail
-   - Work that follows brand rules but lacks the specific warmth/personality of the brand
-   - Sub-elements that were improvised from memory rather than built from visual references
+Evaluate against the Build Spec's success criteria. For each criterion, assess: does the current output meet it? Be honest — "close enough" is not passing.
 
-4. **Fix the weakness.** Make the improvement. Screenshot after the fix to verify.
+Identify and fix:
+- Missing elements from the Build Spec
+- Broken brand tokens (wrong colors, wrong fonts, wrong spacing)
+- Layout or composition errors (overflow, misalignment, wrong hierarchy)
+- Elements that were in the spec but got simplified or skipped during build
 
-5. **Re-evaluate.** Does the output now meet the success criteria? Has the fix introduced new issues?
+**Do not proceed to Pass 2 until all success criteria are met.**
 
-6. **Repeat or proceed.** If success criteria are met and no critical weaknesses remain → proceed to the reviewer (Step 5). If not → iterate (up to 3 rounds total).
+**Pass 2: Craft elevation — "Is it rich?"**
 
-**After the self-critique loop, also do:**
-- **Alignment and spacing** — consistent spacing, proper alignment, visual balance
+This is the pass that separates flat output from professional output. For EVERY element in the composition (not just the weakest one), evaluate against the elevation strategies in `references/craft-elevation.md`:
+
+1. **Count the visual depth stack layers.** How many of the 6 layers (background texture, atmospheric depth, structural elements, content, accent details, interaction cues) are present? If ≤3, the composition will look flat — identify which layers are missing and add them.
+
+2. **Element-by-element elevation scan.** Walk every Tier 2 atom and ask: "Is this at 'Correct' or 'Elevated' per the craft-elevation strategies?" For each element still at "Correct":
+   - What would a senior designer add that you skipped?
+   - What subtle detail would reward closer inspection?
+   - Is there visual texture, or is it a flat fill/shape?
+
+3. **Contextual richness check.** Reason from the Creative Brief:
+   - Does the audience get richness they'll appreciate? (Developer audience → code-as-visual, monospace craft. Executive audience → editorial composition, bold data.)
+   - Does the format get the right treatment? (Blog cover → thumbnail punch. Slide graphic → supports the speaker's narrative.)
+   - Does the content earn its visual weight? (Product mockup → realistic chrome and contextual data. Diagram → properly styled nodes and meaningful connectors.)
+
+4. **Implement at least 2 elevations.** Fix the elements that have the most room to grow. Screenshot after each fix.
+
+**Every element must receive craft investment — there are no "background" elements that deserve less attention.** The horse-drawing problem (front-loading effort on the hero, phoning in everything else) is the primary failure mode this pass prevents.
+
+**Pass 3: Cohesion and polish — "Is it a unified, premium piece?"**
+
+Zoom out from individual elements and evaluate the whole:
+
+1. **Compositional cohesion** — Does everything feel like it belongs in the same visual universe? Consistent lighting direction, shadow style, color temperature, visual language.
+2. **Spacing and rhythm** — Are spacing values from brand tokens (not ad-hoc pixel values)? Does the visual rhythm feel intentional — breathing room where it matters, density where it matters?
+3. **Thumbnail integrity** — At 400px, does the hierarchy hold? Does the focal point dominate? Is the headline readable?
+4. **Micro-polish** — Alignment precision, consistent corner radii, shadow consistency, proper text truncation if needed.
+5. **Final question:** Would this look at home next to a Stripe, Linear, or Vercel marketing graphic? If not, what's the gap?
+
+Fix any issues found. Screenshot after fixes to verify.
+
+**After all 3 passes, also do:**
 - **Layer organization** — descriptive names on all layers, logical layer order (background → structure → content → decorative)
 - **Aspect ratio verification** — for imported SVGs, compare each logo's rendered proportions against its source viewBox
 - **Clean up** — delete the "Working — Atoms" frame, remove stray elements
