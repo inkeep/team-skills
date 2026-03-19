@@ -1820,6 +1820,7 @@ Must have:
 - [ ] Typography uses brand fonts
 - [ ] Output format matches the use case (Figma for editable, Quiver for vector illustrations/icons, GPT Image for photorealistic raster, D2 for technical)
 - [ ] Atom generation audit completed — every Tier 2 atom has quality-based method justification, compound atoms decomposed to leaf elements
+- [ ] Craft elevation loop completed — all 3 passes run (+ recursive cycles if warranted), depth stack ≥5 layers, every Tier 2 atom at "Elevated" per craft-elevation strategies
 - [ ] Deliverable shared with user (Figma URL or file path)
 - [ ] For Figma: no placeholder content — every element is real (actual logos, icons, text)
 - [ ] For Figma: visual checkpoint completed at each workflow phase
