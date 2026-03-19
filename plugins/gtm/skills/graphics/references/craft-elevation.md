@@ -137,6 +137,58 @@ For each element type, what separates "Correct" from "Elevated." Evaluate each e
 
 ---
 
+## AI failure mode callouts: product mockups
+
+Product mockups and UI recreations are where AI models struggle most. These are the specific patterns to watch for during self-critique — they're characteristic of AI-generated mockups vs designer-built ones.
+
+**Failure: "Rectangles with labels" syndrome**
+The model creates colored rectangles with text inside them and calls it a UI. A Slack thread becomes gray boxes with names. A dashboard becomes rectangles in a grid. This is the #1 failure — the model satisfies "this element exists" without achieving "this element looks like the real UI."
+→ **Fix:** Every UI element must have its real visual treatment. A Slack message has: avatar (circular, with image or initials), username (bold) + timestamp (muted, smaller), message text (different font weight from the name), and specific padding/spacing that Slack uses. A button has: specific corner radius, specific padding, specific font size, hover state implied by shadow. Compare against the visual reference from Step 1c — if you don't have one, you're improvising, and this failure is almost guaranteed.
+
+**Failure: Generic/placeholder content**
+The model fills mockups with "Lorem ipsum," "User Name," "Item 1, Item 2, Item 3," or round numbers like "100" and "50%." Real product UI has irregular, contextual data.
+→ **Fix:** Content must tell the same story as the graphic's key message. If the graphic is about "Agents in Slack," the messages should be realistic agent interactions — a user asking a product question, the agent responding with a specific answer, approve/deny buttons for a tool call. If showing metrics, use plausible irregular numbers (847, 23.4%, 12ms) not round placeholders (100, 50%, 0ms).
+
+**Failure: Missing UI chrome**
+The model builds the content area but skips the container — no window titlebar, no tab bar, no status indicators, no scroll position hint. The mockup looks like a wireframe, not a product.
+→ **Fix:** Every mockup needs its chrome layer. For a chat interface: header bar with channel/conversation name + status. For a dashboard: sidebar navigation with active state. For a web app: browser chrome or at minimum a top bar. For mobile: status bar + home indicator. These frame the content and signal "this is a real product."
+
+**Failure: Wrong proportions and spacing**
+The model uses arbitrary spacing — too much padding, elements too far apart, text too large relative to the container. Real product UI is denser than marketing layouts. A chat message bubble has 8-12px padding, not 24px. A sidebar has compact 32px row height, not spacious 56px.
+→ **Fix:** Product mockups use product tokens (Inter font, white/dark backgrounds, 6-8px border radius, compact spacing) — NOT marketing tokens (Neue Haas, cream backgrounds, 32px radius, generous spacing). The two-layer rule: product tokens INSIDE the mockup, marketing tokens OUTSIDE (the shadow, rotation, corner radius of the mockup frame itself). See `/brand` product-representation and element-patterns references.
+
+**Failure: Flat single-panel presentation**
+The model places the mockup as a flat rectangle on the canvas. No depth, no context, no visual interest.
+→ **Fix:** Apply the mockup treatment recipe from `/brand` element-patterns: float the mockup with brand shadow (blue-tinted glow), add 2-5° rotation for dynamism, use generous corner radius (32px) on the outer frame, let the mockup bleed past the canvas edge for energy. For data-rich mockups, use stacked overlapping panels (sidebar + main, or multiple views layered at offset).
+
+---
+
+## AI failure mode callouts: illustrations
+
+Illustrations using the Inkeep brand system are the second-hardest content type. The three-tier visual language is specific and the model tends to simplify it.
+
+**Failure: Flat single-tier illustrations**
+The model generates illustrations that are all one visual tier — either everything is the same opacity/weight (no depth hierarchy), or everything is solid blue (no scaffolding). The three-tier system (gray scaffolding → blue focal → solid fills) is what creates the brand's distinctive depth, and it's the first thing the model drops.
+→ **Fix:** Every illustration must use ALL three tiers. Check: (1) Are there gray containers at 10-30% opacity forming the background scaffolding? (2) Are there blue-stroke containers at 100% opacity as the focal elements? (3) Are there solid blue fills carrying the meaningful content (icons, data shapes)? If any tier is missing, the illustration is incomplete. Load `content-types/illustration.md` for the exact tier specs.
+
+**Failure: Inconsistent or wrong stroke weights**
+The model uses uniform stroke weight everywhere, or uses weights that don't match the hierarchy (thick strokes on background elements, thin strokes on focal ones — the opposite of correct).
+→ **Fix:** Stroke weight creates the hierarchy: 1.5px for distant/background elements, 3px for standard elements (the default), 4px for emphasis, 6px for focal-point emphasis only. Butt linecaps (NONE), never round. If everything is the same weight, the illustration has no depth. Variable 1.8-2.8px wobble for hand-drawn organic quality.
+
+**Failure: Too few elements / too sparse**
+The model creates an illustration with 2-3 elements when the composition needs 5-7 to feel rich. A "hub-and-spoke" diagram has a center and 2 spokes instead of 4-5. A product illustration shows one panel instead of a layered composition.
+→ **Fix:** Brand illustrations typically have 5-7 distinct visual elements (not counting decorative accents like dot connectors). Count the elements — if you have fewer than 4, the illustration will feel sparse. Add: satellite elements around the focal point, connecting lines with dot endpoints, secondary containers that provide context, accent elements that add visual density without competing for attention.
+
+**Failure: Generic shapes instead of semantic content**
+The model uses circles, squares, and lines as abstract placeholders. A "notification" is represented by a circle. A "document" is a rectangle. These carry no meaning.
+→ **Fix:** Shapes must be semantically meaningful. A notification is an icon with a dot badge. A document is a rectangle with horizontal lines implying text. A user is a simple avatar (circle with head/shoulders silhouette). A message is a speech bubble with line-lengths. Each shape should communicate WHAT it represents, not just THAT something exists. Use Lucide icons inside containers for maximum semantic clarity.
+
+**Failure: Missing accent and connector details**
+The model builds the main elements but skips the connective tissue — no lines between nodes, no dot endpoints, no orbit rings, no swoosh. The illustration looks like scattered objects, not a connected system.
+→ **Fix:** Add connecting elements: curved lines (3px blue stroke) between related elements, small dots (4-6px filled circles) at connection points, orbit ring curves around the focal element. These connective details are what make the illustration feel like a coherent system rather than a collection of shapes. The brand illustration system relies heavily on connectors — check any illustration on the marketing site.
+
+---
+
 ## Contextual elevation reasoning
 
 Elevation strategies must derive from the specific graphic. During self-critique, reason from:
