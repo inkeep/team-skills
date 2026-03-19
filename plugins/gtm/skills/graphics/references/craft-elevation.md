@@ -12,6 +12,8 @@ Impact: Without this, the model produces structurally correct but visually flat 
 
 **The horse-drawing problem:** Without explicit craft intent, models front-load effort on the first few elements and progressively simplify everything else. A Slack mockup gets a detailed header but generic message bubbles. A blog cover gets a polished headline but a flat background. Every element must receive the same craft investment — there are no "background" elements that deserve less attention.
 
+**Relationship to the reviewer:** The reviewer (`prompts/visual-evaluation.md`) independently evaluates brand compliance and craft quality AFTER you submit. This guide is your self-critique tool — what you use DURING construction and the elevation loop to catch issues before the reviewer sees them. The reviewer checks whether rules were followed and craft is present; this guide tells you what to ADD and what AI-characteristic mistakes to FIX. The AI failure mode callouts below are patterns the reviewer will catch and NEEDS REVISION — better to fix them yourself than have the reviewer send you back.
+
 **Two modes of elevation:**
 1. **Add new atoms** — introduce sub-elements, decorative details, accent icons, textural layers, or brand signature elements that weren't in the Build Spec but make the composition richer
 2. **Elevate existing atoms** — push each element from "Correct" (meets spec) to "Elevated" (exceptional craft)
