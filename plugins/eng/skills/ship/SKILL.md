@@ -317,8 +317,23 @@ The helper auto-detects the target branch by default (PR base branch if availabl
 
 - Do not blindly apply every suggestion. Validate each one against the diff, codebase patterns, and the spec.
 - Fix high-confidence issues you agree with directly. If the right fix is unclear, investigate before changing code.
-- Keep the loop bounded. Run at most **2 total local-review passes** before pushing. The first pass establishes the baseline; run a second pass only if you made fixes from the first pass.
+- Keep the loop bounded. The default manual mode is still a baseline pass plus one follow-up pass. When you want autonomous repair, use `--repair-mode auto --max-fix-passes 2` so the helper writes a bounded fix prompt, runs a child Claude repair pass with `--dangerously-skip-permissions`, reruns quality gates, and reruns local review.
 - By default the helper exits non-zero when the parsed review result is still blocking (`REQUEST_CHANGES`, or Critical/Major findings remain). Do not create the PR until that gate is green.
+
+When you want a human checkpoint before the repair pass, use `--repair-mode prompt`. That writes `tmp/ship/review-fix-pass-<n>.prompt.md` and stops so you can inspect or run the prompt yourself.
+
+Examples:
+
+```bash
+# Manual gate only
+<path-to-skill>/scripts/run-local-review.sh
+
+# Write a repair prompt, then stop for inspection
+<path-to-skill>/scripts/run-local-review.sh --repair-mode prompt
+
+# Autonomous repair loop for non-interactive /ship runs
+<path-to-skill>/scripts/run-local-review.sh --repair-mode auto --max-fix-passes 2
+```
 
 ---
 
@@ -489,6 +504,8 @@ These govern your behavior throughout:
 | `references/state-initialization.md` | Activating execution state (Phase 1, Step 3) | Stop hook cannot recover context, loop cannot activate |
 | `references/pr-creation.md` | Creating draft PR after implementation (between Phase 2 and Phase 3) | QA results lost on compaction (no PR to post to), /qa cannot post checklist as PR comment |
 | `references/completion-checklist.md` | Final verification (Phase 6) | Incomplete work ships as "done" |
+| `scripts/run-local-review.sh` | Running the pre-push local review gate, optionally with bounded repair passes | Obvious review issues slip through to the PR, or Ship stalls without a deterministic next step |
+| `scripts/build-local-review-fix-prompt.sh` | Converting a blocking local review result into a bounded repair prompt for human or autonomous follow-up | Repair loop has no machine-generated handoff from review output to fix pass |
 | `scripts/ship-worktree.sh` | Reusing or creating a request-scoped worktree, and cleaning it up after merge | Work bleeds into the main checkout, stale worktrees pile up, completed branches linger |
 | `scripts/ship-upload-pr-asset.js` | Uploading existing screenshots or recordings to Bunny CDN for PR bodies | PR image flow depends on manual GitHub uploads even when a programmatic CDN path is available |
 | `/review` skill `scripts/fetch-pr-feedback.sh` | Fetching review feedback and CI/CD status (Phase 5, via /review). Canonical copies live in the `/review` skill — do not duplicate. | Agent uses wrong/deprecated `gh` commands, misses inline review comments |
