@@ -176,7 +176,7 @@ Step 6:  Export & deliver
 2. `"Graphics: Creative brief"` → pending
 3. `"Graphics: Conceptualize — Propose directions"` → pending
 4. `"Graphics: Collect assets & brand tokens"` → pending
-5. `"Graphics: Write build specs"` → pending
+5. `"Graphics: Write build specs & Start Nested Claudes"` → pending
 6. `"Graphics: Build directions"` → pending
 7. `"Graphics: Self-critique → Review → Polish"` → pending
 8. `"Graphics: Present to user"` → pending (blockedBy: [7])
@@ -818,7 +818,7 @@ If the graphic is adapting an existing asset or following an established pattern
 
 Present the Build Spec to the user for review before generating.
 
-**Mark task "Graphics: Write build specs" (exploration) or "Graphics: Write build spec" (single-pass) as `completed`.**
+**Mark task "Graphics: Write build specs & Start Nested Claudes" (exploration) or "Graphics: Write build spec" (single-pass) as `completed`.**
 
 ### 4. Generate the graphic
 
