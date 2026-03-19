@@ -1043,6 +1043,8 @@ Determine build order — method-aware, from simplest to most complex:
 
 **Goal:** Create each missing element individually. Verify each one before moving on. Do NOT try to build the entire graphic at once.
 
+**Load:** `references/craft-elevation.md` for per-element Correct vs Elevated strategies. Consult during the per-atom craft-check (step 5 below).
+
 ⛔ **Keep each `figma_execute` call to ONE logical operation** — create one element, style one element, move one element. Never create an entire composition in a single call. Large multi-element calls timeout (30s limit), leave partial state when they fail, and skip the per-atom verification that catches issues early. INSTEAD: create → screenshot → verify → next element.
 
 ⚠️ **Auto-layout sizing trap:** After setting `layoutMode` on any frame, **always explicitly set both `layoutSizingHorizontal` and `layoutSizingVertical`** in the same call. Figma's defaults are unpredictable — calling `frame.resize(1280, 720)` then `frame.layoutMode = 'VERTICAL'` can silently change the frame's sizing behavior, causing it to collapse to hug its content or stretch unexpectedly. Follow this pattern:
@@ -1191,7 +1193,7 @@ Identify and fix:
 
 This is the pass that separates flat output from professional output. For EVERY element in the composition (not just the weakest one), evaluate against the elevation strategies in `references/craft-elevation.md`:
 
-1. **Count the visual depth stack layers.** How many of the 6 layers (background texture, atmospheric depth, structural elements, content, accent details, interaction cues) are present? If ≤3, the composition will look flat — identify which layers are missing and add them.
+1. **Count the visual depth stack layers.** How many of the 6 layers (background texture, atmospheric depth, structural elements, content, accent details, interaction cues) are present? Phase D should have caught ≤3 — but composition changes, connector rebuilds, or layout adjustments may have removed layers. Re-verify. If ≤3, add missing layers. Target ≥5 for the stop criteria.
 
 2. **Element-by-element elevation scan.** Walk every Tier 2 atom and ask: "Is this at 'Correct' or 'Elevated' per the craft-elevation strategies?" For each element still at "Correct":
    - What would a senior designer add that you skipped?

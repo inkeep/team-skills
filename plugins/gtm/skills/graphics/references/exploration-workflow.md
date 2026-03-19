@@ -280,13 +280,21 @@ Every new frame is placed inside its section immediately upon creation. Section 
 - `SECTION_PADDING = 60px` inside sections
 - Frame dimensions from the format file (e.g., 1280x720 for blog cover)
 
+**Section stacking:** Sections stack **vertically** (top to bottom) — each new direction appears below the previous one. Iterations within a section go **left to right**. This creates a grid: rows = directions, columns = iterations.
+
+**Initial section size:** Set each section's initial dimensions to match the target frame size plus padding: width = frame width + 2×SECTION_PADDING, height = frame height + 2×SECTION_PADDING. This ensures the section starts at a meaningful size rather than collapsing to zero. Sections expand automatically as more iterations are added to the right.
+
 ### Section creation
 
 ```javascript
 // via figma_execute
 const section = figma.createSection();
 section.name = "Immersive Slack Thread";
-// Sections auto-resize to contain their children
+// Set initial size to match target frame + padding
+const frameW = 1280; // from format file
+const frameH = 720;
+section.resizeWithoutConstraints(frameW + 2 * 60, frameH + 2 * 60);
+// Sections expand as children are added
 // Place frames inside with section.appendChild(frame)
 ```
 

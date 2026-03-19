@@ -1,4 +1,4 @@
-Use when: Phase E self-critique loop — evaluating and elevating each element from "correct" to "exceptional." Loaded by the child agent during the self-critique phase.
+Use when: Phase C (per-atom craft check during build), Phase D (depth stack count during composition), and Phase E (3-pass self-critique elevation loop). First loaded at Phase C — before building atoms — so elevation strategies are available from the start of construction, not just during post-build review.
 Priority: P0
 Impact: Without this, the model produces structurally correct but visually flat output. Elements meet the spec but lack the richness, depth, and craft that distinguish professional design from mechanical execution.
 
