@@ -1207,7 +1207,7 @@ This is the pass that separates flat output from professional output. For EVERY 
    - Does the format get the right treatment? (Blog cover → thumbnail punch. Slide graphic → supports the speaker's narrative.)
    - Does the content earn its visual weight? (Product mockup → realistic chrome and contextual data. Diagram → properly styled nodes and meaningful connectors.)
 
-4. **Implement at least 2 elevations.** Fix the elements that have the most room to grow. Screenshot after each fix.
+4. **Implement at least 2 improvements** — either elevating existing elements (Correct → Elevated) or adding new atoms from the additive scan (swoosh, badges, texture layers, mockup chrome, connector details). Fix the elements that have the most room to grow. Screenshot after each fix.
 
 **Every element must receive craft investment — there are no "background" elements that deserve less attention.** The horse-drawing problem (front-loading effort on the hero, phoning in everything else) is the primary failure mode this pass prevents.
 
@@ -1874,3 +1874,5 @@ Should have:
 - **Image gen without reference images**: When generating brand-adjacent content (3D tiles, atmospheric backgrounds, illustrations), always check the design system for a relevant reference asset. A matching reference dramatically improves on-brand quality on both providers.
 - **Using R3F when Image Gen achieves equivalent fidelity**: Image Gen with a brand asset reference produces equivalent visual quality for most 3D hero elements. Use R3F only when the atom requires fidelity Image Gen cannot achieve — exact hex-color determinism, parametric batch consistency, or CSG boolean precision.
 - **Vague image gen prompts**: "A nice photo" produces generic stock imagery. Include subject, materials, lighting direction, camera perspective, hex colors, and negative constraints.
+- **Skipping the craft elevation loop**: Jumping from Phase D (compose) directly to the reviewer without running the 3-pass elevation loop. The reviewer should see elevated work, not first drafts. A graphic that passes all success criteria but has ≤3 depth stack layers and no brand signature elements (swoosh, dot connectors, accent badges) is not ready for review.
+- **Horse-drawing — front-loading craft on the hero, phoning in the rest**: The headline gets letter-spacing and a swoosh, but the background is a flat solid fill, the mockup is rectangles with labels, and the cards are all the same color. INSTEAD: every element receives equal craft investment. Count Tier 2 atoms at "Elevated" — if the hero is elevated but secondary elements aren't, the composition will look uneven.

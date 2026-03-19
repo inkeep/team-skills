@@ -107,7 +107,7 @@ Use these when writing the "Why this method" and "Why NOT runner-up" columns.
 
 ### Figma shapes vs Quiver (geometry boundary)
 - **Figma shapes OK:** Box-and-arrow diagrams, Venn diagrams, simple grids, progress bars, basic icon compositions from circles/rectangles — any layout where shapes are purely geometric and few (<10 elements).
-- **Use Quiver:** Anything with organic curves, hand-drawn style, complex path work, stylized illustrations, decorative patterns, abstract art, or the brand illustration style. If it would take >15 minutes to build from Figma shapes, use Quiver.
+- **Use Quiver:** Anything with organic curves, hand-drawn style, complex path work, stylized illustrations, decorative patterns, abstract art, or the brand illustration style. If the illustration requires >10 distinct shape elements or any organic curves, use Quiver.
 
 ### Image Gen vs Three.js (3D boundary)
 - **Image Gen for most 3D:** Produces equivalent visual quality for one-off hero elements, atmospheric backgrounds, and concept exploration.
