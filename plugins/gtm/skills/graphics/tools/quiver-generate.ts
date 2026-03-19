@@ -217,10 +217,12 @@ async function writeSvgs(svgs: string[], outputArg?: string): Promise<ScriptResu
     writeFileSync(outPath, svgs[0]);
     svgPaths.push(resolve(outPath));
   } else {
-    const base = outputArg ? parsePath(outputArg).name : "quiver-output";
-    const ext = outputArg ? parsePath(outputArg).ext || ".svg" : ".svg";
+    const parsed = outputArg ? parsePath(outputArg) : { dir: "", name: "quiver-output", ext: ".svg" };
+    const baseDir = parsed.dir ? parsed.dir + "/" : "";
+    const base = parsed.name;
+    const ext = parsed.ext || ".svg";
     for (let i = 0; i < svgs.length; i++) {
-      const outPath = `${base}-${i + 1}${ext}`;
+      const outPath = `${baseDir}${base}-${i + 1}${ext}`;
       writeFileSync(outPath, svgs[i]);
       svgPaths.push(resolve(outPath));
     }
