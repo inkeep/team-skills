@@ -79,10 +79,11 @@ Your direction slug is: immersive-slack-thread
 1. Load /brand and /graphics skills
 2. Read state.json — find your direction by slug in the directions object
 3. That gives you: direction concept, sectionNodeId, Creative Brief, assets, Figma file key
-4. Build the frame in your Section (by node ID, never use currentPage)
-5. Run Step 5 two-layer verification (spawn reviewer subagent)
-6. Fix NEEDS REVISION findings, re-verify (max 3 iterations)
-7. Write results to: build-results/immersive-slack-thread.json" \
+4. CRITICAL: ALL Figma nodes you create must go inside YOUR Section (sectionNodeId). Never create at page root. Never touch other Sections. Use getNodeByIdAsync(sectionNodeId) to scope all operations.
+5. Build the frame in your Section, run Phase B-E (decomposition, build, elevation)
+6. Run Step 5 two-layer verification (spawn reviewer subagent)
+7. Fix NEEDS REVISION findings, re-verify (max 3 iterations)
+8. Write results to: build-results/immersive-slack-thread.json" \
     --dangerously-skip-permissions \
     --max-turns 50 \
     --output-format json \
@@ -92,6 +93,8 @@ Your direction slug is: immersive-slack-thread
 **Always spawn a child, even for a single direction.** The parent never builds frames — it orchestrates and verifies. This ensures consistent behavior and independent review.
 
 ### Each child's build cycle
+
+⛔ **Section isolation (non-negotiable):** Every Figma node the child creates — frames, working atoms, imported SVGs, image fills, text, shapes, EVERYTHING — must be placed inside the child's assigned Section (by `sectionNodeId`). Never create nodes at page root. Never place nodes in another direction's Section. Never use `figma.currentPage` to scope operations — always use `getNodeByIdAsync(sectionNodeId)`. The working atoms frame, the final composition frame, and all intermediate artifacts live inside your Section. If a node ends up outside your Section, move it immediately or delete it. Violating section isolation pollutes other children's work and is the #1 cause of cross-direction contamination in parallel builds.
 
 1. Read `state.json` → find its direction by slug → get concept, sectionNodeId, Creative Brief, assets, **buildSpec** (end-state vision, success criteria, information architecture, atom audit with sub-element decomposition)
 2. If Phase 2 iteration: read the direction's `iterations` array for full history — what was built, what feedback was given, what to keep and what to fix

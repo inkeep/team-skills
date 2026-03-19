@@ -1059,11 +1059,13 @@ frame.layoutSizingVertical = 'FIXED';    // root frames: always FIXED
 
 Also: **always set `clipsContent = true`** on any frame that is a final deliverable or visual container. Without this, overflowing children appear fine on the canvas but extend beyond the frame bounds — and `figma_capture_screenshot` will NOT show the overflow because it exports at frame bounds with clipping.
 
-Create a temporary working frame to build atoms in isolation:
+Create a temporary working frame to build atoms in isolation. **In exploration mode, this frame MUST be placed inside your assigned Section** (by `sectionNodeId`) — never at page root. All atoms, imports, and intermediate artifacts go inside your Section to prevent cross-direction contamination during parallel builds.
 ```javascript
-// via figma_execute
+// via figma_execute — scope to your Section
+const section = await figma.getNodeByIdAsync('YOUR_SECTION_NODE_ID');
 const workingFrame = figma.createFrame();
 workingFrame.name = "Working — Atoms";
+section.appendChild(workingFrame); // CRITICAL: place inside Section, not page root
 workingFrame.resize(2000, 2000);
 workingFrame.layoutMode = 'VERTICAL';
 workingFrame.primaryAxisAlignItems = 'MIN';
