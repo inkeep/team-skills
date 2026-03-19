@@ -100,22 +100,40 @@ Your direction slug is: immersive-slack-thread
 2. If Phase 2 iteration: read the direction's `iterations` array for full history — what was built, what feedback was given, what to keep and what to fix
 3. Load `/brand` and `/graphics` skills
 4. Step 3: The Build Spec is already in state.json — verify it's complete (end-state vision, success criteria, information architecture, atom audit). If building a new direction without a spec, write one first.
-5. **Step 4, Phase B: Verify and deepen the atom decomposition.** The parent's Build Spec contains the initial Atom generation audit. The child verifies it's deep enough and further decomposes where needed:
+5. **Position the new frame to the right of existing siblings.** Iterations within a Section go left-to-right. Before creating your frame, query the Section for existing children and compute your x-position:
+   ```javascript
+   // via figma_execute — find the rightmost frame in the Section
+   const section = await figma.getNodeByIdAsync('YOUR_SECTION_NODE_ID');
+   let maxRight = 0;
+   for (const child of section.children) {
+     if (child.type === 'FRAME') {
+       const right = child.x + child.width;
+       if (right > maxRight) maxRight = right;
+     }
+   }
+   // Position new frame to the right with GAP_X
+   const GAP_X = 100;
+   const SECTION_PADDING = 60;
+   const startX = maxRight > 0 ? maxRight + GAP_X : SECTION_PADDING;
+   // After creating the new frame, set: frame.x = startX; frame.y = SECTION_PADDING;
+   ```
+   For the initial build (no existing children), the frame goes at `(SECTION_PADDING, SECTION_PADDING)`. For iteration v2+, it goes to the right of the previous iteration. This creates the left-to-right progression the user sees on the canvas.
+6. **Step 4, Phase B: Verify and deepen the atom decomposition.** The parent's Build Spec contains the initial Atom generation audit. The child verifies it's deep enough and further decomposes where needed:
    - Check every Tier 2 atom — is it compound (3+ sub-elements)? If not yet decomposed, decompose now.
    - For each Tier 2 sub-element, walk the decision tree in `references/method-selection.md`.
    - If a sub-element is itself compound, decompose recursively until every leaf is a single-method declaration.
    - If decomposition reveals new atoms or changes methods, record under `decompositionChanges` in the build-results JSON.
    - Then plan the build order (method-aware: asset fetches → external generations → Figma shapes → imports → compounds → connections).
-6. Step 4, Phases A, C-D: Stage assets, build atoms bottom-up, compose final design (targeting Section by node ID)
-7. **Phase E: 3-pass self-critique (all passes mandatory, recursive).** `references/craft-elevation.md` should already be loaded from Phase C. Pass 1: structural correctness (meet success criteria). Pass 2: craft elevation (push every element from "correct" to "rich" — count depth stack layers, evaluate each atom against elevation strategies, implement ≥2 elevations). Pass 3: cohesion and polish (unified composition, spacing rhythm, thumbnail integrity, micro-polish). **Recursive:** after Pass 3, ask "what would a design lead push back on?" — if the answer isn't "nothing," run another Pass 2 → Pass 3 cycle. Max 5 total passes. Stop when: depth stack ≥5, all atoms at "Elevated," cohesion test passes, no actionable improvement remaining. Do not proceed to the reviewer until the elevation loop exits.
-8. Step 5: Two-layer verification loop (max 3 iterations):
+7. Step 4, Phases A, C-D: Stage assets, build atoms bottom-up, compose final design (targeting Section by node ID). **Place the final composition frame at the x-position computed in step 5** — the working atoms frame can go anywhere within the Section, but the final frame must be positioned for left-to-right iteration progression.
+8. **Phase E: 3-pass self-critique (all passes mandatory, recursive).** `references/craft-elevation.md` should already be loaded from Phase C. Pass 1: structural correctness (meet success criteria). Pass 2: craft elevation (push every element from "correct" to "rich" — count depth stack layers, evaluate each atom against elevation strategies, implement ≥2 elevations). Pass 3: cohesion and polish (unified composition, spacing rhythm, thumbnail integrity, micro-polish). **Recursive:** after Pass 3, ask "what would a design lead push back on?" — if the answer isn't "nothing," run another Pass 2 → Pass 3 cycle. Max 5 total passes. Stop when: depth stack ≥5, all atoms at "Elevated," cohesion test passes, no actionable improvement remaining. Do not proceed to the reviewer until the elevation loop exits.
+9. Step 5: Two-layer verification loop (max 3 iterations):
    - Layer 1: programmatic checks (`figma_lint_design`, bounds, dimensions). Fix until clean.
    - Layer 2: reviewer subagent (`capture-for-review.ts` → reviewer evaluates at 1568px + 400px). Pass the Build Spec's success criteria AND information architecture as evaluation context.
    - The reviewer returns structured findings. **Record each review round** in the `reviews` array (see build-results schema below) — verdict, findings with evidence, and revision instructions.
    - Read verdict: **PASS** → proceed. **PASS WITH SUGGESTIONS** → implement quick fixes, proceed. **NEEDS REVISION** → assess findings against context, apply valid fixes, restart from Layer 1.
    - After 3 iterations without PASS → write error status to result file.
    - **Every frame must pass the self-critique loop AND the reviewer before the user sees it.** No exceptions. Self-reported verdicts (`SELF-REVIEWED`, `SELF_PASS`) do not count.
-9. Write results to `build-results/<direction-slug>.json` including the full `reviews` array from all verification rounds and any `decompositionChanges` from step 5.
+10. Write results to `build-results/<direction-slug>.json` including the full `reviews` array from all verification rounds and any `decompositionChanges` from step 6.
 
 ### Collect results (parent, serialized)
 
