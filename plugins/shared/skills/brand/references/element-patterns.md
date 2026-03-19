@@ -30,7 +30,7 @@ DESCRIPTION (Noto Serif, 20px, weight 300, text/muted)
 [BUTTON 1]  [BUTTON 2] (gap: 24px between buttons)
 ```
 
-- **Fixed 20px gap** between all children — never varies
+- **20px gap** between all children at blog-cover scale (1280×720) — scale proportionally on other canvases per rule 3 above
 - Left-aligned heading max-width: 886px
 - Center-aligned description max-width: 768px
 
