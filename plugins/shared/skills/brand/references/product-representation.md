@@ -118,6 +118,8 @@ When composing a marketing graphic that includes product UI:
 
 This mirrors Adobe's Spectrum/Consonant architecture: the product design system and marketing design system share atomic foundations (Azure Blue, JetBrains Mono) but diverge in composition, density, and atmosphere.
 
+**"Movie UI" sizing rule:** Product tokens define the **visual style** (Inter font, white background, 8px radius, Lucide icons) — not the **sizes**. UI elements inside a marketing mockup should be **1.5-2x their actual product sizes** so they're comprehensible at graphic/thumbnail scale. A 36px product button becomes 54-72px. 14px product body text becomes 20-28px. The mockup should look like the product but at poster scale — recognizable in a social feed, not pixel-accurate at 1:1.
+
 ### What they share (creates subconscious continuity)
 
 - Azure Blue `#3784FF` as primary accent

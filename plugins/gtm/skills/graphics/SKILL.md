@@ -846,6 +846,7 @@ Example — "Slack thread mockup" compound atom:
 - [ ] Squeeze test: heading × (400 ÷ canvas width) ≥ 20px (readable in mobile feed)
 - [ ] Text sizes are from the format file's typography tiers, not raw brand token values
 - [ ] Border-radius does not exceed 25% of any element's shortest side (prevents capsule deformation on small elements)
+- [ ] Every atom inside product mockups is identifiable at 400px thumbnail width (product UI elements should be 1.5-2x their actual product sizes — "poster scale," not pixel-accurate)
 
 ### Anti-pattern check
 - [ ] Background is NOT flat (has texture/gradient)

@@ -120,6 +120,7 @@ When showing product UI in any graphic:
 5. **Rounded corners** — `radius/lg-alt` (32px) matches the brand's soft, approachable aesthetic
 6. **Simplify the UI** — show only the most compelling part (one conversation thread, one dashboard metric), not the full interface
 7. **Overlapping panels** — for multi-feature posts, layer 2-3 panels at different depths (Dub.co technique)
+8. **Enlarge internals for readability** — product UI elements inside the mockup should be **1.5-2x their actual product size**. A 36px button becomes 54-72px. 14px body text becomes 20-28px. The mockup should look like the product but at "poster scale" — recognizable at thumbnail, not pixel-accurate. Think of how movie UIs use the right typeface and colors but at sizes the audience can read from their seats.
 
 **Never use raw product screenshots.** Always stylize — float, angle, add shadow, round corners.
 
