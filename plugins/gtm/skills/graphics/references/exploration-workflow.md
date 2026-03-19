@@ -93,20 +93,26 @@ Your direction slug is: immersive-slack-thread
 
 ### Each child's build cycle
 
-1. Read `state.json` → find its direction by slug → get concept, sectionNodeId, Creative Brief, assets, **buildSpec** (end-state vision, success criteria, information architecture, sub-element plan with visual references)
+1. Read `state.json` → find its direction by slug → get concept, sectionNodeId, Creative Brief, assets, **buildSpec** (end-state vision, success criteria, information architecture, atom audit with sub-element decomposition)
 2. If Phase 2 iteration: read the direction's `iterations` array for full history — what was built, what feedback was given, what to keep and what to fix
 3. Load `/brand` and `/graphics` skills
-4. Step 3: The Build Spec is already in state.json — verify it's complete (end-state vision, success criteria, information architecture, element plan with visual references). If building a new direction without a spec, write one first.
-5. Step 4: Generate (Phase A-E, targeting Section by node ID)
-6. **Phase E self-critique loop (min 1, max 3 iterations):** Capture at full + 400px thumbnail → evaluate against the Build Spec's success criteria → identify weakest element → fix → re-evaluate. Do not proceed to the reviewer until success criteria are met or 3 iterations complete.
-7. Step 5: Two-layer verification loop (max 3 iterations):
+4. Step 3: The Build Spec is already in state.json — verify it's complete (end-state vision, success criteria, information architecture, atom audit). If building a new direction without a spec, write one first.
+5. **Step 4, Phase B: Verify and deepen the atom decomposition.** The parent's Build Spec contains the initial Atom generation audit. The child verifies it's deep enough and further decomposes where needed:
+   - Check every Tier 2 atom — is it compound (3+ sub-elements)? If not yet decomposed, decompose now.
+   - For each Tier 2 sub-element, walk the decision tree in `references/method-selection.md`.
+   - If a sub-element is itself compound, decompose recursively until every leaf is a single-method declaration.
+   - If decomposition reveals new atoms or changes methods, record under `decompositionChanges` in the build-results JSON.
+   - Then plan the build order (method-aware: asset fetches → external generations → Figma shapes → imports → compounds → connections).
+6. Step 4, Phases A, C-D: Stage assets, build atoms bottom-up, compose final design (targeting Section by node ID)
+7. **Phase E self-critique loop (min 1, max 3 iterations):** Capture at full + 400px thumbnail → evaluate against the Build Spec's success criteria → identify weakest element → fix → re-evaluate. Do not proceed to the reviewer until success criteria are met or 3 iterations complete.
+8. Step 5: Two-layer verification loop (max 3 iterations):
    - Layer 1: programmatic checks (`figma_lint_design`, bounds, dimensions). Fix until clean.
    - Layer 2: reviewer subagent (`capture-for-review.ts` → reviewer evaluates at 1568px + 400px). Pass the Build Spec's success criteria AND information architecture as evaluation context.
    - The reviewer returns structured findings. **Record each review round** in the `reviews` array (see build-results schema below) — verdict, findings with evidence, and revision instructions.
    - Read verdict: **PASS** → proceed. **PASS WITH SUGGESTIONS** → implement quick fixes, proceed. **NEEDS REVISION** → assess findings against context, apply valid fixes, restart from Layer 1.
    - After 3 iterations without PASS → write error status to result file.
    - **Every frame must pass the self-critique loop AND the reviewer before the user sees it.** No exceptions. Self-reported verdicts (`SELF-REVIEWED`, `SELF_PASS`) do not count.
-8. Write results to `build-results/<direction-slug>.json` including the full `reviews` array from all verification rounds.
+9. Write results to `build-results/<direction-slug>.json` including the full `reviews` array from all verification rounds and any `decompositionChanges` from step 5.
 
 ### Collect results (parent, serialized)
 

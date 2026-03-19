@@ -996,23 +996,44 @@ If the script returns `"found": false` or SVG import fails, create a styled text
 
 **Checkpoint:** All "Found" items from the manifest are staged in the working file. Screenshot to verify.
 
-#### Phase B: Gap analysis and creation plan
+#### Phase B: Gap analysis, decomposition verification, and creation plan
 
-**Goal:** For every "Not found" item in the Asset Manifest, plan exactly how to create it.
+**Goal:** Verify the Build Spec's atom decomposition is complete, further decompose where needed, and plan the build order for every atom.
 
-For each gap, define:
+**Step B1: Verify and deepen the Atom generation audit.**
+
+The parent wrote the Build Spec with an initial Atom generation audit. The child's first job is to verify it's deep enough and further decompose where needed:
+
+1. **Read the Build Spec's atomAudit** (from state.json or the conversation). For each Tier 2 atom:
+   - Is it compound (contains 3+ distinct sub-elements)? If the Build Spec didn't decompose it, decompose it now — list every sub-element, classify each as Tier 1 or Tier 2.
+   - For each Tier 2 sub-element, walk the decision tree in `references/method-selection.md`. Write the full audit row (Candidates / Selected / Why / Why NOT / Pipeline).
+   - If a sub-element is itself compound, decompose again. Continue until every leaf has a single-method declaration.
+
+2. **Check for gaps the parent couldn't anticipate.** The parent plans from the Creative Brief and references. The child, being closer to execution, may realize:
+   - A "simple" atom is actually compound (e.g., "notification badge" turns out to need an icon + count + colored ring)
+   - A sub-element needs a different method than the parent assumed (e.g., the parent said "Figma shapes" but the child sees it needs Quiver for organic curves)
+   - New sub-elements are needed that weren't in the original plan (e.g., building a chat mockup reveals the need for typing indicators, read receipts, or status icons)
+
+3. **Record any decomposition changes.** If the child deepened or modified the Build Spec's audit, note what changed so the parent can update state.json. Write this to the build-results JSON under a `decompositionChanges` key.
+
+**Step B2: Plan the build for every atom** (both from the original Build Spec and any new decomposition).
+
+For each atom/sub-element that needs to be created, define:
 - **What it looks like** — dimensions, colors, shape, style (reference similar elements from master designs)
-- **How to build it** — which figma-console tools to use
+- **How to build it** — which tool/method per the Atom generation audit (NOT "which figma-console tools to use" — the method was already decided in the audit)
 - **Inspiration source** — if a similar element exists but isn't an exact match, note its node ID
 
-Determine build order from simplest to most complex:
-1. Simple shapes (rectangles, circles — no dependencies)
-2. Styled shapes (gradients, shadows, corner radius)
-3. Text elements (require font loading)
-4. Compound elements (icon + label, card with text + icon)
-5. Connection elements (lines/arrows — build last, depend on element positions)
+Determine build order — method-aware, from simplest to most complex:
+1. **Asset fetches** (logos via fetch-logo.ts, Brand Assets clones — no generation, just retrieval)
+2. **External generations** (Quiver SVGs, Image Gen PNGs — generate early so they're ready for composition)
+3. Simple Figma shapes (rectangles, circles — no dependencies)
+4. Styled Figma shapes (gradients, shadows, corner radius)
+5. Text elements (require font loading)
+6. **Import external outputs into Figma** (SVG import from Quiver, image fill from Image Gen)
+7. Compound elements (assemble sub-elements into composed frames)
+8. Connection elements (lines/arrows — build last, depend on element positions)
 
-**Checkpoint:** Present the creation plan to the user before proceeding.
+**Checkpoint:** The creation plan accounts for every atom in the audit. Every atom has a build method, a build order position, and a clear definition of what it looks like.
 
 #### Phase C: Build atoms (bottom-up)
 
