@@ -1285,32 +1285,83 @@ Best for: 3D rendered objects with exact brand colors, parameterized batch rende
 
 **Mark task "Graphics: Generate graphic" as `completed`. Mark task "Graphics: Brand consistency check" as `in_progress`.**
 
-After generating, verify the graphic matches the brand:
-- [ ] Colors match the brand palette exactly (no approximations)
-- [ ] Typography uses brand font families
-- [ ] Spacing follows brand conventions
-- [ ] Visual style is consistent with existing brand assets
-- [ ] Appropriate use of gradients, shadows, or effects
+This phase uses a two-layer verification model. Layer 1 catches programmatic issues. Layer 2 spawns a reviewer subagent for visual evaluation. The reviewer evaluates against the same brand and graphics guidelines you follow — compliance checking (did you follow the rules?) plus craft assessment (does it actually look good?).
+
+**Layer 1: Programmatic checks (max 3 iterations)**
 
 For Figma designs:
-1. Run `scripts/capture-for-review.ts` (see "How to look at your work" above) and visually verify the review.png
-2. Run `figma_lint_design` on the root frame to catch issues screenshots miss:
+1. Run `figma_lint_design` on the root frame:
    - **Hardcoded colors** not bound to variables (visually identical but not token-linked)
    - **Unnamed layers** (default names like "Frame 47", "Rectangle 12")
    - **WCAG contrast violations** (AA 4.5:1 for normal text, 3:1 for large text)
    - **Text below 12px**, interactive targets below 24x24px, line height below 1.5x
    - **Missing text styles**, detached components, frames without auto-layout
-3. Fix any critical/warning findings before delivering
-4. **Subjective polish evaluation** — screenshot the graphic and evaluate these dimensions that automated checks cannot catch:
-   - [ ] **Hierarchy:** Squint at the screenshot (or mentally blur it) — does the focal point still stand out? Is there a clear visual entry point?
-   - [ ] **Whitespace:** Is spacing deliberate and balanced, or does it feel cramped or randomly distributed? Are micro-gaps (between elements) and macro-gaps (between sections) both intentional?
-   - [ ] **Visual weight:** Are heavy elements (large, dark, saturated) balanced by lighter ones? Does the composition feel stable or lopsided?
-   - [ ] **Typography:** Are headlines visually comfortable? Is all-caps text tracked out slightly? Does font pairing create contrast without conflict?
-   - [ ] **Composition flow:** Does the eye move through the design in the intended order (headline → supporting visual → call-to-action)?
+2. Run programmatic bounds check (see Phase D checkpoint code) — screenshots cannot catch overflow
+3. Verify correct canvas dimensions and aspect ratio per the format standard
 
-   These are evaluative — note issues and fix what you can. Not every graphic will be perfect on every dimension, but catching obvious imbalances before delivery is the goal.
+For Quiver SVG: grep hex values in the SVG source against the brand palette.
 
-For SVGs: validate the code is clean and renders correctly.
+Fix any findings. Re-run until Layer 1 is clean (max 3 iterations). Do not proceed to Layer 2 until Layer 1 passes.
+
+**Layer 2: Visual evaluation via reviewer subagent (max 3 iterations)**
+
+1. **Capture review screenshots:**
+   ```bash
+   bun scripts/capture-for-review.ts \
+     --node-id "<frame-node-id>" \
+     --file-key "<file-key>" \
+     --name "<graphic-name-kebab-case>"
+   ```
+   This exports `review.png` (1568px longest edge) + `proportional.png` (400px longest edge) to `tmp/review/<name>/` and returns their paths as JSON.
+
+   For non-Figma outputs (Quiver, AI image gen, Three.js): use the generated PNG directly as the review image.
+
+2. **Spawn the reviewer subagent:**
+   ```
+   Agent tool:
+     description: "Review graphics output"
+     subagent_type: general-purpose
+     model: opus
+     prompt: |
+       You are reviewing a graphic for brand compliance and visual quality.
+
+       Before doing anything:
+       1. Load the `brand` skill (via Skill tool)
+       2. Load the `graphics` skill (via Skill tool)
+       3. Read the evaluation methodology at:
+          <path-to-graphics-skill>/prompts/visual-evaluation.md
+       4. Read the reviewer context at:
+          <path-to-graphics-skill>/references/visual-inspection.md
+
+       Then visually inspect these screenshots using the Read tool:
+
+       Full detail (1568px longest edge):
+       - <review.png path from capture script>
+
+       Proportional view (400px longest edge):
+       - <proportional.png path from capture script>
+
+       Context:
+       - Format: <format name>
+       - Purpose: <what this graphic is for>
+       - Dimensions: <WxH working canvas>
+       - Output type: <Figma / Quiver SVG / AI Image Gen / etc.>
+       - Content types present: <list all — illustration, product mockup, etc.>
+       - Part of series: <yes/no>
+
+       Follow the methodology to evaluate, then provide detailed
+       findings with clear reasoning. Cite specific visual evidence
+       from the screenshots for every finding.
+   ```
+
+3. **Read the reviewer's verdict and act:**
+   - **PASS** → proceed to Phase 6 (export & deliver)
+   - **PASS WITH SUGGESTIONS** → implement the suggested quick fixes, proceed to Phase 6 (no re-review needed)
+   - **NEEDS REVISION** → read the findings, implement fixes, then restart from Layer 1 (fixes may break programmatic checks). Respect the iteration cap.
+
+4. **After 3 Layer 2 iterations without PASS** → present the reviewer's full findings to the user and let them decide how to proceed.
+
+For SVGs (non-Figma): validate the code is clean and renders correctly, then run Layer 2 on the rendered PNG.
 
 **Mark task "Graphics: Brand consistency check" as `completed`.**
 
