@@ -297,7 +297,7 @@ Present the suggestion to the user: "Based on the content, I'd suggest a [type] 
 | Converting a raster image to SVG | **Quiver vectorize (Option D)** | AI-powered raster-to-vector conversion |
 | Illustration FOR a slide/marketing layout | **Quiver (Option D) → Figma (Option A)** | Generate the illustration with Quiver, import into Figma, compose with brand elements and text — see hybrid workflow in Option D |
 | Photorealistic images, product mockups, realistic scenes | **AI Image Gen (Option E)** | Multi-provider raster generation — GPT Image or Gemini. See provider routing below. |
-| 3D hero elements (dark tiles, glass objects, atmospheric renders) | **AI Image Gen (Option E)** | Faster than R3F with comparable quality. Feed brand assets as references for on-brand results. |
+| 3D hero elements (dark tiles, glass objects, atmospheric renders) | **AI Image Gen (Option E)** | Produces equivalent visual quality to R3F for most 3D hero elements. Feed brand assets as references for on-brand results. Use R3F only when Image Gen cannot achieve required fidelity (exact color determinism, parametric precision). |
 | Abstract atmospheric backgrounds (gradients, particles, volumetric light) | **AI Image Gen (Option E)** | Generate as raster, place in Figma as background image fill. |
 | Image editing (inpainting, background swap, style transfer, object removal) | **AI Image Gen edit (Option E)** | GPT Image edit endpoint for surgical modifications. |
 | Raster image FOR a slide/marketing layout | **AI Image Gen (Option E) → Figma (Option A)** | Generate raster element, place in Figma as image fill, compose with brand text and layout. |
@@ -701,6 +701,8 @@ Write out an asset manifest listing what was found and what's missing:
 
 **Load:** `/brand` and load any reference files relevant to your task following the skill's reference loading guidance for your content. This is important for ensuring you are fully grounded and can leverage brand assets, tokens, and guidance. Use these to inform every composition decision below.
 
+**Load:** `references/method-selection.md` for the per-atom method selection decision tree. Walk this tree for every generative atom in the Build Spec's Atom generation audit.
+
 **If the graphic includes illustrations, visual metaphors, or decorative elements in the Inkeep hand-drawn style:**
 **Load:** `content-types/illustration.md` for the dual-stroke visual language (hand-drawn gray containers + precise blue fills), color palette, composition patterns, Quiver generation instructions, and the blue swoosh underline signature element.
 
@@ -760,22 +762,51 @@ at card size?
 - Edge bleed: ___ (bleed / contained / overlapping)
 - Brand system consistency: ___ (if part of a series — what's locked, what varies)
 
-### Generation method per element
-(For each visual element, declare which tool and why. Consult the output format table in Step 1.)
-- Illustrations/icons/abstract art: ___ (Quiver / Figma shapes / N/A — why?)
-- Logos (Inkeep): ___ (cloned from Brand Assets node ID: ___)
-- Logos (third-party): ___ (cloned from Brand Assets / fetched via fetch-logo.ts / N/A)
-- Product screenshots: ___ (Figma mockup / real screenshot + styling / N/A)
-- Photorealistic imagery: ___ (GPT Image / N/A)
-- Text and layout: Figma (always)
-- Hybrid composition needed? ___ (e.g., "Quiver illustration → import to Figma → add text + brand elements")
+### Atom generation audit
+
+⛔ **The only selection axis is output quality and fidelity for the specific atom. Speed, API cost, and implementation effort are NEVER factors in method selection.** When two methods produce genuinely equivalent quality for an atom, either is acceptable — but never choose a lower-fidelity method because it's faster or cheaper.
+
+**Load:** `references/method-selection.md` and walk the decision tree for every Tier 2 atom below.
+
+Classify every visual element as Tier 1 or Tier 2, then fill in the appropriate format:
+
+**Tier 1 — Trivially-routed atoms** (method is determined by what the atom IS, not by judgment):
+These are atoms where only one method applies. One-line declaration, no justification needed.
+- Text elements → Figma (always)
+- Existing Inkeep logos → clone from Brand Assets (node ID: ___)
+- Existing third-party logos → clone from Brand Assets or fetch via fetch-logo.ts
+- Simple Figma token-bound elements (solid-color backgrounds, spacing frames) → Figma native
+
+```
+Tier 1: headline → Figma, badge → Figma, body text → Figma,
+logo (Inkeep) → Brand Assets clone [node ID], logo (Slack) → fetch-logo.ts
+```
+
+**Tier 2 — Generative atoms** (method requires judgment about HOW to render):
+These are atoms where multiple methods could plausibly work — illustrations, decorative elements, backgrounds, imagery, icons, diagrams, product mockups. For each, walk the decision tree in `references/method-selection.md` and fill every column:
+
+| Atom | Candidates considered | Selected method | Why this method (quality/fidelity) | Why NOT runner-up | Pipeline |
+|---|---|---|---|---|---|
+| *(name the specific atom)* | *(list 2+ methods that could produce this atom)* | *(the one you're using)* | *(what makes this method produce the highest-fidelity result for THIS atom — cite specific quality characteristics)* | *(what quality limitation of the runner-up disqualifies it — be specific, not formulaic)* | *(full tool chain if multi-tool, or "—" if single-tool)* |
+
+Example rows:
+| Hero illustration (rocket) | Quiver, Figma shapes, Image Gen | Quiver | Complex organic curves in brand "Imperfect Precision" style; produces editable SVG that scales infinitely | Figma shapes: can't achieve organic hand-drawn curves. Image Gen: raster output can't scale, not designer-editable | Quiver → SVG import to Figma → brand color verification → overlay with text |
+| Background atmosphere | Image Gen (Gemini), Quiver, Figma gradient | Image Gen (Gemini) | Volumetric light + particle effects that SVG and Figma gradients cannot express; Gemini excels at atmospheric rendering | Quiver: SVG cannot express volumetric/particle effects. Figma: limited to linear/radial/angular gradients | Image Gen → PNG → Figma image fill on background layer |
+| "10x faster" stat callout | Figma native | Figma native | Pure text + shape composition requiring exact token binding and designer editability | — (Tier 1 candidate, promoted to Tier 2 because of custom styling decisions) | — |
+
+**Classification rule:** If an atom has only one plausible method, it's Tier 1. If you list only one candidate in a Tier 2 row, reclassify it as Tier 1 or explain specifically why no other method could produce this atom.
 
 For compound elements (product mockups, chat interfaces, multi-part UI), also list sub-elements:
 | Sub-element | Source/Treatment | Visual reference | Verification |
 |---|---|---|---|
 | *(list every sub-element within the compound element — avatar, text styling, action buttons, headers, icons, etc.)* | *(source: Brand Assets / Quiver / Figma build. Treatment: specific visual approach)* | *(path to reference image from Step 1c, or "—" with justification why none needed)* | *(4x zoom for elements <50px, inline check for text styling)* |
 
-⛔ **Completeness gate:** Every row must have Source/Treatment + Visual reference (or justified "—") before proceeding to build. Rows without references produce improvised elements that look generic. This table is mandatory for any compound element with 3+ distinct sub-elements.
+⛔ **Completeness gate:**
+- Every Tier 2 atom must have ALL columns filled — Candidates (2+), Selected, Why, Why NOT, Pipeline
+- Every Tier 1 atom must declare its source
+- Every sub-element row must have Source/Treatment + Visual reference (or justified "—")
+- If any Tier 2 atom's "Why" column references speed, cost, or ease of implementation rather than quality/fidelity, the gate fails — rewrite the justification in terms of output quality
+- Rows without references produce improvised elements that look generic. The sub-element table is mandatory for any compound element with 3+ distinct sub-elements.
 
 ### Composition plan
 - Layout: overall structure, element placement
@@ -800,6 +831,9 @@ For compound elements (product mockups, chat interfaces, multi-part UI), also li
 - [ ] Max 2 typefaces in this graphic
 - [ ] Illustrations use Quiver (not hand-built Figma shapes) unless purely geometric
 - [ ] Third-party logos are real assets (not text/shape approximations)
+- [ ] Every generative atom (Tier 2) has a method justification grounded in quality/fidelity — not just a method declaration
+- [ ] No generative atom defaults to Figma shapes without explicitly ruling out Quiver (for organic/illustrative) or Image Gen (for photorealistic/atmospheric)
+- [ ] Every multi-tool atom spells out the full pipeline end-to-end (e.g., "Quiver → SVG import → Figma brand overlay"), not just the primary tool
 ```
 
 **Rules for the Build Spec:**
@@ -1183,7 +1217,7 @@ Best for: illustrations, icons, logos, abstract art, decorative elements, backgr
    ```
    "A nice bird picture"
    ```
-   Vague prompts produce vague results and burn credits. Be specific about subject, style, and constraints.
+   Vague prompts produce vague, low-quality results. Be specific about subject, style, and constraints.
 
 2. **Set the `instructions` parameter for persistent brand constraints.** The `instructions` channel is separate from `prompt` — use it for brand rules that apply regardless of the subject:
 
@@ -1244,7 +1278,7 @@ Best for: illustrations, icons, logos, abstract art, decorative elements, backgr
      --n 3 \
      --output agent-collab.svg
    ```
-   Each variant costs 1 credit. Don't generate more variants than needed — `--n 2` or `--n 3` is usually sufficient.
+   For brand-consistent work, 2-3 well-prompted variants (`--n 2` or `--n 3`) typically produce the best result. More variants with weak prompts produce diminishing returns — quality comes from prompt precision, not volume.
 
 6. **Review output.** The script auto-generates PNG previews alongside each SVG. Visually inspect the PNG using the Read tool (which displays images), then also check the SVG source for objective compliance:
 
@@ -1443,21 +1477,23 @@ Image gen produces visual elements. Figma does all text, layout, badges, logos, 
 
 **Option F: Three.js 3D render (for deterministic 3D, exact brand colors, parameterized batches)**
 
-**Before reaching for R3F, try AI Image Gen (Option E) first.** Image gen with a brand asset reference produces Resend-quality 3D renders in ~15-45 seconds vs 30-60 minutes to write and iterate an R3F scene. Most 3D hero elements that previously required R3F can now be generated faster at comparable quality via Option E.
+**Image Gen (Option E) produces equivalent visual quality to R3F for most 3D scenarios.** Both methods can achieve Resend-quality 3D renders with brand asset references. The selection between them is based on fidelity requirements, not speed.
 
-**Use R3F (Option F) only when you need:**
-- **Exact hex-color determinism** — same code = same render, every time. Image gen approximates colors; R3F is pixel-exact.
-- **Parameterized batch rendering** — loop over configs in code (swap icon, change color, adjust angle) for 10+ variations with guaranteed visual consistency. Image gen achieves good batch consistency with reference images but can still drift.
-- **3D texture library assets** — render atmospheric textures (hexagonal facets, ribbed spheres, bokeh) once and store as reusable PNGs for Figma backgrounds. This is a one-time investment, not a per-graphic workflow.
-- **Interactive iteration** — live browser preview, tweak code, refresh. Useful when learning/exploring 3D techniques.
+**Use R3F (Option F) when the atom requires fidelity that Image Gen cannot achieve:**
+- **Exact hex-color determinism** — same code = same render, every time. Image gen approximates colors through its latent space; R3F is pixel-exact. Choose R3F when brand color precision is non-negotiable.
+- **Parameterized batch rendering** — loop over configs in code (swap icon, change color, adjust angle) for 10+ variations with guaranteed visual consistency. Image gen achieves good batch consistency with reference images but can still drift between generations.
+- **3D texture library assets** — render atmospheric textures (hexagonal facets, ribbed spheres, bokeh) as reusable PNGs for Figma backgrounds. Deterministic rendering ensures the texture is identical every time.
+- **Precise geometric branded shapes** — CSG boolean operations (`@react-three/csg`) carve exact shapes (logo carved into surface, hexagonal cutouts). Image gen cannot produce geometrically exact boolean operations.
 
-| Scenario | Try first | Fall back to R3F if |
+**Use Image Gen (Option E) when R3F's additional fidelity is not required:**
+
+| Scenario | Recommended | Why (quality basis) |
 |---|---|---|
-| One-off 3D hero element | **Image gen (Option E)** | Brand color must be pixel-exact, not "close enough" |
-| Integration tile series (10+ tiles) | **Image gen + reference anchoring** | Need guaranteed pixel-identical lighting/materials across all tiles |
-| Abstract 3D background | **Image gen (Option E)** | Need to render once and reuse as a library texture |
-| 3D concept exploration | **Image gen (Option E)** | — (image gen is always faster for exploration) |
-| Precise geometric branded shape | **R3F with CSG** | — (image gen can't carve exact shapes) |
+| One-off 3D hero element | **Image gen** | Equivalent visual quality; R3F's color determinism is not needed for one-off elements where slight color approximation is acceptable |
+| Integration tile series (10+ tiles) | **Evaluate both** | Image gen + reference anchoring for visual quality; R3F if pixel-identical consistency across all tiles is required |
+| Abstract 3D background | **Image gen** | Atmospheric/volumetric effects are a strength of image gen; R3F achieves similar quality but requires more scene-building |
+| 3D concept exploration | **Image gen** | Equivalent quality for directional exploration; R3F adds no fidelity advantage at the concept stage |
+| Precise geometric branded shape | **R3F with CSG** | Image gen cannot carve exact geometric shapes — R3F is the only method that achieves this |
 
 Best for: 3D rendered objects with exact brand colors, parameterized batch rendering, and reusable 3D texture library assets. The agent writes the 3D scene as a React Three Fiber (R3F) TSX component — declarative scene graph with drei staging helpers, full control over every material, light, and camera property.
 
@@ -1719,13 +1755,13 @@ Should have:
 - **Using Quiver for the brand mark**: Quiver will hallucinate a logo. Always clone the real Inkeep logo from the design system in Figma. Use the hybrid workflow (Quiver → Figma) when you need both custom artwork and the brand mark.
 - **Using Quiver for data visualization**: Quiver can't produce charts with accurate data values. Use Figma (Option A) with the code recipes in `content-types/data-visualization.md` — native primitives (arcData for pie/donut, vectorPaths for line charts, rectangles for bar charts) produce editable, brand-consistent charts.
 - **Quiver without brand instructions**: Always pass brand tokens in `--instructions` (separate from `prompt`). Without them, Quiver generates with its own palette. Include explicit hex codes and negative constraints ("no gradients unless specified").
-- **Vague Quiver prompts**: "A nice icon" wastes credits and produces random output. Use the 5-component prompt structure: subject + style + color palette + composition + constraints.
+- **Vague Quiver prompts**: "A nice icon" produces random, low-quality output. Use the 5-component prompt structure: subject + style + color palette + composition + constraints. Quality comes from prompt precision.
 - **Skipping Quiver output review**: Always read and verify the generated SVG before delivering — check hex values in the SVG source against the brand palette, not just visual impression
-- **Generating too many Quiver variants**: Each variant costs 1 credit. Use `--n 2` or `--n 3` for exploration, not `--n 16`. For brand-consistent work, one well-prompted generation often suffices.
+- **Undirected Quiver generation**: Generating many variants with a vague prompt produces diminishing returns. 2-3 well-prompted variants outperform 16 undirected ones. For brand-consistent work, one precisely-prompted generation often suffices.
 - **Using image gen for vector assets**: Image gen produces raster PNGs that pixelate when scaled. For icons, logos, or illustrations that need to work at multiple sizes, use Quiver (Option D) for SVG output.
 - **Using image gen for text or layouts**: NEVER put text in generated images — Figma handles all text. Image gen produces visual elements only, which are composited in Figma.
 - **Image gen without visual inspection**: Always Read the output PNG before delivering. The agent can see images — verify the result matches intent before showing the user.
 - **Defaulting to one provider**: Use the provider routing table. GPT for transparency/editing, Gemini for 3D/glass quality, both in parallel for 50/50 scenarios. Don't always use GPT just because it's the existing default.
 - **Image gen without reference images**: When generating brand-adjacent content (3D tiles, atmospheric backgrounds, illustrations), always check the design system for a relevant reference asset. A matching reference dramatically improves on-brand quality on both providers.
-- **Reaching for R3F before trying image gen**: Image gen with a brand asset reference produces comparable 3D quality in seconds. Try Option E first; only fall back to R3F when exact color determinism or parameterized batch rendering is required.
+- **Using R3F when Image Gen achieves equivalent fidelity**: Image Gen with a brand asset reference produces equivalent visual quality for most 3D hero elements. Use R3F only when the atom requires fidelity Image Gen cannot achieve — exact hex-color determinism, parametric batch consistency, or CSG boolean precision.
 - **Vague image gen prompts**: "A nice photo" produces generic stock imagery. Include subject, materials, lighting direction, camera perspective, hex colors, and negative constraints.
