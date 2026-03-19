@@ -125,11 +125,61 @@ rect.fills = [figma.variables.setBoundVariableForPaint(
 
 ## Workflow
 
+### Exploration is the default
+
+Before starting, assess: **is this a trivial, non-consequential edit of an existing asset** (changing title text, swapping a logo for an updated version, resizing for a different format)?
+
+If **yes** — skip to Step 0 (single-pass mode) and build directly. This is rare.
+
+If **no** — which is the default for any request with meaningful visual direction choices — **Load:** `references/exploration-workflow.md` and follow the exploration workflow. This applies even to requests that seem "obvious" like diagrams or icons — there are almost always meaningful visual direction choices the user should weigh in on before the agent builds.
+
+The exploration workflow wraps around the existing Steps 0-6. Steps 1-2 (parse, brief, assets) run once at the start. Steps 3-5 (plan, generate, verify) run per-frame inside the exploration loop. Step 6 (export) runs once at the end.
+
+```
+Step 1:  Parse request
+Step 1b: Creative brief         ← USER CONFIRMS messaging
+Step 1c: Product context        ← USER MAY PROVIDE INPUT
+
+Phase 0: Conceptualize          ← USER SELECTS directions (text only)
+
+Step 2:  Collect assets & brand tokens
+
+Phase 1: Diverge
+  For each selected direction:
+    → Step 3 (plan composition — internal, not presented to user)
+    → Step 4 (generate — Phase A-E)
+    → Step 5 (two-layer verification)
+    → Place in Figma Section
+  Present to user              ← USER REACTS
+
+Phase 2: Iterate (loop)
+  User says something
+  For each frame requested:
+    → Step 3 → Step 4 → Step 5 → Place in Section
+  Present to user              ← USER REACTS
+  Repeat until user approves
+
+Step 6:  Export & deliver
+```
+
+**Same quality bar at every step.** There is no "quick build" mode. Every element in every frame must be correctly rendered — real logos, correct brand fonts, proper token-referenced colors, appropriate shadows. A Phase 1 direction may have fewer elements than a Phase 2 iteration, but every element present is at production quality and passes the reviewer.
+
+---
+
 ### Step 0: Create workflow tasks (MANDATORY FIRST ACTION)
 
 ⛔ **Before doing anything else**, create these tasks to track workflow progress. This is not optional — skipping this step is the primary cause of the agent jumping straight to building without collecting assets or brand tokens.
 
-Create these tasks in order:
+**Exploration mode tasks** (default — when following the exploration workflow):
+1. `"Graphics: Parse request"` → set to `in_progress`
+2. `"Graphics: Creative brief"` → pending
+3. `"Graphics: Conceptualize — Propose directions"` → pending
+4. `"Graphics: Collect assets & brand tokens"` → pending
+5. `"Graphics: Diverge — Build selected directions"` → pending
+6. `"Graphics: Iterate — User feedback loop"` → pending
+7. `"Graphics: Export & deliver"` → pending
+
+**Single-pass tasks** (bypass — for trivial edits only):
 1. `"Graphics: Parse request"` → set to `in_progress`
 2. `"Graphics: Creative brief"` → pending
 3. `"Graphics: Collect assets & brand tokens"` → pending
@@ -138,7 +188,7 @@ Create these tasks in order:
 6. `"Graphics: Brand consistency check"` → pending
 7. `"Graphics: Export & deliver"` → pending
 
-As each step begins, mark its task `in_progress`. When the step completes, mark it `completed`.
+As each step begins, mark its task `in_progress`. When the step completes, mark it `completed`. Task 6 (Iterate) in exploration mode stays `in_progress` throughout the iteration loop and completes when the user approves the finals.
 
 **Why this exists:** Without explicit task tracking, the observed failure mode is the agent skipping asset collection (Step 2) and brand token extraction (Step 3), jumping straight to building from scratch with approximated brand elements. This produces off-brand graphics with fake logos and wrong colors.
 
@@ -391,6 +441,39 @@ This grounds the visual in the actual product without requiring pixel-accurate U
 
 ---
 
+### Phase 0: Conceptualize — propose direction concepts (exploration mode only)
+
+⛔ **Mark task "Graphics: Conceptualize — Propose directions" as `in_progress`.** Skip this step if in single-pass mode (trivial edits).
+
+After the Creative Brief is confirmed, propose **5 visual direction concepts** as a text table before any Figma work. This is cheap (text only) and lets the user filter before the agent invests in expensive builds.
+
+**How to arrive at the 5 concepts** — reason from the specific inputs gathered so far, not from general knowledge:
+
+1. **Mine the Creative Brief.** What's the key message? What's the hero content? The strongest concepts are visual translations of the key message — not generic layouts with the title pasted on.
+2. **Analyze the source content** (if provided). Look for the strongest visual hooks: product UI → mockup, key stat → data callout, before/after → split narrative, system with parts → architecture, metaphor → illustrative concept, user interaction → stylized UI.
+3. **Check the format and medium.** Load the format file. What composition patterns work at this size? What are the thumbnail readability constraints?
+4. **Check brand composition patterns.** Load `/brand` composition guide. What layouts, background treatments, and illustration styles are on-brand?
+5. **Consider the audience.** Developer-facing leans monospace-forward. Executive-facing leans stat-forward. The Creative Brief tone should translate into visual treatment choices.
+6. **Ensure structural diversity.** The 5 directions must differ in *visual strategy* — different ways of communicating the same message. Each should answer "what is the visual centerpiece?" differently. Not 5 variations of "title left, graphic right."
+
+**Present to the user:**
+
+| # | Direction | Visual concept | Why this works for this content |
+|---|-----------|---------------|-------------------------------|
+| 1 | ... | ... | ... |
+| 2 | ... | ... | ... |
+| ... | | | |
+
+The "why" column must connect the concept back to the Creative Brief — not generic design reasoning.
+
+Include: agent's recommendation (which 2-3 are strongest and why), and a clear ask: "Pick which ones to build, or suggest changes."
+
+The user selects which directions to build. The agent builds exactly what was picked. See `references/exploration-workflow.md` for full Phase 0 guidance, canvas organization, state persistence, and the iteration loop.
+
+**Mark task "Graphics: Conceptualize — Propose directions" as `completed`.**
+
+---
+
 ### 2. Find a starting point, collect assets, and pull brand tokens
 
 ⛔ **Mark task "Graphics: Collect assets & brand tokens" as `in_progress` before proceeding.**
@@ -604,6 +687,13 @@ Write out the brief using this template:
 - Text and layout: Figma (always)
 - Hybrid composition needed? ___ (e.g., "Quiver illustration → import to Figma → add text + brand elements")
 
+For compound elements (product mockups, chat interfaces, multi-part UI), also list sub-elements:
+| Sub-element | Source/Treatment | Verification |
+|---|---|---|
+| *(list every sub-element within the compound element — avatar, text styling, action buttons, headers, icons, etc.)* | *(source: Brand Assets / Quiver / Figma build. Treatment: specific visual approach)* | *(4x zoom for elements <50px, inline check for text styling)* |
+
+This table is mandatory for any compound element with 3+ distinct sub-elements. Planning each sub-element here prevents improvisation during build. The specific treatments are design judgment — the requirement is that each is planned, not that it follows a specific recipe.
+
 ### Composition plan
 - Layout: overall structure, element placement
 - Content elements: text, icons, shapes, images, data points
@@ -695,6 +785,7 @@ Use the right screenshot method for the situation:
 | **Quick construction checks** (Phases A–E: "does this atom look right?") | `figma_capture_screenshot` at default scale | Fast, good enough for binary pass/fail verification |
 | **Review screenshots** (Phase 5: preparing images for reviewer subagent) | `scripts/capture-for-review.ts` | Exports review.png (1568px) + proportional.png (400px) to disk for subagent |
 | **Non-Figma outputs** (Quiver, AI Image Gen, Three.js) | Read the generated PNG directly | Already within range (typically 1024×1024) |
+| **Small element detail check** (brand marks, text, or icons <50px) | `figma_capture_screenshot` at `scale: 4` on the specific node ID | Default-scale screenshots render small elements too tiny for quality assessment. Recommended for any element containing brand identity or text that must be legible. |
 
 Every time this workflow says "screenshot" or "visually verify," you're using `figma_capture_screenshot` for quick checks. In Phase 5, run `scripts/capture-for-review.ts` to produce the review screenshots for the reviewer subagent — it exports via the Figma REST API at two resolutions and saves to `tmp/review/<name>/`.
 
@@ -1317,58 +1408,64 @@ Fix any findings. Re-run until Layer 1 is clean (max 3 iterations). Do not proce
 
 **Layer 2: Visual evaluation via reviewer subagent (max 3 iterations)**
 
-1. **Capture review screenshots:**
-   ```bash
-   bun scripts/capture-for-review.ts \
-     --node-id "<frame-node-id>" \
-     --file-key "<file-key>" \
-     --name "<graphic-name-kebab-case>"
-   ```
-   This exports `review.png` (1568px longest edge) + `proportional.png` (400px longest edge) to `tmp/review/<name>/` and returns their paths as JSON.
+Spawn the reviewer subagent. The reviewer is self-sufficient — it captures its own screenshots, inspects atoms as needed, and evaluates against the loaded brand and graphics skills.
 
-   For non-Figma outputs (Quiver, AI image gen, Three.js): use the generated PNG directly as the review image.
+```
+Agent tool:
+  description: "Review graphics output"
+  subagent_type: general-purpose
+  model: opus
+  prompt: |
+    You are reviewing a graphic for brand compliance and visual quality.
 
-2. **Spawn the reviewer subagent:**
-   ```
-   Agent tool:
-     description: "Review graphics output"
-     subagent_type: general-purpose
-     model: opus
-     prompt: |
-       You are reviewing a graphic for brand compliance and visual quality.
+    Before doing anything:
+    1. Load the `brand` skill (via Skill tool)
+    2. Load the `graphics` skill (via Skill tool)
+    3. Read the evaluation methodology at:
+       <path-to-graphics-skill>/prompts/visual-evaluation.md
+    4. Read the reviewer context at:
+       <path-to-graphics-skill>/references/visual-inspection.md
 
-       Before doing anything:
-       1. Load the `brand` skill (via Skill tool)
-       2. Load the `graphics` skill (via Skill tool)
-       3. Read the evaluation methodology at:
-          <path-to-graphics-skill>/prompts/visual-evaluation.md
-       4. Read the reviewer context at:
-          <path-to-graphics-skill>/references/visual-inspection.md
+    Capture your own screenshots using the capture script:
+    ```bash
+    bun <path-to-graphics-skill>/scripts/capture-for-review.ts \
+      --node-id "<frame-node-id>" \
+      --file-key "<file-key>" \
+      --name "<graphic-name>"
+    ```
+    This produces review.png (1568px) + proportional.png (400px)
+    in tmp/review/<name>/. Read both via the Read tool.
 
-       Then visually inspect these screenshots using the Read tool:
+    For complex compositions with dense detail, inspect individual
+    atoms by re-running the script with specific child node IDs:
+    ```bash
+    bun <path-to-graphics-skill>/scripts/capture-for-review.ts \
+      --node-id "<child-node-id>" \
+      --file-key "<file-key>" \
+      --name "<graphic-name>/atoms/<node-name>"
+    ```
+    Discover child node IDs via figma_get_file_for_plugin with
+    the parent frame's node ID. Inspect FRAME children (mockups,
+    cards, sidebars), not leaf nodes (text, rectangles).
 
-       Full detail (1568px longest edge):
-       - <review.png path from capture script>
+    Source file (SVG outputs only — cross-reference with screenshots):
+    - <path to .svg file, or "N/A" for Figma/raster outputs>
 
-       Proportional view (400px longest edge):
-       - <proportional.png path from capture script>
+    Context:
+    - Frame node ID: <node-id>
+    - File key: <file-key>
+    - Format: <format name>
+    - Purpose: <what this graphic is for>
+    - Dimensions: <WxH working canvas>
+    - Output type: <Figma / Quiver SVG / AI Image Gen / etc.>
+    - Content types present: <list all — illustration, product mockup, etc.>
+    - Part of series: <yes/no>
 
-       Source file (SVG outputs only — cross-reference with screenshots):
-       - <path to .svg file, or "N/A" for Figma/raster outputs>
-
-       Context:
-       - Format: <format name>
-       - Purpose: <what this graphic is for>
-       - Dimensions: <WxH working canvas>
-       - Output type: <Figma / Quiver SVG / AI Image Gen / etc.>
-       - Content types present: <list all — illustration, product mockup, etc.>
-       - Part of series: <yes/no>
-
-       Follow the methodology to evaluate, then provide detailed
-       findings with clear reasoning. Cite specific visual evidence
-       from the screenshots (and source file when available) for
-       every finding.
-   ```
+    Follow the methodology to evaluate, then provide detailed
+    findings with clear reasoning. Cite specific visual evidence
+    from the screenshots (and source file when available) for
+    every finding.
+```
 
 3. **Read the reviewer's verdict and act:**
    - **PASS** → proceed to Phase 6 (export & deliver)

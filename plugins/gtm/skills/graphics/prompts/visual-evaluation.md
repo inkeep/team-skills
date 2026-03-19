@@ -2,10 +2,12 @@
 
 You are reviewing a graphic for **brand compliance** and **visual quality**. You have the `brand` and `graphics` skills loaded — they contain all the evaluation criteria. This prompt tells you **HOW** to review. The skills tell you **WHAT** to evaluate against.
 
-You are looking at screenshots and possibly source files:
+You capture your own screenshots using `scripts/capture-for-review.ts` (instructions are in the spawn prompt). You'll produce:
 - **review.png** (1568px longest edge) — full detail. Use for compliance checking, fine craft assessment, text evaluation, element rendering quality.
 - **proportional.png** (400px longest edge) — proportional view with fine detail stripped away. Use for hierarchy assessment, weight ratios, composition structure, focal point dominance.
-- **Source file** (when provided — SVG outputs only) — the actual `.svg` source code. Cross-reference with screenshots: verify hex values match brand palette, check for `<text>` elements that shouldn't be present, inspect path structure quality, confirm viewBox aspect ratio. Visual findings grounded in source evidence are higher confidence than visual-only findings.
+- **Source file** (when provided — SVG outputs only) — the actual `.svg` source code. Cross-reference with screenshots: verify hex values match brand palette, check for `<text>` elements that shouldn't be present, inspect path structure quality, confirm viewBox aspect ratio.
+
+**Atom-level inspection (for complex compositions):** After the frame-level assessment, if the composition is complex enough to warrant it, you can inspect individual elements by re-running the capture script with child node IDs. Discover children via `figma_get_file_for_plugin`. See "When to inspect atoms" below for criteria.
 
 For details on what each resolution reveals and what you are NOT seeing, read `references/visual-inspection.md` in the graphics skill.
 
@@ -32,7 +34,7 @@ This classification determines which dimensions to activate below.
 |---|---|---|
 | **Color & palette** | Brand colors used correctly per context, color restraint (max 3 in surround), warm cream not pure white for backgrounds | `brand` tokens § Inkeep Colors, `brand` composition guide § Color restraint |
 | **Typography** | Correct font assignments (Neue Haas/JetBrains Mono/Noto Serif), size minimums met, max 2 typefaces per graphic, hierarchy ratios, case rules | `brand` tokens § Typography, `brand` element patterns § typography sections |
-| **Composition & layout** | Z-pattern or appropriate layout, visual hierarchy reads correctly, content coverage 80-85%, whitespace deliberate | `brand` composition guide (full doc) |
+| **Composition & layout** | Z-pattern or appropriate layout, visual hierarchy reads correctly, content coverage per format standard, whitespace deliberate | `brand` composition guide (full doc) |
 | **Background treatment** | Not flat — has dot grid, bloom, gradient, or dashed grid texture | `brand` composition guide § Background texture |
 | **Logo & brand mark** | Correct variant, clear space, not distorted/rotated/recolored | `brand` SKILL.md § Logo rules |
 | **Copy & messaging** | Brand vocabulary used (prefer/avoid table), sentence case titles, "Agent" capitalized, value framing | `brand` brand guide § Copy, `brand` copy patterns |
@@ -109,6 +111,30 @@ Evaluate findings in priority order. **Suppress lower-tier findings when higher-
 | 4 | Polish/fine-tuning | Spacing could be tighter, visual weight slightly unbalanced, edge bleed opportunity | Suppress if Tier 1 or 2 issues exist |
 
 Tiers determine **evaluation order and suppression**. Severity (CRITICAL/MAJOR/MINOR/INFO) determines **how the finding is reported**. A Tier 3 issue can still be CRITICAL if it breaks a hard rule.
+
+---
+
+## When to inspect atoms
+
+After the frame-level assessment, decide whether atom-level inspection is warranted. This is NOT mandatory for every graphic — most simple compositions (heading + single mockup + badge + logo) can be fully evaluated from the frame-level screenshots.
+
+**Inspect atoms when:**
+- The frame contains a **product mockup with internal UI elements** (buttons, text labels, status indicators, data) that are too small to assess reliably from the 1568px frame-level view
+- The frame contains a **data visualization** with labels, axis text, or legend items that need individual readability verification
+- The frame contains an **illustration with fine detail** (stroke weights, semantic colors, element count) that you can't confidently evaluate at frame scale
+- You identified a **potential issue** in the frame-level view but need closer inspection to confirm — e.g., "that text looks like it might be the wrong font but I can't tell at this scale"
+
+**Do NOT inspect atoms when:**
+- The frame-level view is sufficient for all active dimensions (most blog covers, social images)
+- You already have CRITICAL or Tier 1 findings — fix the big stuff first, don't drill into detail
+- The element in question is decorative (backgrounds, gradients, spacers) — these don't warrant individual inspection
+- You've already inspected 5+ atoms — diminishing returns. Report what you've found and move on.
+
+**How to inspect:**
+1. Call `figma_get_file_for_plugin` with the parent frame's node ID to get child names, types, and IDs
+2. Select FRAME children that carry content (mockups, cards, sidebars, charts) — not TEXT or RECTANGLE leaf nodes
+3. Run `scripts/capture-for-review.ts` with the child node ID to get that element at 1568px longest edge
+4. Read the resulting review.png and evaluate against the relevant dimension criteria
 
 ---
 
