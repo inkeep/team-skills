@@ -76,7 +76,7 @@ env -u CLAUDECODE -u CLAUDE_CODE_ENTRYPOINT claude \
     -p "Your state directory is: tmp/graphics/<page-slug>/
 Your direction slug is: immersive-slack-thread
 
-1. Load /brand and /graphics skills
+1. Load `/brand` skill and `/graphics` skill
 2. Read state.json — find your direction by slug in the directions object
 3. That gives you: direction concept, sectionNodeId, Creative Brief, assets, Figma file key
 4. CRITICAL: ALL Figma nodes you create must go inside YOUR Section (sectionNodeId). Never create at page root. Never touch other Sections. Use getNodeByIdAsync(sectionNodeId) to scope all operations.
@@ -98,7 +98,7 @@ Your direction slug is: immersive-slack-thread
 
 1. Read `state.json` → find its direction by slug → get concept, sectionNodeId, Creative Brief, assets, **buildSpec** (end-state vision, success criteria, information architecture, atom audit with sub-element decomposition)
 2. If Phase 2 iteration: read the direction's `iterations` array for full history — what was built, what feedback was given, what to keep and what to fix
-3. Load `/brand` and `/graphics` skills
+3. Load `/brand` skill and `/graphics` skill
 4. Step 3: The Build Spec is already in state.json — verify it's complete (end-state vision, success criteria, information architecture, atom audit). If building a new direction without a spec, write one first.
 5. **Position the new frame to the right of existing siblings.** Iterations within a Section go left-to-right. Before creating your frame, query the Section for existing children and compute your x-position:
    ```javascript

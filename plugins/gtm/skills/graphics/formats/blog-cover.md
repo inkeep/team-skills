@@ -159,9 +159,9 @@ For any blog post, decide which visual element to use:
 
 ### Badge, mockup, background, and composition treatment
 
-**Load:** `/brand` `references/element-patterns.md` for the full badge system (text options, sizing, styling), product mockup treatment (7-step recipe), code-as-visual, metric callout, and logo composition recipes.
+**Load:** `/brand` skill `references/element-patterns.md` file for the full badge system (text options, sizing, styling), product mockup treatment (7-step recipe), code-as-visual, metric callout, and logo composition recipes.
 
-**Load:** `/brand` `references/composition-guide.md` for background texture techniques (4 options), color restraint rules (max 3 colors in surround), Z-pattern layout, visual hierarchy ratios, and content coverage targets.
+**Load:** `/brand` skill `references/composition-guide.md` file for background texture techniques (4 options), color restraint rules (max 3 colors in surround), Z-pattern layout, visual hierarchy ratios, and content coverage targets.
 
 **Blog-cover-specific calibration:**
 - Badge size: 9-11px at 1280w working canvas (scales to 18-22px at 2x export)

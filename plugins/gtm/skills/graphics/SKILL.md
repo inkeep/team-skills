@@ -98,7 +98,7 @@ Page naming: `[YYYY-MM-DD] {medium} — {project description}`. This prevents ov
 
 The Inkeep Brand Assets file contains the canonical design token system as Figma variables across 5 collections. **Always use these tokens instead of hardcoding hex values.**
 
-**Load:** `/brand` for brand identity (principles, logo rules, typography, color usage, illustration style, composition patterns, element recipes). For applying tokens in Figma code, **Load:** `references/figma-patterns.md`. For full token values, read `tokens/marketing.md`.
+**Load:** `/brand` skill for brand identity (principles, logo rules, typography, color usage, illustration style, composition patterns, element recipes). For applying tokens in Figma code, **Load:** `references/figma-patterns.md` file. For full token values, read `tokens/marketing.md`.
 
 | Collection | What it covers | Key usage rules |
 |---|---|---|
@@ -135,7 +135,7 @@ Before starting, assess: **is this a trivial, non-consequential edit of an exist
 
 If **yes** — skip to Step 0 (single-pass mode) and build directly. This is rare.
 
-If **no** — which is the default for any request with meaningful visual direction choices — **Load:** `references/exploration-workflow.md` and follow the exploration workflow. This applies even to requests that seem "obvious" like diagrams or icons — there are almost always meaningful visual direction choices the user should weigh in on before the agent builds.
+If **no** — which is the default for any request with meaningful visual direction choices — **Load:** `references/exploration-workflow.md` file and follow the exploration workflow. This applies even to requests that seem "obvious" like diagrams or icons — there are almost always meaningful visual direction choices the user should weigh in on before the agent builds.
 
 The exploration workflow wraps around the existing Steps 0-6. Steps 1-2 (parse, brief, assets) run once at the start. Steps 3-5 (plan, generate, verify) run per-frame inside the exploration loop. Step 6 (export) runs once at the end.
 
@@ -225,7 +225,7 @@ These are **minimum floors**, not targets. The format files contain **canvas-rel
 
 If the user doesn't specify the medium, **ask** — text sizing is the most common source of iteration waste. Default to slide deck sizing when the purpose is "presentation" or "deck."
 
-- **Dimensions**: determine from the output medium. **Load the matching format file** from `formats/` for exact dimensions, design guidelines, and best practices:
+- **Dimensions**: determine from the output medium. **Load:** the matching `formats/<format>.md` file for exact dimensions, design guidelines, and best practices:
 
 | Medium | Standard file | Default size |
 |---|---|---|
@@ -252,7 +252,7 @@ The standard files also contain **design guidelines specific to each medium** (t
   2. Designate the **blog cover (1280×720 working canvas)** as the master — it's the widest and most content-rich format, giving maximum layout flexibility for derivation
   3. In Step 4, design the master first, then derive other formats by cloning and adapting
 
-  **Load:** `formats/multi-format.md` for the master+derive pattern, per-format content adaptation rules, and the clone→resize→adapt procedure.
+  **Load:** `formats/multi-format.md` file for the master+derive pattern, per-format content adaptation rules, and the clone→resize→adapt procedure.
 
   If the user only requests a single format, skip this — the standard workflow applies unchanged.
 
@@ -264,7 +264,7 @@ The standard files also contain **design guidelines specific to each medium** (t
 | Comparison between options/products | **Split layout or comparison table** — side-by-side with pros/cons |
 | Step-by-step process or workflow | **Sequential diagram** — numbered steps with flow arrows |
 | Customer quote or testimonial | **Quote card** — speaker photo + quote text |
-| Product feature or UI explanation | **Annotated product mockup** — simplified UI with callouts. **Load:** `/brand` → `references/product-representation.md` (fidelity decision) → `tokens/product.md` (product UI tokens for inside the mockup) → `references/element-patterns.md` (styling recipe). **Critical:** product mockups use product tokens inside (Inter, white bg, 8px radii) and marketing tokens outside (Neue Haas, cream, 32px radii). |
+| Product feature or UI explanation | **Annotated product mockup** — simplified UI with callouts. **Load:** `/brand` skill, then load `references/product-representation.md` file (fidelity decision) → `tokens/product.md` file (product UI tokens for inside the mockup) → `references/element-patterns.md` file (styling recipe). **Critical:** product mockups use product tokens inside (Inter, white bg, 8px radii) and marketing tokens outside (Neue Haas, cream, 32px radii). |
 | Tutorial, walkthrough, or "click here" guide | **Spotlight cutout** — screenshot with dimmed overlay + highlighted target element (see Pattern: Spotlight cutout in `tools/figma-console.md`) |
 | Abstract concept or architecture | **Illustration or diagram** — visual metaphor for the concept |
 | List of criteria or evaluation rubric | **Data grid or scorecard** — structured table with ratings |
@@ -293,7 +293,7 @@ Present the suggestion to the user: "Based on the content, I'd suggest a [type] 
 | Illustrations, icons, logos, abstract art, decorative elements | **Quiver (Option D)** | AI generates layered, stylized vectors with complex paths impractical to hand-code |
 | Icon sets (multiple matching icons) | **Quiver (Option D)** with references | Generate one, pass it as `--references` for the rest — maintains visual consistency |
 | Background patterns, textures, abstract decorative art | **Quiver (Option D)** | Hard to hand-code, easy to describe |
-| Charts, graphs, data visualizations (bar, line, pie, donut, sparkline) | **Figma (Option A)** | Native primitives produce editable, brand-consistent output. **Load `content-types/data-visualization.md`** — contains both design guidelines (chart selection, colors, labeling) AND code recipes (arcData, vectorPaths) |
+| Charts, graphs, data visualizations (bar, line, pie, donut, sparkline) | **Figma (Option A)** | Native primitives produce editable, brand-consistent output. **Load:** `content-types/data-visualization.md` file — contains both design guidelines (chart selection, colors, labeling) AND code recipes (arcData, vectorPaths) |
 | Simple structural SVGs (basic shapes, inline diagrams) | **Hand-coded SVG (Option B) → Figma** | Exact control; import into Figma for review; SVG file is the deliverable |
 | System architecture, flowcharts, sequence diagrams | **D2/Mermaid (Option C) → Figma** | Purpose-built diagram languages; import into Figma for brand styling and review |
 | Converting a raster image to SVG | **Quiver vectorize (Option D)** | AI-powered raster-to-vector conversion |
@@ -418,7 +418,7 @@ ___ (What should the viewer DO? Read the blog post, book a demo, share on Linked
 
 **Skip this step if** the hero content is purely typographic, abstract, or logo-based. Only run it when the Creative Brief calls for product UI, a feature mockup, or a visual that needs to represent what the product actually does.
 
-**Load:** `references/product-context-discovery.md`
+**Load:** `references/product-context-discovery.md` file
 
 **Goal:** Acquire a **visual reference** of the actual UI being represented — not improvise from general knowledge. The reference file has the full discovery strategies; this section summarizes the workflow.
 
@@ -483,8 +483,8 @@ After the Creative Brief is confirmed, propose **5 visual direction concepts** a
 
 1. **Mine the Creative Brief.** What's the key message? What's the hero content? The strongest concepts are visual translations of the key message — not generic layouts with the title pasted on.
 2. **Analyze the source content** (if provided). Look for the strongest visual hooks: product UI → mockup, key stat → data callout, before/after → split narrative, system with parts → architecture, metaphor → illustrative concept, user interaction → stylized UI.
-3. **Check the format and medium.** Load the format file. What composition patterns work at this size? What are the thumbnail readability constraints?
-4. **Check brand composition patterns.** Load `/brand` composition guide. What layouts, background treatments, and illustration styles are on-brand?
+3. **Check the format and medium.** **Load:** the format file. What composition patterns work at this size? What are the thumbnail readability constraints?
+4. **Check brand composition patterns.** **Load:** `/brand` skill composition guide. What layouts, background treatments, and illustration styles are on-brand?
 5. **Consider the audience.** Developer-facing leans monospace-forward. Executive-facing leans stat-forward. The Creative Brief tone should translate into visual treatment choices.
 6. **Ensure conceptual diversity** (see diversity self-check below).
 
@@ -562,7 +562,7 @@ If `importComponentByKeyAsync` fails, fall back to the cross-file clone workflow
 
 **b) Check master design files for broader context**
 
-**Load:** `references/figma-assets.md`
+**Load:** `references/figma-assets.md` file
 
 This file contains navigation strategy tables for the Inkeep Design Assets file (Brand Assets page). Use it to identify which pages to check if the Brand Assets page doesn't have what you need.
 
@@ -634,7 +634,7 @@ If `--domain` is omitted, the script uses the Brandfetch Search API to resolve t
 
 Use the Figma MCP to extract brand tokens from the design system.
 
-**Load:** `references/figma-assets.md` for the Figma file URL. For token values, read `tokens/marketing.md`.
+**Load:** `references/figma-assets.md` file for the Figma file URL. For token values, read `tokens/marketing.md`.
 
 Extract:
 - **Color palette**: primary, secondary, accent, background, text colors with exact hex values
@@ -701,12 +701,12 @@ Write out an asset manifest listing what was found and what's missing:
 
 ⛔ **Mark task "Graphics: Plan composition" as `in_progress`. Verify that "Graphics: Collect assets & brand tokens" is `completed` — if not, go back and complete Step 2 first. Do NOT plan without knowing what assets are available.**
 
-**Load:** `/brand` and load any reference files relevant to your task following the skill's reference loading guidance for your content. This is important for ensuring you are fully grounded and can leverage brand assets, tokens, and guidance. Use these to inform every composition decision below.
+**Load:** `/brand` skill and load any reference files relevant to your task following the skill's reference loading guidance for your content. This is important for ensuring you are fully grounded and can leverage brand assets, tokens, and guidance. Use these to inform every composition decision below.
 
-**Load:** `references/method-selection.md` for the per-atom method selection decision tree. Walk this tree for every generative atom in the Build Spec's Atom generation audit.
+**Load:** `references/method-selection.md` file for the per-atom method selection decision tree. Walk this tree for every generative atom in the Build Spec's Atom generation audit.
 
 **If the graphic includes illustrations, visual metaphors, or decorative elements in the Inkeep hand-drawn style:**
-**Load:** `content-types/illustration.md` for the dual-stroke visual language (hand-drawn gray containers + precise blue fills), color palette, composition patterns, Quiver generation instructions, and the blue swoosh underline signature element.
+**Load:** `content-types/illustration.md` file for the dual-stroke visual language (hand-drawn gray containers + precise blue fills), color palette, composition patterns, Quiver generation instructions, and the blue swoosh underline signature element.
 
 ⛔ **Produce a Build Spec before proceeding.** This is the checkpoint that prevents two failure modes: (1) planning from general knowledge instead of brand-specific recipes, and (2) building without a concrete vision of the finished output. The Build Spec is persisted to `state.json` under `directions[slug].buildSpec` so nest-claude children receive it as their build instructions. The self-critique loop (Phase E) evaluates against this spec's success criteria.
 
@@ -901,7 +901,7 @@ Present the Build Spec to the user for review before generating.
 
 | Situation | Path |
 |---|---|
-| **Exploration mode (any number of directions)** | **Always spawn `/nest-claude` children.** Create `state.json`, spawn one child per direction. The parent NEVER builds frames — it orchestrates and verifies. **Load:** `references/exploration-workflow.md` for the full coordination protocol, state.json schema, and child spawn template. |
+| **Exploration mode (any number of directions)** | **Always spawn `/nest-claude` children.** Create `state.json`, spawn one child per direction. The parent NEVER builds frames — it orchestrates and verifies. **Load:** `references/exploration-workflow.md` file for the full coordination protocol, state.json schema, and child spawn template. |
 | **Single-pass mode (trivial edits only)** | **Direct build.** The parent builds the frame using Phase A-E below. Single-pass is for trivial edits to existing assets (changing title text, swapping a logo) — not for new graphics. |
 
 **The parent is always the orchestrator, never the builder.** Even for a single direction in exploration mode, spawn a child. This ensures: (1) the parent can independently verify all frames without reviewing its own work, (2) consistent code path regardless of direction count, (3) children always run the full build cycle including the reviewer subagent.
@@ -917,7 +917,7 @@ The parent's job is: (1) write `state.json` with Build Specs, assets, and Figma 
 
 **If any of these are not met, STOP and complete the missing step before proceeding.**
 
-**Load:** `tools/figma-console.md` for tool reference and common patterns.
+**Load:** `tools/figma-console.md` file for tool reference and common patterns.
 
 Choose the generation method based on graphic type and output needs:
 
@@ -988,9 +988,9 @@ bun tools/fetch-logo.ts --name "Freshdesk" --domain "freshdesk.com" --output /tm
 
 The script outputs JSON to stdout with the SVG content, source, and metadata. Use `--prefer color` (default) for full-color logos or `--prefer mono` for monochrome. Use `--theme dark` for dark-mode variants.
 
-**Load:** `tools/logo-sources.md` for source details, coverage gaps, and manual API patterns if needed.
+**Load:** `tools/logo-sources.md` file for source details, coverage gaps, and manual API patterns if needed.
 
-Import the resulting SVG into Figma via `figma.createNodeFromSvg(svgString)` in `figma_execute`. **Load:** `tools/svg-import.md` if the SVG is complex (gradients, masks, filters) or from Brandfetch (brand-uploaded, variable quality). Simple Icons SVGs always import clean; Iconify logos are ~90% safe. After import:
+Import the resulting SVG into Figma via `figma.createNodeFromSvg(svgString)` in `figma_execute`. **Load:** `tools/svg-import.md` file if the SVG is complex (gradients, masks, filters) or from Brandfetch (brand-uploaded, variable quality). Simple Icons SVGs always import clean; Iconify logos are ~90% safe. After import:
 - Name the node with `third-party/` prefix (e.g., `third-party/freshdesk`)
 - Adapt to the graphic's visual treatment — if other logos are monochrome/grey, convert the imported logo to match (replace fills with the target color)
 - **Preserve the SVG's aspect ratio when resizing.** Extract the viewBox dimensions (e.g., `viewBox="0 0 24 24"` → 1:1 ratio) and calculate target dimensions from that ratio. Never hardcode arbitrary width/height that doesn't match the viewBox. For example, a 24×24 viewBox resized to 60px wide must be 60×60, not 120×60.
@@ -1043,7 +1043,7 @@ Determine build order — method-aware, from simplest to most complex:
 
 **Goal:** Create each missing element individually. Verify each one before moving on. Do NOT try to build the entire graphic at once.
 
-**Load:** `references/craft-elevation.md` for per-element Correct vs Elevated strategies. Consult during the per-atom craft-check (step 5 below).
+**Load:** `references/craft-elevation.md` file for per-element Correct vs Elevated strategies. Consult during the per-atom craft-check (step 5 below).
 
 ⛔ **Keep each `figma_execute` call to ONE logical operation** — create one element, style one element, move one element. Never create an entire composition in a single call. Large multi-element calls timeout (30s limit), leave partial state when they fail, and skip the per-atom verification that catches issues early. INSTEAD: create → screenshot → verify → next element.
 
@@ -1169,7 +1169,7 @@ Skip this for template-based work (blog covers using established patterns, socia
 
 **Goal:** Iteratively push the graphic from correct to rich to exceptional before it reaches the reviewer. The Build Spec is your floor, not your ceiling — meeting success criteria means the graphic is correct, not that it's done. Each pass ratchets quality upward.
 
-**Load:** `references/craft-elevation.md` for per-element elevation strategies, the visual depth stack, and contextual elevation prompts.
+**Load:** `references/craft-elevation.md` file for per-element elevation strategies, the visual depth stack, and contextual elevation prompts.
 
 **Before major revisions:** If the user requests substantial changes to a composed design (not minor tweaks), duplicate the current frame and rename it as a version snapshot (e.g., "Intelligence Layer — v1"). Work on the copy. This provides safe rollback and enables side-by-side comparison when evaluating changes with the user.
 
@@ -1266,7 +1266,7 @@ D2:
 1. Write D2 diagram code
 2. Apply brand colors via D2 theming
 3. Generate SVG output: `d2 input.d2 output.svg`
-4. Import into Figma: `figma.createNodeFromSvg(svgString)` — apply brand typography and colors that D2 theming can't fully control. **Load:** `tools/svg-import.md` if the SVG uses gradients, `<defs>`, or `<use>` elements (these can fail on import).
+4. Import into Figma: `figma.createNodeFromSvg(svgString)` — apply brand typography and colors that D2 theming can't fully control. **Load:** `tools/svg-import.md` file if the SVG uses gradients, `<defs>`, or `<use>` elements (these can fail on import).
 
 Mermaid:
 1. Write Mermaid syntax
@@ -1280,7 +1280,7 @@ All SVG outputs go through Figma for the Phase 5 review loop. The SVG file is th
 
 Best for: illustrations, icons, logos, abstract art, decorative elements, background patterns, custom letterforms — anything with complex vector paths that would be impractical to hand-code. Arrow (Quiver's model) is #1 on SVG Arena and produces clean, layered, editable SVG with semantic grouping.
 
-**Load:** `tools/quiver.md` for full API details, script usage, and parameter reference.
+**Load:** `tools/quiver.md` file for full API details, script usage, and parameter reference.
 
 **Prerequisite:** `QUIVERAI_API_KEY` must be set. If missing, the script will error with setup instructions. If the user doesn't have a key, direct them to https://quiver.ai → Settings → Developers → API Keys.
 
@@ -1436,7 +1436,7 @@ Best for: photorealistic 3D hero elements, glass/material objects, atmospheric b
 | **GPT Image 1.5** (OpenAI) | `gpt-image-1.5` | Transparent compositing elements, image editing, structured illustrations | Only model with native `background: "transparent"` |
 | **Gemini 3.1 Flash Image** (Google) | `gemini-3.1-flash-image-preview` | 3D hero objects, glass/material quality, abstract art, 2D→3D conversion | Native reference image input, conversational editing, 4K output |
 
-**Load:** `tools/openai-image.md` for GPT Image API details. `tools/gemini-image.md` for Gemini API details.
+**Load:** `tools/openai-image.md` file for GPT Image API details. **Load:** `tools/gemini-image.md` file for Gemini API details.
 
 **Prerequisites:** `OPENAI_API_KEY` and `GOOGLE_AI_API_KEY` must be set. If missing: `./secrets/setup.sh --skill graphics --account inkeep.1password.com`
 
@@ -1591,7 +1591,7 @@ Image gen produces visual elements. Figma does all text, layout, badges, logos, 
 
 Best for: 3D rendered objects with exact brand colors, parameterized batch rendering, and reusable 3D texture library assets. The agent writes the 3D scene as a React Three Fiber (R3F) TSX component — declarative scene graph with drei staging helpers, full control over every material, light, and camera property.
 
-**Load:** `tools/r3f/README.md` for the rendering pipeline, scene template, and reference index to deeper files (materials, staging, advanced features).
+**Load:** `tools/r3f/README.md` file for the rendering pipeline, scene template, and reference index to deeper files (materials, staging, advanced features).
 
 **Prerequisite:** `three`, `react`, `react-dom`, `@react-three/fiber`, `@react-three/drei`, `@react-three/postprocessing`, `@react-three/csg`, `playwright`, and `three-bvh-csg` are auto-installed on first use. For GPU-quality rendering, system Google Chrome must be installed (the script uses `channel: 'chrome'` for Metal GPU access on macOS). Optional: `MESHY_API_KEY` for AI-generated 3D meshes via Meshy.ai (only needed for text-to-3D generation, not for code-built scenes).
 

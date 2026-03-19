@@ -74,5 +74,5 @@ When building for an existing deck:
 - Thin lines and fine detail (lost on projectors)
 - Low-contrast color combinations (light gray on white, blue on purple)
 - Screenshots at native resolution (pixelated when projected — take at 2x minimum)
-- **Load:** `/brand` `references/element-patterns.md` for product UI mockup styling (float, shadow, round corners)
+- **Load:** `/brand` skill `references/element-patterns.md` file for product UI mockup styling (float, shadow, round corners)
 - Embedding data tables as images (use native slide tables for data; use graphics for concepts)

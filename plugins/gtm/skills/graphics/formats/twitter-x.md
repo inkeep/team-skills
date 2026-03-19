@@ -74,7 +74,7 @@ X compresses aggressively via MediaPipe-Optimize:
 
 ### What works for B2B on X
 - **Data visualizations and infographics** — stats and charts stop the scroll
-- **Annotated product screenshots** — UI with callouts on key features. **Load:** `/brand` `references/element-patterns.md` for detailed mockup treatment
+- **Annotated product screenshots** — UI with callouts on key features. **Load:** `/brand` skill `references/element-patterns.md` file for detailed mockup treatment
 - **Thought leadership quote cards** — clean, branded text with a strong take
 - **Thread openers with images** — compelling visual first tweet, followed by text thread
 - **Memes and cultural commentary** — B2B brands using humor see outsized engagement

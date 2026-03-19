@@ -11,9 +11,9 @@ Strategic guidance for deciding **how** to represent the Inkeep product in visua
 **Core principle:** Marketing visuals must "correlate to in-product features — not fantastical, glossy and inaccurate representations" (Glenn Hitchcock, Vercel). Abstraction is valid. Fabrication is not.
 
 **Loading guide:** This file provides the strategy (when + why). For execution, also load:
-- Fidelity levels 1–3 (product UI visible) → **Load:** `tokens/product.md` for product design tokens (use INSIDE the mockup), `tokens/marketing.md` for marketing tokens (use for the SURROUND), and `references/element-patterns.md` § Product mockup treatment for the styling recipe.
-- Fidelity levels 4–5 (abstraction/illustration) → **Load:** `tokens/marketing.md` for brand tokens and `content-types/illustration.md` for the illustration system.
-- Fidelity level 6 (pure brand) → **Load:** `tokens/marketing.md` and `references/brand-guide.md` only.
+- Fidelity levels 1–3 (product UI visible) → **Load:** `tokens/product.md` file for product design tokens (use INSIDE the mockup), `tokens/marketing.md` file for marketing tokens (use for the SURROUND), and `references/element-patterns.md` file § Product mockup treatment for the styling recipe.
+- Fidelity levels 4–5 (abstraction/illustration) → **Load:** `tokens/marketing.md` file for brand tokens and `content-types/illustration.md` file for the illustration system.
+- Fidelity level 6 (pure brand) → **Load:** `tokens/marketing.md` file and `references/brand-guide.md` file only.
 
 ---
 

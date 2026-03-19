@@ -75,7 +75,7 @@ Eye-tracking research (NNG, 500+ participants) confirms the Z-pattern for visual
 
 ### What works (B2B scroll-stoppers)
 - **Bold data callouts** — large stat as hero element (most effective B2B pattern)
-- **Annotated product mockups** — simplified UI with callouts, not raw screenshots. **Load:** `/brand` `references/element-patterns.md` for detailed mockup treatment (float, shadow, radius, edge bleed)
+- **Annotated product mockups** — simplified UI with callouts, not raw screenshots. **Load:** `/brand` skill `references/element-patterns.md` file for detailed mockup treatment (float, shadow, radius, edge bleed)
 - **Data visualizations** — charts/graphs communicate instantly
 - **Faces with emotion** — real people, not neutral corporate headshots
 - **Unexpected color contrast** in a muted feed (Von Restorff Effect)

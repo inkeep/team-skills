@@ -171,7 +171,7 @@ Illustrations using the Inkeep brand system are the second-hardest content type.
 
 **Failure: Flat single-tier illustrations**
 The model generates illustrations that are all one visual tier — either everything is the same opacity/weight (no depth hierarchy), or everything is solid blue (no scaffolding). The three-tier system (gray scaffolding → blue focal → solid fills) is what creates the brand's distinctive depth, and it's the first thing the model drops.
-→ **Fix:** Every illustration must use ALL three tiers. Check: (1) Are there gray containers at 10-30% opacity forming the background scaffolding? (2) Are there blue-stroke containers at 100% opacity as the focal elements? (3) Are there solid blue fills carrying the meaningful content (icons, data shapes)? If any tier is missing, the illustration is incomplete. Load `content-types/illustration.md` for the exact tier specs.
+→ **Fix:** Every illustration must use ALL three tiers. Check: (1) Are there gray containers at 10-30% opacity forming the background scaffolding? (2) Are there blue-stroke containers at 100% opacity as the focal elements? (3) Are there solid blue fills carrying the meaningful content (icons, data shapes)? If any tier is missing, the illustration is incomplete. **Load:** `content-types/illustration.md` file for the exact tier specs.
 
 **Failure: Inconsistent or wrong stroke weights**
 The model uses uniform stroke weight everywhere, or uses weights that don't match the hierarchy (thick strokes on background elements, thin strokes on focal ones — the opposite of correct).

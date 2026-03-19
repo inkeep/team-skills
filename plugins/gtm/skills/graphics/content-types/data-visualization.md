@@ -1,6 +1,6 @@
 # Data Visualization
 
-**Load:** `/brand` `references/data-visualization.md` for chart type selection, data series color palette, labeling standards, and data integrity rules.
+**Load:** `/brand` skill `references/data-visualization.md` file for chart type selection, data series color palette, labeling standards, and data integrity rules.
 
 This file covers **graphics-specific** implementation: canvas sizing and Figma code recipes.
 
