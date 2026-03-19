@@ -59,6 +59,7 @@ All execution state lives in `tmp/ship/` (gitignored). The only committed artifa
 | `tmp/ship/spec.json` | User stories — acceptance criteria, priority, pass/fail status | Phase 2 (/implement) | Each iteration (sets `passes: true`) | implement.sh, iterations, Ship |
 | `tmp/ship/progress.txt` | Iteration log — what was done, learnings, blockers | Phase 2 start (implement.sh) | Each iteration (append) | Iterations, Ship |
 | `tmp/ship/review-output.md` | Latest portable local review summary from the pre-push review gate | Pre-push local review gate | Each local review pass (overwrite) | Ship, user |
+| `tmp/ship/review-status.json` | Parsed local review status — recommendation, risk, issue counts, and whether the gate is still blocking | Pre-push local review gate | Each local review pass (overwrite) | Ship, local review scripts |
 | `tmp/ship/qa-progress.json` | QA scenarios and results — status, notes | Phase 3 (/qa) | Each scenario execution (/qa) | /pr (renders Manual QA), Ship (phase gate) |
 | SPEC.md *(committed)* | Product + tech spec — requirements, design, decisions, non-goals | Phase 1 (/spec or user) | Phase 1 only | All phases, iterations |
 
@@ -68,7 +69,7 @@ All execution state lives in `tmp/ship/` (gitignored). The only committed artifa
 |---|---|---|
 | **Phase 1 end** | **Run** `ship-init-state.sh` — creates both `state.json` and `loop.md` (see Phase 1, Step 3) | — |
 | **Phase 2 start** | — | `/implement` creates `tmp/ship/spec.json`, `tmp/ship/implement-prompt.md`, `tmp/ship/progress.txt` |
-| **Pre-push local review gate** | — | `run-local-review.sh` stages the portable review bundle into `tmp/ship/pr-review-plugin/` and overwrites `tmp/ship/review-output.md` with the latest markdown summary |
+| **Pre-push local review gate** | Update local review status if `state.json` already exists | `run-local-review.sh` stages the portable review bundle into `tmp/ship/pr-review-plugin/`, overwrites `tmp/ship/review-output.md`, and parses it into `tmp/ship/review-status.json` |
 | **Any phase → next** | Set `currentPhase` to next phase, append completed phase to `completedPhases`, refresh `lastUpdated` | — |
 | **User amendment** (any phase) | Append to `amendments[]`: `{"description": "...", "status": "pending"}` | — |
 | **Iteration completes a story** | — | `tmp/ship/spec.json`: set story `passes: true`. `tmp/ship/progress.txt`: append iteration log. |
@@ -167,6 +168,14 @@ Determine what the user wants to build and whether a spec already exists. **A qu
 Now that you have a feature name, establish an isolated working directory so all artifacts live in the feature workspace from the start.
 
 **Load:** `references/worktree-setup.md` — contains the decision table (worktree vs. feature branch vs. skip), setup procedure, and dependency installation.
+
+Prefer the helper script over ad-hoc `git worktree` commands:
+
+```bash
+<path-to-skill>/scripts/ship-worktree.sh ensure --feature "<feature-name>"
+```
+
+The helper only reuses a matching worktree when it is already clean. Otherwise it creates a fresh sibling worktree so each `/ship` request gets its own workspace.
 
 #### Step 3: Detect execution context
 
@@ -304,12 +313,27 @@ If Docker execution is active for this `/ship` run, execute the same helper in D
 
 The helper stages the portable review plugin into `${CLAUDE_SHIP_DIR:-tmp/ship}/pr-review-plugin/`, then runs `${CLAUDE_SHIP_DIR:-tmp/ship}/pr-review-plugin/scripts/pr-review.sh` either on the host or inside the Docker sandbox. This mirrors the `/implement` pattern: the container consumes staged artifacts from the bind-mounted repo, not the host plugin install.
 
-The helper auto-detects the target branch by default (PR base branch if available, otherwise the repo default branch / `origin/HEAD`, then `main`). It writes the latest markdown summary to `${CLAUDE_SHIP_DIR:-tmp/ship}/review-output.md`, stores run artifacts under `${CLAUDE_SHIP_DIR:-tmp/ship}/local-review-runs/`, and updates `${CLAUDE_SHIP_DIR:-tmp/ship}/local-review-latest.txt`. Read the summary after each pass and evaluate the findings like any other reviewer feedback:
+The helper auto-detects the target branch by default (PR base branch if available, otherwise the repo default branch / `origin/HEAD`, then `main`). It writes the latest markdown summary to `${CLAUDE_SHIP_DIR:-tmp/ship}/review-output.md`, parses it into `${CLAUDE_SHIP_DIR:-tmp/ship}/review-status.json`, stores run artifacts under `${CLAUDE_SHIP_DIR:-tmp/ship}/local-review-runs/`, and updates `${CLAUDE_SHIP_DIR:-tmp/ship}/local-review-latest.txt`. Treat `${CLAUDE_SHIP_DIR:-tmp/ship}/review-status.json` as the source of truth for whether the gate is still blocking:
 
 - Do not blindly apply every suggestion. Validate each one against the diff, codebase patterns, and the spec.
 - Fix high-confidence issues you agree with directly. If the right fix is unclear, investigate before changing code.
-- Keep the loop bounded. Run at most **2 total local-review passes** before pushing. The first pass establishes the baseline; run a second pass only if you made fixes from the first pass.
-- Exit the gate when the latest summary is no longer a clear blocker, or when remaining disagreements are conscious, evidence-backed decisions you are willing to carry into external review.
+- Keep the loop bounded. The default manual mode is still a baseline pass plus one follow-up pass. When you want autonomous repair, use `--repair-mode auto --max-fix-passes 2` so the helper writes a bounded fix prompt, runs a child Claude repair pass with `--dangerously-skip-permissions`, reruns quality gates, and reruns local review.
+- By default the helper exits non-zero when the parsed review result is still blocking (`REQUEST_CHANGES`, or Critical/Major findings remain). Do not create the PR until that gate is green.
+
+When you want a human checkpoint before the repair pass, use `--repair-mode prompt`. That writes `tmp/ship/review-fix-pass-<n>.prompt.md` and stops so you can inspect or run the prompt yourself.
+
+Examples:
+
+```bash
+# Manual gate only
+<path-to-skill>/scripts/run-local-review.sh
+
+# Write a repair prompt, then stop for inspection
+<path-to-skill>/scripts/run-local-review.sh --repair-mode prompt
+
+# Autonomous repair loop for non-interactive /ship runs
+<path-to-skill>/scripts/run-local-review.sh --repair-mode auto --max-fix-passes 2
+```
 
 ---
 
@@ -340,6 +364,14 @@ If scope calibration indicated a lightweight scope (bug fix / config change), pa
 After Phase 3's exit gate and before entering Phase 4. Do not update `currentPhase` until Phase 4 begins.
 
 If the implementation includes UI changes and `/screengrabs` is available, Load `/screengrabs` skill before writing the PR body — capture screenshots of affected routes so the PR body's "Screenshots / recordings" section has visual evidence ready. `/screengrabs` supports `--pre-script` for interaction before capture (dismissing modals, navigating tabs, logging in).
+
+When you already have images from any source, prefer the programmatic CDN upload path over manual GitHub drag-and-drop:
+
+```bash
+node <path-to-skill>/scripts/ship-upload-pr-asset.js --file <path-to-image>
+```
+
+This uploads the asset to Bunny Storage and returns GitHub-ready Markdown image links. Capture and upload are separate concerns: use Playwright or any other tool to generate the image, then use the upload helper to get a permanent URL.
 
 Load `/pr` skill with the PR number and `--spec <path/to/SPEC.md>` to write the full PR body. Implementation and testing are now complete — the body can cover approach, changes, architectural decisions, and manual QA results comprehensively.
 
@@ -449,7 +481,7 @@ These govern your behavior throughout:
 - **Implementing before understanding.** Jumping into code before building a mental model of the feature, the codebase area, or the spec's intent.
 - Using a different package manager than what the repo specifies
 - Force-pushing or destructive git operations without user confirmation
-- Leaving the worktree without cleaning up (document how to clean up in PR description)
+- Leaving the worktree without cleaning up. Use `ship-worktree.sh cleanup` after merge or when tearing down an abandoned request.
 - **Bypassing /ship for "small" work.** Scope calibration (Phase 0, Step 4) adjusts depth for every task size — bug fixes get a light SPEC.md and calibrated testing. The workflow always runs; rigor scales. Implementing directly outside /ship means no spec (requirements lost on compaction), no state persistence, no QA, no PR, no review loop. A 4-file security fix still needs a spec that captures what "fixed" looks like, tests that verify it, and a PR that documents it.
 - **Skipping `/implement` for "simple" changes.** `/implement` always runs — it owns spec.json conversion, the implementation prompt, and the iteration loop. Even small changes benefit from the structured prompt and verification cycle. Direct implementation outside `/implement` loses the spec.json tracking, progress log, and quality gate loop.
 - **Hand-writing state files.** Never manually write `tmp/ship/state.json` or `tmp/ship/loop.md` as raw JSON/YAML. Always use `ship-init-state.sh`. Hand-written files are the #1 cause of stop hook failures — malformed JSON, missing fields, wrong YAML frontmatter — and the resulting bug (hook silently exits, loop never activates) is invisible until context compaction, when it's too late.
@@ -472,6 +504,10 @@ These govern your behavior throughout:
 | `references/state-initialization.md` | Activating execution state (Phase 1, Step 3) | Stop hook cannot recover context, loop cannot activate |
 | `references/pr-creation.md` | Creating draft PR after implementation (between Phase 2 and Phase 3) | QA results lost on compaction (no PR to post to), /qa cannot post checklist as PR comment |
 | `references/completion-checklist.md` | Final verification (Phase 6) | Incomplete work ships as "done" |
+| `scripts/run-local-review.sh` | Running the pre-push local review gate, optionally with bounded repair passes | Obvious review issues slip through to the PR, or Ship stalls without a deterministic next step |
+| `scripts/build-local-review-fix-prompt.sh` | Converting a blocking local review result into a bounded repair prompt for human or autonomous follow-up | Repair loop has no machine-generated handoff from review output to fix pass |
+| `scripts/ship-worktree.sh` | Reusing or creating a request-scoped worktree, and cleaning it up after merge | Work bleeds into the main checkout, stale worktrees pile up, completed branches linger |
+| `scripts/ship-upload-pr-asset.js` | Uploading existing screenshots or recordings to Bunny CDN for PR bodies | PR image flow depends on manual GitHub uploads even when a programmatic CDN path is available |
 | `/review` skill `scripts/fetch-pr-feedback.sh` | Fetching review feedback and CI/CD status (Phase 5, via /review). Canonical copies live in the `/review` skill — do not duplicate. | Agent uses wrong/deprecated `gh` commands, misses inline review comments |
 | `/review` skill `scripts/investigate-ci-failures.sh` | Investigating CI/CD failures with logs (Phase 5, via /review). Canonical copies live in the `/review` skill — do not duplicate. | Agent struggles to find run IDs, fetch logs, or compare with main |
 | `/debug` skill | Diagnosing root cause of failures encountered during implementation (Phase 2) or testing (Phase 3) — when the cause isn't obvious from the error | Shotgun debugging: fixing symptoms without understanding root cause, wasted iteration cycles |

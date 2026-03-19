@@ -3,7 +3,7 @@ set -euo pipefail
 
 usage() {
   cat <<'EOF'
-Usage: run-local-review.sh [--target <branch>] [--output <file>] [--max-turns <n>] [--prompt <text>] [--docker [compose-file]]
+Usage: run-local-review.sh [--target <branch>] [--output <file>] [--max-turns <n>] [--prompt <text>] [--docker [compose-file]] [--allow-blocking] [--repair-mode off|prompt|auto] [--max-fix-passes <n>] [--fix-max-turns <n>] [--spec <path>]
 
 Stages the portable PR review bundle into the current repo's ship dir, then runs it
 either on the host or inside the repo's Docker sandbox.
@@ -14,6 +14,13 @@ Options:
   --max-turns <n>        Forward max turns to the staged pr-review.sh wrapper
   --prompt <text>        Forward custom prompt text to the staged pr-review.sh wrapper
   --docker [compose]     Execute inside Docker sandbox. Optionally pass the compose file path.
+  --allow-blocking       Exit 0 even if the parsed review summary is still blocking
+  --repair-mode <mode>   Blocking gate behavior: off (default), prompt, or auto
+  --auto-fix             Alias for --repair-mode auto
+  --max-fix-passes <n>   Maximum automatic repair passes after the baseline review (default: 2)
+  --fix-max-turns <n>    Max turns for each autonomous repair pass (default: 25)
+  --spec <path>          SPEC.md path to include in the repair prompt (default: state.json specPath)
+  --fix-guidance <text>  Extra guidance appended to the repair prompt
   -h, --help             Show this help
 EOF
   exit "${1:-0}"
@@ -26,11 +33,19 @@ COMPOSE_FILE=""
 SHIP_DIR="${CLAUDE_SHIP_DIR:-tmp/ship}"
 MAX_TURNS=""
 PROMPT_TEXT=""
+ALLOW_BLOCKING=false
+REPAIR_MODE="off"
+MAX_FIX_PASSES="2"
+FIX_MAX_TURNS="25"
+SPEC_PATH=""
+FIX_GUIDANCE=""
 DOCKER_EXEC_PATH="/home/agent/.local/bin:/home/agent/.claude/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
 HOST_CLAUDE_CREDENTIALS_FILE="${HOME}/.claude/.credentials.json"
 HOST_CLAUDE_PROFILE_FILE="${HOME}/.claude.json"
 REVIEW_API_KEY=""
 REVIEW_API_KEY_SOURCE=""
+RESOLVED_COMPOSE_FILE=""
+DOCKER_AUTH_MODE="api-key"
 
 while [[ $# -gt 0 ]]; do
   case "$1" in
@@ -48,6 +63,34 @@ while [[ $# -gt 0 ]]; do
       ;;
     --prompt)
       PROMPT_TEXT="${2:-}"
+      shift 2
+      ;;
+    --allow-blocking)
+      ALLOW_BLOCKING=true
+      shift
+      ;;
+    --repair-mode)
+      REPAIR_MODE="${2:-}"
+      shift 2
+      ;;
+    --auto-fix)
+      REPAIR_MODE="auto"
+      shift
+      ;;
+    --max-fix-passes)
+      MAX_FIX_PASSES="${2:-}"
+      shift 2
+      ;;
+    --fix-max-turns)
+      FIX_MAX_TURNS="${2:-}"
+      shift 2
+      ;;
+    --spec)
+      SPEC_PATH="${2:-}"
+      shift 2
+      ;;
+    --fix-guidance)
+      FIX_GUIDANCE="${2:-}"
       shift 2
       ;;
     --docker)
@@ -79,13 +122,39 @@ fi
 
 cd "$REPO_ROOT"
 
+case "$REPAIR_MODE" in
+  off|prompt|auto) ;;
+  *)
+    echo "Unsupported --repair-mode value: $REPAIR_MODE" >&2
+    exit 1
+    ;;
+esac
+
+if ! [[ "$MAX_FIX_PASSES" =~ ^[0-9]+$ ]]; then
+  echo "--max-fix-passes must be a non-negative integer (got: '$MAX_FIX_PASSES')" >&2
+  exit 1
+fi
+
+if ! [[ "$FIX_MAX_TURNS" =~ ^[1-9][0-9]*$ ]]; then
+  echo "--fix-max-turns must be a positive integer (got: '$FIX_MAX_TURNS')" >&2
+  exit 1
+fi
+
 if [[ -z "$OUTPUT_FILE" ]]; then
   OUTPUT_FILE="${SHIP_DIR}/review-output.md"
 fi
+REVIEW_STATUS_FILE="${SHIP_DIR}/review-status.json"
+STATE_FILE="${SHIP_DIR}/state.json"
+BUILD_FIX_PROMPT_SCRIPT="${SCRIPT_DIR}/build-local-review-fix-prompt.sh"
+STAGE_SCRIPT="${LOCAL_REVIEW_STAGE_SCRIPT:-$SCRIPT_DIR/stage-local-review-bundle.sh}"
 
-"$SCRIPT_DIR/stage-local-review-bundle.sh"
+if [[ -z "$SPEC_PATH" && -f "$STATE_FILE" ]]; then
+  SPEC_PATH="$(jq -r '.specPath // ""' "$STATE_FILE")"
+fi
 
-BUNDLE_SCRIPT="${SHIP_DIR}/pr-review-plugin/scripts/pr-review.sh"
+"$STAGE_SCRIPT"
+
+BUNDLE_SCRIPT="${LOCAL_REVIEW_BUNDLE_SCRIPT:-${SHIP_DIR}/pr-review-plugin/scripts/pr-review.sh}"
 if [[ ! -x "$BUNDLE_SCRIPT" ]]; then
   echo "Staged local review script not found at ${BUNDLE_SCRIPT}" >&2
   exit 1
@@ -226,6 +295,244 @@ select_review_api_key() {
   return 1
 }
 
+update_state_with_review_status() {
+  [[ -f "$STATE_FILE" ]] || return 0
+
+  jq \
+    --arg summaryFile "$OUTPUT_FILE" \
+    --arg statusFile "$REVIEW_STATUS_FILE" \
+    --arg latestRunFile "${SHIP_DIR}/local-review-latest.txt" \
+    --slurpfile reviewStatus "$REVIEW_STATUS_FILE" \
+    '
+    .localReview = (($reviewStatus[0] // {}) + {
+      summaryFile: $summaryFile,
+      statusFile: $statusFile,
+      latestRunFile: $latestRunFile
+    })
+    | .lastUpdated = ($reviewStatus[0].generatedAt // .lastUpdated)
+    ' "$STATE_FILE" > "${STATE_FILE}.tmp" \
+    && mv "${STATE_FILE}.tmp" "$STATE_FILE"
+}
+
+prepare_docker_context() {
+  if [[ "$DOCKER_EXEC" != "true" ]]; then
+    return 0
+  fi
+
+  if ! command -v docker >/dev/null 2>&1; then
+    echo "docker CLI is required for --docker mode" >&2
+    exit 1
+  fi
+
+  RESOLVED_COMPOSE_FILE="$(resolve_compose_file)"
+
+  if ! compose_service_running "$RESOLVED_COMPOSE_FILE" 'proxy'; then
+    bring_up_service_with_retries "$RESOLVED_COMPOSE_FILE" 'proxy'
+  fi
+
+  if ! compose_service_running "$RESOLVED_COMPOSE_FILE" 'sandbox'; then
+    bring_up_service_with_retries "$RESOLVED_COMPOSE_FILE" 'sandbox' --no-deps
+  fi
+
+  DOCKER_AUTH_MODE="api-key"
+  if select_review_api_key; then
+    echo "Using validated Anthropic API key from ${REVIEW_API_KEY_SOURCE}." >&2
+  elif container_supports_claudeai_auth "$RESOLVED_COMPOSE_FILE"; then
+    DOCKER_AUTH_MODE="claude.ai"
+    echo "Sandbox ANTHROPIC_API_KEY failed validation; falling back to existing claude.ai auth." >&2
+  elif bootstrap_container_claude_auth "$RESOLVED_COMPOSE_FILE"; then
+    DOCKER_AUTH_MODE="claude.ai"
+    echo "Sandbox ANTHROPIC_API_KEY failed validation; falling back to host-backed claude.ai auth." >&2
+  else
+    echo "Sandbox ANTHROPIC_API_KEY validation failed and claude.ai auth is unavailable; proceeding with api-key mode." >&2
+  fi
+}
+
+run_review_once() {
+  local review_status=0
+
+  if [[ "$DOCKER_EXEC" == "true" ]]; then
+    set +e
+    docker compose -f "$RESOLVED_COMPOSE_FILE" exec \
+      -e CLAUDE_SHIP_DIR="$SHIP_DIR" \
+      -e LOCAL_REVIEW_COMPOSE_FILE="$RESOLVED_COMPOSE_FILE" \
+      -e LOCAL_REVIEW_EXECUTION_MODE="docker" \
+      -e LOCAL_REVIEW_SOURCE_REPO="/workspace" \
+      -e LOCAL_REVIEW_TMP_REPO="/tmp/local-review-workspace" \
+      -e LOCAL_REVIEW_AUTH_MODE="$DOCKER_AUTH_MODE" \
+      -e LOCAL_REVIEW_API_KEY="$REVIEW_API_KEY" \
+      -e PATH="$DOCKER_EXEC_PATH" \
+      sandbox \
+      /bin/bash -lc '
+        set -euo pipefail
+
+        SOURCE_REPO="${LOCAL_REVIEW_SOURCE_REPO:-/workspace}"
+        TMP_REPO="${LOCAL_REVIEW_TMP_REPO:-/tmp/local-review-workspace}"
+
+        if [[ "${LOCAL_REVIEW_AUTH_MODE:-api-key}" == "claude.ai" ]]; then
+          unset ANTHROPIC_API_KEY
+        elif [[ -n "${LOCAL_REVIEW_API_KEY:-}" ]]; then
+          export ANTHROPIC_API_KEY="${LOCAL_REVIEW_API_KEY}"
+        fi
+
+        rm -rf "$TMP_REPO"
+        mkdir -p "$TMP_REPO"
+
+        tar -C "$SOURCE_REPO" \
+          --exclude="./.claude/worktrees" \
+          --exclude="./.claude/skills/pr-context" \
+          --exclude="./.claude/pr-diff" \
+          --exclude="./node_modules" \
+          --exclude="./.next" \
+          --exclude="./.turbo" \
+          --exclude="./dist" \
+          --exclude="./build" \
+          --exclude="./tmp/ship/local-review-runs" \
+          -cf - . | tar -C "$TMP_REPO" -xf -
+
+        cd "$TMP_REPO"
+
+        set +e
+        "$@"
+        review_status=$?
+        set -e
+
+        mkdir -p "$SOURCE_REPO/tmp/ship"
+
+        if [[ -f "$TMP_REPO/tmp/ship/review-output.md" ]]; then
+          cp "$TMP_REPO/tmp/ship/review-output.md" "$SOURCE_REPO/tmp/ship/review-output.md"
+        fi
+
+        if [[ -f "$TMP_REPO/tmp/ship/local-review-latest.txt" ]]; then
+          cp "$TMP_REPO/tmp/ship/local-review-latest.txt" "$SOURCE_REPO/tmp/ship/local-review-latest.txt"
+        fi
+
+        if [[ -d "$TMP_REPO/tmp/ship/local-review-runs" ]]; then
+          mkdir -p "$SOURCE_REPO/tmp/ship/local-review-runs"
+          cp -R "$TMP_REPO/tmp/ship/local-review-runs/." "$SOURCE_REPO/tmp/ship/local-review-runs/"
+        fi
+
+        if [[ -f "$TMP_REPO/.claude/skills/pr-context/SKILL.md" ]]; then
+          mkdir -p "$SOURCE_REPO/.claude/skills/pr-context"
+          cp "$TMP_REPO/.claude/skills/pr-context/SKILL.md" "$SOURCE_REPO/.claude/skills/pr-context/SKILL.md"
+        fi
+
+        if [[ -f "$TMP_REPO/.claude/pr-diff/full.diff" ]]; then
+          mkdir -p "$SOURCE_REPO/.claude/pr-diff"
+          cp "$TMP_REPO/.claude/pr-diff/full.diff" "$SOURCE_REPO/.claude/pr-diff/full.diff"
+        fi
+
+        exit "$review_status"
+      ' local-review-in-container \
+      "$BUNDLE_SCRIPT" \
+      "${REVIEW_ARGS[@]}"
+    review_status=$?
+    set -e
+  else
+    set +e
+    "$BUNDLE_SCRIPT" "${REVIEW_ARGS[@]}"
+    review_status=$?
+    set -e
+  fi
+
+  return "$review_status"
+}
+
+run_quality_gates() {
+  local gate_name gate_cmd
+  [[ -f "$STATE_FILE" ]] || return 0
+
+  for gate_name in test typecheck lint; do
+    gate_cmd="$(jq -r ".qualityGates.${gate_name} // \"\"" "$STATE_FILE" 2>/dev/null || true)"
+    [[ -n "$gate_cmd" ]] || continue
+
+    echo "Running ${gate_name} quality gate: ${gate_cmd}" >&2
+    if [[ "$DOCKER_EXEC" == "true" ]]; then
+      docker compose -f "$RESOLVED_COMPOSE_FILE" exec \
+        -e PATH="$DOCKER_EXEC_PATH" \
+        sandbox \
+        /bin/bash -lc "cd /workspace && ${gate_cmd}"
+    else
+      bash -lc "$gate_cmd"
+    fi
+  done
+}
+
+build_fix_prompt() {
+  local pass="$1"
+  local prompt_file="${SHIP_DIR}/review-fix-pass-${pass}.prompt.md"
+  local args=(--review "$OUTPUT_FILE" --status "$REVIEW_STATUS_FILE" --output "$prompt_file")
+
+  [[ -f "$STATE_FILE" ]] && args+=(--state "$STATE_FILE")
+  [[ -n "$SPEC_PATH" ]] && args+=(--spec "$SPEC_PATH")
+  [[ -n "$FIX_GUIDANCE" ]] && args+=(--guidance "$FIX_GUIDANCE")
+
+  "$BUILD_FIX_PROMPT_SCRIPT" "${args[@]}" >/dev/null
+  printf '%s\n' "$prompt_file"
+}
+
+run_fix_pass() {
+  local pass="$1"
+  local prompt_file="$2"
+  local output_file="${SHIP_DIR}/review-fix-pass-${pass}.output.log"
+  local fix_status=0
+
+  mkdir -p "$SHIP_DIR"
+
+  if [[ -n "${LOCAL_REVIEW_FIX_COMMAND:-}" ]]; then
+    set +e
+    LOCAL_REVIEW_FIX_PROMPT_FILE="$prompt_file" \
+    LOCAL_REVIEW_FIX_PASS="$pass" \
+    CLAUDE_SHIP_DIR="$SHIP_DIR" \
+    bash -lc "$LOCAL_REVIEW_FIX_COMMAND" 2>&1 | tee "$output_file"
+    fix_status=${PIPESTATUS[0]}
+    set -e
+    return "$fix_status"
+  fi
+
+  if [[ "$DOCKER_EXEC" == "true" ]]; then
+    set +e
+    docker compose -f "$RESOLVED_COMPOSE_FILE" exec \
+      -e CLAUDE_SHIP_DIR="$SHIP_DIR" \
+      -e LOCAL_REVIEW_AUTH_MODE="$DOCKER_AUTH_MODE" \
+      -e LOCAL_REVIEW_API_KEY="$REVIEW_API_KEY" \
+      -e LOCAL_REVIEW_FIX_PROMPT_PATH="$prompt_file" \
+      -e LOCAL_REVIEW_FIX_MAX_TURNS="$FIX_MAX_TURNS" \
+      -e PATH="$DOCKER_EXEC_PATH" \
+      sandbox \
+      /bin/bash -lc '
+        set -euo pipefail
+        cd /workspace
+
+        if [[ "${LOCAL_REVIEW_AUTH_MODE:-api-key}" == "claude.ai" ]]; then
+          unset ANTHROPIC_API_KEY
+        elif [[ -n "${LOCAL_REVIEW_API_KEY:-}" ]]; then
+          export ANTHROPIC_API_KEY="${LOCAL_REVIEW_API_KEY}"
+        fi
+
+        env -u CLAUDECODE -u CLAUDE_CODE_ENTRYPOINT claude \
+          -p "$(cat "$LOCAL_REVIEW_FIX_PROMPT_PATH")" \
+          --dangerously-skip-permissions \
+          --max-turns "$LOCAL_REVIEW_FIX_MAX_TURNS" \
+          --output-format json
+      ' 2>&1 | tee "$output_file"
+    fix_status=${PIPESTATUS[0]}
+    set -e
+    return "$fix_status"
+  fi
+
+  set +e
+  env -u CLAUDECODE -u CLAUDE_CODE_ENTRYPOINT claude \
+    -p "$(cat "$prompt_file")" \
+    --dangerously-skip-permissions \
+    --max-turns "$FIX_MAX_TURNS" \
+    --output-format json \
+    2>&1 | tee "$output_file"
+  fix_status=${PIPESTATUS[0]}
+  set -e
+  return "$fix_status"
+}
+
 container_supports_claudeai_auth() {
   local compose_file="$1"
 
@@ -266,110 +573,60 @@ bootstrap_container_claude_auth() {
   container_supports_claudeai_auth "$compose_file"
 }
 
-if [[ "$DOCKER_EXEC" == "true" ]]; then
-  if ! command -v docker >/dev/null 2>&1; then
-    echo "docker CLI is required for --docker mode" >&2
-    exit 1
-  fi
+prepare_docker_context
 
-  RESOLVED_COMPOSE_FILE="$(resolve_compose_file)"
+run_review_status=0
+fix_pass=0
 
-  if ! compose_service_running "$RESOLVED_COMPOSE_FILE" 'proxy'; then
-    bring_up_service_with_retries "$RESOLVED_COMPOSE_FILE" 'proxy'
-  fi
-
-  if ! compose_service_running "$RESOLVED_COMPOSE_FILE" 'sandbox'; then
-    bring_up_service_with_retries "$RESOLVED_COMPOSE_FILE" 'sandbox' --no-deps
-  fi
-
-  DOCKER_AUTH_MODE="api-key"
-  if select_review_api_key; then
-    echo "Using validated Anthropic API key from ${REVIEW_API_KEY_SOURCE}." >&2
-  elif container_supports_claudeai_auth "$RESOLVED_COMPOSE_FILE"; then
-    DOCKER_AUTH_MODE="claude.ai"
-    echo "Sandbox ANTHROPIC_API_KEY failed validation; falling back to existing claude.ai auth." >&2
-  elif bootstrap_container_claude_auth "$RESOLVED_COMPOSE_FILE"; then
-    DOCKER_AUTH_MODE="claude.ai"
-    echo "Sandbox ANTHROPIC_API_KEY failed validation; falling back to host-backed claude.ai auth." >&2
+while :; do
+  if run_review_once; then
+    run_review_status=0
   else
-    echo "Sandbox ANTHROPIC_API_KEY validation failed and claude.ai auth is unavailable; proceeding with api-key mode." >&2
+    run_review_status=$?
   fi
 
-  exec docker compose -f "$RESOLVED_COMPOSE_FILE" exec \
-    -e CLAUDE_SHIP_DIR="$SHIP_DIR" \
-    -e LOCAL_REVIEW_COMPOSE_FILE="$RESOLVED_COMPOSE_FILE" \
-    -e LOCAL_REVIEW_EXECUTION_MODE="docker" \
-    -e LOCAL_REVIEW_SOURCE_REPO="/workspace" \
-    -e LOCAL_REVIEW_TMP_REPO="/tmp/local-review-workspace" \
-    -e LOCAL_REVIEW_AUTH_MODE="$DOCKER_AUTH_MODE" \
-    -e LOCAL_REVIEW_API_KEY="$REVIEW_API_KEY" \
-    -e PATH="$DOCKER_EXEC_PATH" \
-    sandbox \
-    /bin/bash -lc '
-      set -euo pipefail
+  if [[ "$run_review_status" -ne 0 ]]; then
+    exit "$run_review_status"
+  fi
 
-      SOURCE_REPO="${LOCAL_REVIEW_SOURCE_REPO:-/workspace}"
-      TMP_REPO="${LOCAL_REVIEW_TMP_REPO:-/tmp/local-review-workspace}"
+  "$SCRIPT_DIR/parse-local-review-summary.sh" --input "$OUTPUT_FILE" --output "$REVIEW_STATUS_FILE" >/dev/null
+  update_state_with_review_status
 
-      if [[ "${LOCAL_REVIEW_AUTH_MODE:-api-key}" == "claude.ai" ]]; then
-        unset ANTHROPIC_API_KEY
-      elif [[ -n "${LOCAL_REVIEW_API_KEY:-}" ]]; then
-        export ANTHROPIC_API_KEY="${LOCAL_REVIEW_API_KEY}"
-      fi
+  if ! jq -e '.blocking == true' "$REVIEW_STATUS_FILE" >/dev/null 2>&1; then
+    exit 0
+  fi
 
-      rm -rf "$TMP_REPO"
-      mkdir -p "$TMP_REPO"
+  echo "Local review summary is blocking. Fix the validated issues and rerun the gate." >&2
+  jq -r '.blockingReasons[]? | "- " + .' "$REVIEW_STATUS_FILE" >&2 || true
 
-      # Use a slimmed temp workspace so Claude startup does not recurse through
-      # heavy local-only trees like .claude/worktrees from the mounted host repo.
-      tar -C "$SOURCE_REPO" \
-        --exclude="./.claude/worktrees" \
-        --exclude="./.claude/skills/pr-context" \
-        --exclude="./.claude/pr-diff" \
-        --exclude="./node_modules" \
-        --exclude="./.next" \
-        --exclude="./.turbo" \
-        --exclude="./dist" \
-        --exclude="./build" \
-        --exclude="./tmp/ship/local-review-runs" \
-        -cf - . | tar -C "$TMP_REPO" -xf -
+  if [[ "$ALLOW_BLOCKING" == true ]]; then
+    exit 2
+  fi
 
-      cd "$TMP_REPO"
+  if [[ "$REPAIR_MODE" == "off" ]]; then
+    exit 2
+  fi
 
-      set +e
-      "$@"
-      review_status=$?
-      set -e
+  if [[ "$fix_pass" -ge "$MAX_FIX_PASSES" ]]; then
+    echo "Reached max fix passes (${MAX_FIX_PASSES}) with a still-blocking local review gate." >&2
+    exit 2
+  fi
 
-      mkdir -p "$SOURCE_REPO/tmp/ship"
+  fix_pass=$((fix_pass + 1))
+  FIX_PROMPT_FILE="$(build_fix_prompt "$fix_pass")"
+  echo "Wrote local review repair prompt to ${FIX_PROMPT_FILE}" >&2
 
-      if [[ -f "$TMP_REPO/tmp/ship/review-output.md" ]]; then
-        cp "$TMP_REPO/tmp/ship/review-output.md" "$SOURCE_REPO/tmp/ship/review-output.md"
-      fi
+  if [[ "$REPAIR_MODE" == "prompt" ]]; then
+    echo "Review repair is in prompt mode. Run the prompt above, then rerun run-local-review.sh." >&2
+    exit 2
+  fi
 
-      if [[ -f "$TMP_REPO/tmp/ship/local-review-latest.txt" ]]; then
-        cp "$TMP_REPO/tmp/ship/local-review-latest.txt" "$SOURCE_REPO/tmp/ship/local-review-latest.txt"
-      fi
+  echo "Starting autonomous local review repair pass ${fix_pass}/${MAX_FIX_PASSES}..." >&2
+  if run_fix_pass "$fix_pass" "$FIX_PROMPT_FILE"; then
+    :
+  else
+    echo "Autonomous repair pass ${fix_pass} exited non-zero; rerunning gates to verify the repo state before the next review pass." >&2
+  fi
 
-      if [[ -d "$TMP_REPO/tmp/ship/local-review-runs" ]]; then
-        mkdir -p "$SOURCE_REPO/tmp/ship/local-review-runs"
-        cp -R "$TMP_REPO/tmp/ship/local-review-runs/." "$SOURCE_REPO/tmp/ship/local-review-runs/"
-      fi
-
-      if [[ -f "$TMP_REPO/.claude/skills/pr-context/SKILL.md" ]]; then
-        mkdir -p "$SOURCE_REPO/.claude/skills/pr-context"
-        cp "$TMP_REPO/.claude/skills/pr-context/SKILL.md" "$SOURCE_REPO/.claude/skills/pr-context/SKILL.md"
-      fi
-
-      if [[ -f "$TMP_REPO/.claude/pr-diff/full.diff" ]]; then
-        mkdir -p "$SOURCE_REPO/.claude/pr-diff"
-        cp "$TMP_REPO/.claude/pr-diff/full.diff" "$SOURCE_REPO/.claude/pr-diff/full.diff"
-      fi
-
-      exit "$review_status"
-    ' local-review-in-container \
-    "$BUNDLE_SCRIPT" \
-    "${REVIEW_ARGS[@]}"
-fi
-
-exec "$BUNDLE_SCRIPT" "${REVIEW_ARGS[@]}"
+  run_quality_gates
+done
