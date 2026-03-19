@@ -17,6 +17,17 @@ Standard for all image assets on Twitter/X. Note: X is primarily an awareness/th
 | **Uncropped range** | 2:1 to 1:1 display without cropping (since May 2021) |
 | **Feed width** | ~504 px on desktop, full-width on mobile |
 
+## Typography tiers at 1200×675
+
+| Role | % of canvas height | Target range | Scale step |
+|---|---|---|---|
+| **Heading** | 9-12% | 60-80px | 64 or 84 |
+| **Subtitle** | 4-5% | 28-36px | 28 or 36 |
+| **Body** | 3-4% | 20-28px | 20 or 28 |
+| **Badge** | 1.2-1.5% | 8-10px | — |
+
+**Sizing ladder** (Perfect Fourth 1.333 from 20px, snapped to ×4): 20 → 28 → 36 → 48 → 64 → 84 → 112. For elements not in the table, pick the scale step that creates correct visual weight relative to the heading. All sizes should be multiples of 4.
+
 ## Compression behavior
 
 X compresses aggressively via MediaPipe-Optimize:

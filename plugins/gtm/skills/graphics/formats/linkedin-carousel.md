@@ -30,6 +30,19 @@ Carousels hold attention **15-20 seconds** per post vs 8-10 seconds for single i
 | **Safe zone** | Keep key content within center ~880 x 880 px (for 1080 format) |
 | **Edge padding** | 80-100 px on all sides |
 
+## Typography tiers at 1080×1080
+
+| Role | % of canvas height | Target range | Scale step |
+|---|---|---|---|
+| **Heading** | 5-7% | 54-76px | 64 |
+| **Subtitle** | 2.5-3.5% | 28-36px | 28 or 36 |
+| **Body** | 2-3% | 24-32px | 28 |
+| **Badge** | 1.3-1.8% | 14-19px | — |
+
+Square formats use lower height percentages because the canvas is taller — absolute sizes stay similar to landscape formats.
+
+**Sizing ladder** (Perfect Fourth 1.333 from 20px, snapped to ×4): 20 → 28 → 36 → 48 → 64 → 84 → 112. For elements not in the table, pick the scale step that creates correct visual weight relative to the heading. All sizes should be multiples of 4.
+
 ## Engagement patterns
 
 - Engagement typically drops after **slide 6-7**, sharper drop after slide 10

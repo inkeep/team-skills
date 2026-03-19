@@ -12,6 +12,17 @@ Standard for YouTube video thumbnails. The thumbnail is the single most importan
 | **File formats** | JPG, PNG, GIF, BMP |
 | **Max file size** | 2 MB |
 
+## Typography tiers at 1280×720
+
+| Role | % of canvas height | Target range | Scale step |
+|---|---|---|---|
+| **Heading** | 11-14% | 80-100px | 84 or 112 |
+| **Subtitle** | 4-5% | 28-36px | 28 or 36 |
+
+YouTube thumbnails rarely use body text — the heading should dominate. 3-5 words maximum.
+
+**Sizing ladder** (Perfect Fourth 1.333 from 20px, snapped to ×4): 20 → 28 → 36 → 48 → 64 → 84 → 112. All sizes should be multiples of 4.
+
 ## Safe zones
 
 ```

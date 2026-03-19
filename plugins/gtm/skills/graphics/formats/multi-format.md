@@ -47,6 +47,22 @@ Blog Cover (1280×720 working, export @2x → 2560×1440)  ← Master
 - **LinkedIn post (1:1):** Full title if it fits large; shortened if not.
 - **Email thumbnail:** No title text in the image.
 
+## Typography tiers by format (quick reference)
+
+When deriving formats from the master, adjust typography for each canvas:
+
+| Format | Canvas | Heading % height | Heading px | Subtitle px | Body px |
+|---|---|---|---|---|---|
+| Blog cover (master) | 1280×720 | 11-14% | 80-100 | 28-36 | 20 |
+| Social OG | 1200×630 | 12-15% | 76-95 | 28 | 20 |
+| Social post | 1200×675 | 9-12% | 60-80 | 28-36 | 20-28 |
+| LinkedIn 1:1 | 1200×1200 | 5-7% | 60-84 | 28-36 | 28 |
+| Email thumbnail | 1200×500 | 10-15% | 48-76 | 28 | 24 |
+
+**Sizing ladder** (Perfect Fourth 1.333 from 20px, snapped to ×4): 20 → 28 → 36 → 48 → 64 → 84 → 112.
+
+When adapting the master to a derived format, re-check the heading against the target canvas height percentage — do not simply reuse the master's pixel values.
+
 ## The derive procedure
 
 After the master (blog cover) is designed and approved:

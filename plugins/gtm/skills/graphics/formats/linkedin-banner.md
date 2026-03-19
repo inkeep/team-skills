@@ -13,6 +13,24 @@ Standard for LinkedIn company page and personal profile banners.
 |---|---|
 | **File format** | PNG (recommended) or JPG |
 
+## Typography tiers
+
+**Company banner (1128×191) — extremely constrained height:**
+
+| Role | % of canvas height | Target range | Scale step |
+|---|---|---|---|
+| **Heading** | 15-20% | 28-38px | 28 or 36 |
+| **Subtitle** | 8-10% | 16-20px | 20 |
+
+**Personal banner (1584×396):**
+
+| Role | % of canvas height | Target range | Scale step |
+|---|---|---|---|
+| **Heading** | 10-14% | 40-56px | 48 |
+| **Subtitle** | 5-7% | 20-28px | 20 or 28 |
+
+**Sizing ladder** (Perfect Fourth 1.333 from 20px, snapped to ×4): 20 → 28 → 36 → 48 → 64 → 84 → 112. All sizes should be multiples of 4.
+
 ## Safe zones
 
 ### Company page banner (1128 x 191)

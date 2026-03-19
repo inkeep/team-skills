@@ -14,6 +14,18 @@ Standard for YouTube channel art / banner images.
 
 All pixel values below are at **1280×720 working scale**.
 
+## Typography tiers at 1280×720 working canvas
+
+| Role | % of canvas height | Target range | Scale step |
+|---|---|---|---|
+| **Heading** | 11-14% | 80-100px | 84 or 112 |
+| **Subtitle** | 4-5% | 28-36px | 28 or 36 |
+| **Body** | 2.5-3.5% | 18-24px | 20 |
+
+**Safe zone constraint:** All text must fit within the all-device safe zone (618×169 centered at working scale). Size heading for this zone, not the full canvas.
+
+**Sizing ladder** (Perfect Fourth 1.333 from 20px, snapped to ×4): 20 → 28 → 36 → 48 → 64 → 84 → 112. All sizes should be multiples of 4.
+
 ## Safe zones (critical)
 
 The banner displays differently on every device. Only the center strip is guaranteed visible everywhere.

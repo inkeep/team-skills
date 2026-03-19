@@ -12,6 +12,25 @@ Standard for case study images on the Inkeep marketing site.
 
 The site renders case study thumbnails in cards at 16:9 aspect ratio with `object-cover`, so the thumbnail will be cropped from 8:5 to 16:9. Keep focal content in the center.
 
+## Typography tiers
+
+**Hero (900×420 working):**
+
+| Role | % of canvas height | Target range | Scale step |
+|---|---|---|---|
+| **Heading** | 11-15% | 48-64px | 48 or 64 |
+| **Subtitle** | 5-7% | 20-28px | 20 or 28 |
+
+**Thumbnail (400×250 working):**
+
+| Role | % of canvas height | Target range | Scale step |
+|---|---|---|---|
+| **Heading** | 11-14% | 28-36px | 28 or 36 |
+
+Thumbnails have very limited space — use 3-5 words maximum.
+
+**Sizing ladder** (Perfect Fourth 1.333 from 20px, snapped to ×4): 20 → 28 → 36 → 48 → 64 → 84 → 112. All sizes should be multiples of 4.
+
 ## Triple-customization system
 
 Case study graphics use a three-layer customization system. Each layer adapts to the specific customer, making every case study feel bespoke while maintaining a recognizable Inkeep template structure.

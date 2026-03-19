@@ -51,6 +51,8 @@ These proportions are measured from the top 6 performing companies (Resend, Dub.
 
 **Measured from exemplars:** Resend's headings at 1920w are ~140-160px. At our 1280w working canvas, that's ~93-107px. The heading should be dramatically larger than everything else — at least 5x the badge text size.
 
+**Sizing ladder** (Perfect Fourth 1.333 from 20px, snapped to ×4): 20 → 28 → 36 → 48 → 64 → 84 → 112. For elements not in the tier table (subtitles, card titles, metric callouts), pick the scale step that creates correct visual weight relative to the heading. All sizes should be multiples of 4.
+
 ### Split layout, visual sizing, and hierarchy
 
 See `/brand` `references/composition-guide.md` for the full split layout proportions, edge bleed techniques, and visual hierarchy ratios.

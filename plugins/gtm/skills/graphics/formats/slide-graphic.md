@@ -18,6 +18,19 @@ When building in Figma for Google Slides, use 960 x 540 px as the working canvas
 - Typical inset sizes: 600–800px wide, variable height
 - Export at 4x scale for sharpness on high-DPI displays
 
+## Typography tiers at 960×540 working canvas
+
+| Role | % of canvas height | Target range | Scale step |
+|---|---|---|---|
+| **Heading** | 11-15% | 60-80px | 64 or 84 |
+| **Subtitle** | 4-5% | 24-28px | 28 |
+| **Body** | 3.3-4.4% | 18-24px | 20 |
+| **Badge** | 1.7-2.0% | 9-11px | — |
+
+Slide decks are projected — err on the side of larger. Viewers are at distance.
+
+**Sizing ladder** (Perfect Fourth 1.333 from 20px, snapped to ×4): 20 → 28 → 36 → 48 → 64 → 84 → 112. All sizes should be multiples of 4.
+
 ## Design guidelines
 
 ### Text

@@ -21,6 +21,17 @@ This is the universal standard for OG images. The site auto-generates OG images 
 - Posts likely to be shared heavily on social (the OG image IS the first impression)
 - When the auto-generated text-only card doesn't convey the visual nature of the content
 
+## Typography tiers at 1200×630
+
+| Role | % of canvas height | Target range | Scale step |
+|---|---|---|---|
+| **Heading** | 12-15% | 76-95px | 84 |
+| **Subtitle** | 4-5% | 25-32px | 28 |
+| **Body** | 3-4% | 19-25px | 20 |
+| **Badge** | 1.3-1.6% | 8-10px | — |
+
+**Sizing ladder** (Perfect Fourth 1.333 from 20px, snapped to ×4): 20 → 28 → 36 → 48 → 64 → 84 → 112. For elements not in the table (card titles, metric callouts), pick the scale step that creates correct visual weight relative to the heading. All sizes should be multiples of 4.
+
 ## Design guidelines
 
 ### Text

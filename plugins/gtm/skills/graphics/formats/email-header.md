@@ -18,6 +18,18 @@ Standard for email marketing images — headers, hero images, and newsletter gra
 
 **Always create images at 2x** the display size for retina sharpness. Constrain with `width="600"` in HTML. Don't rely on `srcset` — email client support is inconsistent.
 
+## Typography tiers at 1200×500 (typical height)
+
+| Role | % of canvas height | Target range | Scale step |
+|---|---|---|---|
+| **Heading** | 10-15% | 48-76px | 48 or 64 |
+| **Subtitle** | 5-7% | 24-36px | 28 or 36 |
+| **Body** | 4-6% | 24-28px | 28 |
+
+Email headers vary in height (400-600px). Calculate targets from your actual canvas height. At 2x retina (1200px canvas for 600px display), text renders at half its pixel size — a 48px heading displays as 24px, which is the readability floor.
+
+**Sizing ladder** (Perfect Fourth 1.333 from 20px, snapped to ×4): 20 → 28 → 36 → 48 → 64 → 84 → 112. All sizes should be multiples of 4.
+
 ## Deliverability constraints
 
 | Rule | Limit | Why |

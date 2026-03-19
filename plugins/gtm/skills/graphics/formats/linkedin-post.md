@@ -18,6 +18,19 @@ Standard for single-image posts on LinkedIn — the primary B2B social channel.
 
 **Default recommendation:** Use **1200 x 1200 px (1:1)** as the default — it works well on both desktop and mobile and is the safest cross-platform choice. Use 4:5 portrait only for LinkedIn-first content where you want maximum mobile feed presence.
 
+## Typography tiers at 1200×1200
+
+| Role | % of canvas height | Target range | Scale step |
+|---|---|---|---|
+| **Heading** | 5-7% | 60-84px | 64 or 84 |
+| **Subtitle** | 2.5-3.5% | 28-40px | 28 or 36 |
+| **Body** | 2-3% | 24-36px | 28 or 36 |
+| **Badge** | 1.2-1.6% | 14-19px | — |
+
+Square formats use lower height percentages because the canvas is taller — absolute sizes stay similar to landscape formats.
+
+**Sizing ladder** (Perfect Fourth 1.333 from 20px, snapped to ×4): 20 → 28 → 36 → 48 → 64 → 84 → 112. For elements not in the table, pick the scale step that creates correct visual weight relative to the heading. All sizes should be multiples of 4.
+
 ## Compression behavior
 
 LinkedIn re-compresses every uploaded image. To minimize quality loss:

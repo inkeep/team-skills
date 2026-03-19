@@ -106,6 +106,8 @@ The Inkeep Brand Assets file contains the canonical design token system as Figma
 | **Inkeep Spacing** | Base scale (4-48px) + contextual layout spacing (section gaps, hero padding, page max-width) | Base scale for component internals. Contextual tokens for page layout (`spacing/section-gap` = 100px between sections). |
 | **Inkeep Radius** | Full range from 2px micro to 80px large headers | The signature aesthetic uses **large radii**: 32px for feature cards, 47px for use case cards, 60px for hero badges. `radius/pill` (9999) for buttons. |
 | **Inkeep Typography** | Font families, semantic sizes, weights, tracking (letter-spacing), leading (line-height) | **Strict rules:** Neue Haas for headings (weight 400), JetBrains Mono for labels (weight 500, **always uppercase**), Noto Serif for body (weight 300). Never mix more than 2 typefaces per component. |
+
+**⚠️ Typography sizing context:** The `font/size-*` tokens in `tokens/marketing.md` (e.g., `font/size-hero: 80px`, `font/size-section: 64px`) are calibrated for the Inkeep marketing **website** at 1280px page width — text on a scrolling page viewed at screen distance. **For standalone graphic canvases** (social banners, blog covers, slides, OG images), derive text sizes from the **format file's canvas-relative typography tiers**, not from these web-page token values. Font families, weights, tracking, and line-heights transfer across contexts; **size values do not**.
 | **Inkeep Shadows** | 9 shadow definitions from subtle to brand glow | `shadow/subtle` for cards at rest, `shadow/medium` for hover, `shadow/brand` for blue-tinted glow on branded elements. |
 
 **Discovering tokens dynamically** (always prefer this over hardcoded values):
@@ -205,12 +207,19 @@ Identify:
 - **Purpose**: where it will be used (slide deck, docs, website, social media, email)
 - **Output medium**: how it will be displayed — this determines minimum text sizes and visual weight
 
-| Medium | Min body text | Min label text | Notes |
-|---|---|---|---|
-| Slide deck (projected) | 18px | 14px | Will be viewed from distance; err on the side of larger |
-| Social media image | 16px | 12px | Viewed on mobile; needs to be legible at small sizes |
-| Website / docs | 14px | 11px | Viewed at screen distance |
-| Print (poster, handout) | 12pt | 9pt | Physical media; point sizes, not pixels |
+| Medium | Min heading | Min body | Min label | Format file (for recommended targets) |
+|---|---|---|---|---|
+| Blog cover (1280×720) | 60px | 16px | 9px | `formats/blog-cover.md` |
+| Social / OG (1200×630) | 64px | 20px | 10px | `formats/social-og.md` |
+| Social post (1200×675) | 60px | 20px | 10px | `formats/social-post.md` |
+| LinkedIn post (1200×1200) | 60px | 24px | 14px | `formats/linkedin-post.md` |
+| LinkedIn carousel (1080×1080) | 54px | 24px | 14px | `formats/linkedin-carousel.md` |
+| Twitter/X (1200×675) | 60px | 20px | 10px | `formats/twitter-x.md` |
+| YouTube thumbnail (1280×720) | 60px | — | — | `formats/youtube-thumbnail.md` |
+| Slide deck (960×540) | 48px | 18px | 9px | `formats/slide-graphic.md` |
+| Email header (1200×500) | 48px | 24px | — | `formats/email-header.md` |
+
+These are **minimum floors**, not targets. The format files contain **canvas-relative typography tiers** with recommended sizes that are significantly larger than these minimums. Always read the format file — the tiers are calibrated from empirical measurements of top-performing B2B companies.
 
 If the user doesn't specify the medium, **ask** — text sizing is the most common source of iteration waste. Default to slide deck sizing when the purpose is "presentation" or "deck."
 
@@ -615,7 +624,7 @@ If `--domain` is omitted, the script uses the Brandfetch Search API to resolve t
 1. **First:** Check Figma Brand Assets page (node `5003:63`) — Inkeep logos AND curated third-party logos are here. Clone, don't recreate.
 2. **If not in Brand Assets:** `fetch-logo.ts` (logo SVG only) or `fetch-brand.ts` (logo + brand colors + fonts). Use `fetch-brand.ts` when you also need the company's color palette (comparison graphics, case study heroes).
 3. **If fetch fails:** Create a styled text pill placeholder (brand name in a rounded rectangle) and flag it for the user to replace manually. NEVER approximate a logo with shapes.
-4. **For AI image gen with logos:** Export the logo as PNG from step 1 or 2, then feed it as a `--reference` image. Both GPT and Gemini preserve logos faithfully when given as references.
+4. **For AI image gen with logos:** Do NOT feed logos as `--reference` images expecting pixel-perfect reproduction — both GPT Image and Gemini reinterpret reference images through their latent space, producing recognizable but altered versions (shifted proportions, font substitution, color drift). Instead, generate the scene/background WITHOUT the logo (prompt: "no text, no logos"), then composite the exact logo as a Figma layer on top of the generated image. This hybrid approach (AI scene + deterministic logo overlay) is the industry standard — Google's own workflow does this.
 
 **Record the brand profile in the Asset Manifest** (section h below).
 
@@ -774,6 +783,14 @@ For compound elements (product mockups, chat interfaces, multi-part UI), also li
 - Color mapping: exact token names from brand-tokens.md for Inkeep elements (not hex from memory). **For third-party brand elements** (competitor side of a comparison, customer in a case study), use colors from the brand profile fetched in Step 2f — map `brand` → primary accent, `dark` → text color, `light` → background tint. If no brand profile was fetched, default to Inkeep palette.
 - Typography mapping: font + weight + size for each text element. If the brand profile includes a Google Fonts title font, consider using it for the third-party brand's name/heading to reinforce their identity.
 - Illustration style (if applicable): hand-drawn rules from brand-guide.md
+
+### Typography scaling validation
+- [ ] Heading is 11-15% of canvas height (landscape/wide) or 5-7% (square/portrait)
+- [ ] Heading ÷ body size ratio ≥ 3:1 (aim for 4:1)
+- [ ] Badge size ≈ 1/8 of heading size (badge whispers, heading shouts)
+- [ ] Content fills ≥75% of canvas area (no "floating in space")
+- [ ] Squeeze test: heading × (400 ÷ canvas width) ≥ 20px (readable in mobile feed)
+- [ ] Text sizes are from the format file's typography tiers, not raw brand token values
 
 ### Anti-pattern check
 - [ ] Background is NOT flat (has texture/gradient)
@@ -1300,7 +1317,7 @@ Best for: photorealistic 3D hero elements, glass/material objects, atmospheric b
 | Signal in the task | Provider | Why |
 |---|---|---|
 | Output needs **transparent background** (element for Figma compositing) | **GPT Image** | Only model with native `background: "transparent"` parameter |
-| **Image editing** (inpaint, mask-based modification, surgical changes) | **GPT Image** | Mask-based precision via edit endpoint |
+| **Image editing** (inpaint, mask-based modification, surgical changes) | **GPT Image** | Edit endpoint accepts mask + prompt. Note: GPT Image masks are soft guidance — the model may modify unmasked areas. For pixel-perfect region protection, generate the scene first, then composite protected elements in Figma. |
 | **Structured illustration** (needs correct layout topology, readable labels) | **GPT Image** | Better structural accuracy |
 | **3D hero element** (dark tile, glass prism, metallic object) | **Both in parallel** | Quality is 50/50 — generate on both, let user pick direction |
 | **Abstract atmospheric** (gradients, volumetric light, particle effects) | **Both in parallel** | Subjective aesthetic — GPT leans cinematic, Gemini leans clean/designed |
@@ -1319,7 +1336,7 @@ When routing says "both in parallel," the script generates on GPT and Gemini con
 **When to use references:**
 - Generating a 3D hero element → feed the most relevant brand illustration as style DNA
 - Generating a batch series → generate image #1 without reference, then use it as reference for #2-N
-- Preserving a logo on a 3D surface → feed the logo as reference (both models preserve it faithfully)
+- Placing a logo on a 3D surface → generate the surface/scene WITHOUT the logo, then composite the exact logo in Figma. Reference images reinterpret logos (shifted proportions, color drift) — they do not preserve them pixel-perfectly.
 - Matching the brand's visual language → feed any illustration from the design system that captures the intended aesthetic
 
 **How to find the right reference:**
