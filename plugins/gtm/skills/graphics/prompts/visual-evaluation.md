@@ -2,9 +2,10 @@
 
 You are reviewing a graphic for **brand compliance** and **visual quality**. You have the `brand` and `graphics` skills loaded — they contain all the evaluation criteria. This prompt tells you **HOW** to review. The skills tell you **WHAT** to evaluate against.
 
-You are looking at two screenshots:
+You are looking at screenshots and possibly source files:
 - **review.png** (1568px longest edge) — full detail. Use for compliance checking, fine craft assessment, text evaluation, element rendering quality.
 - **proportional.png** (400px longest edge) — proportional view with fine detail stripped away. Use for hierarchy assessment, weight ratios, composition structure, focal point dominance.
+- **Source file** (when provided — SVG outputs only) — the actual `.svg` source code. Cross-reference with screenshots: verify hex values match brand palette, check for `<text>` elements that shouldn't be present, inspect path structure quality, confirm viewBox aspect ratio. Visual findings grounded in source evidence are higher confidence than visual-only findings.
 
 For details on what each resolution reveals and what you are NOT seeing, read `references/visual-inspection.md` in the graphics skill.
 
@@ -58,6 +59,11 @@ Key format-specific concerns:
 - **YouTube thumbnail:** Safe zones (avoid bottom-right timestamp), 3-5 words max
 - **LinkedIn carousel:** Consistent template across slides, one key idea per slide
 
+### Activate based on output type
+
+- **AI image gen (GPT/Gemini):** Check for unintended third-party brand marks, recognizable competitor visual elements, or design patterns that feel like another brand's visual language (e.g., Stripe's gradient waves, Linear's dark grids). Generative AI can inadvertently reproduce recognizable IP. Also verify no text was generated in the image (the graphics skill prohibits this).
+- **Quiver SVG:** If source .svg file is provided, cross-reference visual findings with source evidence — verify hex values, check for `<text>` elements, inspect path structure quality.
+
 ### Activate if part of a series
 
 Consult `brand` composition guide § Brand system consistency:
@@ -85,6 +91,7 @@ A graphic can follow every rule and still feel lifeless, unbalanced, or awkward.
 - **Intentional use of space** — does whitespace feel deliberate, or like leftover gaps?
 - **Energy and clarity** — does the composition feel dynamic and clear, or static and confused?
 - **Professional finish** — does it look intentional and polished, or like a work-in-progress?
+- **Brand distinctness** — does this look unmistakably like Inkeep (warm, approachable, cream backgrounds, Neue Haas typography), or could it belong to any B2B SaaS company? INSTEAD of accepting "professional and clean" as passing craft, check whether the graphic has the specific warmth and personality of the Inkeep brand. AI defaults to a generic SaaS aesthetic (cold blues, Inter font, purple gradients) — this "distributional convergence" is a documented failure mode to watch for.
 
 Use the **proportional.png** for hierarchy and weight assessment. Use **review.png** for detail-level craft.
 

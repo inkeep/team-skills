@@ -1175,6 +1175,8 @@ When routing says "both in parallel," the script generates on GPT and Gemini con
    - **Not brand-enough:** Add a reference image from the design system
    - **Gemini-specific:** Use conversational follow-up ("make the rim glow warmer", "increase the glass refraction")
 
+   ⚠️ **Always re-anchor on the original design system reference image**, not on the previous AI-generated output. Iterative AI-to-AI generation compounds distortion — models retrained on their own output produce increasingly distorted results (model self-poisoning). Each generation attempt should start fresh from the brand reference.
+
 **Editing workflow** (GPT Image only — Gemini uses conversational editing instead):
 
 ```bash
@@ -1299,7 +1301,11 @@ For Figma designs:
 2. Run programmatic bounds check (see Phase D checkpoint code) — screenshots cannot catch overflow
 3. Verify correct canvas dimensions and aspect ratio per the format standard
 
-For Quiver SVG: grep hex values in the SVG source against the brand palette.
+For Quiver SVG:
+- Grep hex values in the SVG source against the brand palette
+- Verify viewBox dimensions and aspect ratio match intended output
+- Check for `<text>` elements that shouldn't be present (Quiver should render text as paths)
+- Flag SVG files >500KB for simple illustrations (indicates path fragmentation or decimal bloat)
 
 Fix any findings. Re-run until Layer 1 is clean (max 3 iterations). Do not proceed to Layer 2 until Layer 1 passes.
 
@@ -1341,6 +1347,9 @@ Fix any findings. Re-run until Layer 1 is clean (max 3 iterations). Do not proce
        Proportional view (400px longest edge):
        - <proportional.png path from capture script>
 
+       Source file (SVG outputs only — cross-reference with screenshots):
+       - <path to .svg file, or "N/A" for Figma/raster outputs>
+
        Context:
        - Format: <format name>
        - Purpose: <what this graphic is for>
@@ -1351,7 +1360,8 @@ Fix any findings. Re-run until Layer 1 is clean (max 3 iterations). Do not proce
 
        Follow the methodology to evaluate, then provide detailed
        findings with clear reasoning. Cite specific visual evidence
-       from the screenshots for every finding.
+       from the screenshots (and source file when available) for
+       every finding.
    ```
 
 3. **Read the reviewer's verdict and act:**
