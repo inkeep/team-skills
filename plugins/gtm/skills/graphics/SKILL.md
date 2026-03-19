@@ -1094,7 +1094,22 @@ For each element in the build plan:
    | Third-party logos | `third-party/{name}` | `third-party/vercel` |
 
 4. **Screenshot it** — `figma_capture_screenshot` to verify it looks correct
-5. **Craft-check the atom** — for Tier 2 atoms, evaluate: is this at "Elevated" or just "Correct" per the craft-elevation strategies? If just "Correct," elevate NOW — don't accumulate craft debt. It's far cheaper to elevate an isolated atom than to fix it after composition. Examples: a background that's a flat solid → add a subtle gradient + noise texture. An avatar that's a colored circle → generate a Quiver illustration. A card with no shadow → add proper shadow depth.
+5. **Craft-check the atom** — for Tier 2 atoms, evaluate: is this at "Elevated" or just "Correct" per the craft-elevation strategies? If just "Correct," elevate NOW — don't accumulate craft debt. It's far cheaper to elevate an isolated atom than to fix it after composition.
+
+   **⛔ Geometric-shape-as-placeholder check (the #1 AI craft failure):** If any atom is a plain geometric shape standing in for something that should be richer, STOP and replace it before proceeding. This is the single most common way AI output looks "AI-generated" vs designer-built:
+
+   | If you built... | It should actually be... | Method |
+   |---|---|---|
+   | Colored circle for an avatar | Illustrated portrait or silhouette with personality | Quiver illustration or Lucide `user` icon in styled container |
+   | Plain rectangle for a document/card | Card with internal content (text lines, data, icons) | Figma auto-layout card with sub-elements |
+   | Circle/square for an icon | Semantic icon that communicates meaning (Lucide icon set has 1700+) | Clone from Brand Assets or `fetch-logo.ts`, or Lucide icon in branded container |
+   | Colored dot for a status indicator | Badge with icon + label (checkmark, clock, warning) | Figma shape + Lucide icon + JetBrains Mono label |
+   | Empty rectangle for an image | Actual image fill (screenshot, generated image, illustration) | Image Gen, Quiver, or product screenshot from Step 1c reference |
+   | Plain lines for a diagram connector | Curved connector with dot endpoints and directional arrow | Figma vector path with brand stroke weight + dot nodes |
+   | Solid rectangle for a button | Styled button with label, padding, corner radius, hover shadow | Figma auto-layout frame matching product/brand button styles |
+   | Colored bar for a chart element | Properly styled data bar with value label and brand color token | Figma rectangle + text with exact token binding |
+
+   Every sub-element in a compound atom deserves its real visual treatment. If you catch yourself building a shape that "represents" something rather than "looks like" it, that's the signal to elevate.
 6. **Fix issues** — if the screenshot or craft-check shows problems, fix before continuing
 
 Once simple atoms are verified and elevated, compose them into compound elements (group into auto-layout frames, set spacing/padding, screenshot and verify).

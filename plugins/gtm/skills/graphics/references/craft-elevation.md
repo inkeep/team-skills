@@ -181,9 +181,23 @@ The model uses uniform stroke weight everywhere, or uses weights that don't matc
 The model creates an illustration with 2-3 elements when the composition needs 5-7 to feel rich. A "hub-and-spoke" diagram has a center and 2 spokes instead of 4-5. A product illustration shows one panel instead of a layered composition.
 → **Fix:** Brand illustrations typically have 5-7 distinct visual elements (not counting decorative accents like dot connectors). Count the elements — if you have fewer than 4, the illustration will feel sparse. Add: satellite elements around the focal point, connecting lines with dot endpoints, secondary containers that provide context, accent elements that add visual density without competing for attention.
 
-**Failure: Generic shapes instead of semantic content**
-The model uses circles, squares, and lines as abstract placeholders. A "notification" is represented by a circle. A "document" is a rectangle. These carry no meaning.
-→ **Fix:** Shapes must be semantically meaningful. A notification is an icon with a dot badge. A document is a rectangle with horizontal lines implying text. A user is a simple avatar (circle with head/shoulders silhouette). A message is a speech bubble with line-lengths. Each shape should communicate WHAT it represents, not just THAT something exists. Use Lucide icons inside containers for maximum semantic clarity.
+**Failure: Geometric shapes as placeholders (the #1 "looks AI-generated" tell)**
+The model uses circles, squares, and lines as abstract placeholders for things that should have real visual treatment. This is the single most visible craft failure — it instantly signals "a machine made this, not a designer." Common instances:
+
+| AI builds... | Should be... |
+|---|---|
+| Colored circle → avatar | Illustrated portrait/silhouette (Quiver) or Lucide `user` icon in styled container |
+| Plain rectangle → document/card | Card with internal content — text lines at varying lengths, icons, data values |
+| Circle/square → icon | Semantic Lucide icon (1700+ available) in branded container with background fill |
+| Colored dot → status | Badge with specific icon (checkmark, clock, warning) + label in JetBrains Mono |
+| Empty rectangle → image area | Actual image fill (screenshot, generated image, or golden-stroke image placeholder from illustration system) |
+| Plain lines → connectors | Curved paths with dot endpoints and directional arrows at brand stroke weight |
+| Solid rectangle → button | Styled button with label text, proper padding, corner radius, shadow |
+| Colored bar → chart element | Data bar with value label, proper width proportional to data, brand color token |
+| Circle → logo/brand mark | Real logo asset cloned from Brand Assets or fetched via `fetch-logo.ts` |
+| Rectangle with text → UI element | Proper UI chrome — toolbar, status bar, tab bar with active state, realistic content |
+
+→ **Fix:** Every sub-element should "look like" the thing it represents, not "represent" it abstractly. If you catch yourself building a shape that stands in for something, that's the signal to elevate. Use Lucide icons inside containers for semantic clarity. Use Quiver for illustrated elements that need organic/hand-drawn quality. Use real assets for logos and brand marks. The rule: if a designer would look at the element and say "that's a placeholder," it's not done.
 
 **Failure: Missing accent and connector details**
 The model builds the main elements but skips the connective tissue — no lines between nodes, no dot endpoints, no orbit rings, no swoosh. The illustration looks like scattered objects, not a connected system.
