@@ -8,22 +8,25 @@ argument-hint: "[search query] (e.g. 'openbolt spec', 'PR #2212', 'today', '/spe
 
 Search and navigate Claude Code conversation histories across all projects. Two-phase: **index** for fast lookup, **grep** as fallback for deep content search.
 
-## Step 0: Ensure the index exists
+## Step 0: Ensure search is ready
 
-Before searching, check if the index is current:
+Check if the keyword index exists:
+
+```bash
+test -f ~/.claude/session-index/index.json && echo "INDEX EXISTS" || echo "NO INDEX"
+```
+
+**If NO INDEX** (first time): run the full setup script. This builds the keyword index and optionally installs semantic search (episodic-memory). Tell the user what's happening — first-time setup takes a few minutes.
+
+```bash
+bash ~/.claude/skills/find-claude/scripts/setup.sh
+```
+
+**If INDEX EXISTS**: run an incremental update (<1s):
 
 ```bash
 bun ~/.claude/skills/find-claude/scripts/index-sessions.ts
 ```
-
-This runs incrementally (~1-3s for updates, ~30-60s for first full scan of ~400 sessions). Only re-scans sessions that changed since last run.
-
-If the index has never been built, run with `--full` for the initial scan:
-```bash
-bun ~/.claude/skills/find-claude/scripts/index-sessions.ts --full
-```
-
-The index lives at `~/.claude/session-index/index.json`.
 
 ## Step 1: Classify the search
 
