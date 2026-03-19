@@ -114,27 +114,59 @@ Tiers determine **evaluation order and suppression**. Severity (CRITICAL/MAJOR/M
 
 ---
 
-## When to inspect atoms
+## When and how to inspect atoms
 
-After the frame-level assessment, decide whether atom-level inspection is warranted. This is NOT mandatory for every graphic — most simple compositions (heading + single mockup + badge + logo) can be fully evaluated from the frame-level screenshots.
+After the frame-level assessment, decide whether atom-level inspection is warranted. This is driven by **your own confidence gaps** from the frame-level view — not by a predefined content-type checklist.
 
-**Inspect atoms when:**
-- The frame contains a **product mockup with internal UI elements** (buttons, text labels, status indicators, data) that are too small to assess reliably from the 1568px frame-level view
-- The frame contains a **data visualization** with labels, axis text, or legend items that need individual readability verification
-- The frame contains an **illustration with fine detail** (stroke weights, semantic colors, element count) that you can't confidently evaluate at frame scale
-- You identified a **potential issue** in the frame-level view but need closer inspection to confirm — e.g., "that text looks like it might be the wrong font but I can't tell at this scale"
+### Step 1: Identify confidence gaps
 
-**Do NOT inspect atoms when:**
-- The frame-level view is sufficient for all active dimensions (most blog covers, social images)
-- You already have CRITICAL or Tier 1 findings — fix the big stuff first, don't drill into detail
-- The element in question is decorative (backgrounds, gradients, spacers) — these don't warrant individual inspection
-- You've already inspected 5+ atoms — diminishing returns. Report what you've found and move on.
+Look at your frame-level findings. For each active dimension, ask: **"Am I guessing or verifying?"**
 
-**How to inspect:**
-1. Call `figma_get_file_for_plugin` with the parent frame's node ID to get child names, types, and IDs
-2. Select FRAME children that carry content (mockups, cards, sidebars, charts) — not TEXT or RECTANGLE leaf nodes
-3. Run `scripts/capture-for-review.ts` with the child node ID to get that element at 1568px longest edge
-4. Read the resulting review.png and evaluate against the relevant dimension criteria
+Confidence gaps look like:
+- "I can see text inside that element but can't tell if it's the right font"
+- "There are colored indicators but I can't assess their color accuracy at this scale"
+- "That area has internal detail I can't resolve — stroke weights, small labels, icon quality"
+- "Something looks slightly off but I can't confirm without a closer look"
+
+If you have NO confidence gaps — frame-level is sufficient. Skip atom inspection.
+
+### Step 2: Confirm with resolution math
+
+Query `figma_get_file_for_plugin` with the parent frame's node ID to get child bounds. For each element you flagged:
+
+```
+Element longest edge × (1568 / frame longest edge) = effective resolution in screenshot
+```
+
+- **Above 600px effective:** Frame-level is sufficient — you're seeing enough detail
+- **400–600px effective:** Borderline — inspect if the element carries important evaluative detail
+- **Below 400px effective:** Atom inspection warranted — you can detect existence but can't assess quality
+
+For a 1280×720 blog cover (scale 1.225x), an element needs to be ≥327px at canvas scale to reach 400px in the frame screenshot. Most product mockups, illustrations, and data visualizations are above this — but their INTERNAL elements (buttons, labels, dots, icons) are well below it.
+
+### Step 3: Prioritize which atoms to inspect
+
+You can inspect up to **5 atoms per graphic**. Prioritize in this order:
+
+**Priority 1 — The hero content element.** Whatever the graphic's focal point is (the product mockup, the main illustration, the data visualization). This is the element that most determines whether the graphic succeeds. If you only inspect one atom, it's this one.
+
+**Priority 2 — Elements where you identified a specific concern.** The frame-level view raised a question you can't resolve without closer inspection — wrong font, off-brand color, possible truncation. These are targeted inspections to confirm or dismiss a suspected issue.
+
+**Priority 3 — Elements with brand compliance obligations.** Third-party logos (must be real assets, not approximated), product mockups (two-layer rule — product tokens inside, marketing tokens outside), code blocks (syntax highlighting with brand colors). These have specific documented rules that can only be verified with sufficient detail.
+
+**Priority 4 — One sample from repeating elements.** If there are 3 agent cards, 5 integration logos, or 4 feature cards — inspect ONE to verify the pattern. If it passes, the siblings likely do too. If it fails, flag it for all.
+
+**Do NOT inspect:**
+- Decorative elements (backgrounds, gradients, dividers, spacers)
+- Elements you already assessed confidently from the frame-level view
+- Anything when you already have CRITICAL or Tier 1 findings — fix structural issues first
+
+### Step 4: Execute atom inspection
+
+1. From the node tree query (Step 2), select FRAME children — not TEXT or RECTANGLE leaf nodes (these render without background context)
+2. Run `scripts/capture-for-review.ts` with each child node ID to get that element at 1568px longest edge
+3. Read the resulting review.png and evaluate against the relevant dimension criteria
+4. Include atom-level findings alongside frame-level findings, noting which element was inspected
 
 ---
 
