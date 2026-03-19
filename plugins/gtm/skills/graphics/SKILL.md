@@ -229,8 +229,8 @@ Present the suggestion to the user: "Based on the content, I'd suggest a [type] 
 | Icon sets (multiple matching icons) | **Quiver (Option D)** with references | Generate one, pass it as `--references` for the rest — maintains visual consistency |
 | Background patterns, textures, abstract decorative art | **Quiver (Option D)** | Hard to hand-code, easy to describe |
 | Charts, graphs, data visualizations (bar, line, pie, donut, sparkline) | **Figma (Option A)** | Native primitives produce editable, brand-consistent output. **Load `content-types/data-visualization.md`** — contains both design guidelines (chart selection, colors, labeling) AND code recipes (arcData, vectorPaths) |
-| Simple structural SVGs (basic shapes, inline diagrams) | **Hand-coded SVG (Option B)** | Exact control; simple enough to write directly; humans can maintain the code |
-| System architecture, flowcharts, sequence diagrams | **D2/Mermaid (Option C)** | Purpose-built diagram languages with automatic layout |
+| Simple structural SVGs (basic shapes, inline diagrams) | **Hand-coded SVG (Option B) → Figma** | Exact control; import into Figma for review; SVG file is the deliverable |
+| System architecture, flowcharts, sequence diagrams | **D2/Mermaid (Option C) → Figma** | Purpose-built diagram languages; import into Figma for brand styling and review |
 | Converting a raster image to SVG | **Quiver vectorize (Option D)** | AI-powered raster-to-vector conversion |
 | Illustration FOR a slide/marketing layout | **Quiver (Option D) → Figma (Option A)** | Generate the illustration with Quiver, import into Figma, compose with brand elements and text — see hybrid workflow in Option D |
 | Photorealistic images, product mockups, realistic scenes | **AI Image Gen (Option E)** | Multi-provider raster generation — GPT Image or Gemini. See provider routing below. |
@@ -916,13 +916,13 @@ D2:
 1. Write D2 diagram code
 2. Apply brand colors via D2 theming
 3. Generate SVG output: `d2 input.d2 output.svg`
-4. Import into Figma: `figma.createNodeFromSvg(svgString)` — apply brand typography and colors that D2 theming can't fully control
+4. Import into Figma: `figma.createNodeFromSvg(svgString)` — apply brand typography and colors that D2 theming can't fully control. **Load:** `tools/svg-import.md` if the SVG uses gradients, `<defs>`, or `<use>` elements (these can fail on import).
 
 Mermaid:
 1. Write Mermaid syntax
 2. Render via CLI or browser
 3. Post-process to apply brand colors if needed
-4. Import into Figma: `figma.createNodeFromSvg(svgString)` — same as D2
+4. Import into Figma: `figma.createNodeFromSvg(svgString)` — same as D2. See `tools/svg-import.md` for complex SVG handling.
 
 All SVG outputs go through Figma for the Phase 5 review loop. The SVG file is the deliverable; Figma is the review surface.
 
@@ -1406,15 +1406,11 @@ All SVG outputs (Quiver, hand-coded, D2/Mermaid) should be imported into Figma b
 
 This pipeline has friction (public hosting, coordinate mapping, master element stripping). When possible, defer to the **gslides skill** for the full insertion workflow.
 
-**For code-based outputs (SVG, D2, Mermaid):**
-1. Save the graphic to the appropriate location
-2. If multiple formats needed, export both SVG and PNG
-3. Verify:
-   - [ ] Correct dimensions and aspect ratio
-   - [ ] Clean rendering at target size
-   - [ ] Text is readable at the intended display size
-   - [ ] If SVG: no broken references, valid markup
-4. Share the file path or output with the user
+**For code-based deliverables (SVG, D2, Mermaid):**
+The graphic was already imported into Figma and reviewed in Phase 5. For delivery:
+1. Save the original SVG file to the appropriate location
+2. If PNG export is also needed, export from the Figma frame at the required scale
+3. Share the SVG file path + Figma URL with the user
 
 ⛔ **Final visual inspection (REQUIRED before telling the user the graphic is done).**
 
