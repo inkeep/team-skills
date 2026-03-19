@@ -684,6 +684,20 @@ Before starting, verify the Desktop Bridge plugin is running:
 
 Follow the five-phase workflow below. Do NOT try to build the entire graphic in one pass.
 
+#### How to look at your work
+
+Claude sees images via the Read tool — it presents them visually, not as metadata. But resolution affects what you can reliably assess. Claude's sweet spot is **≤1568px on the long edge**. Above that, images are auto-downscaled (no quality benefit, wasted tokens). Below 200px, quality degrades.
+
+Use the right screenshot method for the situation:
+
+| Situation | Method | Why |
+|---|---|---|
+| **Quick construction checks** (Phases A–E: "does this atom look right?") | `figma_capture_screenshot` at default scale | Fast, good enough for binary pass/fail verification |
+| **Review screenshots** (Phase 5: preparing images for reviewer subagent) | `scripts/capture-for-review.ts` | Exports review.png (1568px) + proportional.png (400px) to disk for subagent |
+| **Non-Figma outputs** (Quiver, AI Image Gen, Three.js) | Read the generated PNG directly | Already within range (typically 1024×1024) |
+
+Every time this workflow says "screenshot" or "visually verify," you're using `figma_capture_screenshot` for quick checks. In Phase 5, run `scripts/capture-for-review.ts` to produce the review screenshots for the reviewer subagent — it exports via the Figma REST API at two resolutions and saves to `tmp/review/<name>/`.
+
 #### Phase A: Stage collected assets into the working file
 
 **Goal:** Transfer the assets identified in Step 2's Asset Manifest into the target Figma file. This phase executes the manifest — it does not redo the search.
@@ -1279,7 +1293,7 @@ After generating, verify the graphic matches the brand:
 - [ ] Appropriate use of gradients, shadows, or effects
 
 For Figma designs:
-1. Take a screenshot (`figma_capture_screenshot`) and visually verify
+1. Run `scripts/capture-for-review.ts` (see "How to look at your work" above) and visually verify the review.png
 2. Run `figma_lint_design` on the root frame to catch issues screenshots miss:
    - **Hardcoded colors** not bound to variables (visually identical but not token-linked)
    - **Unnamed layers** (default names like "Frame 47", "Rectangle 12")

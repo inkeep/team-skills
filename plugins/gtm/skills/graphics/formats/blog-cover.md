@@ -12,7 +12,7 @@ Standard for blog post hero images and thumbnail graphics on the Inkeep marketin
 | **File format** | PNG |
 | **Min acceptable size** | 1600 x 900 px (exported) |
 
-**Why 1x working canvas:** Design tokens (spacing, font sizes) are calibrated for 1x. Claude's vision processing downscales images >1568px, so working at 2560px produces screenshots the AI can't evaluate at full resolution. Figma vectors scale losslessly — export at 2x produces identical quality to working at 2x. All pixel values in this document are at **1280px working scale** unless noted otherwise.
+**Why 1x working canvas:** Design tokens (spacing, font sizes) are calibrated for 1x. Claude downscales images >1568px with no quality benefit — working at 2560px produces screenshots the AI can't evaluate at full resolution. Vectors scale losslessly for 2x export. See "How to look at your work" in the main workflow for screenshot resolution guidance. All pixel values in this document are at **1280px working scale** unless noted otherwise.
 
 The site renders blog thumbnails at multiple sizes depending on context:
 - **Blog post card**: 16:9, responsive (25vw–100vw depending on breakpoint)
