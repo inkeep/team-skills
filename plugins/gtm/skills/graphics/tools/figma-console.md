@@ -520,6 +520,38 @@ const children = parent.children.map(n => ({
 // Now use the verified IDs to swap positions
 ```
 
+### Pattern: SVG visual centering in container
+
+When placing an imported SVG inside a container (avatar, icon badge, logo placement), mathematical centering (`(container - element) / 2`) is wrong if the SVG's viewBox is larger than its visible content. Many icons extracted from larger compositions have empty viewBox padding that shifts the visual content off-center.
+
+Use `absoluteBoundingBox` on the SVG's child path nodes to get exact visual content bounds:
+
+```javascript
+// After importing SVG with createNodeFromSvg and scaling to desired size:
+const frameAbs = icon.absoluteBoundingBox;
+let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+for (const child of icon.children) {
+  const bb = child.absoluteBoundingBox;
+  if (!bb) continue;
+  minX = Math.min(minX, bb.x);
+  minY = Math.min(minY, bb.y);
+  maxX = Math.max(maxX, bb.x + bb.width);
+  maxY = Math.max(maxY, bb.y + bb.height);
+}
+
+// Content center relative to the SVG frame
+const contentCenterX = ((minX + maxX) / 2) - frameAbs.x;
+const contentCenterY = ((minY + maxY) / 2) - frameAbs.y;
+
+// Position so content center = container center
+icon.x = (containerSize / 2) - contentCenterX;
+icon.y = (containerSize / 2) - contentCenterY;
+```
+
+**When to use:** Any imported SVG placed in a fixed-size container (avatars, icon badges, logo lockups in rounded squares). Does NOT apply to native Figma shapes (they don't have viewBox padding).
+
+**Example:** The Inkeep icon SVG has a 244x332 viewBox but visual content (hexagon + blob) occupies only 238x149 starting at y=33. Mathematical centering places the icon 59px too high and 3px too far left. This pattern corrects both axes.
+
 ### Pattern: Defensive node access
 
 Before operating on a node by ID, **always verify** it exists and is the expected type. Wrong or stale node IDs are the #1 cause of `TypeError` and `cannot read property of undefined` in multi-step sessions.
@@ -694,6 +726,22 @@ Figma URLs use hyphens (`?node-id=5-3`), the Plugin API and REST API use colons 
 ```javascript
 const nodeId = urlNodeId.replace('-', ':'); // "5-3" → "5:3"
 ```
+
+### DROP_SHADOW effects require `blendMode`
+
+Effects array entries for `DROP_SHADOW` and `INNER_SHADOW` must include `blendMode: "NORMAL"` (or another valid blend mode). Omitting it causes a validation error. The Figma Plugin API validates the full effect object shape strictly.
+
+### SOLID fill opacity uses fill-level property
+
+To set opacity on a SOLID fill, use the `opacity` property on the fill object: `{ type: 'SOLID', color: { r, g, b }, opacity: 0.5 }`. Do NOT put an `a` (alpha) key in the `color` object — Figma's color type only accepts `r`, `g`, `b` (all 0-1 floats).
+
+### `layoutSizingHorizontal: 'FILL'` requires auto-layout parent
+
+Setting `layoutSizingHorizontal` or `layoutSizingVertical` to `'FILL'` throws an error if the node is not yet a child of an auto-layout frame. Always append the node to its parent first, then set sizing: `parent.appendChild(node); node.layoutSizingHorizontal = 'FILL';`
+
+### No `require()` or Node.js APIs in plugin sandbox
+
+The Figma plugin runtime is a browser-like sandbox, not Node.js. `require('fs')`, `process`, `Buffer`, and other Node.js globals do not exist. Use Figma's own APIs for file operations (`figma.createNodeFromSvg`, `exportAsync`, etc.) and the `fetch` API for network requests.
 
 ### `createNodeFromSvg` limitations
 

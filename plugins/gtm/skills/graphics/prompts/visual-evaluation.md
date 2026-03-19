@@ -89,10 +89,12 @@ Check specific rules from the source-of-truth files. Did the builder follow the 
 Beyond rule-following — does this dimension actually look good?
 
 A graphic can follow every rule and still feel lifeless, unbalanced, or awkward. The craft assessment catches what rules can't codify:
-- **Visual rhythm** — do elements create a pleasing cadence, or does it feel random?
-- **Intentional use of space** — does whitespace feel deliberate, or like leftover gaps?
-- **Energy and clarity** — does the composition feel dynamic and clear, or static and confused?
-- **Professional finish** — does it look intentional and polished, or like a work-in-progress?
+- **Visual hierarchy at thumbnail size** (use proportional.png) — does the focal point hold when the image is viewed at 400px? Is there a clear primary → secondary → tertiary reading order? Professional designers call this the "squint test" — if you blur your eyes, the most important element should still dominate. If hierarchy collapses at thumbnail size, the graphic fails at its primary job (stopping the scroll in a feed).
+- **Visual weight balance** — are heavy elements (dark fills, large shapes, dense text) distributed intentionally across the canvas? One-sided weight makes a composition feel like it's tipping over. This is distinct from alignment — elements can be perfectly aligned but poorly weighted.
+- **Intentional use of space** — does whitespace feel deliberate, or like leftover gaps? Professional designers use micro-whitespace (between elements within a group) and macro-whitespace (between groups and edges) as active composition tools. Space is not "nothing" — it directs the eye and creates breathing room. If every area is filled, the composition feels cramped; if space appears randomly, it feels unfinished.
+- **Visual rhythm** — do elements create a pleasing cadence (consistent spacing progressions, repeating size relationships), or does it feel random?
+- **Energy and clarity** — does the composition guide the eye through a deliberate path, or does every element sit at the same visual weight with no focal point?
+- **Professional finish** — does it look intentional and polished, or like a work-in-progress? The gap between "looks done" and "actually done" is 20-40% of remaining work — this is what separates professional from amateur output. Check: are shadows consistent? Are border radii matching? Is spacing uniform where it should be?
 - **Brand distinctness** — does this look unmistakably like Inkeep (warm, approachable, cream backgrounds, Neue Haas typography), or could it belong to any B2B SaaS company? INSTEAD of accepting "professional and clean" as passing craft, check whether the graphic has the specific warmth and personality of the Inkeep brand. AI defaults to a generic SaaS aesthetic (cold blues, Inter font, purple gradients) — this "distributional convergence" is a documented failure mode to watch for.
 
 Use the **proportional.png** for hierarchy and weight assessment. Use **review.png** for detail-level craft.

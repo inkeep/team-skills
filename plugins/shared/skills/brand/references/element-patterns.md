@@ -253,3 +253,45 @@ Speaker photo paired with attributed quote text. For testimonials, customer quot
 - **Attribution color**: `brand/primary` (#3784FF)
 - **Speaker photo**: circular crop, sized proportionally to the quote text
 - **Container**: gradient background `linear-gradient(248deg, #F3EDFE -17.65%, #DCF2FB 101.25%)` with very light border `border-[#FBF9F4]`
+
+---
+
+## Avatar patterns
+
+**Bot/Agent avatar (Inkeep)** — recommended defaults, can deviate by context:
+- Shape: Rounded square (squircle) with `radius/md` (8px). The squircle shape differentiates bot avatars from circular human photo avatars — this is an intentional industry convention (Slack uses squircle for Slackbot, circle for humans).
+- Content: Inkeep icon mark (hexagon + blob) in brand colors on `bg/primary` (#FBF9F4) background.
+- Sizing: Icon at 70% of container width. Container sizes: 52px for profile headers, 38px for message rows, 24px for compact/inline.
+- Centering: Use the SVG visual centering pattern (see `tools/figma-console.md` → Pattern: SVG visual centering) — the Inkeep icon has asymmetric viewBox padding that makes mathematical centering incorrect.
+
+**Person avatar** — prescriptive convention:
+- **Always** generate avatars purpose-built for the avatar use case. Square composition where the face fills the frame naturally without cropping.
+- **Never** crop a full portrait or body illustration into an avatar — this produces unnatural clipping (hair cut off, ears missing, too much torso) and took 4 iterations to get acceptable in testing.
+- Shape: Rounded square (`radius/md`, 8px) for consistency with bot avatars, or circle for photo avatars.
+- Generation: Use Quiver with a square-composition prompt specifying head-and-shoulders framing, or source from the Brand Assets library if available.
+- Style details (face-based vs. icon-based, character design, color palette) are design judgment that varies by context.
+
+## Product status icons
+
+The product uses **Lucide** icons ([lucide.dev/icons](https://lucide.dev/icons/) — 1700+ searchable icons). These examples are **not exhaustive** — they're the most commonly needed icons for product mockups. Always verify against the actual product code (Step 1c discovery) for the current icon usage.
+
+**Common status/state icons** (from agents-ui):
+
+| State | Lucide Icon | Context |
+|---|---|---|
+| Approved / completed | `CheckCircle` | Tool approval done, task complete |
+| Denied / error output | `XCircle` | Tool denied, execution error |
+| Awaiting approval | `Clock` | Tool requires human-in-the-loop |
+| Pending / streaming | `Circle` | Input streaming, waiting |
+| Running / in-progress | `Loader2` (animated spin) | Tool executing, agent thinking |
+
+**How to use a Lucide icon in a mockup:**
+1. **Find the icon name** from the product code (Step 1c), or search [lucide.dev/icons](https://lucide.dev/icons/)
+2. **Fetch the SVG** via Iconify (our `fetch-logo.ts` supports this) or directly: `https://unpkg.com/lucide-static/icons/{name}.svg`
+3. **Import into Figma** via `figma.createNodeFromSvg(svgString)` — Lucide SVGs are clean and import reliably
+4. **Style** according to context: product UI mockups use the product's semantic colors (`text-green-500` for success, `text-red-500` for error); marketing illustrations use brand colors
+
+**Slack Block Kit button styles** (when mocking up Slack integrations):
+- Approve: `primary` style = Slack blue background
+- Deny: `danger` style = Slack red background
+- These are Slack's conventions, not Inkeep's — use Slack's actual button colors when showing the agent in a Slack context.

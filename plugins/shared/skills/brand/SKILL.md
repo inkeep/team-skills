@@ -83,3 +83,15 @@ All token values and brand assets live in this skill:
 **Regeneration** (when Figma or product code changes):
 - Marketing tokens + assets: `bun scripts/process-manifest.ts <raw-manifest.json>` (requires Figma export first via `generate-manifest.js`)
 - Product tokens: `bun scripts/generate-product-manifest.ts` (fetches from GitHub, no local clone needed)
+
+## Product Resources
+
+Inkeep's product repos, apps, and documentation — for when visual creation skills need to understand or reference the actual product.
+
+| Resource | URL | What it contains |
+|---|---|---|
+| **Product repo** | `github.com/inkeep/agents` | Agent platform, Slack integration, tool system, approval workflows. Also contains product documentation (`docs/`) — check docs first for feature understanding. |
+| **Widget library** | `github.com/inkeep/agents-ui` | Chat widget, message components, approval buttons, agent cards — the actual React components and their styling. Ground truth for what product UI looks like. |
+| **Running app** | `app.inkeep.com` | Production application. Use for screenshotting the actual product in its real state (requires auth). |
+| **Marketing site** | `inkeep.com` | Public website. Check for existing product illustrations, screenshots, and visual treatments. |
+| **Marketing repo** | `github.com/inkeep/marketing-site` | Next.js marketing site source. Existing graphics in `public/images/`, component patterns, blog MDX content. |

@@ -37,7 +37,7 @@ These proportions are measured from the top 6 performing companies (Resend, Dub.
 | **Right** | 0-2% (mockup can bleed) | 0-25 px | Containing the mockup — let it bleed past the edge |
 | **Bottom** | 5% | ~36 px | Too much bottom padding; content should fill the frame |
 
-**Content coverage target: 80-85% of canvas filled.** Measured across Resend, Dub.co, Decagon, Linear — all fill 75-90% of their canvas. If your thumbnail has large empty areas (especially bottom third), the content is too small or too centered.
+**Content density ranges by layout archetype.** Text+mockup split layouts (e.g., Dub, Vercel): 55-70% content density. Full-bleed product UI (e.g., Slack): 70-85%. Measured across 22 qualifying product launch covers from Stripe, Linear, Dub, Vercel, Slack, Clerk, Notion, Raycast. The layout archetype determines the target — not a single number for all covers. If your thumbnail has large empty areas AND content is top-weighted with empty bottom, the content needs to move down (center the content band vertically) or the product graphic needs to extend further.
 
 **Decagon's product mockups extend from ~15% from top to ~5% from bottom** — nearly the full vertical extent of the frame. Their mockups occupy 60-70% of the canvas. This is the benchmark for product-forward thumbnails.
 
@@ -77,7 +77,9 @@ For major product launches, rebrand announcements, or flagship features. Full cu
   - **Stylized product mockup** — agent conversation UI, dashboard panel, floating at angle with `shadow/brand` (blue-tinted glow) and `radius/lg-alt` (32px). Let it bleed past the right edge.
   - **Visual metaphor** — 3D rendered object or custom illustration representing the feature concept (inspired by Resend/Neon approach)
   - **Partner logo composition** — for major integration launches
-- **Bottom-left:** Inkeep wordmark, subtle (brand/primary color, ~24-28px)
+- **Top-left:** Inkeep logo lockup (icon + wordmark), monochrome (white on dark backgrounds, dark on light), ~8-10% of canvas width (~100-128px at 1280w), 5% margin from top and left edges. This follows the Vercel/Clerk model — consistent brand stamp that builds recognition on social shares where context is stripped. Alternative: omit logo entirely if the visual style itself is the brand signal (requires strong, established visual identity — Linear, Notion, Resend do this).
+
+**Subtitle guidance:** Subtitles are optional — 95% of product launch covers with graphics skip them entirely. Badge/pill category labels (JetBrains Mono, uppercase, e.g., "NEW", "ANNOUNCEMENT") are more common than descriptive subtitles. When a subtitle is used, target 1:2.5 to 1:3 ratio relative to the headline size. Feature name headlines should be 2-3 words spanning 40-50% of canvas width.
 
 **Typography:** Neue Haas Display Pro at 80-100px (heading), Noto Serif at 16-20px (subtitle). JetBrains Mono uppercase for badge at 9-11px.
 
@@ -174,7 +176,7 @@ For any blog post, decide which visual element to use:
 ## Composition guidelines
 
 ### Content positioning
-- **Top-weight or tight center** — never leave the bottom third empty
+- **Top-weight or tight center** — Bottom third: either clean background or product graphic extending naturally into it — both are valid (34% of best-in-class covers leave it empty, 37% have product UI extending into it). Avoid placing critical text in the bottom third (social media platforms may crop or overlay UI there).
 - Content block should start within the top 10% and extend to the bottom 10%
 - If using a split layout, both columns should be vertically centered relative to each other
 

@@ -220,3 +220,58 @@ These marketing brand tokens do **not** appear in the product UI:
 - **Large radii** (32–60px) — product uses 8–14px
 - **Brand shadow glow** (`shadow/brand`) — product uses `shadow-xs` to `shadow-sm`
 - **Pill-radius buttons** (9999px) — product uses `rounded-md` (8px)
+
+---
+
+## Widget Library Tokens (agents-ui)
+
+Widget-specific tokens from `inkeep/agents-ui`. These define the chat bubble, embedded chat, and widget overlay surfaces.
+
+### Shadows
+
+Source: Tailwind 4 defaults (no overrides in tailwind.config.ts)
+
+| Token | CSS Value |
+|---|---|
+| `shadow-xs` | `0 1px 2px 0 rgba(0,0,0,0.05)` |
+| `shadow-sm` | `0 1px 3px 0 rgba(0,0,0,0.1), 0 1px 2px -1px rgba(0,0,0,0.1)` |
+| `shadow-md` | `0 4px 6px -1px rgba(0,0,0,0.1), 0 2px 4px -2px rgba(0,0,0,0.1)` |
+| `shadow-lg` | `0 10px 15px -3px rgba(0,0,0,0.1), 0 4px 6px -4px rgba(0,0,0,0.1)` |
+| `shadow-xl` | `0 20px 25px -5px rgba(0,0,0,0.1), 0 8px 10px -6px rgba(0,0,0,0.1)` |
+| `shadow-2xl` | `0 25px 50px -12px rgba(0,0,0,0.25)` |
+
+### Chat Widget Dimensions
+
+| Property | Value |
+|---|---|
+| Desktop width | `440px` |
+| Max height | `650px` |
+| Bottom offset | `0px` |
+| Right offset | `0px` |
+| Desktop border radius | `12px` (`rounded-xl`) |
+| Shadow | `shadow-2xl` → `0 25px 50px -12px rgba(0,0,0,0.25)` |
+
+### Avatar Sizes
+
+| Element | Size | Class |
+|---|---|---|
+| Message avatar | `24px` | `h-6 w-6` |
+
+### Message Spacing
+
+| Property | Value |
+|---|---|
+| Wrapper padding | `0px (p-0)` |
+| Message gap | `12px (gap-3)` |
+
+### State Colors
+
+| State | Color |
+|---|---|
+| Error | `#ef4444` |
+
+### Border Colors
+
+| Mode | Border color |
+|---|---|
+| Light mode | `#e5e7eb` |

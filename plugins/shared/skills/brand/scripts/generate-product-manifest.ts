@@ -27,6 +27,13 @@
  *   - src/components/ui/badge.tsx   → badge variant definitions (CVA)
  *   - src/constants/theme.ts        → brand color constant
  *
+ * Phase 2 — Widget library sources (from inkeep/agents-ui, prefix: packages/agents-ui):
+ *   - tailwind.config.ts                       → shadow definitions, theme extensions
+ *   - src/styled/index.css                     → border colors, CSS custom properties
+ *   - src/theme/colors.ts                      → color definitions, state colors
+ *   - src/styled/components/chat-bubble.tsx     → chat widget dimensions, radius, shadow
+ *   - src/styled/components/embedded-chat.tsx   → message spacing, avatar sizes
+ *
  * Output: A compact markdown manifest (~220 lines) organized for AI agent consumption.
  *
  * Deterministic: same source files → identical output. No timestamps embedded.
@@ -164,6 +171,83 @@ async function fetchFromGitHub(filePath: string): Promise<string> {
 async function readSource(relPath: string): Promise<string> {
   console.log(`  Fetching ${config.prefix}/${relPath}...`);
   return fetchFromGitHub(relPath);
+}
+
+// ============================================================
+// agents-ui (widget library) file fetching
+// ============================================================
+
+const AGENTS_UI_REPO = 'inkeep/agents-ui';
+const AGENTS_UI_PREFIX = 'packages/agents-ui';
+
+const AGENTS_UI_SOURCE_FILES = {
+  tailwindConfig: 'tailwind.config.ts',
+  indexCss: 'src/styled/index.css',
+  colorsTs: 'src/theme/colors.ts',
+  chatBubbleTsx: 'src/styled/components/chat-bubble.tsx',
+  embeddedChatTsx: 'src/styled/components/embedded-chat.tsx',
+} as const;
+
+/**
+ * Fetch a file from the agents-ui repo via GitHub API.
+ * Uses the same fetching strategy as fetchFromGitHub but with agents-ui repo/prefix.
+ */
+async function fetchFromAgentsUi(filePath: string): Promise<string> {
+  const fullPath = `${AGENTS_UI_PREFIX}/${filePath}`;
+  const ref = config.ref; // use same ref (default: main)
+
+  // Try `gh` CLI first
+  try {
+    const proc = Bun.spawn(
+      ['gh', 'api', `repos/${AGENTS_UI_REPO}/contents/${fullPath}?ref=${ref}`, '-H', 'Accept: application/vnd.github.raw'],
+      { stdout: 'pipe', stderr: 'pipe' },
+    );
+    const stdout = await new Response(proc.stdout).text();
+    const stderr = await new Response(proc.stderr).text();
+    const code = await proc.exited;
+
+    if (code === 0 && stdout.length > 0) return stdout;
+
+    if (stderr.includes('Not Found') || stderr.includes('404')) {
+      console.error(`Error: File not found on GitHub: ${AGENTS_UI_REPO}/${fullPath} (ref: ${ref})`);
+      console.error(`  The agents-ui codebase structure may have changed.`);
+      console.error(`  Expected file at: ${filePath}`);
+      process.exit(1);
+    }
+
+    throw new Error(`gh api exit ${code}: ${stderr.trim()}`);
+  } catch (e: unknown) {
+    const token = process.env.GITHUB_TOKEN;
+    if (!token) {
+      const msg = e instanceof Error ? e.message : String(e);
+      console.error(`Error fetching ${fullPath} from ${AGENTS_UI_REPO}@${ref}:`);
+      console.error(`  ${msg}`);
+      console.error('');
+      console.error('  Fix: install gh CLI (brew install gh && gh auth login)');
+      console.error('  Or:  set GITHUB_TOKEN env var');
+      process.exit(1);
+    }
+
+    const url = `https://raw.githubusercontent.com/${AGENTS_UI_REPO}/${ref}/${fullPath}`;
+    const resp = await fetch(url, { headers: { Authorization: `Bearer ${token}` } });
+    if (resp.status === 404) {
+      console.error(`Error: File not found: ${url}`);
+      console.error(`  The agents-ui codebase structure may have changed.`);
+      console.error(`  Expected file at: ${filePath}`);
+      process.exit(1);
+    }
+    if (!resp.ok) {
+      console.error(`Error: GitHub API returned ${resp.status} ${resp.statusText} for ${url}`);
+      console.error(`  Check that the ref '${ref}' exists and your token has repo access.`);
+      process.exit(1);
+    }
+    return resp.text();
+  }
+}
+
+async function readAgentsUiSource(relPath: string): Promise<string> {
+  console.log(`  Fetching ${AGENTS_UI_PREFIX}/${relPath}...`);
+  return fetchFromAgentsUi(relPath);
 }
 
 /**
@@ -806,6 +890,508 @@ emit('- **Brand shadow glow** (`shadow/brand`) — product uses `shadow-xs` to `
 emit('- **Pill-radius buttons** (9999px) — product uses `rounded-md` (8px)');
 
 // ============================================================
+// Phase 2: Widget Library Tokens (agents-ui)
+// ============================================================
+
+console.log('');
+console.log(`Fetching widget library sources from ${AGENTS_UI_REPO}@${config.ref} (prefix: ${AGENTS_UI_PREFIX})...`);
+
+const [
+  agentsUiTailwindConfig,
+  agentsUiIndexCss,
+  agentsUiColorsTs,
+  agentsUiChatBubbleTsx,
+  agentsUiEmbeddedChatTsx,
+] = await Promise.all([
+  readAgentsUiSource(AGENTS_UI_SOURCE_FILES.tailwindConfig),
+  readAgentsUiSource(AGENTS_UI_SOURCE_FILES.indexCss),
+  readAgentsUiSource(AGENTS_UI_SOURCE_FILES.colorsTs),
+  readAgentsUiSource(AGENTS_UI_SOURCE_FILES.chatBubbleTsx),
+  readAgentsUiSource(AGENTS_UI_SOURCE_FILES.embeddedChatTsx),
+]);
+
+// --- Phase 2 structural validations ---
+
+expectStructure(
+  AGENTS_UI_SOURCE_FILES.chatBubbleTsx,
+  'a width definition for the chat widget (w-[...] or width class)',
+  /w-\[\d+px\]/.test(agentsUiChatBubbleTsx) || /width/.test(agentsUiChatBubbleTsx),
+);
+
+// --- Phase 2: Shadow extraction ---
+
+// Standard Tailwind 4 shadow values — used as defaults unless overridden
+const TAILWIND_DEFAULT_SHADOWS: Record<string, string> = {
+  'shadow-xs': '0 1px 2px 0 rgba(0,0,0,0.05)',
+  'shadow-sm': '0 1px 3px 0 rgba(0,0,0,0.1), 0 1px 2px -1px rgba(0,0,0,0.1)',
+  'shadow-md': '0 4px 6px -1px rgba(0,0,0,0.1), 0 2px 4px -2px rgba(0,0,0,0.1)',
+  'shadow-lg': '0 10px 15px -3px rgba(0,0,0,0.1), 0 4px 6px -4px rgba(0,0,0,0.1)',
+  'shadow-xl': '0 20px 25px -5px rgba(0,0,0,0.1), 0 8px 10px -6px rgba(0,0,0,0.1)',
+  'shadow-2xl': '0 25px 50px -12px rgba(0,0,0,0.25)',
+};
+
+// Check if tailwind.config.ts defines custom shadows
+const customShadows: Record<string, string> = {};
+const shadowBlockMatch = agentsUiTailwindConfig.match(/boxShadow\s*:\s*\{([\s\S]*?)\}/);
+if (shadowBlockMatch) {
+  const shadowEntryRegex = /['"]?([\w-]+)['"]?\s*:\s*['"]([^'"]+)['"]/g;
+  let shadowMatch: RegExpExecArray | null;
+  while ((shadowMatch = shadowEntryRegex.exec(shadowBlockMatch[1])) !== null) {
+    customShadows[`shadow-${shadowMatch[1]}`] = shadowMatch[2];
+  }
+}
+
+// Use custom shadows if found, otherwise Tailwind defaults
+const resolvedShadows = Object.keys(customShadows).length > 0
+  ? customShadows
+  : TAILWIND_DEFAULT_SHADOWS;
+
+const shadowSource = Object.keys(customShadows).length > 0
+  ? 'custom (from tailwind.config.ts)'
+  : 'Tailwind 4 defaults (no overrides in tailwind.config.ts)';
+
+// --- Phase 2: Chat widget dimensions ---
+
+interface WidgetDimensions {
+  desktopWidth: number | null;
+  maxHeight: number | null;
+  bottomOffset: number | null;
+  rightOffset: number | null;
+  desktopRadius: number | null;
+  desktopRadiusClass: string | null;
+  shadowClass: string | null;
+}
+
+function extractWidgetDimensions(tsx: string): WidgetDimensions {
+  const dims: WidgetDimensions = {
+    desktopWidth: null,
+    maxHeight: null,
+    bottomOffset: null,
+    rightOffset: null,
+    desktopRadius: null,
+    desktopRadiusClass: null,
+    shadowClass: null,
+  };
+
+  // Width: w-[440px] or similar
+  const widthMatch = tsx.match(/w-\[(\d+)px\]/);
+  if (widthMatch) dims.desktopWidth = parseInt(widthMatch[1], 10);
+
+  // Max height: max-h-[650px] or max-h-[min(650px,...)] or similar
+  const maxHMatch = tsx.match(/max-h-\[(?:min\()?(\d+)px/);
+  if (maxHMatch) dims.maxHeight = parseInt(maxHMatch[1], 10);
+
+  // Bottom offset: bottom-[20px] or bottom-4 etc
+  const bottomBracket = tsx.match(/bottom-\[(\d+)px\]/);
+  const bottomTw = tsx.match(/\bbottom-(\d+)\b/);
+  if (bottomBracket) dims.bottomOffset = parseInt(bottomBracket[1], 10);
+  else if (bottomTw) dims.bottomOffset = parseInt(bottomTw[1], 10) * 4; // Tailwind spacing
+
+  // Right offset: right-[20px] or right-4 etc
+  const rightBracket = tsx.match(/right-\[(\d+)px\]/);
+  const rightTw = tsx.match(/\bright-(\d+)\b/);
+  if (rightBracket) dims.rightOffset = parseInt(rightBracket[1], 10);
+  else if (rightTw) dims.rightOffset = parseInt(rightTw[1], 10) * 4;
+
+  // Border radius: rounded-xl = 12px, rounded-lg = 8px, rounded-2xl = 16px, etc
+  const radiusMap: Record<string, number> = {
+    'rounded-sm': 2, 'rounded': 4, 'rounded-md': 6,
+    'rounded-lg': 8, 'rounded-xl': 12, 'rounded-2xl': 16,
+    'rounded-3xl': 24, 'rounded-full': 9999,
+  };
+  const radiusMatch = tsx.match(/rounded-(sm|md|lg|xl|2xl|3xl|full)\b/);
+  if (radiusMatch) {
+    const cls = `rounded-${radiusMatch[1]}`;
+    dims.desktopRadiusClass = cls;
+    dims.desktopRadius = radiusMap[cls] ?? null;
+  }
+  // Also check bare "rounded" (4px)
+  if (!dims.desktopRadiusClass && /\brounded\b/.test(tsx)) {
+    dims.desktopRadiusClass = 'rounded';
+    dims.desktopRadius = 4;
+  }
+
+  // Shadow class: shadow-2xl, shadow-lg, etc
+  const shadowMatch = tsx.match(/\b(shadow-(?:xs|sm|md|lg|xl|2xl))\b/);
+  if (shadowMatch) dims.shadowClass = shadowMatch[1];
+
+  return dims;
+}
+
+const widgetDims = extractWidgetDimensions(agentsUiChatBubbleTsx);
+
+// --- Phase 2: Avatar sizes ---
+
+interface AvatarInfo {
+  size: number | null;
+  sizeClass: string | null;
+}
+
+function extractAvatarSize(tsx: string): AvatarInfo {
+  // Look for avatar-related context with generous window
+  const avatarSections = tsx.match(/[Aa]vatar[\s\S]{0,500}/g) || [];
+
+  for (const section of avatarSections) {
+    // h-6 w-6 = 24px — may have other classes between them
+    const sizeMatch = section.match(/\bh-(\d+)\b[\s\S]{0,50}\bw-(\d+)\b/);
+    if (sizeMatch && sizeMatch[1] === sizeMatch[2]) {
+      const twSize = parseInt(sizeMatch[1], 10);
+      return { size: twSize * 4, sizeClass: `h-${twSize} w-${twSize}` };
+    }
+
+    // Try arbitrary value: h-[24px] w-[24px]
+    const arbMatch = section.match(/\bh-\[(\d+)px\][\s\S]{0,50}w-\[(\d+)px\]/);
+    if (arbMatch && arbMatch[1] === arbMatch[2]) {
+      return { size: parseInt(arbMatch[1], 10), sizeClass: `h-[${arbMatch[1]}px] w-[${arbMatch[1]}px]` };
+    }
+  }
+
+  // Fallback: search the entire file for h-N w-N patterns (less precise)
+  const globalMatch = tsx.match(/\bh-(\d+)\s+w-\1\b/);
+  if (globalMatch) {
+    const twSize = parseInt(globalMatch[1], 10);
+    return { size: twSize * 4, sizeClass: `h-${twSize} w-${twSize}` };
+  }
+
+  return { size: null, sizeClass: null };
+}
+
+// Try embedded-chat first (more likely to have avatar), fall back to chat-bubble
+let avatarInfo = extractAvatarSize(agentsUiEmbeddedChatTsx);
+if (!avatarInfo.size) {
+  avatarInfo = extractAvatarSize(agentsUiChatBubbleTsx);
+}
+
+// --- Phase 2: Message spacing ---
+
+interface MessageSpacing {
+  wrapperPadding: string | null;
+  messageGap: string | null;
+  headerPadding: string | null;
+}
+
+function extractMessageSpacing(tsx: string): MessageSpacing {
+  const spacing: MessageSpacing = {
+    wrapperPadding: null,
+    messageGap: null,
+    headerPadding: null,
+  };
+
+  // Padding: p-4, px-4 py-3, p-[16px], etc
+  // Look for the main wrapper padding patterns
+  const pMatch = tsx.match(/\bp-(\d+)\b/);
+  if (pMatch) spacing.wrapperPadding = `${parseInt(pMatch[1], 10) * 4}px (p-${pMatch[1]})`;
+
+  const pxMatch = tsx.match(/\bpx-(\d+)\b/);
+  const pyMatch = tsx.match(/\bpy-(\d+)\b/);
+  if (pxMatch && pyMatch && !spacing.wrapperPadding) {
+    spacing.wrapperPadding = `${parseInt(pyMatch[1], 10) * 4}px ${parseInt(pxMatch[1], 10) * 4}px (py-${pyMatch[1]} px-${pxMatch[1]})`;
+  }
+
+  // Gap: gap-4, gap-2, space-y-4, etc
+  const gapMatch = tsx.match(/\bgap-(\d+)\b/);
+  if (gapMatch) spacing.messageGap = `${parseInt(gapMatch[1], 10) * 4}px (gap-${gapMatch[1]})`;
+
+  const spaceYMatch = tsx.match(/\bspace-y-(\d+)\b/);
+  if (spaceYMatch && !spacing.messageGap) {
+    spacing.messageGap = `${parseInt(spaceYMatch[1], 10) * 4}px (space-y-${spaceYMatch[1]})`;
+  }
+
+  // Header padding
+  const headerSection = tsx.match(/header[\s\S]{0,200}/i);
+  if (headerSection) {
+    const headerP = headerSection[0].match(/\bp-(\d+)\b/);
+    const headerPx = headerSection[0].match(/\bpx-(\d+)\b/);
+    const headerPy = headerSection[0].match(/\bpy-(\d+)\b/);
+    if (headerP) spacing.headerPadding = `${parseInt(headerP[1], 10) * 4}px (p-${headerP[1]})`;
+    else if (headerPx && headerPy) {
+      spacing.headerPadding = `${parseInt(headerPy[1], 10) * 4}px ${parseInt(headerPx[1], 10) * 4}px (py-${headerPy[1]} px-${headerPx[1]})`;
+    }
+  }
+
+  return spacing;
+}
+
+const messageSpacing = extractMessageSpacing(agentsUiEmbeddedChatTsx);
+
+// --- Phase 2: State colors ---
+
+interface StateColors {
+  success: string | null;
+  error: string | null;
+  warning: string | null;
+}
+
+function extractStateColors(colorsTs: string): StateColors {
+  const colors: StateColors = { success: null, error: null, warning: null };
+
+  // Look for success/error/warning color definitions
+  // Could be: success: '#10B981', success: 'green-500', --color-success, etc
+  const successMatch = colorsTs.match(/success['":\s]+['"]?([#\w.-]+)/i);
+  if (successMatch) colors.success = successMatch[1];
+
+  const errorMatch = colorsTs.match(/error['":\s]+['"]?([#\w.-]+)/i);
+  if (errorMatch) colors.error = errorMatch[1];
+
+  const warningMatch = colorsTs.match(/warning['":\s]+['"]?([#\w.-]+)/i);
+  if (warningMatch) colors.warning = warningMatch[1];
+
+  // Also look for green/red/amber Tailwind class references
+  if (!colors.success) {
+    const greenMatch = colorsTs.match(/\b(green-\d{3})\b/);
+    if (greenMatch) colors.success = greenMatch[1];
+  }
+  if (!colors.error) {
+    const redMatch = colorsTs.match(/\b(red-\d{3})\b/);
+    if (redMatch) colors.error = redMatch[1];
+  }
+  if (!colors.warning) {
+    const amberMatch = colorsTs.match(/\b(amber-\d{3})\b/);
+    if (amberMatch) colors.warning = amberMatch[1];
+  }
+
+  return colors;
+}
+
+// Try colors.ts first, then fall back to scanning component files for Tailwind color classes
+let stateColors = extractStateColors(agentsUiColorsTs);
+if (!stateColors.success && !stateColors.error) {
+  // Scan component files for Tailwind state color classes (text-green-500, text-red-500, etc.)
+  const allComponentCode = agentsUiEmbeddedChatTsx + '\n' + agentsUiChatBubbleTsx;
+
+  const greenMatch = allComponentCode.match(/text-(green-\d{3})\b/);
+  const redMatch = allComponentCode.match(/text-(red-\d{3})\b/);
+  const amberMatch = allComponentCode.match(/text-(amber-\d{3})\b/);
+
+  // Standard Tailwind color values
+  const twColorToHex: Record<string, string> = {
+    'green-300': '#86efac', 'green-400': '#4ade80', 'green-500': '#22c55e', 'green-600': '#16a34a',
+    'red-300': '#fca5a5', 'red-400': '#f87171', 'red-500': '#ef4444', 'red-600': '#dc2626',
+    'amber-300': '#fcd34d', 'amber-400': '#fbbf24', 'amber-500': '#f59e0b', 'amber-600': '#d97706',
+  };
+
+  if (greenMatch) stateColors.success = twColorToHex[greenMatch[1]] || greenMatch[1];
+  if (redMatch) stateColors.error = twColorToHex[redMatch[1]] || redMatch[1];
+  if (amberMatch) stateColors.warning = twColorToHex[amberMatch[1]] || amberMatch[1];
+}
+
+// --- Phase 2: Border colors ---
+
+interface BorderColors {
+  light: string | null;
+  dark: string | null;
+}
+
+function extractBorderColors(css: string): BorderColors {
+  const borders: BorderColors = { light: null, dark: null };
+
+  // The CSS uses Tailwind @apply directives, not raw hex values.
+  // Pattern: @apply border-gray-200 (light mode), @apply border-white-alpha-200 (dark mode)
+  // We need to identify the Tailwind class used and resolve to a known value.
+
+  // Light mode: look for @apply border-gray-200 or similar in base/non-dark context
+  const lightApply = css.match(/@apply\s+border-(gray-\d+)\b/);
+  if (lightApply) {
+    // Resolve well-known Tailwind gray values
+    const grayToHex: Record<string, string> = {
+      'gray-100': '#f3f4f6', 'gray-200': '#e5e7eb', 'gray-300': '#d1d5db',
+      'gray-400': '#9ca3af', 'gray-500': '#6b7280',
+    };
+    borders.light = grayToHex[lightApply[1]] || `Tailwind ${lightApply[1]}`;
+  }
+
+  // Check if there's a custom --color-gray-200 override in the CSS (some projects remap defaults)
+  const grayOverride = css.match(/--color-gray-200\s*:\s*(#[0-9a-fA-F]{3,8})/);
+  if (grayOverride) borders.light = grayOverride[1];
+
+  // Also check for direct hex or oklch border-color definitions
+  const lightBorderHex = css.match(/(?:border-color|--border-color|--border)\s*:\s*(#[0-9a-fA-F]{3,8})/);
+  if (lightBorderHex && !borders.light) borders.light = lightBorderHex[1];
+
+  // Dark mode: look for @apply border-white-alpha-NNN or similar inside .dark block
+  const darkApply = css.match(/\.dark[\s\S]*?@apply\s+border-(white-alpha-\d+)\b/);
+  if (darkApply) {
+    // Resolve white-alpha-200 to rgba
+    const whiteAlphaToRgba: Record<string, string> = {
+      'white-alpha-100': 'rgba(255,255,255,0.06)',
+      'white-alpha-200': 'rgba(255,255,255,0.15)',
+      'white-alpha-300': 'rgba(255,255,255,0.25)',
+      'white-alpha-400': 'rgba(255,255,255,0.40)',
+      'white-alpha-500': 'rgba(255,255,255,0.50)',
+    };
+    borders.dark = whiteAlphaToRgba[darkApply[1]] || `Tailwind ${darkApply[1]}`;
+  }
+
+  return borders;
+}
+
+const borderColors = extractBorderColors(agentsUiIndexCss);
+
+// --- Phase 2: Validation fixtures ---
+
+const WIDGET_FIXTURES: Record<string, { expected: string | number; actual: string | number | null; label: string }> = {
+  chatWidgetDesktopWidth: {
+    expected: 440,
+    actual: widgetDims.desktopWidth,
+    label: 'Chat widget desktop width (px)',
+  },
+  chatWidgetMaxHeight: {
+    expected: 650,
+    actual: widgetDims.maxHeight,
+    label: 'Chat widget max height (px)',
+  },
+  chatWidgetDesktopRadius: {
+    expected: 12,
+    actual: widgetDims.desktopRadius,
+    label: 'Chat widget desktop radius (px)',
+  },
+  chatWidgetShadow: {
+    expected: 'shadow-2xl',
+    actual: widgetDims.shadowClass,
+    label: 'Chat widget shadow class',
+  },
+  avatarSize: {
+    expected: 24,
+    actual: avatarInfo.size,
+    label: 'Avatar size (px)',
+  },
+  borderColorLight: {
+    expected: '#e5e7eb',
+    actual: borderColors.light,
+    label: 'Light mode border color (gray-200)',
+  },
+  shadowMd: {
+    expected: '0 4px 6px -1px rgba(0,0,0,0.1), 0 2px 4px -2px rgba(0,0,0,0.1)',
+    actual: resolvedShadows['shadow-md'] ?? null,
+    label: 'Shadow md value',
+  },
+  shadow2xl: {
+    expected: '0 25px 50px -12px rgba(0,0,0,0.25)',
+    actual: resolvedShadows['shadow-2xl'] ?? null,
+    label: 'Shadow 2xl value',
+  },
+};
+
+let widgetWarnings = 0;
+for (const [key, fixture] of Object.entries(WIDGET_FIXTURES)) {
+  const actualStr = String(fixture.actual ?? '(not extracted)');
+  const expectedStr = String(fixture.expected);
+  if (actualStr !== expectedStr) {
+    widgetWarnings++;
+    console.warn(`  WARNING [${key}]: ${fixture.label}`);
+    console.warn(`    expected: ${expectedStr}`);
+    console.warn(`    actual:   ${actualStr}`);
+  }
+}
+if (widgetWarnings === 0) {
+  console.log('  All widget fixture validations passed.');
+} else {
+  console.warn(`  ${widgetWarnings} widget fixture(s) differ from expected values — product may have changed.`);
+}
+
+// --- Phase 2: Markdown output ---
+
+emit();
+emit('---');
+emit();
+emit('## Widget Library Tokens (agents-ui)');
+emit();
+emit('Widget-specific tokens from `inkeep/agents-ui`. These define the chat bubble, embedded chat, and widget overlay surfaces.');
+emit();
+
+// Shadows
+emit('### Shadows');
+emit();
+emit(`Source: ${shadowSource}`);
+emit();
+emitTable(
+  ['Token', 'CSS Value'],
+  Object.entries(resolvedShadows).map(([name, value]) => [
+    `\`${name}\``,
+    `\`${value}\``,
+  ]),
+);
+emit();
+
+// Chat widget dimensions
+emit('### Chat Widget Dimensions');
+emit();
+{
+  const dimRows: string[][] = [];
+  if (widgetDims.desktopWidth !== null) dimRows.push(['Desktop width', `\`${widgetDims.desktopWidth}px\``]);
+  if (widgetDims.maxHeight !== null) dimRows.push(['Max height', `\`${widgetDims.maxHeight}px\``]);
+  if (widgetDims.bottomOffset !== null) dimRows.push(['Bottom offset', `\`${widgetDims.bottomOffset}px\``]);
+  if (widgetDims.rightOffset !== null) dimRows.push(['Right offset', `\`${widgetDims.rightOffset}px\``]);
+  if (widgetDims.desktopRadius !== null) dimRows.push(['Desktop border radius', `\`${widgetDims.desktopRadius}px\` (\`${widgetDims.desktopRadiusClass}\`)`]);
+  if (widgetDims.shadowClass) dimRows.push(['Shadow', `\`${widgetDims.shadowClass}\` → \`${resolvedShadows[widgetDims.shadowClass] || '(unknown)'}\``]);
+  if (dimRows.length > 0) {
+    emitTable(['Property', 'Value'], dimRows);
+  } else {
+    emit('*Warning: No chat widget dimensions could be extracted from chat-bubble.tsx.*');
+  }
+}
+emit();
+
+// Avatar sizes
+emit('### Avatar Sizes');
+emit();
+if (avatarInfo.size !== null) {
+  emitTable(
+    ['Element', 'Size', 'Class'],
+    [['Message avatar', `\`${avatarInfo.size}px\``, `\`${avatarInfo.sizeClass}\``]],
+  );
+} else {
+  emit('*Warning: Avatar size could not be extracted from embedded-chat.tsx or chat-bubble.tsx.*');
+}
+emit();
+
+// Message spacing
+emit('### Message Spacing');
+emit();
+{
+  const spacingRows: string[][] = [];
+  if (messageSpacing.wrapperPadding) spacingRows.push(['Wrapper padding', `\`${messageSpacing.wrapperPadding}\``]);
+  if (messageSpacing.messageGap) spacingRows.push(['Message gap', `\`${messageSpacing.messageGap}\``]);
+  if (messageSpacing.headerPadding) spacingRows.push(['Header padding', `\`${messageSpacing.headerPadding}\``]);
+  if (spacingRows.length > 0) {
+    emitTable(['Property', 'Value'], spacingRows);
+  } else {
+    emit('*Warning: Message spacing values could not be extracted from embedded-chat.tsx.*');
+  }
+}
+emit();
+
+// State colors
+emit('### State Colors');
+emit();
+{
+  const stateRows: string[][] = [];
+  if (stateColors.success) stateRows.push(['Success', `\`${stateColors.success}\``]);
+  if (stateColors.error) stateRows.push(['Error', `\`${stateColors.error}\``]);
+  if (stateColors.warning) stateRows.push(['Warning', `\`${stateColors.warning}\``]);
+  if (stateRows.length > 0) {
+    emitTable(['State', 'Color'], stateRows);
+  } else {
+    emit('*No explicit state colors found in colors.ts. Widget likely uses Tailwind defaults (green-500, red-500, amber-500).*');
+  }
+}
+emit();
+
+// Border colors
+emit('### Border Colors');
+emit();
+{
+  const borderRows: string[][] = [];
+  if (borderColors.light) borderRows.push(['Light mode', `\`${borderColors.light}\``]);
+  if (borderColors.dark) borderRows.push(['Dark mode', `\`${borderColors.dark}\``]);
+  if (borderRows.length > 0) {
+    emitTable(['Mode', 'Border color'], borderRows);
+  } else {
+    emit('*Warning: Border colors could not be extracted from index.css.*');
+  }
+}
+
+// ============================================================
 // Write output
 // ============================================================
 
@@ -819,6 +1405,23 @@ if (!existsSync(outDir)) {
 writeFileSync(resolvedOutput, output);
 
 // Summary
+const widgetDimCount = [
+  widgetDims.desktopWidth, widgetDims.maxHeight, widgetDims.bottomOffset,
+  widgetDims.rightOffset, widgetDims.desktopRadius, widgetDims.shadowClass,
+].filter(v => v !== null).length;
+
+const widgetSpacingCount = [
+  messageSpacing.wrapperPadding, messageSpacing.messageGap, messageSpacing.headerPadding,
+].filter(v => v !== null).length;
+
+const widgetStateCount = [
+  stateColors.success, stateColors.error, stateColors.warning,
+].filter(v => v !== null).length;
+
+const widgetBorderCount = [
+  borderColors.light, borderColors.dark,
+].filter(v => v !== null).length;
+
 const tokenCount = {
   foundation: 7,
   brandColors: brandColors.length,
@@ -830,6 +1433,12 @@ const tokenCount = {
   badgeVariants: Object.keys(badgeVariants.variant || {}).length,
   canvas: canvasTokens.length + 14, // CSS tokens + hardcoded entries
   animations: relevantKeyframes.length,
+  widgetShadows: Object.keys(resolvedShadows).length,
+  widgetDimensions: widgetDimCount,
+  widgetAvatars: avatarInfo.size !== null ? 1 : 0,
+  widgetSpacing: widgetSpacingCount,
+  widgetStateColors: widgetStateCount,
+  widgetBorderColors: widgetBorderCount,
 };
 const total = Object.values(tokenCount).reduce((a, b) => a + b, 0);
 

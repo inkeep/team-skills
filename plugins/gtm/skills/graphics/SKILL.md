@@ -144,18 +144,19 @@ Phase 0: Conceptualize          ← USER SELECTS directions (text only)
 
 Step 2:  Collect assets & brand tokens
 
-Phase 1: Diverge
-  For each selected direction:
-    → Step 3 (plan composition — internal, not presented to user)
-    → Step 4 (generate — Phase A-E)
-    → Step 5 (two-layer verification)
-    → Place in Figma Section
+Phase 1: Diverge (PARALLEL via /nest-claude)
+  Parent: create page + N empty Sections, write state.json
+  Parent: spawn N child processes (concurrent)
+    Each child: read state.json → load skills → plan → build → verify (spawns reviewer) → place in Section
+    Each child: write results to build-results/<slug>.json
+  Parent: read result files, merge into state.json
   Present to user              ← USER REACTS
 
 Phase 2: Iterate (loop)
   User says something
-  For each frame requested:
-    → Step 3 → Step 4 → Step 5 → Place in Section
+  Parent: interpret feedback (sequential)
+  If ≥2 independent frames: spawn children (PARALLEL)
+  If 1 frame or orchestration: parent builds directly
   Present to user              ← USER REACTS
   Repeat until user approves
 
@@ -403,24 +404,28 @@ ___ (What should the viewer DO? Read the blog post, book a demo, share on Linked
 
 **Skip this step if** the hero content is purely typographic, abstract, or logo-based. Only run it when the Creative Brief calls for product UI, a feature mockup, or a visual that needs to represent what the product actually does.
 
-**Goal:** Understand the feature/product well enough to build a convincing visual representation. You don't need to replicate the exact product UI — you need to understand what the feature IS, what its key UI elements are, and what makes it visually distinctive.
+**Load:** `references/product-context-discovery.md`
 
-**Step 1: Check working directory for product context**
+**Goal:** Acquire a **visual reference** of the actual UI being represented — not improvise from general knowledge. The reference file has the full discovery strategies; this section summarizes the workflow.
+
+**Step 1: Determine context type and discover**
 
 ```bash
-# Quick detection — does this look like a product codebase?
-ls package.json src/ specs/ docs/ PRDs/ .cursor/ CLAUDE.md 2>/dev/null
+# Set up reference directory
+mkdir -p tmp/reference/<project-name>
 ```
 
-| What you find | What to do |
-|---|---|
-| **Product source code** (src/, app/, components/) | Use the Explore agent to search for UI components related to the feature. Look for: component names, prop types, UI states, key interactions. Extract the CONCEPTS, not the code. |
-| **Specs or PRDs** (specs/, PRDs/, docs/*.md) | Read any spec related to the feature being graphiced. Extract: what the feature does, what the user sees, key UI elements, user flow. |
-| **Marketing site code** (with public/images/) | Check if existing illustrations or screenshots of the feature already exist. These are the canonical "how we show this product" references. |
-| **CLAUDE.md or project docs** | Scan for feature descriptions, product overview, or architecture notes that explain what the product does. |
-| **Nothing relevant** | Move to Step 2. |
+| Context | Discovery strategy | Key resources |
+|---|---|---|
+| **Our product (Inkeep)** | Explore widget library → explore product repo (docs first, then code) → open running app → check marketing site for existing representations | See `/brand` § Product Resources for repos, app URLs, and what each contains |
+| **Third-party product (Slack, Jira, etc.)** | Search their marketing materials → web search for UI screenshots → fetch brand profile | The third-party's own website/blog, web search scoped to their domain, `fetch-brand.ts` |
+| **Novel/conceptual UI** | Skip visual reference — use illustration system | `content-types/illustration.md` |
 
-**Step 2: If no product context found, ask the user ONE question**
+For each useful image, screenshot, or component render found: **download, resize (sharp → ≤1568px + 400px), and save** to `tmp/reference/<project-name>/` with descriptive names. For code-derived references, have the exploration subagent produce a **visual description** (layout, colors, sub-elements, states) saved as markdown alongside images.
+
+See the reference file for detailed strategies, subagent prompt patterns, and the resize recipe.
+
+**Step 2: If discovery methods don't yield sufficient reference, ask the user ONE question**
 
 "The graphic calls for a product mockup of [feature]. To make it look convincing, I need to understand what the feature looks like. Can you point me to any of these?
 - A URL showing this feature (live product, staging, or demo)
@@ -430,14 +435,25 @@ ls package.json src/ specs/ docs/ PRDs/ .cursor/ CLAUDE.md 2>/dev/null
 
 If the user provides context, use it. If they say "just make it up" or "use your best judgment," proceed with a stylized representation using the illustration system (`content-types/illustration.md`).
 
-**Step 3: Capture what you learned**
+**Step 3: Capture and propagate what you learned**
 
-Write 2-3 bullet points in the Composition Brief (Step 3) under "Product context":
+Write in the Composition Brief (Step 3) under "Product context":
 - What the feature does (one sentence)
-- Key UI elements the mockup should show (e.g., "conversation thread with agent response + approve/deny buttons")
-- Visual metaphor if not showing literal UI (e.g., "network of channel nodes radiating from a central hub")
+- Key UI elements the mockup should show
+- Visual reference paths (`tmp/reference/<project-name>/...`)
+- Fidelity level (per `references/product-representation.md`)
 
-This grounds the visual in the actual product without requiring pixel-accurate UI reproduction.
+**In exploration mode:** Also write `productContext` to `state.json` so nested claudes get the references:
+```json
+"productContext": {
+  "feature": "...",
+  "fidelityLevel": "Level 3",
+  "referenceDir": "tmp/reference/<project-name>/",
+  "keyUIElements": ["..."]
+}
+```
+
+This grounds the visual in the actual product. Every sub-element in the Composition Brief's sub-element plan should cite a specific reference from this discovery.
 
 ---
 
@@ -447,6 +463,8 @@ This grounds the visual in the actual product without requiring pixel-accurate U
 
 After the Creative Brief is confirmed, propose **5 visual direction concepts** as a text table before any Figma work. This is cheap (text only) and lets the user filter before the agent invests in expensive builds.
 
+**Preparation before ideation.** The agent's "preparation" is Steps 1-1c — the Creative Brief, content analysis, and brand system. Every concept should trace back to something specific in the brief or content, not emerge from general design knowledge. The quality of ideation is bounded by the depth of context gathered.
+
 **How to arrive at the 5 concepts** — reason from the specific inputs gathered so far, not from general knowledge:
 
 1. **Mine the Creative Brief.** What's the key message? What's the hero content? The strongest concepts are visual translations of the key message — not generic layouts with the title pasted on.
@@ -454,7 +472,31 @@ After the Creative Brief is confirmed, propose **5 visual direction concepts** a
 3. **Check the format and medium.** Load the format file. What composition patterns work at this size? What are the thumbnail readability constraints?
 4. **Check brand composition patterns.** Load `/brand` composition guide. What layouts, background treatments, and illustration styles are on-brand?
 5. **Consider the audience.** Developer-facing leans monospace-forward. Executive-facing leans stat-forward. The Creative Brief tone should translate into visual treatment choices.
-6. **Ensure structural diversity.** The 5 directions must differ in *visual strategy* — different ways of communicating the same message. Each should answer "what is the visual centerpiece?" differently. Not 5 variations of "title left, graphic right."
+6. **Ensure conceptual diversity** (see diversity self-check below).
+
+**Diversity self-check — verify before presenting:**
+
+The #1 failure mode is generating 5 concepts that are variations on the same idea rather than genuinely different directions. Variation (10 color schemes of one layout) ≠ divergence (10 different visual arguments for the same message).
+
+Before presenting the 5 concepts, verify:
+- [ ] At least 3 different visual centerpieces (not 5 variations of "title + graphic right")
+- [ ] At least 2 different layout architectures (centered, asymmetric, full-bleed, grid, layered — mix them)
+- [ ] At least 2 different imagery approaches (product mockup, illustration, typography-dominant, data callout, abstract/metaphorical, photographic)
+- [ ] At least 1 counter-concept that deliberately avoids the most obvious visual approach to the content. If the content is about a product feature, one concept should not show the product UI. If the content is about data, one concept should use a visual metaphor instead of showing numbers. This breaks the agent's fixation on "the obvious answer" and often produces the most interesting direction.
+
+### Incorrect
+A blog about "Agents in Slack" → 5 concepts that all show a Slack message thread in different color schemes. This is variation, not divergence. Every concept has the same visual centerpiece (Slack UI).
+
+### Correct
+A blog about "Agents in Slack" → (1) Immersive Slack thread mockup, (2) Hub-and-spoke diagram showing multi-channel reach, (3) Bold typographic treatment with key stat "10x faster responses", (4) Illustrated metaphor — helpful colleague joining a conversation, (5) Split composition showing before/after support experience. Each has a different visual centerpiece and argues the message differently.
+
+**Ideation entry points** — how to approach the reasoning depends on the brief:
+
+| Entry point | When to use | How |
+|---|---|---|
+| **Concept-first** | Brief has a strong message or narrative hook (most common) | Start from the key message; ask "what visual *argues* this point?" for each concept |
+| **Reference-first** | User provided visual references or the content suggests a visual domain | Extract *principles* from references (composition rhythm, color temperature, spatial density) — never copy execution |
+| **Form-first** | Brief is open-ended or abstract; no obvious visual hook | Explore compositional approaches (typography-dominant, illustration-driven, data-forward) and attach meaning after |
 
 **Present to the user:**
 

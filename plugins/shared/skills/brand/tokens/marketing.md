@@ -143,17 +143,17 @@
 
 ### Inkeep Shadows (9 tokens)
 
-| Token | Value | Usage |
-|---|---|---|
-| `shadow/subtle` | 0 4px 18.4px 0 rgba(0,0,0,0.04) | Cards at rest, form containers |
-| `shadow/medium` | 0 8px 30px 0 rgba(0,0,0,0.08) | Card hover states |
-| `shadow/heavy` | 0 8px 32px 0 rgba(0,0,0,0.08) | Sticky header, comparison table |
-| `shadow/brand` | 5px 6px 18px 0 rgba(157,194,255,0.20) | Header shadow, chat button rest — blue-tinted glow |
-| `shadow/brand-hover` | 6px 8px 22px rgba(157,194,255,0.24), 0 10px 36px rgba(0,0,0,0.10) | Chat button hover — intensified blue glow |
-| `shadow/modal` | 0 5.02px 23.091px 0 rgba(0,0,0,0.04) | Modal and dialog containers |
-| `shadow/dropdown` | 0 10px 40px rgba(0,0,0,0.08) | Dropdown menus, navigation flyouts |
-| `shadow/focus` | 0 0 0 2px #FFFFFF, 0 0 0 4px #69A3FF | Accessibility focus ring — white ring + blue ring |
-| `shadow/value-card` | 0px 4px 4px rgba(0,0,0,0.25) | ValueCard shadow — higher opacity for dark card surfaces |
+| Token | Value | Usage | Never use for |
+|---|---|---|---|
+| `shadow/subtle` | 0 4px 18.4px 0 rgba(0,0,0,0.04) | Cards at rest, form containers | — |
+| `shadow/medium` | 0 8px 30px 0 rgba(0,0,0,0.08) | Card hover states | Static graphics, blog covers, non-interactive mockups |
+| `shadow/heavy` | 0 8px 32px 0 rgba(0,0,0,0.08) | Sticky header, comparison table | — |
+| `shadow/brand` | 5px 6px 18px 0 rgba(157,194,255,0.20) | Header shadow, chat button rest, floating product mockup panels — blue-tinted glow | Static flat cards at rest (use `shadow/subtle` instead) |
+| `shadow/brand-hover` | 6px 8px 22px rgba(157,194,255,0.24), 0 10px 36px rgba(0,0,0,0.10) | Chat button hover — intensified blue glow | Static contexts (hover-only) |
+| `shadow/modal` | 0 5.02px 23.091px 0 rgba(0,0,0,0.04) | Modal and dialog containers | — |
+| `shadow/dropdown` | 0 10px 40px rgba(0,0,0,0.08) | Dropdown menus, navigation flyouts | — |
+| `shadow/focus` | 0 0 0 2px #FFFFFF, 0 0 0 4px #69A3FF | Accessibility focus ring — white ring + blue ring | — |
+| `shadow/value-card` | 0px 4px 4px rgba(0,0,0,0.25) | ValueCard shadow — higher opacity for dark card surfaces | — |
 
 ---
 
