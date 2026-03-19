@@ -182,7 +182,7 @@ Step 6:  Export & deliver
 4. `"Graphics: Collect assets & brand tokens"` → pending
 5. `"Graphics: Write build specs & Start Nested Claudes"` → pending
 6. `"Graphics: Build directions"` → pending
-7. `"Graphics: Self-critique → Review → Polish"` → pending
+7. `"Graphics: Craft elevation → Review → Polish"` → pending
 8. `"Graphics: Present to user"` → pending (blockedBy: [7])
 9. `"Graphics: Iterate on user feedback"` → pending
 10. `"Graphics: Export & deliver"` → pending
@@ -193,10 +193,10 @@ Step 6:  Export & deliver
 3. `"Graphics: Collect assets & brand tokens"` → pending
 4. `"Graphics: Write build spec"` → pending
 5. `"Graphics: Build graphic"` → pending
-6. `"Graphics: Self-critique → Review → Polish"` → pending
+6. `"Graphics: Craft elevation → Review → Polish"` → pending
 7. `"Graphics: Export & deliver"` → pending
 
-As each step begins, mark its task `in_progress`. When the step completes, mark it `completed`. Task 7 (Self-critique → Review → Polish) in exploration mode stays `in_progress` throughout the quality loop and completes when all frames pass the reviewer. Task 8 (Present) cannot start until task 7 completes — this enforces the "every frame must pass the reviewer before the user sees it" rule structurally. Task 9 (Iterate) stays `in_progress` throughout user feedback rounds and completes when the user approves finals.
+As each step begins, mark its task `in_progress`. When the step completes, mark it `completed`. Task 7 (Craft elevation → Review → Polish) in exploration mode stays `in_progress` throughout the 3-pass elevation loop and completes when all frames pass the reviewer. Task 8 (Present) cannot start until task 7 completes — this enforces the "every frame must pass the reviewer before the user sees it" rule structurally. Task 9 (Iterate) stays `in_progress` throughout user feedback rounds and completes when the user approves finals.
 
 **Why this exists:** Without explicit task tracking, the observed failure mode is the agent skipping asset collection (Step 2) and brand token extraction (Step 3), jumping straight to building from scratch with approximated brand elements. This produces off-brand graphics with fake logos and wrong colors.
 
@@ -727,6 +727,12 @@ The self-critique loop and reviewer evaluate against these.
 should UNDERSTAND from the spatial arrangement, not just what they
 should SEE. Example: "Arrows converge from 3 sources into the agent"
 not "Arrows exist between nodes."
+**At least 1 criterion must be a craft/richness criterion** — testing
+visual depth, texture, or polish, not just presence or correctness.
+Example: "Background has visible texture/grain, not a flat solid fill"
+or "Mockup contains realistic contextual content, not placeholder text"
+or "Composition has ≥4 visual depth layers." This ensures the Phase E
+craft elevation pass has a spec-level target to evaluate against.
 - [ ] ...
 - [ ] ...
 - [ ] ...
@@ -1083,9 +1089,10 @@ For each element in the build plan:
    | Third-party logos | `third-party/{name}` | `third-party/vercel` |
 
 4. **Screenshot it** — `figma_capture_screenshot` to verify it looks correct
-5. **Fix issues** — if the screenshot shows problems, fix before continuing
+5. **Craft-check the atom** — for Tier 2 atoms, evaluate: is this at "Elevated" or just "Correct" per the craft-elevation strategies? If just "Correct," elevate NOW — don't accumulate craft debt. It's far cheaper to elevate an isolated atom than to fix it after composition. Examples: a background that's a flat solid → add a subtle gradient + noise texture. An avatar that's a colored circle → generate a Quiver illustration. A card with no shadow → add proper shadow depth.
+6. **Fix issues** — if the screenshot or craft-check shows problems, fix before continuing
 
-Once simple atoms are verified, compose them into compound elements (group into auto-layout frames, set spacing/padding, screenshot and verify).
+Once simple atoms are verified and elevated, compose them into compound elements (group into auto-layout frames, set spacing/padding, screenshot and verify).
 
 **Checkpoint:** Screenshot the entire working frame. Verify:
 - [ ] Every planned atom exists (nothing left as placeholder)
@@ -1093,6 +1100,7 @@ Once simple atoms are verified, compose them into compound elements (group into 
 - [ ] **Aspect ratios preserved:** for every imported SVG, compare the rendered width:height ratio against the source viewBox. A 24×24 viewBox must render square; a 100×25 viewBox must render 4:1. If any element looks stretched or squished, fix it before proceeding.
 - [ ] Compound elements hold together visually
 - [ ] All layers have descriptive names
+- [ ] **Per-atom craft check passed** — every Tier 2 atom is at "Elevated" per the craft-elevation strategies, not just "Correct"
 
 Fix any issues now — it's much easier to fix individual atoms than after composition.
 
@@ -1143,6 +1151,7 @@ Fix any issues now — it's much easier to fix individual atoms than after compo
    return issues.length ? issues : 'All children within bounds';
    ```
 - [ ] **Sibling consistency:** for repeating elements (card grids, icon rows, tag lists), verify that siblings have matching visual weight — equal heights, same number of text lines, consistent padding. A single-line label next to a two-line label misaligns everything below it. Fix content or equalize container sizes before moving on.
+- [ ] **Visual depth stack count:** How many of the 6 layers are present (background texture, atmospheric depth, structural elements, content, accent details, interaction cues)? If ≤3 layers, the composition will look flat — add missing layers before proceeding to Phase E. This is cheaper to fix now than during self-critique.
 - [ ] **If adapting an existing asset:** screenshot the original reference AND your output — compare element-by-element. "The original" means the source Figma file, not any derived copy (not your HTML mockup, not your plan description). Check arrow directions, element ordering, label placement, and logo usage against the actual source.
 
 #### Direction checkpoint (for novel compositions only)
@@ -1209,16 +1218,27 @@ Zoom out from individual elements and evaluate the whole:
 
 Fix any issues found. Screenshot after fixes to verify.
 
-**After all 3 passes, also do:**
+**Recursive elevation — the 3 passes are a minimum, not a cap.**
+
+After Pass 3, ask: **"If I showed this to a design lead, what would they push back on?"** If the answer is anything other than "nothing," run another elevation cycle (Pass 2 → Pass 3). Craft elevation is recursive — each cycle should find a new layer of detail or polish to add. The standard is not "did I run 3 passes" but "is this genuinely at the highest level of craft I can achieve with the tools available?"
+
+Stop criteria (when to exit the loop):
+- The depth stack has ≥5 active layers
+- Every Tier 2 atom is at "Elevated" per the craft-elevation strategies
+- The composition passes the "Stripe/Linear/Vercel" cohesion test
+- You cannot identify a specific, actionable improvement that would materially elevate the output
+- Maximum 5 total passes (to prevent infinite loops) — but reaching 5 should be rare. If you're still finding issues at pass 5, the Build Spec or the atom decomposition was insufficiently detailed.
+
+**After exiting the elevation loop, also do:**
 - **Layer organization** — descriptive names on all layers, logical layer order (background → structure → content → decorative)
 - **Aspect ratio verification** — for imported SVGs, compare each logo's rendered proportions against its source viewBox
 - **Clean up** — delete the "Working — Atoms" frame, remove stray elements
 
 #### Iteration is expected
 
-Visual work is inherently iterative. The self-critique loop handles internal quality iteration. User feedback drives external iteration (Phase 2 in exploration mode). Structure for it:
-- The self-critique loop produces polished work → reviewer verifies → THEN present to user
-- Don't try to make every detail perfect before the reviewer — but DO iterate past the first draft
+Visual work is inherently iterative. The craft elevation loop handles internal quality iteration. User feedback drives external iteration (Phase 2 in exploration mode). Structure for it:
+- The elevation loop produces polished work → reviewer verifies → THEN present to user
+- Don't try to make every detail perfect before the reviewer — but DO iterate past the first draft. The reviewer should see elevated work, not work that "passed the criteria."
 - When the user requests changes, assess scope: minor tweaks can be applied in place, but major revisions should use the v1/v2 pattern so nothing is lost.
 
 **Option B: SVG (when code output is specifically needed)**
@@ -1618,7 +1638,7 @@ Best for: 3D rendered objects with exact brand colors, parameterized batch rende
 
 ### 5. Apply brand consistency
 
-**Mark task "Graphics: Build directions" (or "Graphics: Build graphic") as `completed`. Mark task "Graphics: Self-critique → Review → Polish" as `in_progress`.**
+**Mark task "Graphics: Build directions" (or "Graphics: Build graphic") as `completed`. Mark task "Graphics: Craft elevation → Review → Polish" as `in_progress`.**
 
 ⛔ **Phase E (self-critique loop) must have completed before entering this step.** If you skipped Phase E, go back and run it now. The reviewer evaluates polished work, not first drafts.
 
@@ -1654,7 +1674,9 @@ Agent tool:
   subagent_type: general-purpose
   model: opus
   prompt: |
-    You are reviewing a graphic for brand compliance and visual quality.
+    You are reviewing a graphic for brand compliance, visual quality,
+    and craft richness. A graphic that is technically correct but
+    visually flat or generic should receive NEEDS REVISION.
 
     Before doing anything:
     1. Load the `brand` skill (via Skill tool)
@@ -1663,6 +1685,8 @@ Agent tool:
        <path-to-graphics-skill>/prompts/visual-evaluation.md
     4. Read the reviewer context at:
        <path-to-graphics-skill>/references/visual-inspection.md
+    5. Read the craft elevation guide at:
+       <path-to-graphics-skill>/references/craft-elevation.md
 
     Capture your own screenshots using the capture script:
     ```bash
@@ -1699,10 +1723,19 @@ Agent tool:
     - Content types present: <list all — illustration, product mockup, etc.>
     - Part of series: <yes/no>
 
-    Follow the methodology to evaluate, then provide detailed
-    findings with clear reasoning. Cite specific visual evidence
-    from the screenshots (and source file when available) for
-    every finding.
+    Evaluate along THREE dimensions:
+    1. Brand compliance — correct tokens, fonts, colors, logo usage
+    2. Structural correctness — elements present, hierarchy reads,
+       layout matches spec, thumbnail readability
+    3. Craft richness — visual depth (count the depth stack layers),
+       element-level polish (Correct vs Elevated per craft-elevation
+       strategies), compositional cohesion, texture and detail density.
+       A flat, generic composition that meets criteria 1-2 is still
+       NEEDS REVISION.
+
+    Provide detailed findings with clear reasoning. Cite specific
+    visual evidence from the screenshots (and source file when
+    available) for every finding.
 ```
 
 3. **Read the reviewer's verdict and act:**
@@ -1714,7 +1747,7 @@ Agent tool:
 
 All SVG outputs (Quiver, hand-coded, D2/Mermaid) should be imported into Figma before reaching this phase — the Figma frame is the review surface. Pass the original SVG file path in the reviewer spawn prompt for source cross-referencing.
 
-**Mark task "Graphics: Brand consistency check" as `completed`.**
+**Mark task "Graphics: Craft elevation → Review → Polish" as `completed`.**
 
 ### Present to user (gate between review and export/iteration)
 
