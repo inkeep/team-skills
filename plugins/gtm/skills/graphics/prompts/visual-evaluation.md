@@ -35,6 +35,7 @@ This classification determines which dimensions to activate below.
 | **Color & palette** | Brand colors used correctly per context, color restraint (max 3 in surround), warm cream not pure white for backgrounds | `brand` tokens § Inkeep Colors, `brand` composition guide § Color restraint |
 | **Typography** | Correct font assignments (Neue Haas/JetBrains Mono/Noto Serif), size minimums met, max 2 typefaces per graphic, hierarchy ratios, case rules | `brand` tokens § Typography, `brand` element patterns § typography sections |
 | **Composition & layout** | Z-pattern or appropriate layout, visual hierarchy reads correctly, content coverage per format standard, whitespace deliberate | `brand` composition guide (full doc) |
+| **Spatial fidelity** | Elements that should be separated aren't colliding (edges meeting, text running into icons, SVGs clipping neighbors). Elements inside containers are visually centered (not drifted). Elements at the same semantic role (two feature icons, two logos, matching nodes) have matching visual weight/size regardless of position on canvas. Imported SVGs/logos are not stretched or squished (aspect ratio preserved). Elements that should share an axis (items in a row, a column, or symmetrical positions) are aligned. **Note:** Your spatial judgment from screenshots is holistic, not pixel-precise — flag anything that *looks* off. The builder has programmatic checks (Phase D spatial fidelity code) for precise verification, so your job is to catch what looks wrong visually and flag it for programmatic confirmation. | `graphics` references/craft-elevation § AI failure mode callouts: spatial fidelity, `graphics` tools/figma-console § SVG visual centering |
 | **Background treatment** | Not flat — has dot grid, bloom, gradient, or dashed grid texture | `brand` composition guide § Background texture |
 | **Logo & brand mark** | Correct variant, clear space, not distorted/rotated/recolored | `brand` SKILL.md § Logo rules |
 | **Copy & messaging** | Brand vocabulary used (prefer/avoid table), sentence case titles, "Agent" capitalized, value framing | `brand` brand guide § Copy, `brand` copy patterns |
@@ -108,7 +109,7 @@ Evaluate findings in priority order. **Suppress lower-tier findings when higher-
 | Tier | Category | Examples | Suppression rule |
 |---|---|---|---|
 | 1 | Missing/wrong elements | Missing logo, wrong brand colors, placeholder content, broken rendering | Always report |
-| 2 | Layout/hierarchy | No visual hierarchy, composition doesn't flow, elements overlapping, content overflows | Always report |
+| 2 | Layout/hierarchy + spatial fidelity | No visual hierarchy, composition doesn't flow, element collision (edges meeting/occluding), content overflows, distorted aspect ratios, off-center content in containers, role-matched elements at mismatched sizes, axis misalignment | Always report |
 | 3 | Brand compliance | Wrong font assignment, flat background, badge competing with heading, mockup not styled | Suppress if Tier 1 issues exist |
 | 4 | Polish/fine-tuning | Spacing could be tighter, visual weight slightly unbalanced, edge bleed opportunity | Suppress if Tier 1 or 2 issues exist |
 

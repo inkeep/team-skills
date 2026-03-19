@@ -239,6 +239,34 @@ A process flow labeled "clockwise" renders counter-clockwise, or vice versa. Thi
 
 ---
 
+## AI failure mode callouts: spatial fidelity
+
+Spatial fidelity failures are the most common class of "looks AI-generated" defects. They share a root cause: the model assigns coordinates, sizes, and positions per-element without verifying the resulting spatial relationships between elements. Each element may be individually correct, but the composition as a whole has geometric errors that a human designer would never produce. These failures are invisible in code review — they only appear visually.
+
+**Why this is a class, not individual bugs:** These failures co-occur. A composition with one spatial fidelity error almost always has several — distorted logos AND misaligned centering AND inconsistent icon sizes. When you catch one, scan for all of them.
+
+**Failure: Element collision (edges meet or occlude)**
+Elements that should have clear separation instead have their bounding boxes intersecting — a text label runs into an adjacent icon, an SVG clips into a neighboring element, a badge overlaps a card edge it shouldn't touch. This happens with any element type: SVGs, text, shapes, containers. The model computes positions that are conceptually reasonable but doesn't verify that the actual rendered bounds maintain clearance.
+→ **Fix:** After placing any element near another, run the pairwise collision check (see programmatic spatial fidelity checks in SKILL.md Phase D). Every non-overlapping element pair should have ≥4px clearance between their `absoluteBoundingBox` edges. When intentional overlap IS the design intent (stacked panels, edge bleed, overlapping cards for depth), the overlap must be declared in the Build Spec — any overlap not in the spec is accidental and must be fixed. The rule: **if it's not in the Build Spec, it's a collision, not a design choice.**
+
+**Failure: Distorted or squished elements (wrong aspect ratio)**
+Imported SVGs, logos, and icons rendered at a width:height ratio that doesn't match their source viewBox. A square icon becomes a wide rectangle. A horizontal logo gets compressed vertically. This happens when the model sets width and height independently instead of deriving one from the other via the source aspect ratio.
+→ **Fix:** For every imported SVG: extract the viewBox (`viewBox="0 0 W H"`), compute the aspect ratio (`W/H`), and constrain resizing to maintain it. A 24×24 viewBox scaled to 60px wide must be 60×60, not 60×40. A 100×25 viewBox at 80px wide must be 80×20. Run the aspect ratio verification check (SKILL.md Phase C + Phase D) on every imported element. The model should NEVER set both width and height to arbitrary values — always derive one axis from the other.
+
+**Failure: Off-center content in containers**
+An element inside a container (icon in a circle, logo in a badge, text in a pill) that is visually off-center despite being "mathematically" centered. Two causes: (1) SVGs with viewBox padding larger than their visible content — mathematical centering uses the viewBox, but the eye sees the content, and (2) manual positioning without auto-layout where the model computes approximate coordinates. This is especially visible in avatars, icon badges, and logo lockups.
+→ **Fix:** Use auto-layout with center alignment whenever possible — it eliminates the problem structurally. When auto-layout can't be used (absolute-positioned overlays, complex compositions), use the SVG visual centering pattern in `tools/figma-console.md` — compute the actual content bounds via `absoluteBoundingBox` on child paths, then center the content center (not the frame center) in the container. Run the centering verification check (SKILL.md Phase D) on every container+child pair.
+
+**Failure: Role-matched elements at mismatched sizes**
+Two or more elements that serve the same semantic role in the composition — two feature icons, two company logos in a comparison, two avatar circles in a flow, two node shapes in a diagram — rendered at noticeably different sizes. They don't need to be adjacent; they can be in different parts of the canvas, in symmetrical positions, in the same row/column, or anywhere the viewer perceives them as "the same kind of thing." The model assigns sizes per-element based on content or available space without considering peer relationships. The viewer reads size as importance — unequal sizes for equal-role elements implies a hierarchy that wasn't intended.
+→ **Fix:** In the Build Spec, explicitly tag elements that share a semantic role (e.g., "all integration logos: 48×48", "all feature icons: 40×40 in 56×56 containers", "all agent nodes: 120×80"). During build, set sizes from these role tags, not from per-element judgment. During the Phase D checkpoint, run the peer-size consistency check — group elements by semantic role and verify that all members of each group have matching dimensions (within 2px tolerance). For elements that are optically different sizes at the same pixel dimensions (circles vs squares, dense vs sparse icons), use optical sizing: circles need ~10% larger pixel dimensions to match the visual weight of squares at the same size.
+
+**Failure: Misaligned elements that should share an axis**
+Elements that should be vertically or horizontally aligned (e.g., a row of cards, a column of labels, items in a grid) are slightly off — one card is 3px lower than its siblings, labels don't share a baseline, icons in a column aren't horizontally centered on the same axis. The model positions each element independently rather than aligning to a shared reference line.
+→ **Fix:** Use auto-layout for any group of elements that should share alignment — it enforces alignment structurally. When manual positioning is necessary, compute the shared axis explicitly (e.g., all items in a row share the same `y + height/2` for vertical centering, all items in a column share the same `x + width/2` for horizontal centering) and set each element's position from that shared value. The alignment check in Phase D catches this programmatically.
+
+---
+
 ## Contextual elevation reasoning
 
 Elevation strategies must derive from the specific graphic. During self-critique, reason from:

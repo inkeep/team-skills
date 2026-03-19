@@ -1119,6 +1119,8 @@ Once simple atoms are verified and elevated, compose them into compound elements
 - [ ] Brand colors exact, fonts correct
 - [ ] **Aspect ratios preserved:** for every imported SVG, compare the rendered width:height ratio against the source viewBox. A 24×24 viewBox must render square; a 100×25 viewBox must render 4:1. If any element looks stretched or squished, fix it before proceeding.
 - [ ] Compound elements hold together visually
+- [ ] **Centering verified:** for every atom placed inside a container (icon in circle, logo in badge, text in pill), verify the content is visually centered — use auto-layout with center alignment, or the SVG visual centering pattern in `tools/figma-console.md` for imported SVGs with viewBox padding. Mathematical centering of the SVG frame is not sufficient when the visual content doesn't fill the frame.
+- [ ] **Role-matched sizing:** identify all atoms that share a semantic role (e.g., two feature icons, multiple company logos, matching avatar circles). Tag them in the Build Spec with explicit shared dimensions. Verify all members of each role group are the same size now — before composition makes resizing harder.
 - [ ] All layers have descriptive names
 - [ ] **Per-atom craft check passed** — every Tier 2 atom is at "Elevated" per the craft-elevation strategies, not just "Correct"
 
@@ -1171,6 +1173,94 @@ Fix any issues now — it's much easier to fix individual atoms than after compo
    return issues.length ? issues : 'All children within bounds';
    ```
 - [ ] **Sibling consistency:** for repeating elements (card grids, icon rows, tag lists), verify that siblings have matching visual weight — equal heights, same number of text lines, consistent padding. A single-line label next to a two-line label misaligns everything below it. Fix content or equalize container sizes before moving on.
+- [ ] ⛔ **Spatial fidelity checks (MANDATORY — screenshots cannot reliably catch these):** Claude's spatial reasoning from screenshots is limited for precise measurements (see `prompts/visual-evaluation.md`). These programmatic checks catch the class of failures described in `references/craft-elevation.md` § "AI failure mode callouts: spatial fidelity" — element collisions, distorted aspect ratios, off-center content, mismatched peer sizes, and axis misalignment. **Run after every composition step**, not just at the end:
+   ```javascript
+   const parent = await figma.getNodeByIdAsync('PARENT_ID');
+   const children = parent.children.filter(c => c.absoluteBoundingBox);
+   const issues = [];
+
+   // 1. Pairwise collision detection — every non-overlapping pair must have ≥4px clearance
+   //    Skip pairs where overlap is declared in the Build Spec (stacked panels, edge bleed, etc.)
+   const MIN_CLEARANCE = 4;
+   for (let i = 0; i < children.length; i++) {
+     for (let j = i + 1; j < children.length; j++) {
+       const a = children[i].absoluteBoundingBox;
+       const b = children[j].absoluteBoundingBox;
+       const gapX = Math.max(0, Math.max(b.x - (a.x + a.width), a.x - (b.x + b.width)));
+       const gapY = Math.max(0, Math.max(b.y - (a.y + a.height), a.y - (b.y + b.height)));
+       if (gapX === 0 && gapY === 0) {
+         // Bounding boxes intersect — check if overlap is ≥ MIN_CLEARANCE intrusion
+         issues.push({
+           type: 'collision',
+           elements: [children[i].name, children[j].name],
+           ids: [children[i].id, children[j].id],
+           note: 'Bounding boxes overlap — verify this is intentional (declared in Build Spec) or fix'
+         });
+       } else if (gapX < MIN_CLEARANCE && gapY < MIN_CLEARANCE) {
+         issues.push({
+           type: 'near-collision',
+           elements: [children[i].name, children[j].name],
+           gap: { x: gapX, y: gapY },
+           note: `Less than ${MIN_CLEARANCE}px clearance`
+         });
+       }
+     }
+   }
+
+   // 2. Centering verification — for each child inside a container with 1 child,
+   //    check if the child is centered (within 3px tolerance)
+   const CENTERING_TOLERANCE = 3;
+   for (const child of children) {
+     if (child.children && child.children.length === 1) {
+       const container = child.absoluteBoundingBox;
+       const inner = child.children[0].absoluteBoundingBox;
+       if (!inner) continue;
+       const expectedX = container.x + (container.width - inner.width) / 2;
+       const expectedY = container.y + (container.height - inner.height) / 2;
+       const driftX = Math.abs(inner.x - expectedX);
+       const driftY = Math.abs(inner.y - expectedY);
+       if (driftX > CENTERING_TOLERANCE || driftY > CENTERING_TOLERANCE) {
+         issues.push({
+           type: 'off-center',
+           container: child.name,
+           inner: child.children[0].name,
+           drift: { x: Math.round(driftX), y: Math.round(driftY) },
+           note: 'Content not centered in container — use auto-layout or SVG visual centering pattern'
+         });
+       }
+     }
+   }
+
+   // 3. Peer-size consistency — group elements by name prefix (e.g., "icon-*", "logo-*")
+   //    and verify all members have matching dimensions (within 2px tolerance)
+   const SIZE_TOLERANCE = 2;
+   const groups = {};
+   for (const child of children) {
+     const prefix = child.name.replace(/[-_]\d+$/, '').replace(/\s+\d+$/, '');
+     if (!groups[prefix]) groups[prefix] = [];
+     groups[prefix].push(child);
+   }
+   for (const [prefix, members] of Object.entries(groups)) {
+     if (members.length < 2) continue;
+     const refW = members[0].absoluteBoundingBox.width;
+     const refH = members[0].absoluteBoundingBox.height;
+     for (let k = 1; k < members.length; k++) {
+       const bb = members[k].absoluteBoundingBox;
+       if (Math.abs(bb.width - refW) > SIZE_TOLERANCE || Math.abs(bb.height - refH) > SIZE_TOLERANCE) {
+         issues.push({
+           type: 'peer-size-mismatch',
+           group: prefix,
+           reference: { name: members[0].name, w: refW, h: refH },
+           mismatch: { name: members[k].name, w: bb.width, h: bb.height },
+           note: 'Elements with same semantic role should have matching dimensions'
+         });
+       }
+     }
+   }
+
+   return issues.length ? issues : 'All spatial fidelity checks passed';
+   ```
+   **Interpreting results:** Collision findings must be cross-referenced against the Build Spec — if the Build Spec declares overlapping panels or edge bleed for an element pair, the collision is intentional. Any collision NOT declared in the Build Spec is accidental and must be fixed. For centering and peer-size findings, fix all of them — there are no intentional exceptions to these.
 - [ ] **Visual depth stack count:** How many of the 6 layers are present (background texture, atmospheric depth, structural elements, content, accent details, interaction cues)? If ≤3 layers, the composition will look flat — add missing layers before proceeding to Phase E. This is cheaper to fix now than during self-critique.
 - [ ] **If adapting an existing asset:** screenshot the original reference AND your output — compare element-by-element. "The original" means the source Figma file, not any derived copy (not your HTML mockup, not your plan description). Check arrow directions, element ordering, label placement, and logo usage against the actual source.
 
