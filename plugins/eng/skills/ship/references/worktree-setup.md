@@ -25,7 +25,22 @@ Determine which action to take based on the current environment:
 
 After this step, all subsequent phases operate from the feature workspace — specs, evidence, and state files all land here.
 
-## Create the worktree
+## Preferred entrypoint
+
+Use the helper script from the repo root:
+
+```bash
+<path-to-skill>/scripts/ship-worktree.sh ensure --feature "<feature-name>"
+```
+
+What it does:
+- Reuses the current checkout only when you're already in a non-primary branch or worktree.
+- Reuses an existing matching worktree only when it is clean, ignoring `tmp/ship/` and `tmp/browser/` noise.
+- Otherwise creates a fresh sibling worktree with a unique branch/path so concurrent `/ship` runs do not collide.
+
+Parse the JSON output and `cd` into the reported `path` before continuing.
+
+## Manual fallback
 
 From the main repo directory:
 
@@ -68,7 +83,17 @@ Run the repo's quality gate commands to confirm the worktree is healthy:
 
 Use the commands discovered during capability detection, not hardcoded defaults.
 
-## Cleanup (after PR is merged)
+## Cleanup (after PR is merged or the request is abandoned)
+
+Preferred:
+
+```bash
+<path-to-skill>/scripts/ship-worktree.sh cleanup --state tmp/ship/state.json
+```
+
+The helper refuses to remove the primary checkout, refuses to remove dirty worktrees unless `--force` is passed, and refuses to delete unmerged branches unless `--force` is passed.
+
+Manual fallback:
 
 From the main repo:
 ```bash

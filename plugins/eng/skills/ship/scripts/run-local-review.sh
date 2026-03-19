@@ -3,7 +3,7 @@ set -euo pipefail
 
 usage() {
   cat <<'EOF'
-Usage: run-local-review.sh [--target <branch>] [--output <file>] [--max-turns <n>] [--prompt <text>] [--docker [compose-file]]
+Usage: run-local-review.sh [--target <branch>] [--output <file>] [--max-turns <n>] [--prompt <text>] [--docker [compose-file]] [--allow-blocking]
 
 Stages the portable PR review bundle into the current repo's ship dir, then runs it
 either on the host or inside the repo's Docker sandbox.
@@ -14,6 +14,7 @@ Options:
   --max-turns <n>        Forward max turns to the staged pr-review.sh wrapper
   --prompt <text>        Forward custom prompt text to the staged pr-review.sh wrapper
   --docker [compose]     Execute inside Docker sandbox. Optionally pass the compose file path.
+  --allow-blocking       Exit 0 even if the parsed review summary is still blocking
   -h, --help             Show this help
 EOF
   exit "${1:-0}"
@@ -26,6 +27,7 @@ COMPOSE_FILE=""
 SHIP_DIR="${CLAUDE_SHIP_DIR:-tmp/ship}"
 MAX_TURNS=""
 PROMPT_TEXT=""
+ALLOW_BLOCKING=false
 DOCKER_EXEC_PATH="/home/agent/.local/bin:/home/agent/.claude/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
 HOST_CLAUDE_CREDENTIALS_FILE="${HOME}/.claude/.credentials.json"
 HOST_CLAUDE_PROFILE_FILE="${HOME}/.claude.json"
@@ -49,6 +51,10 @@ while [[ $# -gt 0 ]]; do
     --prompt)
       PROMPT_TEXT="${2:-}"
       shift 2
+      ;;
+    --allow-blocking)
+      ALLOW_BLOCKING=true
+      shift
       ;;
     --docker)
       DOCKER_EXEC=true
@@ -82,6 +88,7 @@ cd "$REPO_ROOT"
 if [[ -z "$OUTPUT_FILE" ]]; then
   OUTPUT_FILE="${SHIP_DIR}/review-output.md"
 fi
+REVIEW_STATUS_FILE="${SHIP_DIR}/review-status.json"
 
 "$SCRIPT_DIR/stage-local-review-bundle.sh"
 
@@ -266,6 +273,8 @@ bootstrap_container_claude_auth() {
   container_supports_claudeai_auth "$compose_file"
 }
 
+run_review_status=0
+
 if [[ "$DOCKER_EXEC" == "true" ]]; then
   if ! command -v docker >/dev/null 2>&1; then
     echo "docker CLI is required for --docker mode" >&2
@@ -295,7 +304,8 @@ if [[ "$DOCKER_EXEC" == "true" ]]; then
     echo "Sandbox ANTHROPIC_API_KEY validation failed and claude.ai auth is unavailable; proceeding with api-key mode." >&2
   fi
 
-  exec docker compose -f "$RESOLVED_COMPOSE_FILE" exec \
+  set +e
+  docker compose -f "$RESOLVED_COMPOSE_FILE" exec \
     -e CLAUDE_SHIP_DIR="$SHIP_DIR" \
     -e LOCAL_REVIEW_COMPOSE_FILE="$RESOLVED_COMPOSE_FILE" \
     -e LOCAL_REVIEW_EXECUTION_MODE="docker" \
@@ -370,6 +380,42 @@ if [[ "$DOCKER_EXEC" == "true" ]]; then
     ' local-review-in-container \
     "$BUNDLE_SCRIPT" \
     "${REVIEW_ARGS[@]}"
+  run_review_status=$?
+  set -e
+else
+  set +e
+  "$BUNDLE_SCRIPT" "${REVIEW_ARGS[@]}"
+  run_review_status=$?
+  set -e
 fi
 
-exec "$BUNDLE_SCRIPT" "${REVIEW_ARGS[@]}"
+if [[ "$run_review_status" -eq 0 ]]; then
+  "$SCRIPT_DIR/parse-local-review-summary.sh" --input "$OUTPUT_FILE" --output "$REVIEW_STATUS_FILE" >/dev/null
+
+  if [[ -f "${SHIP_DIR}/state.json" ]]; then
+    jq \
+      --arg summaryFile "$OUTPUT_FILE" \
+      --arg statusFile "$REVIEW_STATUS_FILE" \
+      --arg latestRunFile "${SHIP_DIR}/local-review-latest.txt" \
+      --slurpfile reviewStatus "$REVIEW_STATUS_FILE" \
+      '
+      .localReview = (($reviewStatus[0] // {}) + {
+        summaryFile: $summaryFile,
+        statusFile: $statusFile,
+        latestRunFile: $latestRunFile
+      })
+      | .lastUpdated = ($reviewStatus[0].generatedAt // .lastUpdated)
+      ' "${SHIP_DIR}/state.json" > "${SHIP_DIR}/state.json.tmp" \
+      && mv "${SHIP_DIR}/state.json.tmp" "${SHIP_DIR}/state.json"
+  fi
+
+  if jq -e '.blocking == true' "$REVIEW_STATUS_FILE" >/dev/null 2>&1; then
+    echo "Local review summary is blocking. Fix the validated issues and rerun the gate." >&2
+    jq -r '.blockingReasons[]? | "- " + .' "$REVIEW_STATUS_FILE" >&2 || true
+    if [[ "$ALLOW_BLOCKING" != true ]]; then
+      exit 2
+    fi
+  fi
+fi
+
+exit "$run_review_status"
