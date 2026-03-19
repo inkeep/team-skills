@@ -108,6 +108,8 @@ The Inkeep Brand Assets file contains the canonical design token system as Figma
 | **Inkeep Typography** | Font families, semantic sizes, weights, tracking (letter-spacing), leading (line-height) | **Strict rules:** Neue Haas for headings (weight 400), JetBrains Mono for labels (weight 500, **always uppercase**), Noto Serif for body (weight 300). Never mix more than 2 typefaces per component. |
 
 **⚠️ Typography sizing context:** The `font/size-*` tokens in `tokens/marketing.md` (e.g., `font/size-hero: 80px`, `font/size-section: 64px`) are calibrated for the Inkeep marketing **website** at 1280px page width — text on a scrolling page viewed at screen distance. **For standalone graphic canvases** (social banners, blog covers, slides, OG images), derive text sizes from the **format file's canvas-relative typography tiers**, not from these web-page token values. Font families, weights, tracking, and line-heights transfer across contexts; **size values do not**.
+
+**Other property scaling:** Shadows and strokes stay **fixed** at all canvas sizes (they represent depth, not proportion). Corner radii stay **fixed**, but cap at 25% of the element's shortest side to prevent capsule deformation on small elements. Spacing and padding values **>16px scale** by (canvas height ÷ 720) per element-patterns.md rule 3; values ≤16px stay fixed.
 | **Inkeep Shadows** | 9 shadow definitions from subtle to brand glow | `shadow/subtle` for cards at rest, `shadow/medium` for hover, `shadow/brand` for blue-tinted glow on branded elements. |
 
 **Discovering tokens dynamically** (always prefer this over hardcoded values):
@@ -796,17 +798,34 @@ Example rows:
 
 **Classification rule:** If an atom has only one plausible method, it's Tier 1. If you list only one candidate in a Tier 2 row, reclassify it as Tier 1 or explain specifically why no other method could produce this atom.
 
-For compound elements (product mockups, chat interfaces, multi-part UI), also list sub-elements:
-| Sub-element | Source/Treatment | Visual reference | Verification |
-|---|---|---|---|
-| *(list every sub-element within the compound element — avatar, text styling, action buttons, headers, icons, etc.)* | *(source: Brand Assets / Quiver / Figma build. Treatment: specific visual approach)* | *(path to reference image from Step 1c, or "—" with justification why none needed)* | *(4x zoom for elements <50px, inline check for text styling)* |
+**Compound atom decomposition** — when a Tier 2 atom is a composed, multi-layer, or multi-element construct (product mockups, chat interfaces, UI recreations, diagrams with styled nodes, infographics), it must be decomposed into sub-elements. Each sub-element gets its own Tier 1/Tier 2 classification and the same method-selection rigor as top-level atoms. The compound atom's top-level Tier 2 row declares the **container method** (usually Figma for layout). The sub-element table declares how each piece inside is built.
+
+This is recursive — a sub-element can itself be compound (e.g., a "message bubble" inside a "Slack thread" contains avatar + name + text + timestamp + action buttons). Decompose until every leaf element has a clear, single-method declaration.
+
+| Sub-element | Tier | Method | Why (if Tier 2) | Visual reference | Verification |
+|---|---|---|---|---|---|
+| *(name every sub-element — avatar, text styling, action buttons, headers, icons, emoji, etc.)* | *(1 or 2)* | *(for Tier 1: source declaration. For Tier 2: selected method from decision tree)* | *(Tier 2 only: quality rationale + why NOT runner-up. Tier 1: "—")* | *(path to reference image from Step 1c, or "—" with justification why none needed)* | *(4x zoom for elements <50px, inline check for text styling)* |
+
+Example — "Slack thread mockup" compound atom:
+| Sub-element | Tier | Method | Why (if Tier 2) | Visual reference | Verification |
+|---|---|---|---|---|---|
+| Channel header bar | 1 | Figma native (text + rectangle) | — | tmp/reference/slack-channel.png | Inline check |
+| User avatar | 2 | Quiver illustration | Organic, illustrated portrait matching brand "Imperfect Precision" style; Figma circles with initials lack personality. Image Gen raster can't scale if reused | tmp/reference/slack-avatar-style.png | 4x zoom |
+| Inkeep bot avatar | 1 | Brand Assets clone [node ID] | — | — (canonical asset) | 4x zoom |
+| Slack hash icon | 1 | fetch-logo.ts | — | — | Inline check |
+| Approve/Deny buttons | 1 | Figma native (geometric, <5 elements) | — | tmp/reference/slack-buttons.jpg | 4x zoom |
+| Message text | 1 | Figma text | — | — | Inline check |
+| Emoji reactions | 2 | Quiver | Stylized emoji matching illustration system; Unicode text rendering is system-dependent and uncontrollable. Image Gen raster overkill for small icons | — (brand illustration style) | 4x zoom |
+
+**Why this matters:** Compound atoms are where the model most often defaults to building everything from basic Figma shapes. A Slack mockup built entirely from rectangles and circles looks flat and generic. Decomposing forces the model to recognize that sub-elements like avatars and emoji are illustration problems (→ Quiver), not shape problems (→ Figma rectangles).
 
 ⛔ **Completeness gate:**
-- Every Tier 2 atom must have ALL columns filled — Candidates (2+), Selected, Why, Why NOT, Pipeline
-- Every Tier 1 atom must declare its source
-- Every sub-element row must have Source/Treatment + Visual reference (or justified "—")
-- If any Tier 2 atom's "Why" column references speed, cost, or ease of implementation rather than quality/fidelity, the gate fails — rewrite the justification in terms of output quality
-- Rows without references produce improvised elements that look generic. The sub-element table is mandatory for any compound element with 3+ distinct sub-elements.
+- Every Tier 2 atom (top-level or sub-element) must have ALL audit columns filled — including quality rationale and why NOT runner-up
+- Every Tier 1 atom/sub-element must declare its source
+- Compound atoms with 3+ sub-elements MUST have a sub-element table — no exceptions
+- Sub-elements that are themselves compound must be further decomposed until all leaves are single-method
+- If any Tier 2 entry's rationale references speed, cost, or ease of implementation rather than quality/fidelity, the gate fails — rewrite in terms of output quality
+- Every sub-element must have a Visual reference or justified "—". Rows without references produce improvised elements that look generic
 
 ### Composition plan
 - Layout: overall structure, element placement
@@ -815,13 +834,14 @@ For compound elements (product mockups, chat interfaces, multi-part UI), also li
 - Typography mapping: font + weight + size for each text element. If the brand profile includes a Google Fonts title font, consider using it for the third-party brand's name/heading to reinforce their identity.
 - Illustration style (if applicable): hand-drawn rules from brand-guide.md
 
-### Typography scaling validation
+### Scaling validation
 - [ ] Heading is 11-15% of canvas height (landscape/wide) or 5-7% (square/portrait)
 - [ ] Heading ÷ body size ratio ≥ 3:1 (aim for 4:1)
 - [ ] Badge size ≈ 1/8 of heading size (badge whispers, heading shouts)
 - [ ] Content fills ≥75% of canvas area (no "floating in space")
 - [ ] Squeeze test: heading × (400 ÷ canvas width) ≥ 20px (readable in mobile feed)
 - [ ] Text sizes are from the format file's typography tiers, not raw brand token values
+- [ ] Border-radius does not exceed 25% of any element's shortest side (prevents capsule deformation on small elements)
 
 ### Anti-pattern check
 - [ ] Background is NOT flat (has texture/gradient)

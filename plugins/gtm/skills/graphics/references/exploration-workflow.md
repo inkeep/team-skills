@@ -363,10 +363,17 @@ State is organized by **direction** (not by frame). Each direction tracks its fu
         ],
         "thumbnailSketch": "At 400px: heading dominates left, white mockup card visible right...",
         "recipes": { "productMockup": true, "badge": true },
-        "elementPlan": [
-          { "element": "User avatar", "source": "Quiver portrait", "visualRef": "—", "criterion": "Illustrated, not a colored circle" },
-          { "element": "Approve button", "source": "Figma, Slack green", "visualRef": "tmp/reference/slack-buttons.jpg", "criterion": "Slack Block Kit style" }
-        ]
+        "atomAudit": {
+          "tier1": ["headline → Figma", "badge → Figma", "logo (Inkeep) → Brand Assets clone"],
+          "tier2": [
+            { "atom": "Slack thread mockup", "candidates": ["Figma native", "Image Gen"], "selected": "Figma native", "why": "Compound element requiring editable sub-elements", "whyNotRunnerUp": "Image Gen: raster, sub-elements not independently editable", "pipeline": "—" }
+          ],
+          "subElements": [
+            { "parent": "Slack thread mockup", "element": "User avatar", "tier": 2, "method": "Quiver portrait", "why": "Organic illustrated style matching brand; Figma circles lack personality", "visualRef": "—", "criterion": "Illustrated, not a colored circle" },
+            { "parent": "Slack thread mockup", "element": "Inkeep bot avatar", "tier": 1, "method": "Brand Assets clone", "visualRef": "—", "criterion": "Canonical asset" },
+            { "parent": "Slack thread mockup", "element": "Approve button", "tier": 1, "method": "Figma, Slack green", "visualRef": "tmp/reference/slack-buttons.jpg", "criterion": "Slack Block Kit style" }
+          ]
+        }
       },
       "status": "active",
       "color": "green",

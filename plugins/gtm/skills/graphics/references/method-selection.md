@@ -10,9 +10,20 @@ Impact: Without this, the model defaults to Figma shapes for everything or picks
 
 **The only selection axis is output quality and fidelity for the specific atom.** Speed, API cost, and implementation effort are NEVER factors. When two methods produce genuinely equivalent visual quality, either is acceptable — but never choose a lower-fidelity method for any reason other than the higher-fidelity method being unable to produce the atom at all.
 
+## Compound atoms: recursive decomposition
+
+When an atom is a composed, multi-layer, or multi-element construct (product mockups, chat UIs, styled diagram nodes, infographics), the decision tree applies **recursively**:
+
+1. The compound atom's top-level Tier 2 entry declares the **container method** (usually Figma native for layout/structure)
+2. Decompose into sub-elements — each sub-element is classified Tier 1 or Tier 2
+3. Walk this decision tree for every Tier 2 sub-element
+4. If a sub-element is itself compound, decompose again until every leaf has a single-method declaration
+
+**Why this matters:** Compound atoms are where the model most often defaults to Figma shapes for everything. A Slack thread built entirely from rectangles looks flat. Decomposing reveals that avatars are illustration problems (→ Quiver), logos are asset problems (→ Brand Assets clone), and only layout/text are genuinely Figma-native problems.
+
 ## Per-atom decision tree
 
-For each Tier 2 atom in the Build Spec, walk this tree top-to-bottom. Stop at the first YES.
+For each Tier 2 atom or sub-element in the Build Spec, walk this tree top-to-bottom. Stop at the first YES.
 
 ### 1. Does this atom reproduce an existing mark (logo, icon, badge)?
 
