@@ -710,9 +710,21 @@ as if describing it to someone who will build it.
 ### Success criteria
 3-5 concrete, testable statements specific to THIS graphic.
 The self-critique loop and reviewer evaluate against these.
+**At least 2 criteria must be semantic** — testing what the viewer
+should UNDERSTAND from the spatial arrangement, not just what they
+should SEE. Example: "Arrows converge from 3 sources into the agent"
+not "Arrows exist between nodes."
 - [ ] ...
 - [ ] ...
 - [ ] ...
+
+### Information architecture
+What is the semantic structure of this graphic? What relationships
+must the spatial arrangement convey WITHOUT reading text?
+- Directional flow: ___ (e.g., "3 triggers → agent → KB output")
+- Element roles: ___ (which are inputs, processors, outputs, labels?)
+- What must be visually distinct? ___ (e.g., "inputs use card colors, output uses neutral")
+- What should the viewer understand at a glance? ___ (one sentence)
 
 ### Thumbnail sketch
 What should this look like at 400px wide? Which elements are
@@ -776,6 +788,8 @@ For compound elements (product mockups, chat interfaces, multi-part UI), also li
 **Rules for the Build Spec:**
 - **End-state vision must be concrete** — "a warm cream canvas with a large Slack thread mockup" not "a professional-looking blog cover." The vision should be vivid enough that someone else could build it.
 - **Success criteria must be testable** — "heading reads at 300px thumbnail" not "looks good." The self-critique loop evaluates against these.
+- **At least 2 success criteria must be semantic** — testing what the composition COMMUNICATES, not just what it CONTAINS. "Arrows converge from 3 sources into the agent" not "arrows exist between nodes." Structural-only criteria produce graphics that look right but say the wrong thing.
+- **Information architecture must be filled in** for any graphic with directional flow, hierarchy, or element relationships (diagrams, workflows, hub-and-spoke, convergence patterns). Skip only for purely typographic or decorative graphics with no spatial semantics.
 - Every recipe must be explicitly marked YES or NO — skipping the scan is the failure mode this prevents
 - Every visual element must declare its generation tool — this prevents defaulting to Figma shapes for everything
 - Every sub-element in compound elements must cite a visual reference or justify why none is needed
@@ -812,10 +826,12 @@ Present the Build Spec to the user for review before generating.
 
 | Situation | Path |
 |---|---|
-| **≥2 directions selected** | **Exploration workflow.** Create `state.json`, spawn `/nest-claude` children. The parent does NOT build frames — it coordinates. **Load:** `references/exploration-workflow.md` for the full coordination protocol, state.json schema, and child spawn template. |
-| **1 direction or single-pass mode** | **Direct build.** The parent builds the frame using Phase A-E below. |
+| **Exploration mode (any number of directions)** | **Always spawn `/nest-claude` children.** Create `state.json`, spawn one child per direction. The parent NEVER builds frames — it orchestrates and verifies. **Load:** `references/exploration-workflow.md` for the full coordination protocol, state.json schema, and child spawn template. |
+| **Single-pass mode (trivial edits only)** | **Direct build.** The parent builds the frame using Phase A-E below. Single-pass is for trivial edits to existing assets (changing title text, swapping a logo) — not for new graphics. |
 
-When using the exploration workflow, the parent's job for this step is: (1) write `state.json` with Build Specs, assets, and Figma IDs, (2) create Figma Sections, (3) spawn children, (4) collect results. Each child loads `/brand` and `/graphics`, reads its Build Spec from `state.json`, builds its frame, and runs its own self-critique + reviewer loop. See `references/exploration-workflow.md` for the full protocol.
+**The parent is always the orchestrator, never the builder.** Even for a single direction in exploration mode, spawn a child. This ensures: (1) the parent can independently verify all frames without reviewing its own work, (2) consistent code path regardless of direction count, (3) children always run the full build cycle including the reviewer subagent.
+
+The parent's job is: (1) write `state.json` with Build Specs, assets, and Figma IDs, (2) create Figma Sections, (3) spawn children, (4) collect and verify results. Each child loads `/brand` and `/graphics`, reads its Build Spec from `state.json`, builds its frame, and runs its own self-critique + reviewer loop. See `references/exploration-workflow.md` for the full protocol.
 
 ⛔ **Mark task "Graphics: Build directions" (exploration) or "Graphics: Build graphic" (single-pass) as `in_progress`. Before creating ANY Figma elements, verify:**
 - [ ] **Asset manifest exists** — Step 2 produced a manifest listing found/missing/approximated assets
@@ -1583,9 +1599,10 @@ All SVG outputs (Quiver, hand-coded, D2/Mermaid) should be imported into Figma b
 ⛔ **Mark task "Graphics: Present to user" as `in_progress`. Before presenting ANY frame to the user, verify:**
 - [ ] **Self-critique loop completed** — Phase E ran at least 1 iteration on this frame
 - [ ] **Reviewer passed** — Layer 2 reviewer returned PASS or PASS WITH SUGGESTIONS (suggestions were implemented)
-- [ ] **In exploration mode:** `build-results/<slug>.json` exists with `reviewerVerdict: PASS`
+- [ ] **In exploration mode:** `build-results/<slug>.json` exists with a `reviews` array where the last entry has `"verdict": "PASS"`
+- [ ] **No self-certified verdicts** — if any frame's reviews array is empty, or the last verdict is `SELF-REVIEWED` / `SELF_PASS` / any non-reviewer verdict, the frame has NOT been independently reviewed. The parent MUST spawn a reviewer for that frame before presenting.
 
-**If any frame has not passed both the self-critique loop and the reviewer, run them now before presenting.** This is the structural enforcement of "every frame must pass the reviewer before the user sees it."
+**If any frame has not passed both the self-critique loop and an independent reviewer, run them now before presenting.** This is the structural enforcement of "every frame must pass the reviewer before the user sees it." Self-reported pass verdicts from the builder do not count.
 
 After presenting and receiving user feedback, mark this task `completed` and proceed to either "Iterate on user feedback" (if changes requested) or "Export & deliver" (if approved).
 

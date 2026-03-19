@@ -89,23 +89,24 @@ Your direction slug is: immersive-slack-thread
     < /dev/null 2>&1 | tee tmp/graphics/<page-slug>/build-results/immersive-slack-thread-stdout.json
 ```
 
-For a single direction, the parent builds directly (no parallelism benefit).
+**Always spawn a child, even for a single direction.** The parent never builds frames — it orchestrates and verifies. This ensures consistent behavior and independent review.
 
 ### Each child's build cycle
 
-1. Read `state.json` → find its direction by slug → get concept, sectionNodeId, Creative Brief, assets, **buildSpec** (end-state vision, success criteria, sub-element plan with visual references)
+1. Read `state.json` → find its direction by slug → get concept, sectionNodeId, Creative Brief, assets, **buildSpec** (end-state vision, success criteria, information architecture, sub-element plan with visual references)
 2. If Phase 2 iteration: read the direction's `iterations` array for full history — what was built, what feedback was given, what to keep and what to fix
 3. Load `/brand` and `/graphics` skills
-4. Step 3: The Build Spec is already in state.json — verify it's complete (end-state vision, success criteria, element plan with visual references). If building a new direction without a spec, write one first.
+4. Step 3: The Build Spec is already in state.json — verify it's complete (end-state vision, success criteria, information architecture, element plan with visual references). If building a new direction without a spec, write one first.
 5. Step 4: Generate (Phase A-E, targeting Section by node ID)
 6. **Phase E self-critique loop (min 1, max 3 iterations):** Capture at full + 400px thumbnail → evaluate against the Build Spec's success criteria → identify weakest element → fix → re-evaluate. Do not proceed to the reviewer until success criteria are met or 3 iterations complete.
 7. Step 5: Two-layer verification loop (max 3 iterations):
    - Layer 1: programmatic checks (`figma_lint_design`, bounds, dimensions). Fix until clean.
-   - Layer 2: reviewer subagent (`capture-for-review.ts` → reviewer evaluates at 1568px + 400px). Pass the Build Spec's success criteria as evaluation context.
+   - Layer 2: reviewer subagent (`capture-for-review.ts` → reviewer evaluates at 1568px + 400px). Pass the Build Spec's success criteria AND information architecture as evaluation context.
+   - The reviewer returns structured findings. **Record each review round** in the `reviews` array (see build-results schema below) — verdict, findings with evidence, and revision instructions.
    - Read verdict: **PASS** → proceed. **PASS WITH SUGGESTIONS** → implement quick fixes, proceed. **NEEDS REVISION** → assess findings against context, apply valid fixes, restart from Layer 1.
    - After 3 iterations without PASS → write error status to result file.
-   - **Every frame must pass the self-critique loop AND the reviewer before the user sees it.** No exceptions.
-8. Write results to `build-results/<direction-slug>.json`
+   - **Every frame must pass the self-critique loop AND the reviewer before the user sees it.** No exceptions. Self-reported verdicts (`SELF-REVIEWED`, `SELF_PASS`) do not count.
+8. Write results to `build-results/<direction-slug>.json` including the full `reviews` array from all verification rounds.
 
 ### Collect results (parent, serialized)
 
@@ -294,10 +295,15 @@ Graphics exploration sessions can be 50+ turns. Without structured state, the ag
 ```
 tmp/graphics/<page-slug>/
 ├── state.json              # Shared coordination surface — all project context
+├── assets/                 # Third-party logos and other SVGs (referenced by path in state.json)
+│   ├── slack-logo.svg
+│   └── github-logo.svg
 └── build-results/          # Child process outputs (one file per direction per round)
     ├── <direction-slug>.json
     └── ...
 ```
+
+**SVG file convention:** Save third-party logo SVGs and other fetched assets to the `assets/` subdirectory. Reference them by file path in `state.json` — never inline SVG content directly in JSON. This avoids JSON escaping issues and keeps `state.json` readable.
 
 The `<page-slug>` is derived from the Figma page name by slugifying: lowercase, spaces → hyphens, strip brackets/dates/special chars. Example: `[2026-03-18] Blog — Agents in Slack covers` → `2026-03-18-blog-agents-in-slack`.
 
@@ -414,7 +420,7 @@ State is organized by **direction** (not by frame). Each direction tracks its fu
 
 ### Child result file (`build-results/<direction-slug>.json`)
 
-Each `/nest-claude` child writes one iteration entry that the parent appends to the direction:
+Each `/nest-claude` child writes one iteration entry that the parent appends to the direction. The `reviews` array captures every reviewer round with structured findings for retrospective visibility into reviewer performance.
 
 ```json
 {
@@ -424,11 +430,32 @@ Each `/nest-claude` child writes one iteration entry that the parent appends to 
     "frameNodeId": "61:392",
     "frameName": "Blog/Cover/1A-Immersive-Thread",
     "trigger": "initial-diverge",
-    "instruction": null,
-    "reviewerVerdict": "PASS",
-    "reviewerFindings": [],
-    "verificationIterationsNeeded": 2
+    "instruction": null
   },
+  "reviews": [
+    {
+      "round": 1,
+      "verdict": "NEEDS REVISION",
+      "findings": [
+        {
+          "issue": "Arrows form a sequential cycle instead of converging to center agent",
+          "severity": "critical",
+          "evidence": "4 independent arcs connect nodes clockwise — none point to/from center hub"
+        },
+        {
+          "issue": "Arrow curves have inconsistent radii",
+          "severity": "minor",
+          "evidence": "Slack→Tickets arc is ~40% wider than GitHub→KB arc"
+        }
+      ],
+      "revisionInstructions": ["Redraw arrows converging to center", "Use consistent arc radius"]
+    },
+    {
+      "round": 2,
+      "verdict": "PASS",
+      "findings": []
+    }
+  ],
   "status": "complete",
   "error": null
 }
