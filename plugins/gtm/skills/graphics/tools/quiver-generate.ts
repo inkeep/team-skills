@@ -139,8 +139,14 @@ async function generate(args: Record<string, string>): Promise<ScriptResult> {
       process.exit(1);
     }
     body.references = refs.map((r) => {
-      if (r.startsWith("http://") || r.startsWith("https://")) return r;
-      return imageToBase64(r);
+      if (r.startsWith("http://") || r.startsWith("https://")) return { url: r };
+      // API expects { base64: "<raw base64>" }, NOT a data URI
+      const abs = resolve(r);
+      if (!existsSync(abs)) {
+        console.error(`Error: reference file not found: ${abs}`);
+        process.exit(1);
+      }
+      return { base64: readFileSync(abs).toString("base64") };
     });
   }
 
