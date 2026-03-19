@@ -43,7 +43,7 @@ This classification determines which dimensions to activate below.
 
 | Content type | Dimension | Key concerns | Skill references |
 |---|---|---|---|
-| Custom illustration | **Illustration style** | "Imperfect Precision" 3-tier system, stroke weights (3px default), semantic colors (blue=AI, golden=human), blue swoosh, max 7 elements, Quiver for organic shapes | `brand` brand guide § Illustration, `graphics` content-types/illustration |
+| Custom illustration | **Illustration style** | "Imperfect Precision" 3-tier system, stroke weights (3px default), semantic colors (blue=AI, golden=human), max 7 elements, Quiver for organic shapes | `brand` brand guide § Illustration, `graphics` content-types/illustration |
 | Product mockup | **Product representation** | Two-layer rule (product tokens inside, marketing outside), fidelity spectrum, float/angle/shadow/bleed recipe, 50-60% canvas area | `brand` product representation, `brand` element patterns § mockup treatment |
 | Data visualization | **Data viz** | Okabe-Ito colorblind palette, chart type selection, direct labeling, Y-axis at zero, max 5-8 data points at social sizes | `brand` data visualization, `graphics` content-types/data-visualization |
 | Code-as-visual | **Code block** | Syntax highlighting with brand colors per mode, 3-8 lines of money line, real code (never fake), JetBrains Mono | `brand` element patterns § Code-as-visual |

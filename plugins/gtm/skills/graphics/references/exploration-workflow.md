@@ -85,7 +85,6 @@ Your direction slug is: immersive-slack-thread
 7. Fix NEEDS REVISION findings, re-verify (max 3 iterations)
 8. Write results to: build-results/immersive-slack-thread.json" \
     --dangerously-skip-permissions \
-    --max-turns 50 \
     --output-format json \
     < /dev/null 2>&1 | tee tmp/graphics/<page-slug>/build-results/immersive-slack-thread-stdout.json
 ```

@@ -432,13 +432,13 @@ Beyond the three-tier color system, illustrations use these techniques for spati
 
 ## Signature decorative elements
 
-### Blue swoosh underline — Inkeep's signature element
+### Blue swoosh underline — optional brand accent
 
-A hand-drawn blue brush stroke that underlines a key word in headlines. This is Inkeep's most distinctive brand element — used on 8+ pages across the marketing site (homepage, developers, enterprise, agent workforce, about, visual builder, unified search). It embodies "Imperfect Precision" — a rough, organic mark on precise typography.
+A hand-drawn blue brush stroke that underlines a key word in headlines. Used on the marketing site to embody "Imperfect Precision" — a rough, organic mark on precise typography. In graphics, it's an **optional** accent — consider using when there's a clear value word to underline and the composition benefits from a brand touch.
 
-**The swoosh is to Inkeep what the gradient wave is to Stripe.** It should appear on every blog thumbnail, social graphic, and marketing visual that has a headline.
+**⚠️ Do NOT generate or draw the swoosh programmatically** (no vectorPaths, no Quiver, no hand-coded SVG). AI-generated hand-drawn curves look mechanical and break the organic quality. **Always use the predefined PNG asset**, resized to fit.
 
-#### Source asset
+#### Source asset (the ONLY method)
 
 - File: `/icons/line-curve-blue.png` (580 × 18px raster)
 - Color: `#3784FF` (brand/primary)
@@ -467,42 +467,27 @@ Never underline: "Inkeep" (the brand is already on the graphic), generic verbs (
 #### How to place it in Figma
 
 ```javascript
-// 1. Import the swoosh PNG as an image fill on a rectangle
+// 1. Download the predefined swoosh PNG
+// curl -sL -o /tmp/swoosh.png "https://inkeep.com/icons/line-curve-blue.png"
+
+// 2. Import as an image fill on a rectangle sized to the word
 const swoosh = figma.createRectangle();
 swoosh.name = "deco-swoosh";
 
-// 2. Size it to match the underlined word's width
-// The swoosh should be exactly as wide as the word it underlines
+// Size it to match the underlined word's width
 // Height: ~4-6% of the word's font size (e.g., 5px tall for 100px font)
 const wordWidth = 280; // measure the word's rendered width
 const swooshHeight = 6;
 swoosh.resize(wordWidth, swooshHeight);
 
-// 3. Position it just below the word's baseline
-// Offset: ~2-4px below the text baseline
-swoosh.x = wordNode.x; // align left edge with word start
-swoosh.y = wordNode.y + wordNode.height - 2; // just below baseline
+// Position just below the word's baseline
+swoosh.x = wordNode.x;
+swoosh.y = wordNode.y + wordNode.height - 2;
 
-// 4. Apply the swoosh image as a fill
-// Option A: Use the PNG from the marketing site
-// Download: curl -sL -o /tmp/swoosh.png "https://inkeep.com/icons/line-curve-blue.png"
-// Then set as image fill on the rectangle
-
-// Option B: Draw a simple hand-drawn line with vectorPaths (faster, no image dependency)
-const swooshLine = figma.createVector();
-swooshLine.name = "deco-swoosh";
-swooshLine.vectorPaths = [{
-  windingRule: "NONE",
-  // Slight curve with organic wobble
-  data: `M 0 ${swooshHeight/2} C ${wordWidth*0.2} ${swooshHeight*0.1} ${wordWidth*0.5} ${swooshHeight*0.9} ${wordWidth} ${swooshHeight*0.3}`
-}];
-swooshLine.strokes = [{ type: 'SOLID', color: { r: 0.216, g: 0.518, b: 1.0 } }];
-swooshLine.strokeWeight = 3;
-swooshLine.strokeCap = 'ROUND';
-swooshLine.fills = [];
+// Apply the PNG as an image fill (TILE or FILL mode, stretched to fit)
 ```
 
-**Option B (vectorPaths) is preferred** — it's resolution-independent, doesn't require downloading a PNG, and the agent can vary the curve slightly for each graphic (maintaining the hand-drawn feel of slight irregularity).
+**Only use the predefined PNG asset.** Do not attempt vectorPaths, Quiver, or any programmatic generation — AI-produced curves look mechanical.
 
 #### Dark vs light backgrounds
 
@@ -516,12 +501,12 @@ swooshLine.fills = [];
 
 | Graphic type | Use swoosh? | Notes |
 |---|---|---|
-| Blog cover (any tier) | **Yes** — on the headline's key word | This is the primary deployment |
-| Social post | **Yes** — on the stat or key message word | Reinforces brand across channels |
-| Slide deck | **Yes** — on section headings | Consistent with website experience |
+| Blog cover (any tier) | **Optional** — on the headline's key word | Nice brand touch when composition benefits from it |
+| Social post | **Optional** — on the stat or key message word | Can reinforce brand, but not required |
+| Slide deck | **Optional** — on section headings | Consistent with website experience |
 | Case study hero | **No** — customer's brand takes priority | The swoosh is Inkeep's element, not the customer's |
 | Comparison graphic | **No** — the "vs" format doesn't have a natural swoosh target | Keep comparisons neutral |
-| Email header | **Optional** — if there's a headline | Works but test rendering across email clients |
+| Email header | **No** — test rendering issues across email clients | Not worth the risk |
 
 ### Hand-drawn dash (`hand-drawn-dash.svg`)
 

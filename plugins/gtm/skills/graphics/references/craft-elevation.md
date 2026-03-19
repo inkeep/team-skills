@@ -34,7 +34,7 @@ Every composition should have multiple visual layers that create depth and richn
 | **2. Atmospheric depth** | Light wash fills, ambient glow, color zone shifts between areas | Elements float on a flat plane | Blue wash behind focal element, warm wash behind secondary zone, radial light bloom from primary visual element |
 | **3. Structural elements** | Cards, containers, dividers with proper shadows and brand radius | Content has no visual hierarchy | Cards with brand radius (32px+), brand shadow (blue-tinted glow), stacked overlapping panels at slight offset for data-rich areas |
 | **4. Content** | Text, mockups, illustrations, data — the core information | Empty frame | (This is the Build Spec — it should already exist) |
-| **5. Accent details** | Decorative lines, brand signature elements, icons, color pops | Feels sterile and corporate | Blue swoosh underline, hand-drawn dash separators, dot connector lines, category badges, Lucide icons with semantic color coding |
+| **5. Accent details** | Decorative lines, brand accents, icons, color pops | Feels sterile and corporate | Category badges, Lucide icons with semantic color coding, hand-drawn dash separators, dot connector lines, optional blue swoosh underline (predefined asset only) |
 | **6. Interaction cues** | Overlapping elements, perspective, edge bleed, depth-of-field | Static and lifeless | 2-5° rotation on mockups, element bleed past edge, stacked card panels overlapping, orbit ring curves around focal element |
 
 **Self-check:** Count the layers in your composition. If it's ≤3, it will look flat. Most 10/10 graphics have 5-6 active layers.
@@ -46,7 +46,7 @@ Every composition should have multiple visual layers that create depth and richn
 These are sub-elements and details you can ADD during self-critique to increase richness. They go beyond the Build Spec. Scan this list during Pass 2 and ask: "Which of these would make this specific graphic richer?"
 
 ### Brand signature elements (see `content-types/illustration.md` for specs)
-- **Blue swoosh underline** — the most distinctive Inkeep brand element. Should appear on every graphic with a headline unless intentionally minimal. Underlines the value/emotion word, not the product name. Generate via Quiver or hand-coded SVG.
+- **Blue swoosh underline** — optional brand accent. If used, import the predefined PNG asset from `/icons/line-curve-blue.png` and resize to fit the underlined word. Do NOT generate programmatically. Underlines the value/emotion word, not the product name.
 - **Hand-drawn dash separator** — two overlapping curved lines for section dividers. Adds organic warmth between text sections.
 - **Dot connector lines** — hand-drawn line with dots for timeline/connection/flow elements.
 - **Orbit ring curves** — elliptical strokes wrapping around a focal element. Adds energy and draws the eye inward.
@@ -93,7 +93,7 @@ For each element type, what separates "Correct" from "Elevated." Evaluate each e
 | Correct | Elevated |
 |---|---|
 | Right font, right size, right color | Deliberate letter-spacing (tighter on headings, looser on labels), optical alignment, weight contrast between hierarchy levels, proper leading |
-| Text placed in the layout | Text that creates visual rhythm — headline dominates (10x badge weight), subhead breathes, body recedes. Blue swoosh underline on key word. JetBrains Mono uppercase for all labels/badges. |
+| Text placed in the layout | Text that creates visual rhythm — headline dominates (10x badge weight), subhead breathes, body recedes. JetBrains Mono uppercase for all labels/badges. Optionally add blue swoosh underline on key word (predefined asset only). |
 
 ### Product mockups / UI recreations
 | Correct | Elevated |
@@ -200,7 +200,7 @@ The model uses circles, squares, and lines as abstract placeholders for things t
 → **Fix:** Every sub-element should "look like" the thing it represents, not "represent" it abstractly. If you catch yourself building a shape that stands in for something, that's the signal to elevate. Use Lucide icons inside containers for semantic clarity. Use Quiver for illustrated elements that need organic/hand-drawn quality. Use real assets for logos and brand marks. The rule: if a designer would look at the element and say "that's a placeholder," it's not done.
 
 **Failure: Missing accent and connector details**
-The model builds the main elements but skips the connective tissue — no lines between nodes, no dot endpoints, no orbit rings, no swoosh. The illustration looks like scattered objects, not a connected system.
+The model builds the main elements but skips the connective tissue — no lines between nodes, no dot endpoints, no orbit rings. The illustration looks like scattered objects, not a connected system.
 → **Fix:** Add connecting elements: curved lines (3px blue stroke) between related elements, small dots (4-6px filled circles) at connection points, orbit ring curves around the focal element. These connective details are what make the illustration feel like a coherent system rather than a collection of shapes. The brand illustration system relies heavily on connectors — check any illustration on the marketing site.
 
 ---
@@ -211,11 +211,11 @@ Elevation strategies must derive from the specific graphic. During self-critique
 
 1. **The Creative Brief** — Developer audience earns richness from code-as-visual (syntax-highlighted blocks with brand palette), monospace craft, technical precision. Executive audience earns it from data visualization, bold metric callouts, editorial composition.
 
-2. **The format** — Blog cover at 300px in a social feed needs visual punch — blue swoosh, bold heading, clear focal element. Slide graphic needs whitespace and restraint — fewer accent details, more breathing room.
+2. **The format** — Blog cover at 300px in a social feed needs visual punch — bold heading, clear focal element, strong brand color accents. Slide graphic needs whitespace and restraint — fewer accent details, more breathing room.
 
 3. **The content** — Comparison graphic: accurately represent both brands (real logos, real colors via fetch-brand.ts). Product mockup: realistic UI chrome, contextual data, poster-scale internals. Architecture diagram: color-coded nodes, meaningful connector patterns, hub-and-spoke focal structure. Abstract concept: brand illustration system's dual-stroke language with three-tier color depth.
 
-4. **The brand system** — Inkeep's richness levers: warm cream + strategic blue accents, hand-drawn illustration language ("imperfect precision"), generous corner radii (32-54px), layered card system with rotating accent colors, blue swoosh signature element, three-tier color depth hierarchy. Using these intentionally (not just correctly) is what makes it feel crafted.
+4. **The brand system** — Inkeep's richness levers: warm cream + strategic blue accents, hand-drawn illustration language ("imperfect precision"), generous corner radii (32-54px), layered card system with rotating accent colors, three-tier color depth hierarchy. Using these intentionally (not just correctly) is what makes it feel crafted.
 
 ---
 
@@ -229,7 +229,7 @@ Elevation strategies must derive from the specific graphic. During self-critique
 ### Pass 2 focus: "Is it rich?"
 
 **Additive scan — what can I introduce?**
-- Does the headline have the blue swoosh underline?
+- Would a blue swoosh underline add value here? (Optional — use predefined asset only if it strengthens the composition.)
 - Is there a category badge? (If the content has a category.)
 - Are there accent icons with semantic color coding where they'd help readers parse at a glance?
 - Is there a background texture layer? (Anything that prevents a flat fill.)
@@ -237,7 +237,7 @@ Elevation strategies must derive from the specific graphic. During self-critique
 - For mockups: are there sub-sub-elements that add realism? (Tab bar states, loading indicators, real data, scroll hints, window chrome.)
 - For diagrams: are there dot connectors, curved lines, color-coded node roles?
 - Are structural elements using stacked overlapping panels for depth?
-- Is there at least one brand signature element (swoosh, hand-drawn dash, orbit rings)?
+- Is there at least one brand accent element (hand-drawn dash, orbit rings, dot connectors, category badge)?
 
 **Elevation scan — is each element at its best?**
 - How many layers in the visual depth stack? If ≤3, what's missing?
@@ -252,7 +252,7 @@ Elevation strategies must derive from the specific graphic. During self-critique
 - Is the three-tier color system working? (Gray recedes, blue draws the eye, fills carry meaning.)
 - Are shadows, colors, and lighting consistent across all elements?
 - Are spacing values from brand tokens?
-- At 400px thumbnail: does the hierarchy hold? Is the swoosh visible?
+- At 400px thumbnail: does the hierarchy hold? Are accent elements visible?
 - Does the composition fill 80-85% of the canvas?
 - Do elements bleed past the edge where appropriate?
 - Would this look at home next to a Stripe, Linear, or Vercel marketing graphic?
