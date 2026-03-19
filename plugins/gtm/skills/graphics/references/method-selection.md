@@ -57,7 +57,7 @@ For each Tier 2 atom or sub-element in the Build Spec, walk this tree top-to-bot
 
 ### 4. Is this atom a structural diagram (flowchart, architecture, sequence, entity-relationship)?
 
-→ **YES:** **D2 or Mermaid (Option C) → SVG export → Figma import.** Purpose-built diagram languages produce structurally accurate output. After import, apply brand typography and colors in Figma.
+→ **YES:** **D2 or Mermaid (Option C) → SVG export → Figma import.** Purpose-built diagram languages produce structurally accurate output. After import, apply brand typography and colors in Figma. If the imported connectors need restyling (curved arrows, dot endpoints, brand stroke weight), rebuild them using the `vectorNetwork` connector recipes in `tools/figma-console.md` — the imported SVG connectors may be straight lines or have non-brand styling.
 
 → **NO:** Continue to step 5.
 

@@ -205,6 +205,40 @@ The model builds the main elements but skips the connective tissue — no lines 
 
 ---
 
+## AI failure mode callouts: arrows, connectors, and flow diagrams
+
+Arrows and curved connectors are where AI models fail most visibly — a single sign error in a tangent vector reverses the curve entirely, and the model can't see the result. These failures are specific to programmatic Figma construction via `figma_execute`.
+
+**Failure: Straight lines where curves are needed**
+The model defaults to `vectorPaths` with `M...L` (straight line) for all connectors because that's the simplest recipe. In hub-and-spoke and radial layouts, straight spokes cross over each other. In flow diagrams, straight connectors overlap with nodes they pass near.
+→ **Fix:** Use the curved arrow recipe in `tools/figma-console.md` — `vectorNetwork` with non-zero `tangentStart`/`tangentEnd`. Default curvature factor to 0.2-0.3 for any non-trivial layout. Only use zero tangents for explicitly straight connectors.
+
+**Failure: Star pattern instead of circular flow**
+In circular/radial process flows, the model computes tangent direction as pointing from each node toward the next node (along the chord). The resulting curves cut across the circle interior, forming a star/asterisk pattern instead of arcs following the circle.
+→ **Fix:** Tangent direction must be **perpendicular to the radius** at each node: `angle + π/2` for clockwise, `angle - π/2` for counter-clockwise. Use the circular flow recipe in `tools/figma-console.md`. This is the #1 failure mode — always verify circular flows with a screenshot.
+
+**Failure: Wrong tangent direction (curve loops backward)**
+The model sets `tangentStart` pointing away from the target instead of toward it, causing the bezier curve to loop backward before reaching the destination. A single sign flip (`{x: 50, y: 0}` vs `{x: -50, y: 0}`) reverses the curve entirely.
+→ **Fix:** `tangentStart` should create a control point that pulls the curve in the intended flow direction. For a leftward-flowing arrow, tangentStart.x should be negative. Screenshot each arrow individually — this error is invisible in the code but obvious visually.
+
+**Failure: Arrowhead misaligned with curve direction**
+The model creates arrowheads as separate triangle shapes and rotates them based on the chord angle (straight line between endpoints), not the tangent angle at the endpoint. On a curved path, these are different.
+→ **Fix:** NEVER create separate arrowhead shapes. Use `strokeCap: 'ARROW_EQUILATERAL'` on the vertex — it auto-aligns with the curve tangent. This is already documented in `tools/figma-console.md`.
+
+**Failure: Inconsistent curvature across connectors**
+Multiple arrows in the same diagram have wildly different curvatures — some barely arc, others are extreme curves. This happens when tangent magnitude is computed independently per arrow without normalization.
+→ **Fix:** Normalize tangent magnitude by distance: `magnitude = distance × constant_factor`. Use the SAME factor for all connectors of the same type in a diagram. See consistency rules in `tools/figma-console.md`.
+
+**Failure: Arrow endpoints at node center, not edge**
+The model targets the center of the destination node, causing the arrow to either overlap with the node content or extend past it. The arrowhead ends up inside the node instead of touching its boundary.
+→ **Fix:** Compute the endpoint at the node's edge: `edgePoint = center - (direction × nodeRadius)` for circles. For rectangles, use ray-rectangle intersection. See the hub-and-spoke recipe in `tools/figma-console.md`.
+
+**Failure: Reversed arc direction (clockwise vs counter-clockwise)**
+A process flow labeled "clockwise" renders counter-clockwise, or vice versa. This happens when the perpendicular direction is computed with the wrong sign.
+→ **Fix:** `+π/2` from the radial angle = clockwise. `-π/2` = counter-clockwise. Always screenshot and verify direction matches the intended flow. Label the flow direction in the Build Spec so the reviewer can catch reversals.
+
+---
+
 ## Contextual elevation reasoning
 
 Elevation strategies must derive from the specific graphic. During self-critique, reason from:

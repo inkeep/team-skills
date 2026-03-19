@@ -195,9 +195,201 @@ const vertices = network.vertices.map((v, i) => {
 vector.vectorNetwork = { ...network, vertices };
 ```
 
-Build connection arrows **after** all elements are in their final positions. If layout changes later, rebuild all arrows from scratch (see SKILL.md Phase D).
+Build connection arrows **after** all elements are in their final positions. If layout changes later, rebuild all arrows from scratch (see SKILL.md Phase D). **Screenshot each arrow individually** to verify tangent direction and curvature — batch creation without per-arrow verification compounds errors.
 
 **Z-ordering:** In Figma, z-order = child insertion order. The last child appended renders on top. Always `appendChild()` connectors as the very last step. If you add elements to a frame after connectors, the connectors will be hidden behind them.
+
+⚠️ **`vectorPaths` does NOT reliably support bezier curve commands (C, Q).** The `data` string works for M (move), L (line), and Z (close) — but C (cubic bezier) and Q (quadratic bezier) produce errors or silent failures. **For any curved path, use `vectorNetwork` with `tangentStart`/`tangentEnd` instead.** The straight-line recipe above uses `vectorPaths` because it's simpler for straight lines; all curved recipes below use `vectorNetwork`.
+
+### Pattern: Curved arrow (arc or S-curve)
+
+Use `vectorNetwork` with tangent handles to create bezier curves. `tangentStart` and `tangentEnd` are **relative offsets from their vertex** — they define cubic bezier control points.
+
+```javascript
+// Curved arrow from (x1,y1) to (x2,y2) with arrowhead
+// curvature: 0.2 = gentle, 0.4 = pronounced, negative = curve other way
+function createCurvedArrow(parent, x1, y1, x2, y2, curvature, color, strokeWeight) {
+  const dx = x2 - x1, dy = y2 - y1;
+  const dist = Math.sqrt(dx * dx + dy * dy);
+  // Perpendicular offset creates the curve
+  const perpX = -dy / dist * dist * curvature;
+  const perpY = dx / dist * dist * curvature;
+
+  const vector = figma.createVector();
+  parent.appendChild(vector);
+  vector.vectorNetwork = {
+    vertices: [
+      { x: x1, y: y1 },
+      { x: x2, y: y2, strokeCap: 'ARROW_EQUILATERAL' }
+    ],
+    segments: [{
+      start: 0, end: 1,
+      tangentStart: { x: perpX, y: perpY },
+      tangentEnd: { x: -perpX, y: -perpY }
+    }],
+    regions: []
+  };
+  vector.strokes = [{ type: 'SOLID', color }];
+  vector.strokeWeight = strokeWeight;
+  return vector;
+}
+```
+
+**How tangents work:**
+- `tangentStart` = offset from vertex 0 → defines first bezier control point (P1 = P0 + tangentStart)
+- `tangentEnd` = offset from vertex 1 → defines second bezier control point (P2 = P3 + tangentEnd)
+- Both `{x: 0, y: 0}` = straight line (default)
+- Perpendicular to the line between vertices = arc
+- Opposing directions (tangentStart points right, tangentEnd points left) = S-curve
+
+**The arrowhead auto-aligns with the curve tangent** at the vertex — no manual rotation needed. This is why `strokeCap: 'ARROW_EQUILATERAL'` is always better than a separate triangle shape.
+
+### Pattern: Circular flow (N nodes with arc arrows)
+
+For cyclic process diagrams. Positions N nodes evenly on a circle and creates arc arrows following the circular path between them.
+
+**⛔ Critical: tangent direction must be perpendicular to the radius — NOT along the chord to the next node.** Getting this wrong produces star/asterisk patterns instead of circular flows. This is the #1 AI failure mode for circular diagrams.
+
+```javascript
+// Create a clockwise circular flow with N nodes
+function createCircularFlowArrows(parent, cx, cy, radius, nodeCount, color, strokeWeight) {
+  const arrows = [];
+  const positions = [];
+
+  // Position nodes evenly, starting at top (12 o'clock)
+  for (let i = 0; i < nodeCount; i++) {
+    const angle = (2 * Math.PI * i) / nodeCount - Math.PI / 2;
+    positions.push({
+      x: cx + radius * Math.cos(angle),
+      y: cy + radius * Math.sin(angle),
+      angle: angle
+    });
+  }
+
+  // Create arc arrows between consecutive nodes
+  for (let i = 0; i < nodeCount; i++) {
+    const from = positions[i];
+    const to = positions[(i + 1) % nodeCount];
+    const arcSpan = (2 * Math.PI) / nodeCount;
+    const tightness = 0.38; // how closely arc follows the circle
+    const magnitude = radius * arcSpan * tightness;
+
+    // Tangent perpendicular to radius = follows circle path
+    // +π/2 for clockwise, -π/2 for counter-clockwise
+    const ts = {
+      x: magnitude * Math.cos(from.angle + Math.PI / 2),
+      y: magnitude * Math.sin(from.angle + Math.PI / 2)
+    };
+    const te = {
+      x: magnitude * Math.cos(to.angle - Math.PI / 2),
+      y: magnitude * Math.sin(to.angle - Math.PI / 2)
+    };
+
+    const vector = figma.createVector();
+    parent.appendChild(vector);
+    vector.vectorNetwork = {
+      vertices: [
+        { x: from.x, y: from.y },
+        { x: to.x, y: to.y, strokeCap: 'ARROW_EQUILATERAL' }
+      ],
+      segments: [{ start: 0, end: 1, tangentStart: ts, tangentEnd: te }],
+      regions: []
+    };
+    vector.strokes = [{ type: 'SOLID', color }];
+    vector.strokeWeight = strokeWeight;
+    arrows.push(vector);
+  }
+  return { positions, arrows };
+}
+```
+
+**Why chord-direction tangents fail:** If tangents point from node A toward node B (along the chord), the bezier cuts across the circle interior. With 4+ nodes this produces a star pattern. Tangents must be perpendicular to the radius (`angle ± π/2`) to follow the circle.
+
+### Pattern: Hub-and-spoke (curved spokes converging to center)
+
+For diagrams where peripheral nodes connect to a central hub. Arrows target the hub's EDGE, not its center.
+
+```javascript
+// Create curved spoke arrows from peripheral nodes to a central hub
+function createHubSpokes(parent, hubX, hubY, hubRadius, spokeNodes, color, strokeWeight) {
+  // spokeNodes: [{x, y}, ...] — positions of peripheral nodes
+  const arrows = [];
+  for (const node of spokeNodes) {
+    const dx = hubX - node.x, dy = hubY - node.y;
+    const dist = Math.sqrt(dx * dx + dy * dy);
+
+    // Target hub EDGE, not center
+    const edgeX = hubX - (dx / dist) * hubRadius;
+    const edgeY = hubY - (dy / dist) * hubRadius;
+
+    // Slight perpendicular curvature for visual interest
+    const perpX = -dy / dist * dist * 0.15;
+    const perpY = dx / dist * dist * 0.15;
+
+    const vector = figma.createVector();
+    parent.appendChild(vector);
+    vector.vectorNetwork = {
+      vertices: [
+        { x: node.x, y: node.y },
+        { x: edgeX, y: edgeY, strokeCap: 'ARROW_EQUILATERAL' }
+      ],
+      segments: [{
+        start: 0, end: 1,
+        tangentStart: { x: perpX, y: perpY },
+        tangentEnd: { x: -perpX * 0.5, y: -perpY * 0.5 }
+      }],
+      regions: []
+    };
+    vector.strokes = [{ type: 'SOLID', color }];
+    vector.strokeWeight = strokeWeight;
+    arrows.push(vector);
+  }
+  return arrows;
+}
+```
+
+**Endpoint-at-edge rule:** Always compute the arrow endpoint at the target node's boundary, not its center:
+- **Circle:** `edgePoint = center - (direction × radius)`
+- **Rectangle:** Ray-rectangle intersection from arrow approach angle
+- **Rounded rect:** Same as rectangle, then inset by corner radius
+
+### Pattern: Dot connector (line with dot endpoints)
+
+For the brand's dot-connector line style (hand-drawn line with small circles at connection points).
+
+```javascript
+// Create a line with dot endpoints (brand connector style)
+function createDotConnector(parent, x1, y1, x2, y2, color, strokeWeight, dotRadius) {
+  // The line
+  const vector = figma.createVector();
+  parent.appendChild(vector);
+  vector.vectorPaths = [{ windingRule: "NONE", data: `M ${x1} ${y1} L ${x2} ${y2}` }];
+  vector.strokes = [{ type: 'SOLID', color }];
+  vector.strokeWeight = strokeWeight || 2;
+
+  // Dots at both endpoints
+  for (const [x, y] of [[x1, y1], [x2, y2]]) {
+    const dot = figma.createEllipse();
+    parent.appendChild(dot);
+    const r = dotRadius || 3;
+    dot.resize(r * 2, r * 2);
+    dot.x = x - r;
+    dot.y = y - r;
+    dot.fills = [{ type: 'SOLID', color }];
+    dot.name = 'connector-dot';
+  }
+  return vector;
+}
+```
+
+### Connector consistency rules
+
+When a diagram has multiple connectors:
+- **Same curvature factor** for all connectors of the same type (normalize by `distance × constant`)
+- **Same stroke weight** across all connectors (2-3px for content diagrams, 1-2px for detailed technical)
+- **Same stroke color** for connectors of the same semantic role (blue for data flow, gray for structural)
+- **Same arrowhead style** (all `ARROW_EQUILATERAL` or all `ARROW_LINES` — don't mix)
+- **Screenshot each connector individually** — a single sign error in a tangent vector reverses the curve. Batch creation without per-connector verification compounds errors.
 
 ### Pattern: Hero graphic with text overlay
 
