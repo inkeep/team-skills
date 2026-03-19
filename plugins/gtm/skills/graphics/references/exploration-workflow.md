@@ -60,7 +60,7 @@ The only exception: if the user explicitly references an existing page or you're
 
 1. Create the Figma page
 2. Create N empty Sections (one per selected direction)
-3. Write `state.json` with all shared context: Creative Brief, assets, Figma IDs, per-direction assignments (see State Persistence below)
+3. Write `state.json` with all shared context: Creative Brief, collected assets, Figma IDs, per-direction assignments (see State Persistence below)
 4. Create `build-results/` directory
 
 ### Build (parallel via /nest-claude)
@@ -78,7 +78,7 @@ Your direction slug is: immersive-slack-thread
 
 1. Load `/brand` skill and `/graphics` skill
 2. Read state.json — find your direction by slug in the directions object
-3. That gives you: direction concept, sectionNodeId, Creative Brief, assets, Figma file key
+3. That gives you: direction concept, sectionNodeId, Creative Brief, collected assets, Figma file key. The assets and atomAudit are the parent's best starting point — NOT a prescription. You have full authority to source better alternatives from the brand library, create new icons via Quiver, fetch additional third-party logos, or omit assets that don't serve your frame. Use what helps; replace or skip what doesn't.
 4. CRITICAL: ALL Figma nodes you create must go inside YOUR Section (sectionNodeId). Never create at page root. Never touch other Sections. Use getNodeByIdAsync(sectionNodeId) to scope all operations.
 5. Build the frame in your Section, run Phase B-E (decomposition, build, elevation)
 6. Run Step 5 two-layer verification (spawn reviewer subagent)
@@ -95,10 +95,16 @@ Your direction slug is: immersive-slack-thread
 
 ⛔ **Section isolation (non-negotiable):** Every Figma node the child creates — frames, working atoms, imported SVGs, image fills, text, shapes, EVERYTHING — must be placed inside the child's assigned Section (by `sectionNodeId`). Never create nodes at page root. Never place nodes in another direction's Section. Never use `figma.currentPage` to scope operations — always use `getNodeByIdAsync(sectionNodeId)`. The working atoms frame, the final composition frame, and all intermediate artifacts live inside your Section. If a node ends up outside your Section, move it immediately or delete it. Violating section isolation pollutes other children's work and is the #1 cause of cross-direction contamination in parallel builds.
 
-1. Read `state.json` → find its direction by slug → get concept, sectionNodeId, Creative Brief, assets, **buildSpec** (end-state vision, success criteria, information architecture, atom audit with sub-element decomposition)
+1. Read `state.json` → find its direction by slug → get concept, sectionNodeId, Creative Brief, collected assets, **buildSpec** (end-state vision, success criteria, information architecture, atom audit with sub-element decomposition)
 2. If Phase 2 iteration: read the direction's `iterations` array for full history — what was built, what feedback was given, what to keep and what to fix
 3. Load `/brand` skill and `/graphics` skill
-4. Step 3: The Build Spec is already in state.json — verify it's complete (end-state vision, success criteria, information architecture, atom audit). If building a new direction without a spec, write one first.
+4. **Asset autonomy:** The parent collected assets and wrote an atomAudit as a starting point — not a contract. You own the final asset and method decisions for your frame. Specifically:
+   - **Replace** any asset with a better alternative if it serves the direction (e.g., source a different icon from Brand Assets, create a new illustration via Quiver, fetch an additional third-party logo via `fetch-logo.ts`)
+   - **Augment** with assets the parent didn't anticipate — your direction may need elements the parent couldn't predict during the shared asset collection pass
+   - **Omit** any provided asset that doesn't strengthen the composition — assets are resources, not requirements
+   - **Change methods** in the atomAudit — the parent's method selections are recommendations based on the concept description; you're seeing the actual design and may judge differently
+   - Record any asset or method changes in `decompositionChanges` in your build-results JSON so the parent knows what you decided and why
+5. Step 3: The Build Spec is already in state.json — verify it's complete (end-state vision, success criteria, information architecture, atom audit). If building a new direction without a spec, write one first.
 5. **Position the new frame to the right of existing siblings.** Iterations within a Section go left-to-right. Before creating your frame, query the Section for existing children and compute your x-position:
    ```javascript
    // via figma_execute — find the rightmost frame in the Section
@@ -329,7 +335,7 @@ Graphics exploration sessions can be 50+ turns. Without structured state, the ag
 ```
 tmp/graphics/<page-slug>/
 ├── state.json              # Shared coordination surface — all project context
-├── assets/                 # Third-party logos and other SVGs (referenced by path in state.json)
+├── assets/                 # Collected assets — logos, SVGs, references gathered by parent (starting kit, not prescriptive)
 │   ├── slack-logo.svg
 │   └── github-logo.svg
 └── build-results/          # Child process outputs (one file per direction per round)
@@ -337,11 +343,11 @@ tmp/graphics/<page-slug>/
     └── ...
 ```
 
-**SVG file convention:** Save third-party logo SVGs and other fetched assets to the `assets/` subdirectory. Reference them by file path in `state.json` — never inline SVG content directly in JSON. This avoids JSON escaping issues and keeps `state.json` readable.
+**SVG file convention:** Save third-party logo SVGs and other fetched assets to the `assets/` subdirectory. Reference them by file path in `state.json` — never inline SVG content directly in JSON. This avoids JSON escaping issues and keeps `state.json` readable. Children may also save newly sourced assets here during their build.
 
 The `<page-slug>` is derived from the Figma page name by slugifying: lowercase, spaces → hyphens, strip brackets/dates/special chars. Example: `[2026-03-18] Blog — Agents in Slack covers` → `2026-03-18-blog-agents-in-slack`.
 
-`state.json` is the single source of truth. It holds shared context (Creative Brief, assets, Figma IDs), per-direction state, and the full iteration history including user feedback. It also serves as the coordination surface for `/nest-claude` children — each child reads it to get its assignment.
+`state.json` is the single source of truth. It holds shared context (Creative Brief, collected assets, Figma IDs), per-direction state, and the full iteration history including user feedback. It also serves as the coordination surface for `/nest-claude` children — each child reads it to get its assignment and starting resources. The assets in state.json are what the parent gathered during the shared collection pass — children may use, replace, augment, or omit them based on what serves their direction best.
 
 ### state.json — direction-oriented model
 
@@ -363,7 +369,8 @@ State is organized by **direction** (not by frame). Each direction tracks its fu
     "tone": "Technical, modern, clean, collaborative",
     "cta": "Read the blog post"
   },
-  "assets": {
+  "collectedAssets": {
+    "note": "Starting kit — children may use, replace, augment, or omit any of these",
     "inkeepLogoSvg": "<svg>...</svg>",
     "thirdPartyLogos": [{ "name": "Slack", "svg": "<svg>..." }],
     "fontsVerified": true,

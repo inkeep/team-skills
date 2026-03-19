@@ -906,14 +906,14 @@ Present the Build Spec to the user for review before generating.
 
 **The parent is always the orchestrator, never the builder.** Even for a single direction in exploration mode, spawn a child. This ensures: (1) the parent can independently verify all frames without reviewing its own work, (2) consistent code path regardless of direction count, (3) children always run the full build cycle including the reviewer subagent.
 
-The parent's job is: (1) write `state.json` with Build Specs, assets, and Figma IDs, (2) create Figma Sections, (3) spawn children, (4) collect and verify results. Each child loads `/brand` and `/graphics`, reads its Build Spec from `state.json`, builds its frame, and runs its own self-critique + reviewer loop. See `references/exploration-workflow.md` for the full protocol.
+The parent's job is: (1) write `state.json` with Build Specs, collected assets, and Figma IDs, (2) create Figma Sections, (3) spawn children, (4) collect and verify results. Each child loads `/brand` and `/graphics`, reads its Build Spec from `state.json`, builds its frame, and runs its own self-critique + reviewer loop. Children have full authority to source better assets, create new ones, or omit provided assets that don't serve their direction. See `references/exploration-workflow.md` for the full protocol.
 
 ⛔ **Mark task "Graphics: Build directions" (exploration) or "Graphics: Build graphic" (single-pass) as `in_progress`. Before creating ANY Figma elements, verify:**
 - [ ] **Asset manifest exists** — Step 2 produced a manifest listing found/missing/approximated assets
 - [ ] **Brand tokens collected** — you have exact hex colors and font families from the design system, not from memory or the user's message
 - [ ] **Logos are real** — any Inkeep or third-party logos are cloned from the Brand Assets page or fetched via `tools/fetch-logo.ts`, not approximated with text or shapes
 - [ ] **Build Spec was produced** — Step 3 produced a Build Spec with end-state vision, success criteria, and sub-element plan with visual references
-- [ ] **In exploration mode: `state.json` exists** — with creativeBrief, assets, directions, and per-direction buildSpec
+- [ ] **In exploration mode: `state.json` exists** — with creativeBrief, collectedAssets, directions, and per-direction buildSpec
 
 **If any of these are not met, STOP and complete the missing step before proceeding.**
 
