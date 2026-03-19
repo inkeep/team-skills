@@ -906,6 +906,8 @@ Write SVG code directly using brand tokens:
 - Use consistent spacing and border radius
 - Keep SVG clean and well-structured (named groups, meaningful IDs)
 
+**Always import into Figma for review:** Even when the final deliverable is an SVG file, import it into the Figma Graphics Workspace via `figma.createNodeFromSvg(svgString)` so it can go through the standard Phase 5 review loop (`capture-for-review.ts` → reviewer subagent). The SVG file is still the deliverable — Figma is just the review surface.
+
 **Option C: D2 / Mermaid diagrams (for technical diagrams)**
 
 Best for: system architecture, flow charts, sequence diagrams, entity relationships.
@@ -914,11 +916,15 @@ D2:
 1. Write D2 diagram code
 2. Apply brand colors via D2 theming
 3. Generate SVG output: `d2 input.d2 output.svg`
+4. Import into Figma: `figma.createNodeFromSvg(svgString)` — apply brand typography and colors that D2 theming can't fully control
 
 Mermaid:
 1. Write Mermaid syntax
 2. Render via CLI or browser
 3. Post-process to apply brand colors if needed
+4. Import into Figma: `figma.createNodeFromSvg(svgString)` — same as D2
+
+All SVG outputs go through Figma for the Phase 5 review loop. The SVG file is the deliverable; Figma is the review surface.
 
 **Option D: AI-generated SVG via Quiver (for illustrations, logos, icons, vector art)**
 
@@ -1371,7 +1377,7 @@ Fix any findings. Re-run until Layer 1 is clean (max 3 iterations). Do not proce
 
 4. **After 3 Layer 2 iterations without PASS** → present the reviewer's full findings to the user and let them decide how to proceed.
 
-For SVGs (non-Figma): validate the code is clean and renders correctly, then run Layer 2 on the rendered PNG.
+All SVG outputs (Quiver, hand-coded, D2/Mermaid) should be imported into Figma before reaching this phase — the Figma frame is the review surface. Pass the original SVG file path in the reviewer spawn prompt for source cross-referencing.
 
 **Mark task "Graphics: Brand consistency check" as `completed`.**
 
