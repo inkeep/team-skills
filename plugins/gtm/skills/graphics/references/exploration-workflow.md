@@ -297,12 +297,12 @@ Every new frame is placed inside its section immediately upon creation. Section 
 
 - `GAP_X = 100px` between frames within a section
 - `GAP_Y = 100px` between sections
-- `SECTION_PADDING = 60px` inside sections
+- `SECTION_PADDING = 60px` offset of first frame from section origin
 - Frame dimensions from the format file (e.g., 1280x720 for blog cover)
 
 **Section stacking:** Sections stack **vertically** (top to bottom) — each new direction appears below the previous one. Iterations within a section go **left to right**. This creates a grid: rows = directions, columns = iterations.
 
-**Initial section size:** Set each section's initial dimensions to match the target frame size plus padding: width = frame width + 2×SECTION_PADDING, height = frame height + 2×SECTION_PADDING. This ensures the section starts at a meaningful size rather than collapsing to zero. Sections expand automatically as more iterations are added to the right.
+**Sections auto-expand.** Figma Sections automatically resize to contain their children. Do not manually set section dimensions — just create the section and `appendChild()` frames into it. The section grows as frames are added.
 
 ### Section creation
 
@@ -310,13 +310,13 @@ Every new frame is placed inside its section immediately upon creation. Section 
 // via figma_execute
 const section = figma.createSection();
 section.name = "Immersive Slack Thread";
-// Set initial size to match target frame + padding
-const frameW = 1280; // from format file
-const frameH = 720;
-section.resizeWithoutConstraints(frameW + 2 * 60, frameH + 2 * 60);
-// Sections expand as children are added
+// Transparent background — sections are logical containers, not visual elements
+section.fills = [];
+// No manual sizing needed — sections auto-expand to contain children
 // Place frames inside with section.appendChild(frame)
 ```
+
+**Transparent sections:** Set `section.fills = []` to remove the default background fill. Sections serve as logical grouping containers on the canvas — they don't need visible backgrounds. This eliminates sizing concerns entirely: the section boundary adapts to whatever frames are inside it.
 
 ---
 
