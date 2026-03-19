@@ -469,6 +469,19 @@ Each `/nest-claude` child writes one iteration entry that the parent appends to 
       "findings": []
     }
   ],
+  "decompositionChanges": [
+    {
+      "atom": "Slack thread mockup",
+      "change": "Further decomposed — parent listed 3 sub-elements, child found 7",
+      "addedSubElements": [
+        { "element": "typing indicator", "tier": 1, "method": "Figma native" },
+        { "element": "read receipts", "tier": 1, "method": "Figma native" }
+      ],
+      "methodChanges": [
+        { "element": "user avatar", "parentMethod": "Figma circle", "childMethod": "Quiver illustration", "reason": "Organic portrait needed for brand consistency" }
+      ]
+    }
+  ],
   "status": "complete",
   "error": null
 }

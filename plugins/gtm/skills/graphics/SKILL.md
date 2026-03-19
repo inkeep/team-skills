@@ -335,7 +335,7 @@ Present the suggestion to the user: "Based on the content, I'd suggest a [type] 
 
 **Quiver vs Figma shapes for illustrations:**
 - **Figma shapes OK:** box-and-arrow flow diagrams, Venn diagrams, simple grids, progress bars, basic icon compositions from circles/rectangles, any layout where the shapes are purely geometric and few (<10 elements).
-- **Use Quiver:** anything with organic curves, hand-drawn style, complex path work, stylized illustrations, decorative patterns, abstract art, or the "Imperfect Precision" brand illustration style. If the illustration would take >15 minutes to build from Figma shapes, use Quiver.
+- **Use Quiver:** anything with organic curves, hand-drawn style, complex path work, stylized illustrations, decorative patterns, abstract art, or the "Imperfect Precision" brand illustration style. If the illustration requires >10 distinct shape elements or any organic curves, use Quiver.
 
 **Do NOT use Three.js for:**
 - One-off 3D renders — try AI Image Gen (Option E) first. See Option F for the full decision framework.
@@ -768,8 +768,6 @@ at card size?
 
 ⛔ **The only selection axis is output quality and fidelity for the specific atom. Speed, API cost, and implementation effort are NEVER factors in method selection.** When two methods produce genuinely equivalent quality for an atom, either is acceptable — but never choose a lower-fidelity method because it's faster or cheaper.
 
-**Load:** `references/method-selection.md` and walk the decision tree for every Tier 2 atom below.
-
 Classify every visual element as Tier 1 or Tier 2, then fill in the appropriate format:
 
 **Tier 1 — Trivially-routed atoms** (method is determined by what the atom IS, not by judgment):
@@ -846,7 +844,6 @@ Example — "Slack thread mockup" compound atom:
 ### Anti-pattern check
 - [ ] Background is NOT flat (has texture/gradient)
 - [ ] Surround uses ≤3 colors (mockup internals don't count)
-- [ ] Badge is ≤1/8 heading visual weight
 - [ ] No raw screenshots (all product UI is stylized)
 - [ ] Max 2 typefaces in this graphic
 - [ ] Illustrations use Quiver (not hand-built Figma shapes) unless purely geometric
@@ -1755,6 +1752,7 @@ Must have:
 - [ ] All colors match brand palette exactly
 - [ ] Typography uses brand fonts
 - [ ] Output format matches the use case (Figma for editable, Quiver for vector illustrations/icons, GPT Image for photorealistic raster, D2 for technical)
+- [ ] Atom generation audit completed — every Tier 2 atom has quality-based method justification, compound atoms decomposed to leaf elements
 - [ ] Deliverable shared with user (Figma URL or file path)
 - [ ] For Figma: no placeholder content — every element is real (actual logos, icons, text)
 - [ ] For Figma: visual checkpoint completed at each workflow phase

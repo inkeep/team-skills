@@ -19,7 +19,7 @@ When an atom is a composed, multi-layer, or multi-element construct (product moc
 3. Walk this decision tree for every Tier 2 sub-element
 4. If a sub-element is itself compound, decompose again until every leaf has a single-method declaration
 
-**Why this matters:** Compound atoms are where the model most often defaults to Figma shapes for everything. A Slack thread built entirely from rectangles looks flat. Decomposing reveals that avatars are illustration problems (→ Quiver), logos are asset problems (→ Brand Assets clone), and only layout/text are genuinely Figma-native problems.
+Decomposing reveals that sub-elements like avatars are illustration problems (→ Quiver), logos are asset problems (→ Brand Assets clone), and only layout/text are genuinely Figma-native. See the Build Spec template's compound atom decomposition section for the full rationale and examples.
 
 ## Per-atom decision tree
 
@@ -27,7 +27,7 @@ For each Tier 2 atom or sub-element in the Build Spec, walk this tree top-to-bot
 
 ### 1. Does this atom reproduce an existing mark (logo, icon, badge)?
 
-→ **YES:** Clone from Brand Assets or fetch via `fetch-logo.ts`. NEVER generate — Quiver hallucates logos, Image Gen reinterprets them through its latent space. The only acceptable source for an existing mark is the canonical asset.
+→ **YES:** Clone from Brand Assets or fetch via `fetch-logo.ts`. NEVER generate — Quiver hallucinates logos, Image Gen reinterprets them through its latent space. The only acceptable source for an existing mark is the canonical asset.
 
 → **NO:** Continue to step 2.
 
@@ -51,7 +51,7 @@ For each Tier 2 atom or sub-element in the Build Spec, walk this tree top-to-bot
   - Set `--instructions` with brand color constraints (hex codes, style rules, negative constraints)
   - Use reference images (`--references`) for style consistency with existing brand illustrations
   - For icon sets: generate the first icon, pass as `--references` for subsequent icons
-  - **Exception → Figma shapes** only if the illustration is purely geometric with <10 elements (box-and-arrow diagrams, simple grids, basic shape compositions). If the illustration would take >15 minutes to build from Figma shapes, use Quiver.
+  - **Exception → Figma shapes** only if the illustration is purely geometric with <10 elements (box-and-arrow diagrams, simple grids, basic shape compositions). If the illustration requires >10 distinct shape elements or any organic curves, use Quiver.
 
 → **NO:** Continue to step 4.
 
