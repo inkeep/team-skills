@@ -41,17 +41,20 @@ These proportions are measured from the top 6 performing companies (Resend, Dub.
 
 **Decagon's product mockups extend from ~15% from top to ~5% from bottom** — nearly the full vertical extent of the frame. Their mockups occupy 60-70% of the canvas. This is the benchmark for product-forward thumbnails.
 
-### Heading size
+### Typography tiers at 1280×720
 
-| Tier | Font size at 1280w | % of canvas height | Visual weight |
+| Role | % of canvas height | Target range | Scale step |
 |---|---|---|---|
-| **Tier 1** | 80-100 px | 11-14% | DOMINANT — the heading is the largest element by far |
-| **Tier 2** | 60-80 px | 8-11% | Strong — clearly the primary element |
-| **Tier 3** | 50-60 px | 7-8% | Clear — readable but not overwhelming |
+| **Heading** | 11-14% | 80-100px | 84 or 112 |
+| **Subtitle** | 2.2-2.8% | 16-20px | 20 |
+| **Body** | 2.2-2.8% | 16-20px | 20 |
+| **Badge** | 1.3-1.5% | 9-11px | — |
+
+Heading tiers by post type: Tier 1 (80-100px, DOMINANT) for hero launches. Tier 2 (60-80px, strong) for features. Tier 3 (50-60px, clear) for guides/updates.
 
 **Measured from exemplars:** Resend's headings at 1920w are ~140-160px. At our 1280w working canvas, that's ~93-107px. The heading should be dramatically larger than everything else — at least 5x the badge text size.
 
-**Sizing ladder** (Perfect Fourth 1.333 from 20px, snapped to ×4): 20 → 28 → 36 → 48 → 64 → 84 → 112. For elements not in the tier table (subtitles, card titles, metric callouts), pick the scale step that creates correct visual weight relative to the heading. All sizes should be multiples of 4.
+**Sizing ladder** (Perfect Fourth 1.333 from 20px, snapped to ×4): 20 → 28 → 36 → 48 → 64 → 84 → 112. For elements not in the table, pick the scale step that creates correct visual weight relative to the heading. All sizes should be multiples of 4.
 
 ### Split layout, visual sizing, and hierarchy
 

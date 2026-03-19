@@ -57,7 +57,7 @@ Many email clients (Apple Mail, Outlook, Gmail) modify images in dark mode:
 ### Text
 - **Keep text minimal** in images — include key message only
 - **Always include alt text** — Outlook blocks images by default in many configurations
-- **Min font: 24px** at 1200px (2x) — readable at 600px display
+- **Use the typography tiers table above** for sizes; min body 24px at 1200px (2x) — readable at 600px display
 - If the entire message is in the image, it won't be readable when images are blocked
 
 ### Composition

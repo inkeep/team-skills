@@ -55,13 +55,13 @@ X compresses aggressively via MediaPipe-Optimize:
 - **Safe zone:** Center **1200 x 300-400 px**
 - Profile picture (128px circle) overlaps **bottom-left** — avoid content there
 - Mobile crops ~50px from top and bottom
-- **Text sizing:** Headlines 48-72px, minimum 24px for mobile readability
+- **Text sizing:** Use the typography tiers table above; minimum 24px for mobile readability
 
 ## Design guidelines
 
 ### Text
 - **5-8 word headlines** max
-- **Min font: 40px** at 1200px wide for mobile readability (feed renders at ~504px desktop)
+- **Min heading: 60px** at 1200px wide per typography tiers; body min 20px (feed renders at ~504px desktop)
 - **High contrast** essential — test at rendered feed size
 
 ### Engagement data

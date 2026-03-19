@@ -58,7 +58,7 @@ LinkedIn re-compresses every uploaded image. To minimize quality loss:
 ### Text
 - **Headlines: 5-8 words max** — treat social graphics like billboards
 - **Total text: under 15-20 words** — keep under 20% of image area
-- **Min font: 24pt** at 1200px wide — must be readable on mobile (~400px display)
+- **Use the typography tiers table above** for sizes; min body 24px — must be readable on mobile (~400px display)
 - **Left-align body text** — most readable. Center only short headlines (1-2 lines)
 
 ### Layout (Z-pattern)

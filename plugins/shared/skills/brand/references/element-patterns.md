@@ -8,10 +8,10 @@ Impact: Inconsistent element styling, missed brand patterns, reinventing existin
 
 Reusable visual element recipes that apply across all output formats. Each recipe describes **design intent, proportions, and brand rules** — not tool-specific implementation code.
 
-**Adapt proportions to your target format.** All pixel values below are calibrated at blog-cover scale (1280×720 working canvas, exported at 2x to 2560×1440). For other canvas sizes:
+**Adapt proportions to your target format.** All pixel values below are calibrated at blog-cover scale (1280×720 working canvas, exported at 2x to 2560×1440). For fixed-dimension canvases (graphics, slides, video frames), apply these rules. For responsive web, use the spacing/typography tokens directly.
 
 1. **Values define proportions, not absolutes.** A 64px heading at 1280×720 means "heading ≈ 9% of canvas height." Use that proportion on your canvas.
-2. **Format file typography tiers take precedence.** If the format file (e.g., `formats/social-og.md`) specifies heading = 84px, use 84px — even though recipes here say 64px.
+2. **Format file typography tiers take precedence** (when available). If the format file (e.g., `formats/social-og.md`) specifies heading = 84px, use 84px — even though recipes here say 64px.
 3. **For elements not in the format file's tiers**, scale the recipe value by (your canvas height ÷ 720). Example: 20px description at 720px height → 18px at 630px height.
 
 ---

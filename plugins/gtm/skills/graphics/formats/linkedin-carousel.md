@@ -62,7 +62,7 @@ Square formats use lower height percentages because the canvas is taller — abs
 - **One key idea per slide** with large, scannable text
 - **Headlines: 5-8 words** per slide
 - **Body text: 2-3 short sentences** max per slide
-- **Min font: 24pt** at 1080px — must be readable on mobile
+- **Use the typography tiers table above** for sizes; min body 24px — must be readable on mobile
 
 ### Layout
 - **Consistent template** across all slides — same colors, fonts, layout grid

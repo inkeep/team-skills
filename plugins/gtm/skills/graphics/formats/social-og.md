@@ -35,7 +35,7 @@ This is the universal standard for OG images. The site auto-generates OG images 
 ## Design guidelines
 
 ### Text
-- **Title**: 48–64px — must be readable in a ~600px wide preview card
+- **Use the typography tiers table above** for heading/subtitle/body sizes (heading: 76-95px, not the legacy 48-64px range)
 - **Max 8–10 words** for the title — OG previews are small; long titles get truncated by the platform before they get unreadable in the image
 - **No body text** — platforms show their own description below the image. Don't duplicate it
 

@@ -37,8 +37,8 @@ Quick reference for standalone social media images across platforms. For deeper 
 ## Design guidelines
 
 ### Text
-- **Headline**: 60–80px at 1200w — readable on mobile without zooming
-- **Supporting text**: 32–40px at 1200w
+- **Use the typography tiers table above** for heading/subtitle/body sizes
+- **Supporting text**: use Subtitle tier (28-36px at 1200w)
 - **Max 15 words total** on the image — social images are glanced at, not read
 - **If the text is the content** (quote cards, stats, announcements): use large, bold type as the primary visual element
 
