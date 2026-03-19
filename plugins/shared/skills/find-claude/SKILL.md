@@ -42,52 +42,40 @@ Determine which search flow applies based on the user's request:
 | "conversations in the worktree X" | **Worktree filter** | `worktrees` array |
 | "all conversations touching doltgresql repo" | **Repo filter** | `repos` array |
 
-## Step 2: Search the index (Layer 1)
+## Step 2: Search (keyword + semantic in parallel)
 
-Use the `search` subcommand to query the index. It returns compact JSON with only matching sessions — no need to load the full 1MB index.
-
-```bash
-# Free-text search (scored by relevance, weighted toward lastUserMessages)
-bun ~/.claude/skills/find-claude/scripts/index-sessions.ts search "figma port hook"
-
-# Filtered searches
-bun ~/.claude/skills/find-claude/scripts/index-sessions.ts search --skill eng:spec "openbolt"
-bun ~/.claude/skills/find-claude/scripts/index-sessions.ts search --pr 2212
-bun ~/.claude/skills/find-claude/scripts/index-sessions.ts search --branch feat/auth
-bun ~/.claude/skills/find-claude/scripts/index-sessions.ts search --today
-bun ~/.claude/skills/find-claude/scripts/index-sessions.ts search --file manage-schema.ts
-bun ~/.claude/skills/find-claude/scripts/index-sessions.ts search --worktree agents-pr2212
-bun ~/.claude/skills/find-claude/scripts/index-sessions.ts search --repo doltgresql
-bun ~/.claude/skills/find-claude/scripts/index-sessions.ts search --limit 20 "auth"
-```
-
-Flags can be combined: `search --skill eng:spec --branch feat/auth "credential"` requires all conditions.
-
-**Scoring:** Text terms are weighted: `lastUserMessages` (3x), `firstUserMessages` (2x), `continuationSummaries` (2x), structured fields like skills/files/PRs/branches (1x). Results are sorted by score then recency.
-
-The output is JSON — read it and synthesize human-readable summaries per Step 5.
-
-## Step 3: Semantic search (Layer 2)
-
-If the keyword search returns few or weak matches, or the user's query is conceptual rather than keyword-based (e.g. "the conversation where we were figuring out how to handle credential refresh"), use episodic-memory for semantic vector search:
+Use the unified search script. It runs keyword search (our index) and semantic search (episodic-memory embeddings) **in parallel**, merges results by session ID, and boosts sessions found by both engines.
 
 ```bash
-episodic-memory search "credential refresh flow for browser extensions"
+# Free-text search (runs both keyword + semantic, merges results)
+bun ~/.claude/skills/find-claude/scripts/search.ts "figma hook cleanup"
+
+# Filtered searches (keyword filters + semantic in parallel)
+bun ~/.claude/skills/find-claude/scripts/search.ts --skill eng:spec "openbolt"
+bun ~/.claude/skills/find-claude/scripts/search.ts --pr 2212
+bun ~/.claude/skills/find-claude/scripts/search.ts --branch feat/auth
+bun ~/.claude/skills/find-claude/scripts/search.ts --today
+bun ~/.claude/skills/find-claude/scripts/search.ts --file manage-schema.ts
+bun ~/.claude/skills/find-claude/scripts/search.ts --worktree agents-pr2212
+bun ~/.claude/skills/find-claude/scripts/search.ts --repo doltgresql
+bun ~/.claude/skills/find-claude/scripts/search.ts --limit 30 "auth"
 ```
 
-This embeds the query using a local MiniLM model and searches against 384-dimensional vectors of every user/assistant exchange across all sessions. It finds conversations by meaning, not just keyword overlap.
+Flags can be combined: `--skill eng:spec --branch feat/auth "credential"` requires all flag conditions AND scores text terms.
 
-**When to use semantic vs keyword search:**
-- User gives exact terms ("posthog", "PR #2212", "manage-schema.ts") → keyword search (Layer 1) first
-- User describes a concept or activity ("the one where we were debugging auth") → semantic search
-- Keyword search returns 0 results or nothing relevant → try semantic search
-- Both can be run and results merged — they're complementary
+**How scoring works:**
+- **Keyword score:** `lastUserMessages` (3x), `firstUserMessages` (2x), `continuationSummaries` (2x), structured fields (1x)
+- **Semantic score:** Cosine similarity from local MiniLM-L6 embeddings (384-dim) against every user/assistant exchange
+- **Combined:** Sessions found by both engines get boosted. Sorted by combined score then recency.
+- **Default limit:** 20 results
 
-**Dependency:** Requires [episodic-memory](https://github.com/obra/episodic-memory) installed at `~/.claude/oss-repos/episodic-memory/` with `npm link`. Run `episodic-memory sync` periodically to index new sessions (runs automatically via SessionStart hook if installed as a plugin).
+The output is JSON with `foundBy: ["keyword", "semantic"]` indicating which engine(s) found each result. Read it and synthesize human-readable summaries per Step 4.
 
-**First-time setup:** The initial sync embeds all sessions (~5-10 minutes). After that, incremental syncs are fast.
+**Fallback:** If episodic-memory is not installed, only keyword search runs (still works, just no semantic layer).
 
-## Step 4: Grep fallback (Layer 3)
+**Dependency:** Semantic search requires [episodic-memory](https://github.com/obra/episodic-memory) installed at `~/.claude/oss-repos/episodic-memory/` with `npm link`. Run `episodic-memory sync` to index new sessions.
+
+## Step 3: Grep fallback
 
 If both keyword and semantic search return no matches (the keyword may be buried in the middle of a conversation, not captured in bookends, summaries, or embedding text):
 
@@ -99,7 +87,7 @@ For each hit, extract first + last user messages using `head`/`tail` and inline 
 
 Compression does NOT delete messages from the JSONL file — it only affects the live context window. The full history is always on disk, so grep always searches complete content.
 
-## Step 5: Present results
+## Step 4: Present results
 
 For every match, synthesize a human-readable summary and explain **why** this session matches the query. Do NOT just dump raw field values — interpret them.
 
