@@ -93,18 +93,19 @@ For a single direction, the parent builds directly (no parallelism benefit).
 
 ### Each child's build cycle
 
-1. Read `state.json` → find its direction by slug → get concept, sectionNodeId, Creative Brief, assets
+1. Read `state.json` → find its direction by slug → get concept, sectionNodeId, Creative Brief, assets, **buildSpec** (end-state vision, success criteria, sub-element plan with visual references)
 2. If Phase 2 iteration: read the direction's `iterations` array for full history — what was built, what feedback was given, what to keep and what to fix
 3. Load `/brand` and `/graphics` skills
-4. Step 3: Plan composition (internal agent discipline)
+4. Step 3: The Build Spec is already in state.json — verify it's complete (end-state vision, success criteria, element plan with visual references). If building a new direction without a spec, write one first.
 5. Step 4: Generate (Phase A-E, targeting Section by node ID)
-6. Step 5: Two-layer verification loop (max 3 iterations):
+6. **Phase E self-critique loop (min 1, max 3 iterations):** Capture at full + 400px thumbnail → evaluate against the Build Spec's success criteria → identify weakest element → fix → re-evaluate. Do not proceed to the reviewer until success criteria are met or 3 iterations complete.
+7. Step 5: Two-layer verification loop (max 3 iterations):
    - Layer 1: programmatic checks (`figma_lint_design`, bounds, dimensions). Fix until clean.
-   - Layer 2: reviewer subagent (`capture-for-review.ts` → reviewer evaluates at 1568px + 400px).
+   - Layer 2: reviewer subagent (`capture-for-review.ts` → reviewer evaluates at 1568px + 400px). Pass the Build Spec's success criteria as evaluation context.
    - Read verdict: **PASS** → proceed. **PASS WITH SUGGESTIONS** → implement quick fixes, proceed. **NEEDS REVISION** → assess findings against context, apply valid fixes, restart from Layer 1.
    - After 3 iterations without PASS → write error status to result file.
-   - **Every frame must pass the reviewer before the user sees it.** No exceptions.
-7. Write results to `build-results/<direction-slug>.json`
+   - **Every frame must pass the self-critique loop AND the reviewer before the user sees it.** No exceptions.
+8. Write results to `build-results/<direction-slug>.json`
 
 ### Collect results (parent, serialized)
 
@@ -346,6 +347,20 @@ State is organized by **direction** (not by frame). Each direction tracks its fu
         "name": "Immersive Slack Thread",
         "visual": "Stylized Slack message thread with @Inkeep responding",
         "whyItWorks": "Product-as-marketing — shows the feature in action"
+      },
+      "buildSpec": {
+        "endStateVision": "A warm cream canvas with a large, slightly rotated Slack thread mockup...",
+        "successCriteria": [
+          "The Slack mockup looks like a real Slack conversation",
+          "The heading reads clearly at 300px thumbnail width",
+          "The Approve/Deny buttons are recognizable Slack Block Kit style"
+        ],
+        "thumbnailSketch": "At 400px: heading dominates left, white mockup card visible right...",
+        "recipes": { "productMockup": true, "badge": true },
+        "elementPlan": [
+          { "element": "User avatar", "source": "Quiver portrait", "visualRef": "—", "criterion": "Illustrated, not a colored circle" },
+          { "element": "Approve button", "source": "Figma, Slack green", "visualRef": "tmp/reference/slack-buttons.jpg", "criterion": "Slack Block Kit style" }
+        ]
       },
       "status": "active",
       "color": "green",

@@ -176,20 +176,23 @@ Step 6:  Export & deliver
 2. `"Graphics: Creative brief"` → pending
 3. `"Graphics: Conceptualize — Propose directions"` → pending
 4. `"Graphics: Collect assets & brand tokens"` → pending
-5. `"Graphics: Diverge — Build selected directions"` → pending
-6. `"Graphics: Iterate — User feedback loop"` → pending
-7. `"Graphics: Export & deliver"` → pending
+5. `"Graphics: Write build specs"` → pending
+6. `"Graphics: Build directions"` → pending
+7. `"Graphics: Self-critique → Review → Polish"` → pending
+8. `"Graphics: Present to user"` → pending (blockedBy: [7])
+9. `"Graphics: Iterate on user feedback"` → pending
+10. `"Graphics: Export & deliver"` → pending
 
 **Single-pass tasks** (bypass — for trivial edits only):
 1. `"Graphics: Parse request"` → set to `in_progress`
 2. `"Graphics: Creative brief"` → pending
 3. `"Graphics: Collect assets & brand tokens"` → pending
-4. `"Graphics: Plan composition"` → pending
-5. `"Graphics: Generate graphic"` → pending
-6. `"Graphics: Brand consistency check"` → pending
+4. `"Graphics: Write build spec"` → pending
+5. `"Graphics: Build graphic"` → pending
+6. `"Graphics: Self-critique → Review → Polish"` → pending
 7. `"Graphics: Export & deliver"` → pending
 
-As each step begins, mark its task `in_progress`. When the step completes, mark it `completed`. Task 6 (Iterate) in exploration mode stays `in_progress` throughout the iteration loop and completes when the user approves the finals.
+As each step begins, mark its task `in_progress`. When the step completes, mark it `completed`. Task 7 (Self-critique → Review → Polish) in exploration mode stays `in_progress` throughout the quality loop and completes when all frames pass the reviewer. Task 8 (Present) cannot start until task 7 completes — this enforces the "every frame must pass the reviewer before the user sees it" rule structurally. Task 9 (Iterate) stays `in_progress` throughout user feedback rounds and completes when the user approves finals.
 
 **Why this exists:** Without explicit task tracking, the observed failure mode is the agent skipping asset collection (Step 2) and brand token extraction (Step 3), jumping straight to building from scratch with approximated brand elements. This produces off-brand graphics with fake logos and wrong colors.
 
@@ -342,7 +345,7 @@ Present the suggestion to the user: "Based on the content, I'd suggest a [type] 
 
 ⛔ **Mark task "Graphics: Creative brief" as `in_progress` before proceeding.** Do NOT skip to asset collection or visual planning without establishing what the graphic needs to communicate.
 
-The Creative Brief captures the **what** and **why** — who this is for, what it should say, and what the viewer should do. The Composition Brief (Step 3) captures the **how** — visual layout, recipes, and patterns. Separating these prevents the observed failure mode of jumping to visual execution without understanding the message.
+The Creative Brief captures the **what** and **why** — who this is for, what it should say, and what the viewer should do. The Build Spec (Step 3) captures the **how** and the **vision** — what the finished graphic should look like, success criteria, visual layout, recipes, and patterns. Separating these prevents the observed failure mode of jumping to visual execution without understanding the message.
 
 **Interaction model: propose-confirm, not interrogate.** Extract as much as possible from context, propose a brief, pause ONCE for confirmation. Do not ask blank questions — always lead with a recommendation.
 
@@ -388,7 +391,7 @@ ___ (What should the viewer DO? Read the blog post, book a demo, share on Linked
 - **Context (field 7) is already handled.** Step 1 captures the output medium and dimensions. Don't re-ask.
 
 **How the Creative Brief feeds forward:**
-- **Key message** → determines what's visually dominant in the Composition Brief (Step 3)
+- **Key message** → determines what's visually dominant in the Build Spec (Step 3)
 - **Hero content** → determines which artifact recipe to apply (product mockup? code-as-visual? metric callout?)
 - **Audience** → influences tone translation (developer-facing = monospace-forward, technical depth; executive-facing = clean, stat-forward)
 - **Goal + CTA** → determines whether the graphic needs a CTA element, urgency signals, or is purely brand/awareness
@@ -437,7 +440,7 @@ If the user provides context, use it. If they say "just make it up" or "use your
 
 **Step 3: Capture and propagate what you learned**
 
-Write in the Composition Brief (Step 3) under "Product context":
+Write in the Build Spec (Step 3) under "Product context":
 - What the feature does (one sentence)
 - Key UI elements the mockup should show
 - Visual reference paths (`tmp/reference/<project-name>/...`)
@@ -453,7 +456,7 @@ Write in the Composition Brief (Step 3) under "Product context":
 }
 ```
 
-This grounds the visual in the actual product. Every sub-element in the Composition Brief's sub-element plan should cite a specific reference from this discovery.
+This grounds the visual in the actual product. Every sub-element in the Build Spec's sub-element plan should cite a specific reference from this discovery.
 
 ---
 
@@ -692,12 +695,29 @@ Write out an asset manifest listing what was found and what's missing:
 **If the graphic includes illustrations, visual metaphors, or decorative elements in the Inkeep hand-drawn style:**
 **Load:** `content-types/illustration.md` for the dual-stroke visual language (hand-drawn gray containers + precise blue fills), color palette, composition patterns, Quiver generation instructions, and the blue swoosh underline signature element.
 
-⛔ **Produce a Composition Brief before proceeding.** This is the checkpoint that prevents the "skip reference files" failure mode — planning from general knowledge instead of brand-specific recipes and patterns.
+⛔ **Produce a Build Spec before proceeding.** This is the checkpoint that prevents two failure modes: (1) planning from general knowledge instead of brand-specific recipes, and (2) building without a concrete vision of the finished output. The Build Spec is persisted to `state.json` under `directions[slug].buildSpec` so nest-claude children receive it as their build instructions. The self-critique loop (Phase E) evaluates against this spec's success criteria.
 
-Write out the brief using this template:
+Write out the spec using this template:
 
 ```
-## Composition Brief
+## Build Spec: [Direction Name]
+
+### End-state vision
+Describe in 3-5 sentences what the finished graphic should look like
+and feel like. Not which recipes to apply — the actual visual result
+as if describing it to someone who will build it.
+
+### Success criteria
+3-5 concrete, testable statements specific to THIS graphic.
+The self-critique loop and reviewer evaluate against these.
+- [ ] ...
+- [ ] ...
+- [ ] ...
+
+### Thumbnail sketch
+What should this look like at 400px wide? Which elements are
+visible vs lost? What's the primary → secondary reading order
+at card size?
 
 ### Artifact recipes applied
 (Scan artifact-recipes.md and select which apply. Mark each YES/NO with a one-line note.)
@@ -730,11 +750,11 @@ Write out the brief using this template:
 - Hybrid composition needed? ___ (e.g., "Quiver illustration → import to Figma → add text + brand elements")
 
 For compound elements (product mockups, chat interfaces, multi-part UI), also list sub-elements:
-| Sub-element | Source/Treatment | Verification |
-|---|---|---|
-| *(list every sub-element within the compound element — avatar, text styling, action buttons, headers, icons, etc.)* | *(source: Brand Assets / Quiver / Figma build. Treatment: specific visual approach)* | *(4x zoom for elements <50px, inline check for text styling)* |
+| Sub-element | Source/Treatment | Visual reference | Verification |
+|---|---|---|---|
+| *(list every sub-element within the compound element — avatar, text styling, action buttons, headers, icons, etc.)* | *(source: Brand Assets / Quiver / Figma build. Treatment: specific visual approach)* | *(path to reference image from Step 1c, or "—" with justification why none needed)* | *(4x zoom for elements <50px, inline check for text styling)* |
 
-This table is mandatory for any compound element with 3+ distinct sub-elements. Planning each sub-element here prevents improvisation during build. The specific treatments are design judgment — the requirement is that each is planned, not that it follows a specific recipe.
+⛔ **Completeness gate:** Every row must have Source/Treatment + Visual reference (or justified "—") before proceeding to build. Rows without references produce improvised elements that look generic. This table is mandatory for any compound element with 3+ distinct sub-elements.
 
 ### Composition plan
 - Layout: overall structure, element placement
@@ -753,14 +773,18 @@ This table is mandatory for any compound element with 3+ distinct sub-elements. 
 - [ ] Third-party logos are real assets (not text/shape approximations)
 ```
 
-**Rules for the brief:**
+**Rules for the Build Spec:**
+- **End-state vision must be concrete** — "a warm cream canvas with a large Slack thread mockup" not "a professional-looking blog cover." The vision should be vivid enough that someone else could build it.
+- **Success criteria must be testable** — "heading reads at 300px thumbnail" not "looks good." The self-critique loop evaluates against these.
 - Every recipe must be explicitly marked YES or NO — skipping the scan is the failure mode this prevents
 - Every visual element must declare its generation tool — this prevents defaulting to Figma shapes for everything
+- Every sub-element in compound elements must cite a visual reference or justify why none is needed
 - Color values must reference token names (`brand/primary`, `bg/surface`) not bare hex codes from memory
 - If no artifact recipes apply (e.g., a pure diagram), note "None — diagram only, using diagram rules from brand-guide.md"
-- The anti-pattern check must all pass before presenting to the user. If any fail, fix the plan first.
+- The anti-pattern check must all pass before proceeding. If any fail, fix the plan first.
 - If an illustration or icon is marked "Figma shapes" instead of Quiver, justify WHY (only acceptable for purely geometric compositions like simple diagrams)
 - If a third-party logo is not sourced from Brand Assets or fetch-logo.ts, STOP — logos must never be approximated
+- **Persist the Build Spec** — in exploration mode, write to `state.json` under `directions[slug].buildSpec`. In single-pass mode, write to conversation (it serves as the agent's own execution plan).
 
 **Why this exists:** Without this checkpoint, the observed failure modes are: (1) the agent skipping the Load instructions, planning from general design knowledge, and producing graphics that miss brand-specific treatments (wrong shadow, wrong radius, flat backgrounds, oversized badges); (2) the agent defaulting to basic Figma shapes for everything instead of using Quiver for illustrations, GPT Image for photorealistic imagery, and fetch-logo.ts for third-party logos — producing flat, unpolished graphics that lack the richness the toolchain enables. The brief forces the agent to read the references and commit to the right tools before building.
 
@@ -778,17 +802,27 @@ Don't infer these from ambiguous language — describe your interpretation and c
 
 If the graphic is adapting an existing asset or following an established pattern, a single plan with user confirmation is sufficient.
 
-Present the Composition Brief to the user for review before generating.
+Present the Build Spec to the user for review before generating.
 
-**Mark task "Graphics: Plan composition" as `completed`.**
+**Mark task "Graphics: Write build specs" (exploration) or "Graphics: Write build spec" (single-pass) as `completed`.**
 
 ### 4. Generate the graphic
 
-⛔ **Mark task "Graphics: Generate graphic" as `in_progress`. Before creating ANY Figma elements, verify:**
+⛔ **Routing decision (before building anything):**
+
+| Situation | Path |
+|---|---|
+| **≥2 directions selected** | **Exploration workflow.** Create `state.json`, spawn `/nest-claude` children. The parent does NOT build frames — it coordinates. **Load:** `references/exploration-workflow.md` for the full coordination protocol, state.json schema, and child spawn template. |
+| **1 direction or single-pass mode** | **Direct build.** The parent builds the frame using Phase A-E below. |
+
+When using the exploration workflow, the parent's job for this step is: (1) write `state.json` with Build Specs, assets, and Figma IDs, (2) create Figma Sections, (3) spawn children, (4) collect results. Each child loads `/brand` and `/graphics`, reads its Build Spec from `state.json`, builds its frame, and runs its own self-critique + reviewer loop. See `references/exploration-workflow.md` for the full protocol.
+
+⛔ **Mark task "Graphics: Build directions" (exploration) or "Graphics: Build graphic" (single-pass) as `in_progress`. Before creating ANY Figma elements, verify:**
 - [ ] **Asset manifest exists** — Step 2 produced a manifest listing found/missing/approximated assets
 - [ ] **Brand tokens collected** — you have exact hex colors and font families from the design system, not from memory or the user's message
 - [ ] **Logos are real** — any Inkeep or third-party logos are cloned from the Brand Assets page or fetched via `tools/fetch-logo.ts`, not approximated with text or shapes
-- [ ] **Plan was confirmed** — the user reviewed and approved the composition plan
+- [ ] **Build Spec was produced** — Step 3 produced a Build Spec with end-state vision, success criteria, and sub-element plan with visual references
+- [ ] **In exploration mode: `state.json` exists** — with creativeBrief, assets, directions, and per-direction buildSpec
 
 **If any of these are not met, STOP and complete the missing step before proceeding.**
 
@@ -980,11 +1014,12 @@ Fix any issues now — it's much easier to fix individual atoms than after compo
 **Dimensional changes cascade.** Changing an element's width or height can cause content to reflow (e.g., text wrapping changes line count, which changes container height, which collapses spacing with neighbors). Screenshot after **every** dimensional change to catch cascading layout breakage before it compounds.
 
 **Checkpoint:** Full screenshot of the composed design. Verify:
-- [ ] All elements from the plan are present
+- [ ] All elements from the Build Spec are present
 - [ ] Layout matches the composition plan
 - [ ] Connection elements actually connect to their targets
 - [ ] Visual hierarchy reads correctly
 - [ ] Text is readable at intended display size (see output medium table in Step 1)
+- [ ] **Thumbnail hierarchy check:** Export at 400px width (`node.exportAsync({ format: 'PNG', constraint: { type: 'WIDTH', value: 400 } })`) and visually verify — does the focal point dominate? Is the heading readable? Does the composition hold or collapse to flat visual weight? Fix hierarchy issues NOW, before investing in polish.
 - [ ] No content overflow or collapsed spacing from dimensional changes
 - [ ] ⛔ **Bounds check (MANDATORY — screenshots cannot catch this):** `figma_capture_screenshot` exports with clipping — children that overflow outside the frame are invisible in screenshots but broken on the actual canvas. This is not a 2-4px edge case; overflow can be hundreds of pixels (e.g., an auto-layout sidebar that expanded beyond its parent). **You MUST run this programmatic check after every composition step**, not just at the end. Do not trust screenshots alone for layout verification:
    ```javascript
@@ -1011,23 +1046,44 @@ If the graphic involves a **novel composition** (not adapting a template or exis
 
 Skip this for template-based work (blog covers using established patterns, social images from existing layouts, icon variations). The intent is to catch fundamental direction issues before polish investment — not to add a gate on every graphic.
 
-#### Phase E: Polish and verify
+#### Phase E: Self-critique → Polish (iteration loop)
 
-**Goal:** Final refinements and quality check.
+**Goal:** Iteratively improve the graphic before it reaches the reviewer. The reviewer evaluates polished work, not first drafts.
 
 **Before major revisions:** If the user requests substantial changes to a composed design (not minor tweaks), duplicate the current frame and rename it as a version snapshot (e.g., "Intelligence Layer — v1"). Work on the copy. This provides safe rollback and enables side-by-side comparison when evaluating changes with the user.
 
-1. **Alignment and spacing** — consistent spacing, proper alignment, visual balance
-2. **Layer organization** — descriptive names on all layers, logical layer order (background → structure → content → decorative)
-3. **Final screenshot** — verify brand colors exact, typography correct, no placeholders, connections attached, design looks intentional. For imported SVGs, explicitly verify aspect ratios one more time: compare each logo's rendered proportions against its source viewBox — stretched or squished logos are the most common visual defect that passes casual inspection. If adapting an existing asset, do a final A/B comparison with the original source file.
-4. **Clean up** — delete the "Working — Atoms" frame, remove stray elements
+**Self-critique loop (min 1 iteration, max 3):**
+
+1. **Capture at two resolutions:**
+   - Full resolution: `figma_capture_screenshot` at default scale
+   - Thumbnail: export at 400px width (`node.exportAsync({ format: 'PNG', constraint: { type: 'WIDTH', value: 400 } })`)
+
+2. **Evaluate against the Build Spec's success criteria.** For each criterion in the spec, assess: does the current output meet it? Be honest — "close enough" is not passing.
+
+3. **Identify the weakest element.** You MUST identify at least one area for improvement per iteration. If you can't find one, you're not looking critically enough. Common blindspots:
+   - Elements that technically exist but look generic (colored circles instead of illustrated avatars, plain text instead of styled UI elements)
+   - Composition that reads at full size but collapses at 400px thumbnail
+   - Work that follows brand rules but lacks the specific warmth/personality of the brand
+   - Sub-elements that were improvised from memory rather than built from visual references
+
+4. **Fix the weakness.** Make the improvement. Screenshot after the fix to verify.
+
+5. **Re-evaluate.** Does the output now meet the success criteria? Has the fix introduced new issues?
+
+6. **Repeat or proceed.** If success criteria are met and no critical weaknesses remain → proceed to the reviewer (Step 5). If not → iterate (up to 3 rounds total).
+
+**After the self-critique loop, also do:**
+- **Alignment and spacing** — consistent spacing, proper alignment, visual balance
+- **Layer organization** — descriptive names on all layers, logical layer order (background → structure → content → decorative)
+- **Aspect ratio verification** — for imported SVGs, compare each logo's rendered proportions against its source viewBox
+- **Clean up** — delete the "Working — Atoms" frame, remove stray elements
 
 #### Iteration is expected
 
-Visual work is inherently iterative. Expect 5-10+ rounds of feedback and refinement — this is normal, not a sign of failure. Structure for it:
-- Deliver a complete first pass, then refine based on user feedback.
-- Don't try to make every detail perfect before showing the user — get directional alignment first, then polish.
-- When the user requests changes, assess scope: minor tweaks can be applied in place, but major revisions should use the v1/v2 pattern (see Phase E above) so nothing is lost.
+Visual work is inherently iterative. The self-critique loop handles internal quality iteration. User feedback drives external iteration (Phase 2 in exploration mode). Structure for it:
+- The self-critique loop produces polished work → reviewer verifies → THEN present to user
+- Don't try to make every detail perfect before the reviewer — but DO iterate past the first draft
+- When the user requests changes, assess scope: minor tweaks can be applied in place, but major revisions should use the v1/v2 pattern so nothing is lost.
 
 **Option B: SVG (when code output is specifically needed)**
 
@@ -1424,7 +1480,9 @@ Best for: 3D rendered objects with exact brand colors, parameterized batch rende
 
 ### 5. Apply brand consistency
 
-**Mark task "Graphics: Generate graphic" as `completed`. Mark task "Graphics: Brand consistency check" as `in_progress`.**
+**Mark task "Graphics: Build directions" (or "Graphics: Build graphic") as `completed`. Mark task "Graphics: Self-critique → Review → Polish" as `in_progress`.**
+
+⛔ **Phase E (self-critique loop) must have completed before entering this step.** If you skipped Phase E, go back and run it now. The reviewer evaluates polished work, not first drafts.
 
 This phase uses a two-layer verification model. Layer 1 catches programmatic issues. Layer 2 spawns a reviewer subagent for visual evaluation. The reviewer evaluates against the same brand and graphics guidelines you follow — compliance checking (did you follow the rules?) plus craft assessment (does it actually look good?).
 
@@ -1519,6 +1577,17 @@ Agent tool:
 All SVG outputs (Quiver, hand-coded, D2/Mermaid) should be imported into Figma before reaching this phase — the Figma frame is the review surface. Pass the original SVG file path in the reviewer spawn prompt for source cross-referencing.
 
 **Mark task "Graphics: Brand consistency check" as `completed`.**
+
+### Present to user (gate between review and export/iteration)
+
+⛔ **Mark task "Graphics: Present to user" as `in_progress`. Before presenting ANY frame to the user, verify:**
+- [ ] **Self-critique loop completed** — Phase E ran at least 1 iteration on this frame
+- [ ] **Reviewer passed** — Layer 2 reviewer returned PASS or PASS WITH SUGGESTIONS (suggestions were implemented)
+- [ ] **In exploration mode:** `build-results/<slug>.json` exists with `reviewerVerdict: PASS`
+
+**If any frame has not passed both the self-critique loop and the reviewer, run them now before presenting.** This is the structural enforcement of "every frame must pass the reviewer before the user sees it."
+
+After presenting and receiving user feedback, mark this task `completed` and proceed to either "Iterate on user feedback" (if changes requested) or "Export & deliver" (if approved).
 
 ### 6. Export and deliver
 

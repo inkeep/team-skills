@@ -38,7 +38,7 @@ mkdir -p tmp/reference/<project-name>
 3. **Name descriptively**: `<source>-<what-it-shows>-<resolution>.jpg` — e.g., `slack-marketing-thread-with-bot-1568w.jpg`, `agents-ui-chat-widget-400w.jpg`
 4. **Visually inspect** the 400w version (Read tool) to confirm it's actually useful before citing it
 
-**Cite in the Composition Brief** — the "Visual reference(s)" field should list the saved paths:
+**Cite in the Build Spec** — the "Visual reference(s)" field should list the saved paths:
 ```
 - **Visual reference(s):**
   - tmp/reference/agents-in-slack/slack-marketing-thread-1568w.jpg (Slack's own blog — shows thread with bot response)
@@ -191,7 +191,7 @@ Product context is **shared across all directions** — every direction building
 
 ## What to capture
 
-After discovery, record in BOTH the Composition Brief (for the main agent) AND `state.json` (for nested claudes):
+After discovery, record in BOTH the Build Spec (for the main agent) AND `state.json` (for nested claudes):
 
 ```
 ### Product context
