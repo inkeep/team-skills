@@ -193,10 +193,32 @@ async function extractSession(filepath: string): Promise<SessionEntry | null> {
         compactionCount++;
       }
 
+      // pr-link entries: authoritative PR association from Claude Code
+      if (msgType === "pr-link") {
+        const prNum = d.prNumber;
+        const prRepo = d.prRepository;
+        if (prRepo && prNum) prs.add(`${prRepo}#${prNum}`);
+        if (prRepo) repos.add(prRepo);
+      }
+
       const msg = d.message;
       if (!msg || typeof msg !== "object") continue;
       const role = msg.role || "";
       const content = msg.content;
+
+      // isMeta user entries: skills auto-loaded by the harness (not just invoked)
+      if (d.isMeta && role === "user" && Array.isArray(content)) {
+        for (const item of content) {
+          if (
+            item?.type === "text" &&
+            typeof item.text === "string" &&
+            item.text.startsWith("Base directory for this skill:")
+          ) {
+            const match = item.text.match(/skills\/([^/\n]+)/);
+            if (match) skills.add(match[1]);
+          }
+        }
+      }
 
       if (role === "user" || role === "assistant") messageCount++;
 
