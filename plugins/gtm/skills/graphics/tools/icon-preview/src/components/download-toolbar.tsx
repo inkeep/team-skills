@@ -98,11 +98,9 @@ export function DownloadToolbar({
     }
   };
 
-  if (count === 0) return null;
-
   return (
-    <div className="sticky top-0 z-50">
-      <div className="bg-card border border-border rounded-xl px-4 py-3 mb-6 flex items-center gap-3 flex-wrap shadow-lg">
+    <div className={`fixed bottom-4 left-1/2 -translate-x-1/2 z-50 transition-all duration-200 ${count === 0 ? "translate-y-full opacity-0 pointer-events-none" : "translate-y-0 opacity-100"}`}>
+      <div className="bg-card border border-border rounded-xl px-4 py-3 flex items-center gap-3 flex-wrap shadow-xl">
         <span className="text-sm text-primary font-medium">
           {count} selected
         </span>
