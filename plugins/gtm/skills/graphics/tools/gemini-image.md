@@ -33,7 +33,7 @@ The script lives at `tools/image-generate.ts`. Gemini is accessed via `--provide
 ### Generate an image
 
 ```bash
-bun tools/image-generate.ts generate \
+bun plugins/gtm/skills/graphics/tools/image-generate.ts generate \
   --prompt "A translucent blue glass hexagonal prism floating in dark space (#0A0A0A)..." \
   --provider gemini \
   --output glass-hero.png
@@ -42,7 +42,7 @@ bun tools/image-generate.ts generate \
 ### Generate with a reference image (brand asset anchoring)
 
 ```bash
-bun tools/image-generate.ts generate \
+bun plugins/gtm/skills/graphics/tools/image-generate.ts generate \
   --prompt "Using the visual style of this reference, generate a 3D glass shield..." \
   --provider gemini \
   --reference /tmp/brand-illustration.png \
@@ -54,7 +54,7 @@ The reference image is sent as `inlineData` alongside the text prompt. The model
 ### Generate on both providers in parallel
 
 ```bash
-bun tools/image-generate.ts generate \
+bun plugins/gtm/skills/graphics/tools/image-generate.ts generate \
   --prompt "A dark matte tile with blue rim glow..." \
   --provider both \
   --output hero-compare.png
@@ -66,7 +66,7 @@ bun tools/image-generate.ts generate \
 Gemini supports multi-turn editing — feed an existing image and ask for modifications:
 
 ```bash
-bun tools/image-generate.ts edit \
+bun plugins/gtm/skills/graphics/tools/image-generate.ts edit \
   --prompt "Make the rim glow warmer and increase the glass refraction" \
   --provider gemini \
   --image previous-output.png \

@@ -4,8 +4,8 @@
  * AI Image Generation — multi-provider (GPT Image 1.5 + Gemini 3.1 Flash Image).
  *
  * Usage:
- *   bun tools/image-generate.ts generate --prompt "..." [--provider gpt|gemini|both] [--reference ref.png] [--quality high] [--output out.png]
- *   bun tools/image-generate.ts edit --prompt "..." --image input.png [--provider gpt|gemini] [--mask mask.png] [--output out.png]
+ *   bun plugins/gtm/skills/graphics/tools/image-generate.ts generate --prompt "..." [--provider gpt|gemini|both] [--reference ref.png] [--quality high] [--output out.png]
+ *   bun plugins/gtm/skills/graphics/tools/image-generate.ts edit --prompt "..." --image input.png [--provider gpt|gemini] [--mask mask.png] [--output out.png]
  *
  * Providers:
  *   gpt    — OpenAI GPT Image 1.5. Supports transparent backgrounds, mask-based editing.
@@ -343,8 +343,8 @@ async function main() {
         console.error(
           "AI Image Generation — GPT Image 1.5 + Gemini 3.1 Flash Image\n\n" +
           "Usage:\n" +
-          '  bun tools/image-generate.ts generate --prompt "..." [--provider gpt|gemini|both] [--reference ref.png] [--quality high] [--output out.png]\n' +
-          '  bun tools/image-generate.ts edit --prompt "..." --image input.png [--provider gpt|gemini] [--mask mask.png] [--output out.png]\n\n' +
+          '  bun plugins/gtm/skills/graphics/tools/image-generate.ts generate --prompt "..." [--provider gpt|gemini|both] [--reference ref.png] [--quality high] [--output out.png]\n' +
+          '  bun plugins/gtm/skills/graphics/tools/image-generate.ts edit --prompt "..." --image input.png [--provider gpt|gemini] [--mask mask.png] [--output out.png]\n\n' +
           "Providers:\n" +
           "  gpt    — OpenAI GPT Image 1.5 (default). Transparent backgrounds, mask editing.\n" +
           "  gemini — Google Gemini 3.1 Flash. Better 3D/glass, native references, conversational editing.\n" +

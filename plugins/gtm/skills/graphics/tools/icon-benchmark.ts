@@ -51,16 +51,16 @@
  * ## Usage
  *
  *   # Run full benchmark (all variations)
- *   bun tools/icon-benchmark.ts --output /tmp/benchmark-results
+ *   bun plugins/gtm/skills/graphics/tools/icon-benchmark.ts --output /tmp/benchmark-results
  *
  *   # Run specific variation only
- *   bun tools/icon-benchmark.ts --variation V-1ref --output /tmp/benchmark-results
+ *   bun plugins/gtm/skills/graphics/tools/icon-benchmark.ts --variation V-1ref --output /tmp/benchmark-results
  *
  *   # Change samples per condition
- *   bun tools/icon-benchmark.ts --samples 5 --output /tmp/benchmark-results
+ *   bun plugins/gtm/skills/graphics/tools/icon-benchmark.ts --samples 5 --output /tmp/benchmark-results
  *
  *   # List available variations
- *   bun tools/icon-benchmark.ts --list
+ *   bun plugins/gtm/skills/graphics/tools/icon-benchmark.ts --list
  *
  * ## Output Structure
  *

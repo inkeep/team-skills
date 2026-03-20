@@ -37,19 +37,19 @@ This is the programmatic 3D tool — the agent writes the scene as code, control
 
 ```bash
 # Basic render (GPU auto-detection)
-bun tools/r3f/render.ts render \
+bun plugins/gtm/skills/graphics/tools/r3f/render.ts render \
   --scene my-scene.tsx \
   --output render.png
 
 # Custom dimensions + SwiftShader fallback (CI/Docker)
-bun tools/r3f/render.ts render \
+bun plugins/gtm/skills/graphics/tools/r3f/render.ts render \
   --scene my-scene.tsx \
   --output render.png \
   --width 1280 --height 720 --scale 2 \
   --gpu swiftshader
 
 # Transparent background (for compositing in Figma)
-bun tools/r3f/render.ts render \
+bun plugins/gtm/skills/graphics/tools/r3f/render.ts render \
   --scene my-scene.tsx \
   --output render.png \
   --transparent
@@ -333,7 +333,7 @@ This matches how premium 3D marketing teams work: the 3D tool (Spline, Blender, 
 **The workflow:**
 
 1. **Write the scene** in TSX — focus on the 3D element only, not the full layout
-2. **Render to transparent PNG** via `bun tools/r3f/render.ts render --scene scene.tsx --output 3d-element.png --mode compositing`
+2. **Render to transparent PNG** via `bun plugins/gtm/skills/graphics/tools/r3f/render.ts render --scene scene.tsx --output 3d-element.png --mode compositing`
 3. **Import into Figma** — use `figma_execute` to create a rectangle with an image fill from the PNG
 4. **Compose in Figma** using the Option A workflow — add brand text, badges, 3D texture background (from texture library), and layout around the 3D element
 5. **Apply brand consistency** — verify the 3D render looks right alongside Figma-native elements

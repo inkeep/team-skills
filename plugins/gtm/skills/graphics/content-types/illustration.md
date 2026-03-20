@@ -648,7 +648,7 @@ curl -sL -o /tmp/inkeep-ref.png "https://inkeep.com/images/use-cases/b2b-custome
 sips -s format png -Z 800 /tmp/inkeep-ref.png --out /tmp/inkeep-ref-800.png
 
 # Generate new illustration matching the style
-bun tools/quiver-generate.ts generate \
+bun plugins/gtm/skills/graphics/tools/quiver-generate.ts generate \
   --prompt "Hand-drawn hexagonal grid with precise blue Slack hash icon in center, radiating connection lines to channel name labels" \
   --references /tmp/inkeep-ref-800.png \
   --instructions "Match the illustration style of the reference exactly. Use #3784FF for precise fills, #231F20 at 20% for hand-drawn containers. No shadows, no gradients." \

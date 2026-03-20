@@ -11,7 +11,7 @@ When a third-party logo is not in the Brand Assets page, use `tools/fetch-logo.t
 ## Quick usage
 
 ```bash
-bun tools/fetch-logo.ts --name "Freshdesk" --domain "freshdesk.com" --output /tmp/freshdesk.svg
+bun plugins/gtm/skills/graphics/tools/fetch-logo.ts --name "Freshdesk" --domain "freshdesk.com" --output /tmp/freshdesk.svg
 ```
 
 Options:
@@ -220,7 +220,7 @@ After importing a third-party logo from any source:
 When you need more than just the logo — brand colors, fonts, and company data for comparison graphics, case study heroes, or integration showcases — use the full brand profile script:
 
 ```bash
-bun tools/fetch-brand.ts --name "Zendesk" --domain "zendesk.com"
+bun plugins/gtm/skills/graphics/tools/fetch-brand.ts --name "Zendesk" --domain "zendesk.com"
 ```
 
 Returns `{ logo, colors, fonts, company }`. See SKILL.md Step 2f for details and the Asset Manifest integration.

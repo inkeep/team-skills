@@ -4,8 +4,8 @@
  * Quiver.ai SVG generation script.
  *
  * Usage:
- *   bun tools/quiver-generate.ts generate --prompt "A logo for ..." [--instructions "..."] [--references img1.png,img2.png] [--n 2] [--temperature 0.5] [--presence-penalty 0.5] [--output out.svg]
- *   bun tools/quiver-generate.ts vectorize --image input.png [--auto-crop] [--target-size 512] [--output out.svg]
+ *   bun plugins/gtm/skills/graphics/tools/quiver-generate.ts generate --prompt "A logo for ..." [--instructions "..."] [--references img1.png,img2.png] [--n 2] [--temperature 0.5] [--presence-penalty 0.5] [--output out.svg]
+ *   bun plugins/gtm/skills/graphics/tools/quiver-generate.ts vectorize --image input.png [--auto-crop] [--target-size 512] [--output out.svg]
  *
  * Auto-generates PNG previews alongside SVGs (requires `sharp` module).
  * The agent can then use the Read tool on the PNG to visually inspect the result.
@@ -278,8 +278,8 @@ async function main() {
       default:
         console.error(
           "Usage:\n" +
-            '  bun tools/quiver-generate.ts generate --prompt "..." [--instructions "..."] [--references img1.png,img2.png] [--n 2] [--temperature 0.5] [--presence-penalty 0.5] [--output out.svg]\n' +
-            "  bun tools/quiver-generate.ts vectorize --image input.png [--auto-crop] [--target-size 512] [--output out.svg]\n"
+            '  bun plugins/gtm/skills/graphics/tools/quiver-generate.ts generate --prompt "..." [--instructions "..."] [--references img1.png,img2.png] [--n 2] [--temperature 0.5] [--presence-penalty 0.5] [--output out.svg]\n' +
+            "  bun plugins/gtm/skills/graphics/tools/quiver-generate.ts vectorize --image input.png [--auto-crop] [--target-size 512] [--output out.svg]\n"
         );
         process.exit(1);
     }

@@ -8,8 +8,8 @@
  * 2. A master comparison sheet (all variations side by side)
  *
  * Usage:
- *   bun tools/capture-for-review.ts --input /tmp/dissect/quiver-experiment/results --output /tmp/review
- *   bun tools/capture-for-review.ts --input /tmp/dissect/quiver-experiment/results --variation V-1ref
+ *   bun plugins/gtm/skills/graphics/tools/capture-for-review.ts --input /tmp/dissect/quiver-experiment/results --output /tmp/review
+ *   bun plugins/gtm/skills/graphics/tools/capture-for-review.ts --input /tmp/dissect/quiver-experiment/results --variation V-1ref
  *
  * Each icon is rendered at 200×200px in the composite for easy visual comparison.
  */
@@ -195,7 +195,7 @@ async function main() {
   const args = parseArgs();
 
   if (!args.inputDir || !existsSync(args.inputDir)) {
-    console.error("Usage: bun tools/capture-for-review.ts --input <results-dir> [--output <review-dir>] [--variation <name>]");
+    console.error("Usage: bun plugins/gtm/skills/graphics/tools/capture-for-review.ts --input <results-dir> [--output <review-dir>] [--variation <name>]");
     process.exit(1);
   }
 

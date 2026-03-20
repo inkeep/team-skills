@@ -7,10 +7,10 @@
  * and captures a screenshot.
  *
  * Usage:
- *   bun tools/r3f/render.ts render --scene my-scene.tsx --output render.png
- *   bun tools/r3f/render.ts render --scene my-scene.tsx --output render.png --width 1280 --height 720 --scale 2
- *   bun tools/r3f/render.ts render --scene my-scene.tsx --output render.png --gpu swiftshader
- *   bun tools/r3f/render.ts render --scene my-scene.tsx --output render.png --transparent
+ *   bun plugins/gtm/skills/graphics/tools/r3f/render.ts render --scene my-scene.tsx --output render.png
+ *   bun plugins/gtm/skills/graphics/tools/r3f/render.ts render --scene my-scene.tsx --output render.png --width 1280 --height 720 --scale 2
+ *   bun plugins/gtm/skills/graphics/tools/r3f/render.ts render --scene my-scene.tsx --output render.png --gpu swiftshader
+ *   bun plugins/gtm/skills/graphics/tools/r3f/render.ts render --scene my-scene.tsx --output render.png --transparent
  *
  * Scene file requirements:
  *   - TSX file using React Three Fiber (<Canvas>, drei components, etc.)
@@ -79,7 +79,7 @@ const { values: args, positionals } = parseArgs({
 
 const command = positionals[0];
 if (command !== 'render' || !args.scene) {
-  console.error(`Usage: bun tools/r3f/render.ts render --scene <scene.tsx> --output <output.png> [options]
+  console.error(`Usage: bun plugins/gtm/skills/graphics/tools/r3f/render.ts render --scene <scene.tsx> --output <output.png> [options]
 
 Options:
   --scene <file>       R3F scene TSX file (required)

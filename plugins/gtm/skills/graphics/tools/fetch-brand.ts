@@ -4,9 +4,9 @@
  * Brand profile fetcher — returns logo + colors + fonts + company data for a third-party brand.
  *
  * Usage:
- *   bun tools/fetch-brand.ts --name "Zendesk"
- *   bun tools/fetch-brand.ts --name "Zendesk" --domain "zendesk.com"
- *   bun tools/fetch-brand.ts --name "Freshworks"  # uses Search API to resolve domain
+ *   bun plugins/gtm/skills/graphics/tools/fetch-brand.ts --name "Zendesk"
+ *   bun plugins/gtm/skills/graphics/tools/fetch-brand.ts --name "Zendesk" --domain "zendesk.com"
+ *   bun plugins/gtm/skills/graphics/tools/fetch-brand.ts --name "Freshworks"  # uses Search API to resolve domain
  *
  * What it does:
  *   1. If --domain is provided, use it directly
@@ -246,8 +246,8 @@ async function main() {
 Brand profile fetcher — logo + colors + fonts + company data
 
 Usage:
-  bun tools/fetch-brand.ts --name "Zendesk"
-  bun tools/fetch-brand.ts --name "Zendesk" --domain "zendesk.com"
+  bun plugins/gtm/skills/graphics/tools/fetch-brand.ts --name "Zendesk"
+  bun plugins/gtm/skills/graphics/tools/fetch-brand.ts --name "Zendesk" --domain "zendesk.com"
 
 Options:
   --name      Brand name (required)

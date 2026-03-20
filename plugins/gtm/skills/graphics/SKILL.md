@@ -614,7 +614,7 @@ When creating a blog thumbnail, check `src/components/blog/category-badge.tsx` i
 When the graphic features a third-party brand — comparison thumbnails ("Inkeep vs Zendesk"), case study heroes, integration showcases, partner spotlights — fetch that brand's profile to get their real colors, fonts, and company data instead of guessing.
 
 ```bash
-bun tools/fetch-brand.ts --name "Zendesk" --domain "zendesk.com"
+bun plugins/gtm/skills/graphics/tools/fetch-brand.ts --name "Zendesk" --domain "zendesk.com"
 ```
 
 The script returns a structured profile:
@@ -1033,7 +1033,7 @@ Always call `figma_navigate` to switch active file context before accessing node
 Use the fetch-logo script to find and download the SVG in a single call. It checks Simple Icons, Iconify, and Brandfetch in parallel and returns the best result:
 
 ```bash
-bun tools/fetch-logo.ts --name "Freshdesk" --domain "freshdesk.com" --output /tmp/freshdesk.svg
+bun plugins/gtm/skills/graphics/tools/fetch-logo.ts --name "Freshdesk" --domain "freshdesk.com" --output /tmp/freshdesk.svg
 ```
 
 The script outputs JSON to stdout with the SVG content, source, and metadata. Use `--prefer color` (default) for full-color logos or `--prefer mono` for monochrome. Use `--theme dark` for dark-mode variants.
@@ -1513,7 +1513,7 @@ Best for: illustrations, icons, logos, abstract art, decorative elements, backgr
    # Export an existing Figma asset to PNG first (via figma_execute):
    # node.exportAsync({ format: 'PNG', constraint: { type: 'SCALE', value: 2 } })
 
-   bun tools/quiver-generate.ts generate \
+   bun plugins/gtm/skills/graphics/tools/quiver-generate.ts generate \
      --prompt "Icon for AI-powered search" \
      --references /tmp/existing-brand-icon.png \
      --instructions "Match the visual style of the reference. Use #3784FF accent." \
@@ -1531,7 +1531,7 @@ Best for: illustrations, icons, logos, abstract art, decorative elements, backgr
 
 5. **Generate.** For novel graphics, generate 2-3 variants (`--n 3`) so the user can pick a direction:
    ```bash
-   bun tools/quiver-generate.ts generate \
+   bun plugins/gtm/skills/graphics/tools/quiver-generate.ts generate \
      --prompt "Abstract illustration of AI agents collaborating, flat geometric style" \
      --instructions "Colors: #FBF9F4 background, #3784FF accent, #231F20 primary. Minimal, clean." \
      --n 3 \
@@ -1583,7 +1583,7 @@ This hybrid approach is the right default for: slide deck illustrations, marketi
 **Vectorization workflow** (raster image to SVG):
 
 ```bash
-bun tools/quiver-generate.ts vectorize \
+bun plugins/gtm/skills/graphics/tools/quiver-generate.ts vectorize \
   --image screenshot.png \
   --output vectorized.svg
 ```
@@ -1659,7 +1659,7 @@ When routing says "both in parallel," the script generates on GPT and Gemini con
 
    ```bash
    # GPT Image (transparent element for Figma compositing)
-   bun tools/image-generate.ts generate \
+   bun plugins/gtm/skills/graphics/tools/image-generate.ts generate \
      --prompt "..." \
      --provider gpt \
      --quality high \
@@ -1667,14 +1667,14 @@ When routing says "both in parallel," the script generates on GPT and Gemini con
      --output hero-element.png
 
    # Gemini (3D hero with brand asset reference)
-   bun tools/image-generate.ts generate \
+   bun plugins/gtm/skills/graphics/tools/image-generate.ts generate \
      --prompt "..." \
      --provider gemini \
      --reference /tmp/brand-illustration.png \
      --output hero-3d.png
 
    # Both in parallel (50/50 quality scenarios — let user pick)
-   bun tools/image-generate.ts generate \
+   bun plugins/gtm/skills/graphics/tools/image-generate.ts generate \
      --prompt "..." \
      --provider both \
      --reference /tmp/brand-ref.png \
@@ -1702,13 +1702,13 @@ When routing says "both in parallel," the script generates on GPT and Gemini con
 
 ```bash
 # Replace background
-bun tools/image-generate.ts edit \
+bun plugins/gtm/skills/graphics/tools/image-generate.ts edit \
   --prompt "Replace the background with a gradient from cream #FBF9F4 to light blue" \
   --image original.png \
   --output new-background.png
 
 # Targeted edit with mask
-bun tools/image-generate.ts edit \
+bun plugins/gtm/skills/graphics/tools/image-generate.ts edit \
   --prompt "Fill the masked area with a potted plant" \
   --image room.png \
   --mask area-to-fill.png \
@@ -1718,7 +1718,7 @@ bun tools/image-generate.ts edit \
 **Transparent background** (GPT Image only — Gemini does not support native transparency):
 
 ```bash
-bun tools/image-generate.ts generate \
+bun plugins/gtm/skills/graphics/tools/image-generate.ts generate \
   --prompt "A glass hexagonal prism, studio lighting, isolated object" \
   --provider gpt \
   --background transparent \
@@ -1786,7 +1786,7 @@ Best for: 3D rendered objects with exact brand colors, parameterized batch rende
 
 2. **Render to PNG:**
    ```bash
-   bun tools/r3f/render.ts render \
+   bun plugins/gtm/skills/graphics/tools/r3f/render.ts render \
      --scene my-scene.tsx \
      --output 3d-element.png \
      --width 1280 --height 720 --scale 2
