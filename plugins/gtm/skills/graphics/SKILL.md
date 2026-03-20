@@ -1008,7 +1008,7 @@ If the script returns `"found": false` or SVG import fails, create a styled text
 
 The parent wrote the Build Spec with an initial Atom generation audit. The child's first job is to verify it's deep enough and further decompose where needed:
 
-1. **Read the Build Spec's atomAudit** (from state.json or the conversation). For each Tier 2 atom:
+1. **Read the Build Spec's atomAudit** (from the direction file's `spec` event, or the conversation in single-pass mode). For each Tier 2 atom:
    - Is it compound (contains 3+ distinct sub-elements)? If the Build Spec didn't decompose it, decompose it now — list every sub-element, classify each as Tier 1 or Tier 2.
    - For each Tier 2 sub-element, walk the decision tree in `references/method-selection.md`. Write the full audit row (Candidates / Selected / Why / Why NOT / Pipeline).
    - If a sub-element is itself compound, decompose again. Continue until every leaf has a single-method declaration.

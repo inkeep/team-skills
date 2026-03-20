@@ -36,7 +36,7 @@ The summary in SKILL.md covers the 6-step reasoning process and output format. T
 
 The build count is determined by the user's selection — the agent builds exactly what was picked.
 
-After the user selects, update `state.json` with `conceptsProposed`, then proceed to Step 2 (asset collection) and Phase 1 (diverge).
+After the user selects, proceed to Step 2 (asset collection) and Phase 1 (diverge).
 
 ---
 
@@ -143,8 +143,7 @@ Your direction slug is: immersive-slack-thread
 
 After all children complete:
 1. Read each `directions/<slug>.json` — children have already appended their timeline events (spec-update, build, feedback)
-2. Update `state.json` direction index — sync each direction's `status` from its direction file
-3. Present to user using the converge contract (see Interaction Model below)
+2. Present to user using the converge contract (see Interaction Model below)
 
 ---
 
@@ -168,7 +167,7 @@ The agent's job is always the same:
 2. **Build** — If ≥2 independent frames: spawn `/nest-claude` children (parallel). If 1 frame or orchestration: parent builds directly (sequential).
 3. **Verify** — Step 5 two-layer verification on every frame (children handle this internally when parallel; parent handles when sequential)
 4. **Organize** — Place in the correct Section (new section for new direction, next column for iteration)
-5. **Persist** — Append `feedback` event (with user's verdict and feedback) to the direction file. Update `state.json` direction index status if needed (approved/archived).
+5. **Persist** — Append `feedback` event (with user's verdict and feedback) to the direction file. Set `status` and `color` on the direction file if needed (approved/archived).
 6. **Present** — Direct the user to the canvas
 
 ### Sub-variant diversity
@@ -327,13 +326,13 @@ section.fills = [];
 
 ## State persistence
 
-Graphics exploration sessions can be 50+ turns. State is split into two layers: **shared context** (one file, parent-owned) and **per-direction state** (one file per direction, append-only timeline).
+Graphics exploration sessions can be 50+ turns. State is split into two layers: **shared context** (`state.json`, parent-owned, immutable after setup) and **per-direction state** (`directions/<slug>.json`, append-only timeline owned by the child).
 
 ### Directory structure
 
 ```
 tmp/graphics/<page-slug>/
-├── state.json              # Shared context only — Creative Brief, collected assets, Figma IDs, direction index
+├── state.json              # Shared context only — Creative Brief, collected assets, Figma IDs
 ├── assets/                 # Collected assets — logos, SVGs, references gathered by parent (starting kit, not prescriptive)
 │   ├── slack-logo.svg
 │   └── github-logo.svg
@@ -346,13 +345,14 @@ tmp/graphics/<page-slug>/
 
 The `<page-slug>` is derived from the Figma page name by slugifying: lowercase, spaces → hyphens, strip brackets/dates/special chars. Example: `[2026-03-18] Blog — Agents in Slack covers` → `2026-03-18-blog-agents-in-slack`.
 
+**Direction discovery:** To find all directions, list `directions/*.json`. To get the overview (name + status), read each file's top-level fields. No index needed — the filesystem is the index.
+
 ### state.json — shared context only
 
-`state.json` holds context shared across ALL directions. It is owned by the parent — children read it but never write to it. The direction index provides a quick overview of all directions and their current status.
+`state.json` holds context shared across ALL directions. It is owned by the parent — children read it but never write to it. It contains no direction-specific data and no mutable state.
 
 ```json
 {
-  "currentPhase": "iterate",
   "figma": {
     "fileKey": "S5kGTPZ0kSjmSxusJ56QJH",
     "pageId": "32:2"
@@ -378,16 +378,7 @@ The `<page-slug>` is derived from the Figma page name by slugifying: lowercase, 
     "fidelityLevel": "Level 3 — stylized mockup",
     "referenceDir": "tmp/reference/agents-in-slack/",
     "keyUIElements": ["Slack message thread", "bot avatar", "user avatar", "approve/deny buttons", "channel header"]
-  },
-  "conceptsProposed": [
-    { "name": "Slack UI mockup", "selected": true },
-    { "name": "Hub-and-spoke", "selected": false }
-  ],
-  "directions": {
-    "immersive-slack-thread": { "status": "active", "file": "directions/immersive-slack-thread.json" },
-    "multi-agent-cards": { "status": "archived", "file": "directions/multi-agent-cards.json" }
-  },
-  "lastUpdated": "2026-03-18T18:45:00Z"
+  }
 }
 ```
 
@@ -395,18 +386,18 @@ The `<page-slug>` is derived from the Figma page name by slugifying: lowercase, 
 
 Each direction gets its own file at `directions/<slug>.json`. This is the **single source of truth** for everything about a direction — concept, spec, builds, reviews, feedback. The parent creates it with the initial `spec` event. The child reads it, appends events, and writes it back. The reviewer reads it to get evaluation context.
 
-**The timeline is append-only.** The only mutable fields are `status` and `sectionNodeId` (set once). Everything else is captured as timeline events — nothing is overwritten or deleted.
+**The timeline is append-only.** The only mutable fields are `status`, `color`, and `sectionNodeId` (set once). Everything else is captured as timeline events — nothing is overwritten or deleted.
 
 **Four event types:**
 
 | Type | Writer | What it captures |
 |---|---|---|
-| `spec` | parent | The Build Spec — concept, end-state vision, success criteria, atom audit. Written once as the initial entry. Immutable. |
-| `spec-update` | child | A delta to the spec — what field changed, what it changed to, and why. Append as many as needed. |
-| `build` | child | A frame was built — iteration ID, Figma node ID, frame name, trigger. |
-| `feedback` | reviewer / user | Verdict + findings (reviewer) or verdict + feedback text (user). |
+| `spec` | parent | The full Build Spec — concept, end-state vision, success criteria, thumbnail sketch, recipes, atom audit with sub-element decomposition. Written once as the initial entry. Immutable. For split directions, includes `splitFrom` provenance. |
+| `spec-update` | child | A delta to the spec — what field changed, what it changed to, and why. Covers method changes, new/removed atoms, asset replacements, layout adjustments, recipe additions, criteria changes. |
+| `build` | child | A frame was built — iteration ID, Figma node ID, frame name, trigger, and instruction (what this iteration was responding to). |
+| `feedback` | reviewer / user | Reviewer: verdict + findings + revision instructions. User: verdict + feedback text. |
 
-**Reading pattern for the child:** Last `spec` event = the brief. All `spec-update` events = adjustments. Last `feedback` event = what to act on. All `build` events = previous iterations for positioning.
+**Reading pattern for the child:** `spec` event = the brief. All `spec-update` events = adjustments. Last `feedback` event = what to act on. All `build` events = previous iterations for positioning.
 
 ```json
 {
@@ -414,36 +405,48 @@ Each direction gets its own file at `directions/<slug>.json`. This is the **sing
   "name": "Immersive Slack Thread",
   "sectionNodeId": "61:390",
   "status": "active",
+  "color": "default",
 
   "timeline": [
     { "type": "spec", "by": "parent",
       "data": {
         "concept": { "name": "Immersive Slack Thread", "visual": "Stylized Slack message thread with @Inkeep responding", "whyItWorks": "Product-as-marketing — shows the feature in action" },
-        "endStateVision": "A warm cream canvas with a large, slightly rotated Slack thread mockup...",
+        "endStateVision": "A warm cream canvas with a large, slightly rotated Slack thread mockup showing an @Inkeep mention, bot response with tool approval buttons, and a subtle dot-grid background texture",
         "successCriteria": [
-          "The Slack mockup looks like a real Slack conversation",
+          "The Slack mockup looks like a real Slack conversation — not rectangles with labels",
           "The heading reads clearly at 300px thumbnail width",
-          "The Approve/Deny buttons are recognizable Slack Block Kit style"
+          "The Approve/Deny buttons are recognizable Slack Block Kit style",
+          "Background has visible texture (not a flat solid fill)"
         ],
+        "thumbnailSketch": "At 400px: heading dominates left, white mockup card visible right, badge whispers top-left, cream background with dot grid barely visible",
+        "recipes": { "productMockup": true, "badge": true, "codeAsVisual": false, "metricCallout": false, "logoComposition": true, "quoteCard": false },
         "atomAudit": {
           "tier1": ["headline → Figma", "badge → Figma", "logo (Inkeep) → Brand Assets clone"],
           "tier2": [
-            { "atom": "Slack thread mockup", "candidates": ["Figma native", "Image Gen"], "selected": "Figma native", "why": "Compound element requiring editable sub-elements" }
+            { "atom": "Slack thread mockup", "candidates": ["Figma native", "Image Gen"], "selected": "Figma native", "why": "Compound element requiring editable sub-elements", "whyNotRunnerUp": "Image Gen: raster, sub-elements not independently editable", "pipeline": "—" }
+          ],
+          "subElements": [
+            { "parent": "Slack thread mockup", "element": "User avatar", "tier": 2, "method": "Quiver portrait", "why": "Organic illustrated style matching brand; Figma circles lack personality", "visualRef": "—", "criterion": "Illustrated, not a colored circle" },
+            { "parent": "Slack thread mockup", "element": "Inkeep bot avatar", "tier": 1, "method": "Brand Assets clone", "visualRef": "—", "criterion": "Canonical asset" },
+            { "parent": "Slack thread mockup", "element": "Channel header bar", "tier": 1, "method": "Figma native", "visualRef": "tmp/reference/slack-channel.png", "criterion": "Slack-accurate" },
+            { "parent": "Slack thread mockup", "element": "Approve/Deny buttons", "tier": 1, "method": "Figma native (Slack green)", "visualRef": "tmp/reference/slack-buttons.jpg", "criterion": "Slack Block Kit style" },
+            { "parent": "Slack thread mockup", "element": "Message text", "tier": 1, "method": "Figma text", "visualRef": "—", "criterion": "Realistic agent response content" }
           ]
         }
       }
     },
 
     { "type": "spec-update", "by": "child",
-      "data": { "field": "atomAudit.userAvatar.method", "to": "Quiver illustration", "reason": "Figma circle looked flat — organic portrait matches brand better" } },
+      "data": { "field": "atomAudit.subElements.userAvatar.method", "to": "Quiver illustration", "reason": "Figma circle looked flat — organic portrait matches brand better" } },
 
     { "type": "build", "by": "child",
-      "data": { "id": "1A", "frameNodeId": "32:152", "frameName": "Blog/Cover/1A-Immersive-Thread", "trigger": "initial-diverge" } },
+      "data": { "id": "1A", "frameNodeId": "32:152", "frameName": "Blog/Cover/1A-Immersive-Thread", "trigger": "initial-diverge", "instruction": null } },
 
     { "type": "feedback", "by": "reviewer",
       "data": { "verdict": "NEEDS REVISION", "findings": [
-        { "issue": "Arrows form sequential cycle instead of converging to center", "severity": "critical" }
-      ] } },
+        { "issue": "Arrows form sequential cycle instead of converging to center agent", "severity": "critical", "evidence": "4 independent arcs connect nodes clockwise — none point to/from center hub" },
+        { "issue": "Arrow curves have inconsistent radii", "severity": "minor", "evidence": "Slack→Tickets arc is ~40% wider than GitHub→KB arc" }
+      ], "revisionInstructions": ["Redraw arrows converging to center", "Normalize arc radius across all connectors"] } },
 
     { "type": "feedback", "by": "reviewer",
       "data": { "verdict": "PASS" } },
@@ -452,10 +455,10 @@ Each direction gets its own file at `directions/<slug>.json`. This is the **sing
       "data": { "verdict": "needs-fixes", "feedback": "Logo is wrong, avatar looks generic" } },
 
     { "type": "spec-update", "by": "child",
-      "data": { "field": "atomAudit.botAvatar.method", "to": "Brand Assets clone", "reason": "User feedback — use canonical asset" } },
+      "data": { "field": "atomAudit.subElements.botAvatar.method", "to": "Brand Assets clone", "reason": "User feedback — use canonical asset instead of approximation" } },
 
     { "type": "build", "by": "child",
-      "data": { "id": "1A-v2", "frameNodeId": "33:335", "frameName": "Blog/Cover/1A-v2", "trigger": "user-feedback" } },
+      "data": { "id": "1A-v2", "frameNodeId": "33:335", "frameName": "Blog/Cover/1A-v2", "trigger": "user-feedback", "instruction": "Fix logo with real SVG, use Inkeep icon for bot avatar" } },
 
     { "type": "feedback", "by": "reviewer",
       "data": { "verdict": "PASS" } },
@@ -475,20 +478,29 @@ Each direction gets its own file at `directions/<slug>.json`. This is the **sing
 | `archived` | Direction was discarded |
 | `error` | Child failed after 3 reviewer iterations |
 
+### Section color coding
+
+The `color` field on the direction file maps to Figma Section colors:
+
+| Color | Meaning |
+|---|---|
+| `default` | Active exploration (no fill) |
+| `green` | Selected finalist |
+| `gray` | Archived / discarded |
+
 ### When state is updated
 
 | Event | Where | What happens |
 |---|---|---|
 | Step 1c complete | `state.json` | Write `productContext` |
-| Phase 0 complete | `state.json` | Write `conceptsProposed` with selections |
-| Page + Sections created | `state.json` + direction files | Write `figma.pageId` to state.json. Create direction files with `sectionNodeId` and initial `spec` event |
+| Page + Sections created | direction files | Create direction files with `sectionNodeId` and initial `spec` event. Write `figma.pageId` to state.json |
 | Child adjusts spec | direction file | Child appends `spec-update` event |
 | Frame built and verified | direction file | Child appends `build` event |
-| Reviewer returns verdict | direction file | Child appends `feedback` event (with findings) |
-| User gives feedback | direction file + `state.json` | Parent appends `feedback` event to direction file. Updates direction status in state.json index if needed |
-| User approves | direction file + `state.json` | Parent appends `feedback` event with `"verdict": "approved"`. Sets status to `approved` in both |
-| User archives a direction | `state.json` + direction file | Sets `status` to `archived` in both |
-| Direction splits | `state.json` + new direction files | Create new direction files with `spec` events. Add entries to state.json index |
+| Reviewer returns verdict | direction file | Child appends `feedback` event (with findings + revision instructions) |
+| User gives feedback | direction file | Parent appends `feedback` event to direction file |
+| User approves | direction file | Parent appends `feedback` event with `"verdict": "approved"`. Sets `status` to `approved`, `color` to `green` |
+| User archives a direction | direction file | Sets `status` to `archived`, `color` to `gray` |
+| Direction splits | new direction files | Create new direction files with `spec` events (including `splitFrom` provenance). Original direction gets a `feedback` event with `"verdict": "split"` |
 
 ### Session detection and re-entry
 
@@ -497,8 +509,9 @@ Each direction gets its own file at `directions/<slug>.json`. This is the **sing
 > "I found an existing graphics session for 'Agents in Slack covers' with 3 directions built. Resume that project, or start fresh?"
 
 **On re-entry after context compression**, the agent:
-1. Reads `state.json` — knows current phase, direction index with statuses
-2. Reads direction files for active directions — the timeline has the full history (specs, builds, feedback)
-3. Re-anchors to the Creative Brief (in state.json) — verifies work still aligns with messaging goals
-4. Checks Figma canvas via `figma_get_status` — verifies canvas matches state
-5. Identifies next action: find directions with `status: active` where the latest `feedback` event has `"verdict": "needs-fixes"`, or where no `build` event exists yet
+1. Reads `state.json` — shared context (Creative Brief, assets, Figma IDs)
+2. Lists `directions/*.json` — reads each file's `status` + `name` for the overview
+3. Reads direction files for active directions — the timeline has the full history (specs, builds, feedback)
+4. Re-anchors to the Creative Brief (in state.json) — verifies work still aligns with messaging goals
+5. Checks Figma canvas via `figma_get_status` — verifies canvas matches state
+6. Identifies next action: find directions with `status: active` where the latest `feedback` event has `"verdict": "needs-fixes"`, or where no `build` event exists yet
