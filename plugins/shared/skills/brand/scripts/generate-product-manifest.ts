@@ -2,7 +2,7 @@
 /**
  * generate-product-manifest.ts
  *
- * Deterministically extracts product design tokens from the agents-manage-ui
+ * Deterministically extracts product tokens from the agents-manage-ui
  * codebase via GitHub API and outputs a markdown manifest for AI agents
  * creating product-representative graphics.
  *
@@ -615,9 +615,9 @@ function emitTable(headers: string[], rows: string[][]) {
 
 // --- Header ---
 
-emit('# Inkeep Product Design Tokens');
+emit('# Inkeep Product Tokens');
 emit();
-emit('Product UI tokens extracted from `agents-manage-ui` source code. Use these when creating product mockups (fidelity levels 1–3). For marketing tokens (the surround, headlines, backgrounds), use `tokens/marketing.md`.');
+emit('Product tokens extracted from `agents-manage-ui` source code. Use these when creating product mockups (fidelity levels 1–3). For marketing tokens (the surround, headlines, backgrounds), use `tokens/marketing.md`.');
 emit();
 emit('> **Two-layer rule:** Inside the product mockup → these tokens. Outside the mockup → marketing tokens from `tokens/marketing.md`. See `references/product-representation.md` for the decision framework.');
 emit();

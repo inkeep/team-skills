@@ -65,7 +65,7 @@ Load the reference files relevant to what you're building:
 | Any layout or arrangement decisions (almost always) | `references/composition-guide.md` — Z-pattern, split layout, visual hierarchy, color restraint, edge bleed, content coverage, brand system consistency |
 | Product mockups, code blocks, badges, metric callouts, logos, quotes, headers, buttons | `references/element-patterns.md` — reusable element recipes with exact brand styling |
 | Illustrations, icons, diagrams, or gradient backgrounds | `references/brand-guide.md` — illustration style, icon rules, diagram rules, gradient tiers, decorative elements, what feels dated |
-| Product screenshots or UI representations | `references/product-representation.md` — fidelity spectrum (6 levels), decision framework, cleaning-up techniques, brand-product bridging |
+| Product screenshots and mockups | `references/product-representation.md` — fidelity spectrum (6 levels), decision framework, cleaning-up techniques, brand-product bridging |
 | Charts, graphs, or data visualization | `references/data-visualization.md` — data series colors, labeling standards, chart type selection, data integrity rules |
 | Animation or motion (video scenes, slide transitions) | `references/motion-philosophy.md` — principles, do's/don'ts, standard motion patterns |
 | Marketing website copy (headlines, CTAs, landing pages) | `references/copy-patterns.md` — headline formulas, CTA conventions, value framing hierarchy, use case page patterns |
@@ -76,7 +76,7 @@ Load the reference files relevant to what you're building:
 All token values and brand assets live in this skill:
 
 - `tokens/marketing.md` — marketing brand tokens (colors, typography, spacing, radius, shadows) from Figma
-- `tokens/product.md` — product UI tokens (semantic colors, component variants, canvas tokens) from `agents-manage-ui`
+- `tokens/product.md` — product tokens (semantic colors, component variants, canvas tokens) from `agents-manage-ui`
 - `tokens/figma.json` — Figma component keys and node IDs (for `importComponentByKeyAsync`)
 - `assets/` — SVGO-optimized SVGs and PNGs organized by Figma section hierarchy (`logos/`, `icon-set/`, `illustrations/`, `decorative-and-backgrounds/`, `fonts/`)
 

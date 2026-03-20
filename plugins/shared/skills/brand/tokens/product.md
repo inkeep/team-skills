@@ -1,6 +1,6 @@
-# Inkeep Product Design Tokens
+# Inkeep Product Tokens
 
-Product UI tokens extracted from `agents-manage-ui` source code. Use these when creating product mockups (fidelity levels 1–3). For marketing tokens (the surround, headlines, backgrounds), use `tokens/marketing.md`.
+Product tokens extracted from `agents-manage-ui` source code. Use these when creating product mockups (fidelity levels 1–3). For marketing tokens (the surround, headlines, backgrounds), use `tokens/marketing.md`.
 
 > **Two-layer rule:** Inside the product mockup → these tokens. Outside the mockup → marketing tokens from `tokens/marketing.md`. See `references/product-representation.md` for the decision framework.
 

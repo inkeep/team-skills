@@ -28,6 +28,8 @@ interface KeywordResult {
   id: string;
   launchDir: string;
   date: string;
+  startedAt: string | null;
+  lastActiveAt: string | null;
   messageCount: number;
   compactionCount: number;
   branches: string[];
@@ -209,6 +211,8 @@ async function main() {
         id: sessionId,
         launchDir: "",
         date: sr.date,
+        startedAt: null,
+        lastActiveAt: null,
         messageCount: 0,
         compactionCount: 0,
         branches: [],
@@ -247,6 +251,8 @@ async function main() {
           const full = indexById.get(entry.id);
           if (full) {
             entry.launchDir = full.launchDir;
+            entry.startedAt = full.startedAt;
+            entry.lastActiveAt = full.lastActiveAt;
             entry.messageCount = full.messageCount;
             entry.compactionCount = full.compactionCount;
             entry.branches = full.branches;
@@ -288,6 +294,8 @@ async function main() {
     id: r.id,
     launchDir: r.launchDir,
     date: r.date,
+    startedAt: r.startedAt,
+    lastActiveAt: r.lastActiveAt,
     messageCount: r.messageCount,
     compactionCount: r.compactionCount,
     branches: r.branches,

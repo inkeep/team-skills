@@ -134,8 +134,10 @@ For each result, produce:
 
 **Started as:** {natural language paraphrase of firstUserMessages — not raw text dump}
 **Left off at:** {natural language paraphrase of lastUserMessages — what state was the work in?}
-**Context:** {launchDir} | {branches} | {date} | {messageCount} messages | {compactionCount} compactions
+**Context:** {launchDir} | {branches} | {messageCount} messages | {compactionCount} compactions
 **Skills used:** {skills}
+**Created at:** {startedAt — human-readable timestamp}
+**Updated at:** {lastActiveAt — human-readable timestamp}
 **PRs:** {prs} | **Files modified:** {count}
 
 ```bash
@@ -179,6 +181,8 @@ Each line is a JSON object with `type` (progress, user, assistant, system, file-
 
 | Field | Source | Why it matters |
 |---|---|---|
+| `startedAt` | First timestamp in session | When the conversation was created |
+| `lastActiveAt` | Last timestamp in session | When the conversation was last active |
 | `firstUserMessages` | First 3 user messages | What the conversation started as |
 | `lastUserMessages` | Last 3 user messages | Where the conversation left off (handles topic drift) |
 | `branches` | `gitBranch` field on every entry | Tracks branch changes mid-session |

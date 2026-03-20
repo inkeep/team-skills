@@ -111,7 +111,9 @@ When displaying customer/partner logos in "Trusted by" sections (marquees, grids
 
 ## Product mockup treatment
 
-When showing product UI in any graphic:
+**Fidelity scope: Level 3 (stylized product mockup).** For Levels 1-2 (product screenshots), apply product tokens faithfully but skip the stylization treatment (rotation, shadow, bleed). See `product-representation.md` for the fidelity decision.
+
+When building a product mockup:
 
 1. **Float the panel** — slight rotation (2-5°) or perspective adds depth
 2. **Make it large** — the mockup should fill 50-60% of the canvas, not sit as a small card in the corner
@@ -122,7 +124,7 @@ When showing product UI in any graphic:
 7. **Overlapping panels** — for multi-feature posts, layer 2-3 panels at different depths (Dub.co technique)
 8. **Enlarge internals for readability** — product UI elements inside the mockup should be **1.5-2x their actual product size**. A 36px button becomes 54-72px. 14px body text becomes 20-28px. The mockup should look like the product but at "poster scale" — recognizable at thumbnail, not pixel-accurate. Think of how movie UIs use the right typeface and colors but at sizes the audience can read from their seats.
 
-**Never use raw product screenshots.** Always stylize — float, angle, add shadow, round corners.
+**For product mockups (Level 3): always apply the full treatment** — float, angle, shadow, round corners. Product screenshots (Levels 1-2) use product tokens faithfully but skip the full treatment — see `product-representation.md` for when each level is appropriate. (Exception: the Product-as-marketing pattern below applies light styling to screenshots that serve as the entire visual.)
 
 ---
 

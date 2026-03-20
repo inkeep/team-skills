@@ -593,6 +593,8 @@ function searchIndex(args: string[]) {
     id: e.id,
     launchDir: e.launchDir,
     date: (e.lastActiveAt || "").slice(0, 10),
+    startedAt: e.startedAt,
+    lastActiveAt: e.lastActiveAt,
     messageCount: e.messageCount,
     compactionCount: e.compactionCount,
     branches: e.branches,

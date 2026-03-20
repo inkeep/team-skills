@@ -35,7 +35,7 @@ env -u CLAUDECODE -u CLAUDE_CODE_ENTRYPOINT claude \
 
 | Flag | Why it's required |
 |---|---|
-| `env -u CLAUDECODE -u CLAUDE_CODE_ENTRYPOINT` | Claude Code sets these env vars on startup and refuses to launch if they're present. Unsetting them is what makes nesting possible. |
+| `env -u CLAUDECODE -u CLAUDE_CODE_ENTRYPOINT` | Claude Code sets these env vars on startup. When inherited by a child `claude -p` process, they can cause the child to **hang silently** — the process starts but never connects to the API ([open issue](https://github.com/anthropics/claude-code/issues/26190)). Unsetting them prevents this. |
 | `-p "..."` | Non-interactive mode. The prompt is the child's sole instruction. |
 | `--dangerously-skip-permissions` | No TTY exists for permission prompts in `-p` mode. Without this, the child hangs waiting for confirmation. |
 | `--max-turns N` | **Non-negotiable safety limit.** Prevents runaway children. Set at EVERY nesting level. 50-100 for focused tasks, 25-50 for simple tasks. |
@@ -67,7 +67,7 @@ env -u CLAUDECODE -u CLAUDE_CODE_ENTRYPOINT claude \
 | `--agent <name>` | Run as a specific agent defined in `.claude/agents/*.md`. The agent's markdown body becomes the session's system prompt. |
 | `--no-session-persistence` | Don't save session to disk. Use for ephemeral children to avoid disk clutter. |
 | `--max-budget-usd N` | Cost cap per child. Prevents expensive runaways. |
-| `--json-schema '{"type":"object",...}'` | Validate child's final response against a JSON Schema. Use with `--output-format json` for typed, parseable results. |
+| `--json-schema '{"type":"object",...}'` | Validate child's final response against a JSON Schema. Use with `--output-format json`. Structured data lands in the `structured_output` field (not `result`). |
 | `--resume <session-id>` | Continue a previous session with its full context. Use for multi-phase workflows where a child needs to pick up where it left off. |
 
 ---
@@ -165,6 +165,8 @@ With `--output-format json`, the child's final output is a JSON object:
 
 ```json
 {
+    "type": "result",
+    "subtype": "success",
     "result": "The child's final text response",
     "session_id": "abc-123-...",
     "total_cost_usd": 0.42,
@@ -173,7 +175,17 @@ With `--output-format json`, the child's final output is a JSON object:
 }
 ```
 
-Extract `result` for the child's findings. Use `session_id` with `--resume` if you need to continue the session.
+Extract `result` for the child's text findings. Use `session_id` with `--resume` if you need to continue the session. Use `subtype` to detect exit reason (see exit detection table below).
+
+When using `--json-schema`, the validated structured data is in `structured_output` (not `result`, which will be empty):
+
+```bash
+# Text result (no schema)
+jq -r '.result'
+
+# Structured output (with --json-schema)
+jq '.structured_output'
+```
 
 ### File-based IPC (recommended for complex tasks)
 
@@ -496,12 +508,12 @@ A child spawned with `env -u ... claude -p` is fundamentally **fire-and-read**: 
 
 The child has no way to signal "I'm stuck" in real-time. It keeps going until it hits `--max-turns` or `--max-budget-usd`, then exits. The parent discovers what happened after the fact:
 
-| Exit reason | How parent detects it | JSON output field |
+| Exit reason | How parent detects it | JSON `subtype` field |
 |---|---|---|
-| Natural completion | Process exits 0 | `result.subtype: "success"` |
-| Ran out of turns | Process exits | `result.subtype: "error_max_turns"` |
-| Budget exhausted | Process exits | `result.subtype: "error_max_budget_usd"` |
-| Crash / error | Process exits non-zero | `result.subtype: "error_during_execution"` |
+| Natural completion | Process exits 0 | `"success"` |
+| Ran out of turns | Process exits | `"error_max_turns"` |
+| Budget exhausted | Process exits | `"error_max_budget_usd"` |
+| Crash / error | Process exits non-zero | `"error_during_execution"` |
 | Child wrote "I'm stuck" | Parent reads output file after exit | Grep output for blocker keywords |
 
 ### Five interaction patterns (from simplest to most capable)
