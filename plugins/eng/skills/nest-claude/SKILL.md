@@ -299,6 +299,24 @@ Write context to a known path; instruct the child to read it in the prompt. Alre
 | Context is large, dynamic, or per-child | File-based — write to disk, child reads it |
 | Children need different skills for the same task | Multiple agent files, each with their own `skills:` list |
 
+### Headless mode for loaded skills (mandatory)
+
+Children run non-interactively — there is no human to answer prompts, confirm decisions, or select options. Many skills have interactive gates by default (e.g., `/research` pauses for rubric confirmation, `/spec` presents routing options, `/analyze` may ask clarifying questions).
+
+**When a child loads any skill that supports a headless/non-interactive mode, it must use that mode.** Without it, the skill will try to prompt a human who isn't there — the child will either hang, waste turns waiting for input, or produce degraded output.
+
+**How to signal headless mode:**
+
+| Method | How |
+|---|---|
+| In the `-p` prompt | Include `--headless` in the skill invocation: `"Load /research --headless and investigate..."` |
+| In `--append-system-prompt` | `"When loading skills, always pass --headless."` |
+| In an agent's body | Add to the agent's markdown: `"You are running non-interactively. When invoking skills, always use --headless mode."` |
+
+The `--headless` flag is the standard convention across skills for signaling non-interactive execution. Skills that support it will auto-confirm interactive gates, auto-select routing decisions, and skip follow-up prompts — while preserving all quality gates (validation, evidence standards, etc.).
+
+**If a skill does not have a headless mode,** it may still work — many skills have no interactive gates. But if the child gets stuck waiting for input that never comes, the symptom is wasted turns or empty output. The fix is to either add `--headless` support to that skill or work around the interactive step in the prompt.
+
 ---
 
 ## Nesting depth
@@ -375,15 +393,16 @@ git worktree remove "/tmp/worktree-child-$i"
 
 ## Crafting good child prompts
 
-Each child has zero context from the parent. The prompt must be self-contained.
+Each child has zero context from the parent. The prompt must be self-contained. **If the prompt is incomplete, the child will silently fabricate what's missing** — it cannot ask you for clarification. The most damaging gaps: missing goals (child executes the wrong task), missing constraints (child takes a wrong approach), and missing inputs (child fabricates file paths, API shapes, or prior findings).
 
 **Include:**
 - The full task description
 - Any file paths to read
-- Output format expectations
+- Output format expectations — ask children to cite what they read or verified vs. what they inferred, so you can evaluate reliability when synthesizing across children (information degrades at agent boundaries; citations let you verify)
 - Where to write results (file path)
 - What "done" means
 - What to do if stuck
+- Headless flags for any skills the child will load (see "Headless mode for loaded skills" above)
 
 **Avoid:**
 - Referencing "the previous conversation" or "what we discussed"
@@ -406,11 +425,13 @@ You are performing [task type] on [subject].
 Write your findings to [file path].
 Format: [markdown/json/etc]
 Include a ## Summary section at the top with key findings.
+For each finding, note whether you verified it directly (read source code, ran a command, checked docs) or inferred it. This helps downstream synthesis.
 
 ## Constraints
 - Do not modify any source files
 - Focus only on [scope]
 - If blocked, write what you found so far and note the blocker
+- When loading skills, use --headless mode (you are running non-interactively)
 ```
 
 ---
