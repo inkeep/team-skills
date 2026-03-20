@@ -78,14 +78,14 @@ env -u CLAUDECODE -u CLAUDE_CODE_ENTRYPOINT claude \
 Your direction slug is: immersive-slack-thread
 
 1. Load '/brand' skill and '/graphics' skill.
-2. Read these P0 files BEFORE building (they are blocking — you cannot produce quality output without them):
+2. Read state.json for shared context (Creative Brief, collected assets, Figma IDs, product context, format)
+3. Read these P0 files BEFORE building (they are blocking — you cannot produce quality output without them):
    - references/craft-elevation.md (craft quality: elevation strategies, AI failure modes, visual depth stack)
    - references/method-selection.md (atom method: decision tree for choosing Figma vs Quiver vs Image Gen vs etc.)
    - tools/figma-console.md (Figma recipes: connectors, auto-layout, patterns, MCP tool reference)
    - references/figma-patterns.md (token code: how to bind brand variables in Figma)
    - formats/<format>.md where <format> comes from state.json (canvas size, typography tiers, design rules for this specific medium)
    Then read content-type files (content-types/*.md) and tool-specific files (tools/quiver.md, tools/openai-image.md, etc.) as your Build Spec's atom audit dictates — only load what your atoms actually need.
-3. Read state.json for shared context (Creative Brief, collected assets, Figma IDs, product context)
 4. Read directions/immersive-slack-thread.json — this is YOUR direction file. It has your concept, Build Spec, sectionNodeId, and full timeline of what's happened so far. The spec and assets are the parent's best starting point — NOT a prescription. You have full authority to adjust the spec, source better assets, or omit what doesn't serve your frame.
 5. CRITICAL: ALL Figma nodes you create must go inside YOUR Section (sectionNodeId from your direction file). Never create at page root. Never touch other Sections. Use getNodeByIdAsync(sectionNodeId) to scope all operations.
 6. Build the frame in your Section, run Phase B-E (decomposition, build, elevation)
