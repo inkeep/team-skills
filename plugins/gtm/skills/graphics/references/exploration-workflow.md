@@ -77,7 +77,12 @@ env -u CLAUDECODE -u CLAUDE_CODE_ENTRYPOINT claude \
     -p "Your state directory is: tmp/graphics/<page-slug>/
 Your direction slug is: immersive-slack-thread
 
-1. Load '/brand' skill and '/graphics' skill
+1. Load '/brand' skill and '/graphics' skill. Then read these reference files from the graphics skill — they contain the craft knowledge, code recipes, and failure modes you need throughout the build:
+   - references/craft-elevation.md (AI failure modes, elevation strategies, spatial fidelity checks)
+   - references/method-selection.md (per-atom method decision tree)
+   - references/figma-patterns.md (token binding, auto-layout patterns)
+   - tools/figma-console.md (Figma API recipes, SVG centering, connector patterns)
+   Reference brand and graphics guidance continuously as you build — not just at the start.
 2. Read state.json for shared context (Creative Brief, collected assets, Figma IDs, product context)
 3. Read directions/immersive-slack-thread.json — this is YOUR direction file. It has your concept, Build Spec, sectionNodeId, and full timeline of what's happened so far. The spec and assets are the parent's best starting point — NOT a prescription. You have full authority to adjust the spec, source better assets, or omit what doesn't serve your frame.
 4. CRITICAL: ALL Figma nodes you create must go inside YOUR Section (sectionNodeId from your direction file). Never create at page root. Never touch other Sections. Use getNodeByIdAsync(sectionNodeId) to scope all operations.
@@ -98,7 +103,12 @@ Your direction slug is: immersive-slack-thread
 
 1. Read `state.json` for shared context → Creative Brief, collected assets, Figma file key, product context
 2. Read `directions/<your-slug>.json` → your direction file. The latest `spec` event is your Build Spec. Scan `feedback` events for what to act on. Scan `build` events for previous iterations.
-3. Load `/brand` skill and `/graphics` skill
+3. Load `/brand` skill and `/graphics` skill. Read the key reference files from the graphics skill — these contain craft knowledge, code recipes, and failure modes you need throughout:
+   - `references/craft-elevation.md` (AI failure modes, elevation strategies, spatial fidelity)
+   - `references/method-selection.md` (per-atom method decision tree)
+   - `references/figma-patterns.md` (token binding, auto-layout patterns)
+   - `tools/figma-console.md` (Figma API recipes, SVG centering, connector patterns)
+   Reference brand and graphics guidance continuously as you build — not just at the start.
 4. **Autonomy — you own this direction file.** The parent's `spec` event is a starting point, not a contract. You have full authority to:
    - **Adjust the spec** — change composition, layout, success criteria, atom methods, or anything else that serves the direction better. Append a `spec-update` event for each adjustment with what you changed and why.
    - **Replace, augment, or omit assets** — source different icons from the brand library, create new illustrations via Quiver, fetch additional third-party logos, or skip assets that don't strengthen the composition. Record in `spec-update` events.
