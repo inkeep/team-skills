@@ -527,22 +527,40 @@ function searchIndex(args: string[]) {
       // Flag-only search — all passing entries get score 1
       score = 1;
     } else {
-      for (const term of textTerms) {
-        // Count occurrences across fields, weight by field type
-        const lastMsgText = entry.lastUserMessages.join(" ").toLowerCase();
-        const firstMsgText = entry.firstUserMessages.join(" ").toLowerCase();
-        const summaryText = entry.continuationSummaries.join(" ").toLowerCase();
+      // OR-with-scoring: each term contributes independently, weighted by field
+      // Sessions matching more terms rank higher, but partial matches still appear
+      const lastMsgText = entry.lastUserMessages.join(" ").toLowerCase();
+      const firstMsgText = entry.firstUserMessages.join(" ").toLowerCase();
+      const summaryText = entry.continuationSummaries.join(" ").toLowerCase();
+      const structuredText = [
+        ...entry.skills,
+        ...entry.filesModified,
+        ...entry.prs,
+        ...entry.repos,
+        ...entry.branches,
+        ...entry.worktrees,
+      ]
+        .join(" ")
+        .toLowerCase();
 
-        if (lastMsgText.includes(term)) score += 3; // highest: where they left off
-        if (firstMsgText.includes(term)) score += 2; // next: where they started
-        if (summaryText.includes(term)) score += 2; // continuation summaries
-        if (
-          entry.skills.some((s) => s.toLowerCase().includes(term)) ||
-          entry.filesModified.some((f) => f.toLowerCase().includes(term)) ||
-          entry.prs.some((p) => p.toLowerCase().includes(term)) ||
-          entry.branches.some((b) => b.toLowerCase().includes(term))
-        )
-          score += 1;
+      let termsMatched = 0;
+      for (const term of textTerms) {
+        let termScore = 0;
+        if (lastMsgText.includes(term)) termScore += 3;
+        if (firstMsgText.includes(term)) termScore += 2;
+        if (summaryText.includes(term)) termScore += 2;
+        if (structuredText.includes(term)) termScore += 1;
+
+        if (termScore > 0) termsMatched++;
+        score += termScore;
+      }
+
+      // Bonus for multi-term coverage: matching 3/3 terms is much better than 1/3
+      // This makes "figma hook port" rank a 3-term match above a 1-term match
+      // even if the 1-term match has a higher per-term weight
+      if (textTerms.length > 1 && termsMatched > 1) {
+        const coverage = termsMatched / textTerms.length; // 0..1
+        score = Math.round(score * (1 + coverage)); // up to 2x boost at full coverage
       }
     }
 
