@@ -107,8 +107,8 @@ export function IconCard({
             cursor-pointer transition-all duration-150 p-1.5
             ${darkBg ? "bg-secondary hover:bg-secondary/80" : "bg-card hover:bg-accent"}
             ${selected
-              ? "ring-2 ring-primary ring-offset-2 ring-offset-transparent"
-              : "hover:ring-1 hover:ring-border"
+              ? "outline outline-1 outline-[#3784FF] -outline-offset-1"
+              : "hover:outline hover:outline-1 hover:outline-border hover:-outline-offset-1"
             }
           `}
         >
