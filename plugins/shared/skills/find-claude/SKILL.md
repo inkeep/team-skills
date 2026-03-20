@@ -86,6 +86,17 @@ Use flags (`--skill`, `--pr`, `--branch`, `--file`, `--worktree`, `--repo`, `--t
 | "where we were debugging doltgres timestamp issues" | `--skill eng:debug "doltgres timestamp"` |
 | "all conversations that touched manage-schema.ts" | `--file manage-schema.ts` |
 
+**Retry loop — reformulate if results are weak:**
+
+If the first search returns no results or nothing that looks relevant (low scores, wrong topics):
+
+1. **Broaden the query** — drop the least distinctive term. `"figma hook port"` → `"figma hook"` → `"figma"`
+2. **Try synonyms or related terms** — `"auth"` → `"authentication"`, `"credential"`, `"login"`
+3. **Switch from text to flags** — if you know the topic involved a specific skill, branch, or file, try a flag-only search
+4. **Try grep fallback (Step 3)** — searches full JSONL content, catches things neither engine indexed
+
+Do up to 3 reformulations before falling back to grep. Each retry should change strategy, not just repeat.
+
 **How scoring works:**
 - **Keyword score:** `lastUserMessages` (3x), `firstUserMessages` (2x), `continuationSummaries` (2x), structured fields (1x)
 - **Semantic score:** Cosine similarity from local MiniLM-L6 embeddings (384-dim) against every user/assistant exchange
