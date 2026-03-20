@@ -80,12 +80,22 @@ Your direction slug is: immersive-slack-thread
 1. Load '/brand' skill and '/graphics' skill.
 2. Read state.json for shared context (Creative Brief, collected assets, Figma IDs, product context, format)
 3. Read these P0 files BEFORE building (they are blocking — you cannot produce quality output without them):
+   **From /graphics skill:**
    - references/craft-elevation.md (craft quality: elevation strategies, AI failure modes, visual depth stack)
    - references/method-selection.md (atom method: decision tree for choosing Figma vs Quiver vs Image Gen vs etc.)
    - tools/figma-console.md (Figma recipes: connectors, auto-layout, patterns, MCP tool reference)
    - references/figma-patterns.md (token code: how to bind brand variables in Figma)
    - formats/<format>.md where <format> comes from state.json (canvas size, typography tiers, design rules for this specific medium)
-   Then read content-type files (content-types/*.md) and tool-specific files (tools/quiver.md, tools/openai-image.md, etc.) as your Build Spec's atom audit dictates — only load what your atoms actually need.
+   **From /brand skill:**
+   - references/composition-guide.md (layout patterns: Z-pattern, split, hierarchy, color restraint, edge bleed, content coverage)
+   - references/element-patterns.md (element recipes: mockup treatment, badges, code blocks, metric callouts, logos, headers)
+   - references/brand-guide.md (illustration style, diagram rules, gradient tiers, decorative elements)
+   - tokens/marketing.md (exact token values: colors, typography, spacing, radius, shadows)
+   Then read conditional files as your Build Spec dictates:
+   - Graphics content-types (content-types/*.md) and tool files (tools/quiver.md, etc.) — only what your atoms need
+   - Brand product-representation.md — if building product mockups
+   - Brand data-visualization.md — if building charts/graphs
+   - Brand create-brand-packet.md — if delegating to Quiver or Image Gen
 4. Read directions/immersive-slack-thread.json — this is YOUR direction file. It has your concept, Build Spec, sectionNodeId, and full timeline of what's happened so far. The spec and assets are the parent's best starting point — NOT a prescription. You have full authority to adjust the spec, source better assets, or omit what doesn't serve your frame.
 5. CRITICAL: ALL Figma nodes you create must go inside YOUR Section (sectionNodeId from your direction file). Never create at page root. Never touch other Sections. Use getNodeByIdAsync(sectionNodeId) to scope all operations.
 6. Build the frame in your Section, run Phase B-E (decomposition, build, elevation)
@@ -106,12 +116,9 @@ Your direction slug is: immersive-slack-thread
 1. Read `state.json` for shared context → Creative Brief, collected assets, Figma file key, product context
 2. Read `directions/<your-slug>.json` → your direction file. The latest `spec` event is your Build Spec. Scan `feedback` events for what to act on. Scan `build` events for previous iterations.
 3. Load `/brand` skill and `/graphics` skill. Then read these P0 files before building:
-   - `references/craft-elevation.md` — craft quality, AI failure modes, visual depth stack
-   - `references/method-selection.md` — atom method decision tree
-   - `tools/figma-console.md` — Figma recipes, connectors, MCP tool reference
-   - `references/figma-patterns.md` — token application in Figma code
-   - `formats/<format>.md` — canvas dimensions and design rules (format from state.json)
-   Then load content-type files (`content-types/*.md`) and tool-specific files as your Build Spec's atom audit dictates. Reference brand and graphics guidance continuously as you build — not just at the start.
+   **From /graphics:** `references/craft-elevation.md`, `references/method-selection.md`, `tools/figma-console.md`, `references/figma-patterns.md`, `formats/<format>.md` (format from state.json)
+   **From /brand:** `references/composition-guide.md`, `references/element-patterns.md`, `references/brand-guide.md`, `tokens/marketing.md`
+   Then load conditional files as your Build Spec dictates (graphics content-types, tool files, brand product-representation/data-viz/brand-packet). Reference brand and graphics guidance continuously as you build — not just at the start.
 4. **Autonomy — you own this direction file.** The parent's `spec` event is a starting point, not a contract. You have full authority to:
    - **Adjust the spec** — change composition, layout, success criteria, atom methods, or anything else that serves the direction better. Append a `spec-update` event for each adjustment with what you changed and why.
    - **Replace, augment, or omit assets** — source different icons from the brand library, create new illustrations via Quiver, fetch additional third-party logos, or skip assets that don't strengthen the composition. Record in `spec-update` events.
