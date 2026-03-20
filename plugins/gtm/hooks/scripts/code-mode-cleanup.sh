@@ -1,0 +1,1 @@
+../../../shared/hooks/scripts/code-mode-cleanup.sh
