@@ -353,34 +353,106 @@ function createHubSpokes(parent, hubX, hubY, hubRadius, spokeNodes, color, strok
 - **Rectangle:** Ray-rectangle intersection from arrow approach angle
 - **Rounded rect:** Same as rectangle, then inset by corner radius
 
-### Pattern: Dot connector (line with dot endpoints)
+### Pattern: Elbowed connector (right-angle path with optional rounded corners)
 
-For the brand's dot-connector line style (hand-drawn line with small circles at connection points).
+For architecture diagrams and flow charts where connectors route around obstacles with right-angle turns. Uses `vectorNetwork` with 3 vertices (start, corner, end) and optionally applies `cornerRadius` for smooth turns.
 
 ```javascript
-// Create a line with dot endpoints (brand connector style)
-function createDotConnector(parent, x1, y1, x2, y2, color, strokeWeight, dotRadius) {
-  // The line
+// Elbowed connector: goes horizontal then vertical (or vice versa)
+// direction: 'horizontal-first' or 'vertical-first'
+function createElbowedConnector(parent, x1, y1, x2, y2, direction, color, strokeWeight, cornerRadius) {
   const vector = figma.createVector();
   parent.appendChild(vector);
-  vector.vectorPaths = [{ windingRule: "NONE", data: `M ${x1} ${y1} L ${x2} ${y2}` }];
+
+  // Compute the corner point
+  const cornerX = direction === 'horizontal-first' ? x2 : x1;
+  const cornerY = direction === 'horizontal-first' ? y1 : y2;
+
+  vector.vectorNetwork = {
+    vertices: [
+      { x: x1, y: y1 },
+      { x: cornerX, y: cornerY, cornerRadius: cornerRadius || 12 },
+      { x: x2, y: y2, strokeCap: 'ARROW_EQUILATERAL' }
+    ],
+    segments: [
+      { start: 0, end: 1 }, // straight horizontal or vertical
+      { start: 1, end: 2 }  // straight vertical or horizontal
+    ],
+    regions: []
+  };
   vector.strokes = [{ type: 'SOLID', color }];
   vector.strokeWeight = strokeWeight || 2;
+  return vector;
+}
+```
 
-  // Dots at both endpoints
-  for (const [x, y] of [[x1, y1], [x2, y2]]) {
+**`cornerRadius` on a vertex** rounds the turn — `0` = sharp 90° angle, `12` = gentle curve, `24` = very smooth. Match the corner radius to the diagram's visual style (brand diagrams typically use 12-16px).
+
+For **multi-segment elbow paths** (horizontal → vertical → horizontal, routing around obstacles), add more vertices:
+
+```javascript
+// Multi-segment: start → down → across → down → end
+vector.vectorNetwork = {
+  vertices: [
+    { x: x1, y: y1 },
+    { x: x1, y: midY, cornerRadius: 12 },      // first turn
+    { x: x2, y: midY, cornerRadius: 12 },      // second turn
+    { x: x2, y: y2, strokeCap: 'ARROW_EQUILATERAL' }
+  ],
+  segments: [
+    { start: 0, end: 1 },
+    { start: 1, end: 2 },
+    { start: 2, end: 3 }
+  ],
+  regions: []
+};
+```
+
+### Pattern: Dot endpoints (add to any connector)
+
+Dots at connection points are a brand signature. This helper adds dots to any connector — combine with straight, curved, or elbowed paths.
+
+```javascript
+// Add dot endpoints to a connector at specified positions
+// endpoints: [{x, y}, ...] — where to place dots
+function addDotEndpoints(parent, endpoints, color, dotRadius) {
+  const r = dotRadius || 3;
+  const dots = [];
+  for (const { x, y } of endpoints) {
     const dot = figma.createEllipse();
     parent.appendChild(dot);
-    const r = dotRadius || 3;
     dot.resize(r * 2, r * 2);
     dot.x = x - r;
     dot.y = y - r;
     dot.fills = [{ type: 'SOLID', color }];
     dot.name = 'connector-dot';
+    dots.push(dot);
   }
-  return vector;
+  return dots;
 }
 ```
+
+**Combine with any connector pattern:**
+- Straight line + dots: create the line, then `addDotEndpoints(parent, [{x: x1, y: y1}, {x: x2, y: y2}], color, 3)`
+- Curved arrow + dot at source: create the curved arrow (with `strokeCap` arrowhead at end), then `addDotEndpoints(parent, [{x: x1, y: y1}], color, 3)` at the source only
+- Elbowed path + dots at both ends: create the elbowed connector, then add dots at start and end
+- Dot at source + arrowhead at target is the most common mixed style: the dot says "originates here," the arrow says "flows to here"
+
+### Pattern: Endpoint style combinations
+
+Different endpoint combinations communicate different relationships:
+
+| Source endpoint | Target endpoint | Meaning | When to use |
+|---|---|---|---|
+| Dot | Arrow | "Flows from → to" | Data flow, process flow, API calls |
+| Dot | Dot | "Connected / related" | Bidirectional relationships, associations |
+| None | Arrow | "Points to / depends on" | Dependencies, references, hierarchy |
+| Arrow | Arrow | "Bidirectional flow" | Sync, two-way communication |
+
+Set endpoints via `strokeCap` on vertices in `vectorNetwork`:
+- **Dot endpoint:** Don't use strokeCap — add a separate ellipse via `addDotEndpoints` (gives more visual control over dot size and color)
+- **Arrow endpoint:** `strokeCap: 'ARROW_EQUILATERAL'` (filled triangle) or `'ARROW_LINES'` (open chevron)
+- **No endpoint:** Default (no strokeCap set)
 
 ### Connector consistency rules
 
