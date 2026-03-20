@@ -162,9 +162,9 @@ When the mockup represents a feature that hasn't been built yet:
 
 ## Propagation to nested claudes (exploration workflow)
 
-When using the exploration workflow (`references/exploration-workflow.md`), discovery results must be available to `/nest-claude` children that build individual frames. Children read `state.json` to get their context — but `state.json` currently only carries `assets` and `creativeBrief`.
+When using the exploration workflow (`references/exploration-workflow.md`), discovery results must be available to `/nest-claude` children that build individual frames. Children read `state.json` for shared context and their direction file (`directions/<slug>.json`) for direction-specific state.
 
-**Add a `productContext` field to `state.json`** during Step 1c. Keep it lightweight — paths and metadata only, no inline assets:
+**Add a `productContext` field to `state.json`** during Step 1c. Product context is shared across all directions, so it belongs in state.json (not in direction files). Keep it lightweight — paths and metadata only, no inline assets:
 
 ```json
 {
@@ -185,7 +185,7 @@ When using the exploration workflow (`references/exploration-workflow.md`), disc
 
 **Only paths and metadata go in state.json — never inline assets.** The nested claude reads `referenceDir`, lists the files, and loads what it needs. Images, SVGs, and visual descriptions live on disk in `tmp/reference/`, not in state.json.
 
-Product context is **shared across all directions** — every direction building a different visual concept references the same product UI screenshots and feature understanding. This is why it belongs in `state.json`'s shared context (alongside `creativeBrief`, `assets`, `figma`). Each nested claude reads `state.json` at startup to get its assignment, Creative Brief, assets, and now also the product context references.
+Product context is **shared across all directions** — every direction building a different visual concept references the same product UI screenshots and feature understanding. This is why it belongs in `state.json`'s shared context (alongside `creativeBrief`, `collectedAssets`, `figma`). Each nested claude reads `state.json` at startup for shared context (Creative Brief, assets, product context) and its direction file for direction-specific state (concept, Build Spec, timeline).
 
 ---
 

@@ -149,11 +149,11 @@ Phase 0: Conceptualize          ← USER SELECTS directions (text only)
 Step 2:  Collect assets & brand tokens
 
 Phase 1: Diverge (PARALLEL via /nest-claude)
-  Parent: create page + N empty Sections, write state.json
+  Parent: create page + N empty Sections, write state.json + direction files
   Parent: spawn N child processes (concurrent)
-    Each child: read state.json → load skills → plan → build → verify (spawns reviewer) → place in Section
-    Each child: write results to build-results/<slug>.json
-  Parent: read result files, merge into state.json
+    Each child: read state.json + its direction file → load skills → build → verify (spawns reviewer) → place in Section
+    Each child: append results to its direction file (spec-update, build, feedback events)
+  Parent: read direction files, update state.json index
   Present to user              ← USER REACTS
 
 Phase 2: Iterate (loop)
@@ -708,7 +708,7 @@ Write out an asset manifest listing what was found and what's missing:
 **If the graphic includes illustrations, visual metaphors, or decorative elements in the Inkeep hand-drawn style:**
 **Load:** `content-types/illustration.md` file for the dual-stroke visual language (hand-drawn gray containers + precise blue fills), color palette, composition patterns, and Quiver generation instructions.
 
-⛔ **Produce a Build Spec before proceeding.** This is the checkpoint that prevents two failure modes: (1) planning from general knowledge instead of brand-specific recipes, and (2) building without a concrete vision of the finished output. The Build Spec is persisted to `state.json` under `directions[slug].buildSpec` so nest-claude children receive it as their build instructions. The self-critique loop (Phase E) evaluates against this spec's success criteria.
+⛔ **Produce a Build Spec before proceeding.** This is the checkpoint that prevents two failure modes: (1) planning from general knowledge instead of brand-specific recipes, and (2) building without a concrete vision of the finished output. In exploration mode, the Build Spec is persisted as a `spec` event in the direction file (`directions/<slug>.json`) so nest-claude children receive it as their starting instructions. Children have full authority to adjust the spec during build via `spec-update` events. The self-critique loop (Phase E) evaluates against the spec's success criteria.
 
 Write out the spec using this template:
 
@@ -873,7 +873,7 @@ Example — "Slack thread mockup" compound atom:
 - The anti-pattern check must all pass before proceeding. If any fail, fix the plan first.
 - If an illustration or icon is marked "Figma shapes" instead of Quiver, justify WHY (only acceptable for purely geometric compositions like simple diagrams)
 - If a third-party logo is not sourced from Brand Assets or fetch-logo.ts, STOP — logos must never be approximated
-- **Persist the Build Spec** — in exploration mode, write to `state.json` under `directions[slug].buildSpec`. In single-pass mode, write to conversation (it serves as the agent's own execution plan).
+- **Persist the Build Spec** — in exploration mode, write as a `spec` event in `directions/<slug>.json`. In single-pass mode, write to conversation (it serves as the agent's own execution plan).
 
 **Why this exists:** Without this checkpoint, the observed failure modes are: (1) the agent skipping the Load instructions, planning from general design knowledge, and producing graphics that miss brand-specific treatments (wrong shadow, wrong radius, flat backgrounds, oversized badges); (2) the agent defaulting to basic Figma shapes for everything instead of using Quiver for illustrations, GPT Image for photorealistic imagery, and fetch-logo.ts for third-party logos — producing flat, unpolished graphics that lack the richness the toolchain enables. The brief forces the agent to read the references and commit to the right tools before building.
 
@@ -913,7 +913,7 @@ The parent's job is: (1) write `state.json` with Build Specs, collected assets, 
 - [ ] **Brand tokens collected** — you have exact hex colors and font families from the design system, not from memory or the user's message
 - [ ] **Logos are real** — any Inkeep or third-party logos are cloned from the Brand Assets page or fetched via `tools/fetch-logo.ts`, not approximated with text or shapes
 - [ ] **Build Spec was produced** — Step 3 produced a Build Spec with end-state vision, success criteria, and sub-element plan with visual references
-- [ ] **In exploration mode: `state.json` exists** — with creativeBrief, collectedAssets, directions, and per-direction buildSpec
+- [ ] **In exploration mode: `state.json` exists** with creativeBrief, collectedAssets, and direction index — AND `directions/<slug>.json` files exist for each direction with a `spec` event containing the Build Spec
 
 **If any of these are not met, STOP and complete the missing step before proceeding.**
 
@@ -1018,7 +1018,7 @@ The parent wrote the Build Spec with an initial Atom generation audit. The child
    - A sub-element needs a different method than the parent assumed (e.g., the parent said "Figma shapes" but the child sees it needs Quiver for organic curves)
    - New sub-elements are needed that weren't in the original plan (e.g., building a chat mockup reveals the need for typing indicators, read receipts, or status icons)
 
-3. **Record any decomposition changes.** If the child deepened or modified the Build Spec's audit, note what changed so the parent can update state.json. Write this to the build-results JSON under a `decompositionChanges` key.
+3. **Record any decomposition changes.** If the child deepened or modified the Build Spec's audit, append `spec-update` events to the direction file (`directions/<slug>.json`) noting what changed and why.
 
 **Step B2: Plan the build for every atom** (both from the original Build Spec and any new decomposition).
 
@@ -1864,8 +1864,8 @@ All SVG outputs (Quiver, hand-coded, D2/Mermaid) should be imported into Figma b
 ⛔ **Mark task "Graphics: Present to user" as `in_progress`. Before presenting ANY frame to the user, verify:**
 - [ ] **Self-critique loop completed** — Phase E ran at least 1 iteration on this frame
 - [ ] **Reviewer passed** — Layer 2 reviewer returned PASS or PASS WITH SUGGESTIONS (suggestions were implemented)
-- [ ] **In exploration mode:** `build-results/<slug>.json` exists with a `reviews` array where the last entry has `"verdict": "PASS"`
-- [ ] **No self-certified verdicts** — if any frame's reviews array is empty, or the last verdict is `SELF-REVIEWED` / `SELF_PASS` / any non-reviewer verdict, the frame has NOT been independently reviewed. The parent MUST spawn a reviewer for that frame before presenting.
+- [ ] **In exploration mode:** `directions/<slug>.json` has a `feedback` event from the reviewer with `"verdict": "PASS"` after the latest `build` event
+- [ ] **No self-certified verdicts** — if the direction file has no `feedback` events from the reviewer, or the last reviewer `feedback` has a non-PASS verdict, the frame has NOT been independently reviewed. The parent MUST spawn a reviewer for that frame before presenting.
 
 **If any frame has not passed both the self-critique loop and an independent reviewer, run them now before presenting.** This is the structural enforcement of "every frame must pass the reviewer before the user sees it." Self-reported pass verdicts from the builder do not count.
 

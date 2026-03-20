@@ -60,8 +60,9 @@ The only exception: if the user explicitly references an existing page or you're
 
 1. Create the Figma page
 2. Create N empty Sections (one per selected direction)
-3. Write `state.json` with all shared context: Creative Brief, collected assets, Figma IDs, per-direction assignments (see State Persistence below)
-4. Create `build-results/` directory
+3. Write `state.json` with shared context: Creative Brief, collected assets, Figma IDs, format (see State Persistence below)
+4. Create `directions/` directory
+5. Write one `directions/<slug>.json` per selected direction — each with a `spec` timeline event containing the concept + Build Spec (see Direction File schema below)
 
 ### Build (parallel via /nest-claude)
 
@@ -76,17 +77,17 @@ env -u CLAUDECODE -u CLAUDE_CODE_ENTRYPOINT claude \
     -p "Your state directory is: tmp/graphics/<page-slug>/
 Your direction slug is: immersive-slack-thread
 
-1. Load `/brand` skill and `/graphics` skill
-2. Read state.json — find your direction by slug in the directions object
-3. That gives you: direction concept, sectionNodeId, Creative Brief, collected assets, Figma file key. The assets and atomAudit are the parent's best starting point — NOT a prescription. You have full authority to source better alternatives from the brand library, create new icons via Quiver, fetch additional third-party logos, or omit assets that don't serve your frame. Use what helps; replace or skip what doesn't.
-4. CRITICAL: ALL Figma nodes you create must go inside YOUR Section (sectionNodeId). Never create at page root. Never touch other Sections. Use getNodeByIdAsync(sectionNodeId) to scope all operations.
+1. Load '/brand' skill and '/graphics' skill
+2. Read state.json for shared context (Creative Brief, collected assets, Figma IDs, product context)
+3. Read directions/immersive-slack-thread.json — this is YOUR direction file. It has your concept, Build Spec, sectionNodeId, and full timeline of what's happened so far. The spec and assets are the parent's best starting point — NOT a prescription. You have full authority to adjust the spec, source better assets, or omit what doesn't serve your frame.
+4. CRITICAL: ALL Figma nodes you create must go inside YOUR Section (sectionNodeId from your direction file). Never create at page root. Never touch other Sections. Use getNodeByIdAsync(sectionNodeId) to scope all operations.
 5. Build the frame in your Section, run Phase B-E (decomposition, build, elevation)
 6. Run Step 5 two-layer verification (spawn reviewer subagent)
 7. Fix NEEDS REVISION findings, re-verify (max 3 iterations)
-8. Write results to: build-results/immersive-slack-thread.json" \
+8. Append results to your direction file: spec-update events (if you adjusted the spec), a build event, and feedback events from reviewer rounds" \
     --dangerously-skip-permissions \
     --output-format json \
-    < /dev/null 2>&1 | tee tmp/graphics/<page-slug>/build-results/immersive-slack-thread-stdout.json
+    < /dev/null 2>&1 | tee tmp/graphics/<page-slug>/directions/immersive-slack-thread-stdout.json
 ```
 
 **Always spawn a child, even for a single direction.** The parent never builds frames — it orchestrates and verifies. This ensures consistent behavior and independent review.
@@ -95,16 +96,14 @@ Your direction slug is: immersive-slack-thread
 
 ⛔ **Section isolation (non-negotiable):** Every Figma node the child creates — frames, working atoms, imported SVGs, image fills, text, shapes, EVERYTHING — must be placed inside the child's assigned Section (by `sectionNodeId`). Never create nodes at page root. Never place nodes in another direction's Section. Never use `figma.currentPage` to scope operations — always use `getNodeByIdAsync(sectionNodeId)`. The working atoms frame, the final composition frame, and all intermediate artifacts live inside your Section. If a node ends up outside your Section, move it immediately or delete it. Violating section isolation pollutes other children's work and is the #1 cause of cross-direction contamination in parallel builds.
 
-1. Read `state.json` → find its direction by slug → get concept, sectionNodeId, Creative Brief, collected assets, **buildSpec** (end-state vision, success criteria, information architecture, atom audit with sub-element decomposition)
-2. If Phase 2 iteration: read the direction's `iterations` array for full history — what was built, what feedback was given, what to keep and what to fix
+1. Read `state.json` for shared context → Creative Brief, collected assets, Figma file key, product context
+2. Read `directions/<your-slug>.json` → your direction file. The latest `spec` event is your Build Spec. Scan `feedback` events for what to act on. Scan `build` events for previous iterations.
 3. Load `/brand` skill and `/graphics` skill
-4. **Asset autonomy:** The parent collected assets and wrote an atomAudit as a starting point — not a contract. You own the final asset and method decisions for your frame. Specifically:
-   - **Replace** any asset with a better alternative if it serves the direction (e.g., source a different icon from Brand Assets, create a new illustration via Quiver, fetch an additional third-party logo via `fetch-logo.ts`)
-   - **Augment** with assets the parent didn't anticipate — your direction may need elements the parent couldn't predict during the shared asset collection pass
-   - **Omit** any provided asset that doesn't strengthen the composition — assets are resources, not requirements
-   - **Change methods** in the atomAudit — the parent's method selections are recommendations based on the concept description; you're seeing the actual design and may judge differently
-   - Record any asset or method changes in `decompositionChanges` in your build-results JSON so the parent knows what you decided and why
-5. Step 3: The Build Spec is already in state.json — verify it's complete (end-state vision, success criteria, information architecture, atom audit). If building a new direction without a spec, write one first.
+4. **Autonomy — you own this direction file.** The parent's `spec` event is a starting point, not a contract. You have full authority to:
+   - **Adjust the spec** — change composition, layout, success criteria, atom methods, or anything else that serves the direction better. Append a `spec-update` event for each adjustment with what you changed and why.
+   - **Replace, augment, or omit assets** — source different icons from the brand library, create new illustrations via Quiver, fetch additional third-party logos, or skip assets that don't strengthen the composition. Record in `spec-update` events.
+   - The reviewer reads your direction file — it sees both the original spec AND your adjustments, so your reasoning is visible.
+5. Verify the Build Spec (latest `spec` event + any `spec-update` events you've appended) is complete — end-state vision, success criteria, information architecture, atom audit. If building a new direction without a spec, append a `spec` event first.
 5. **Position the new frame to the right of existing siblings.** Iterations within a Section go left-to-right. Before creating your frame, query the Section for existing children and compute your x-position:
    ```javascript
    // via figma_execute — find the rightmost frame in the Section
@@ -127,24 +126,24 @@ Your direction slug is: immersive-slack-thread
    - Check every Tier 2 atom — is it compound (3+ sub-elements)? If not yet decomposed, decompose now.
    - For each Tier 2 sub-element, walk the decision tree in `references/method-selection.md`.
    - If a sub-element is itself compound, decompose recursively until every leaf is a single-method declaration.
-   - If decomposition reveals new atoms or changes methods, record under `decompositionChanges` in the build-results JSON.
+   - If decomposition reveals new atoms or changes methods, append `spec-update` events to your direction file.
    - Then plan the build order (method-aware: asset fetches → external generations → Figma shapes → imports → compounds → connections).
 7. Step 4, Phases A, C-D: Stage assets, build atoms bottom-up, compose final design (targeting Section by node ID). **Place the final composition frame at the x-position computed in step 5** — the working atoms frame can go anywhere within the Section, but the final frame must be positioned for left-to-right iteration progression.
 8. **Phase E: 3-pass self-critique (all passes mandatory, recursive).** `references/craft-elevation.md` should already be loaded from Phase C. Pass 1: structural correctness (meet success criteria). Pass 2: craft elevation (push every element from "correct" to "rich" — count depth stack layers, evaluate each atom against elevation strategies, implement ≥2 elevations). Pass 3: cohesion and polish (unified composition, spacing rhythm, thumbnail integrity, micro-polish). **Recursive:** after Pass 3, ask "what would a design lead push back on?" — if the answer isn't "nothing," run another Pass 2 → Pass 3 cycle. Max 5 total passes. Stop when: depth stack ≥5, all atoms at "Elevated," cohesion test passes, no actionable improvement remaining. Do not proceed to the reviewer until the elevation loop exits.
 9. Step 5: Two-layer verification loop (max 3 iterations):
    - Layer 1: programmatic checks (`figma_lint_design`, bounds, dimensions). Fix until clean.
    - Layer 2: reviewer subagent (`capture-for-review.ts` → reviewer evaluates at 1568px + 400px). Pass the Build Spec's success criteria AND information architecture as evaluation context.
-   - The reviewer returns structured findings. **Record each review round** in the `reviews` array (see build-results schema below) — verdict, findings with evidence, and revision instructions.
+   - The reviewer returns structured findings. **Append a `feedback` event** to your direction file for each review round — verdict, findings with evidence, and revision instructions.
    - Read verdict: **PASS** → proceed. **PASS WITH SUGGESTIONS** → implement quick fixes, proceed. **NEEDS REVISION** → assess findings against context, apply valid fixes, restart from Layer 1.
-   - After 3 iterations without PASS → write error status to result file.
+   - After 3 iterations without PASS → set direction file `status` to `error`.
    - **Every frame must pass the self-critique loop AND the reviewer before the user sees it.** No exceptions. Self-reported verdicts (`SELF-REVIEWED`, `SELF_PASS`) do not count.
-10. Write results to `build-results/<direction-slug>.json` including the full `reviews` array from all verification rounds and any `decompositionChanges` from step 6.
+10. Append a `build` event to your direction file with the frame's iteration ID, node ID, and name.
 
 ### Collect results (parent, serialized)
 
 After all children complete:
-1. Read each `build-results/<slug>.json`
-2. Append each iteration to the corresponding direction in `state.json`
+1. Read each `directions/<slug>.json` — children have already appended their timeline events (spec-update, build, feedback)
+2. Update `state.json` direction index — sync each direction's `status` from its direction file
 3. Present to user using the converge contract (see Interaction Model below)
 
 ---
@@ -169,7 +168,7 @@ The agent's job is always the same:
 2. **Build** — If ≥2 independent frames: spawn `/nest-claude` children (parallel). If 1 frame or orchestration: parent builds directly (sequential).
 3. **Verify** — Step 5 two-layer verification on every frame (children handle this internally when parallel; parent handles when sequential)
 4. **Organize** — Place in the correct Section (new section for new direction, next column for iteration)
-5. **Persist** — Update `state.json`: append iteration to direction's `iterations` array, record `userVerdict` and `userFeedback` when user responds
+5. **Persist** — Append `feedback` event (with user's verdict and feedback) to the direction file. Update `state.json` direction index status if needed (approved/archived).
 6. **Present** — Direct the user to the canvas
 
 ### Sub-variant diversity
@@ -212,7 +211,7 @@ Countermeasures:
 
 **Re-anchor to intent:** After every 3-4 iteration rounds, re-read the Creative Brief from `state.json` to verify work still aligns with the original messaging goals. Internal discipline — don't announce it.
 
-**When a direction splits into sub-directions:** Create new direction entries in `state.json`, each with its own `iterations` array, `sectionNodeId`, and `concept`. Create new Figma Sections. The first iteration of each new direction gets `trigger: "split"`. The parent direction's `status` stays `active` if it still has its own path, or moves to `archived` if fully replaced.
+**When a direction splits into sub-directions:** Create new direction files in `directions/`, each with its own `sectionNodeId` and a `spec` event containing the new concept. Add entries to `state.json`'s direction index. Create new Figma Sections. The new direction's first `build` event gets `trigger: "split"`. The parent direction's `status` stays `active` if it still has its own path, or moves to `archived` if fully replaced.
 
 Repeat until user approves, then proceed to Step 6 (export).
 
@@ -328,30 +327,28 @@ section.fills = [];
 
 ## State persistence
 
-Graphics exploration sessions can be 50+ turns. Without structured state, the agent loses track of which directions were selected, what feedback was given, and what frames exist on the canvas.
+Graphics exploration sessions can be 50+ turns. State is split into two layers: **shared context** (one file, parent-owned) and **per-direction state** (one file per direction, append-only timeline).
 
 ### Directory structure
 
 ```
 tmp/graphics/<page-slug>/
-├── state.json              # Shared coordination surface — all project context
+├── state.json              # Shared context only — Creative Brief, collected assets, Figma IDs, direction index
 ├── assets/                 # Collected assets — logos, SVGs, references gathered by parent (starting kit, not prescriptive)
 │   ├── slack-logo.svg
 │   └── github-logo.svg
-└── build-results/          # Child process outputs (one file per direction per round)
-    ├── <direction-slug>.json
-    └── ...
+└── directions/             # One file per direction — owned by the child, append-only timeline
+    ├── immersive-slack-thread.json
+    └── multi-agent-cards.json
 ```
 
-**SVG file convention:** Save third-party logo SVGs and other fetched assets to the `assets/` subdirectory. Reference them by file path in `state.json` — never inline SVG content directly in JSON. This avoids JSON escaping issues and keeps `state.json` readable. Children may also save newly sourced assets here during their build.
+**SVG file convention:** Save third-party logo SVGs and other fetched assets to the `assets/` subdirectory. Reference them by file path — never inline SVG content directly in JSON. Children may also save newly sourced assets here during their build.
 
 The `<page-slug>` is derived from the Figma page name by slugifying: lowercase, spaces → hyphens, strip brackets/dates/special chars. Example: `[2026-03-18] Blog — Agents in Slack covers` → `2026-03-18-blog-agents-in-slack`.
 
-`state.json` is the single source of truth. It holds shared context (Creative Brief, collected assets, Figma IDs), per-direction state, and the full iteration history including user feedback. It also serves as the coordination surface for `/nest-claude` children — each child reads it to get its assignment and starting resources. The assets in state.json are what the parent gathered during the shared collection pass — children may use, replace, augment, or omit them based on what serves their direction best.
+### state.json — shared context only
 
-### state.json — direction-oriented model
-
-State is organized by **direction** (not by frame). Each direction tracks its full iteration history — what was built, what feedback was given, what changed. A child building iteration v3 sees the complete history and knows exactly what to keep and what to fix.
+`state.json` holds context shared across ALL directions. It is owned by the parent — children read it but never write to it. The direction index provides a quick overview of all directions and their current status.
 
 ```json
 {
@@ -387,61 +384,85 @@ State is organized by **direction** (not by frame). Each direction tracks its fu
     { "name": "Hub-and-spoke", "selected": false }
   ],
   "directions": {
-    "immersive-slack-thread": {
-      "name": "Immersive Slack Thread",
-      "sectionNodeId": "61:390",
-      "concept": {
-        "name": "Immersive Slack Thread",
-        "visual": "Stylized Slack message thread with @Inkeep responding",
-        "whyItWorks": "Product-as-marketing — shows the feature in action"
-      },
-      "buildSpec": {
+    "immersive-slack-thread": { "status": "active", "file": "directions/immersive-slack-thread.json" },
+    "multi-agent-cards": { "status": "archived", "file": "directions/multi-agent-cards.json" }
+  },
+  "lastUpdated": "2026-03-18T18:45:00Z"
+}
+```
+
+### Direction file — append-only timeline
+
+Each direction gets its own file at `directions/<slug>.json`. This is the **single source of truth** for everything about a direction — concept, spec, builds, reviews, feedback. The parent creates it with the initial `spec` event. The child reads it, appends events, and writes it back. The reviewer reads it to get evaluation context.
+
+**The timeline is append-only.** The only mutable fields are `status` and `sectionNodeId` (set once). Everything else is captured as timeline events — nothing is overwritten or deleted.
+
+**Four event types:**
+
+| Type | Writer | What it captures |
+|---|---|---|
+| `spec` | parent | The Build Spec — concept, end-state vision, success criteria, atom audit. Written once as the initial entry. Immutable. |
+| `spec-update` | child | A delta to the spec — what field changed, what it changed to, and why. Append as many as needed. |
+| `build` | child | A frame was built — iteration ID, Figma node ID, frame name, trigger. |
+| `feedback` | reviewer / user | Verdict + findings (reviewer) or verdict + feedback text (user). |
+
+**Reading pattern for the child:** Last `spec` event = the brief. All `spec-update` events = adjustments. Last `feedback` event = what to act on. All `build` events = previous iterations for positioning.
+
+```json
+{
+  "slug": "immersive-slack-thread",
+  "name": "Immersive Slack Thread",
+  "sectionNodeId": "61:390",
+  "status": "active",
+
+  "timeline": [
+    { "type": "spec", "by": "parent",
+      "data": {
+        "concept": { "name": "Immersive Slack Thread", "visual": "Stylized Slack message thread with @Inkeep responding", "whyItWorks": "Product-as-marketing — shows the feature in action" },
         "endStateVision": "A warm cream canvas with a large, slightly rotated Slack thread mockup...",
         "successCriteria": [
           "The Slack mockup looks like a real Slack conversation",
           "The heading reads clearly at 300px thumbnail width",
           "The Approve/Deny buttons are recognizable Slack Block Kit style"
         ],
-        "thumbnailSketch": "At 400px: heading dominates left, white mockup card visible right...",
-        "recipes": { "productMockup": true, "badge": true },
         "atomAudit": {
           "tier1": ["headline → Figma", "badge → Figma", "logo (Inkeep) → Brand Assets clone"],
           "tier2": [
-            { "atom": "Slack thread mockup", "candidates": ["Figma native", "Image Gen"], "selected": "Figma native", "why": "Compound element requiring editable sub-elements", "whyNotRunnerUp": "Image Gen: raster, sub-elements not independently editable", "pipeline": "—" }
-          ],
-          "subElements": [
-            { "parent": "Slack thread mockup", "element": "User avatar", "tier": 2, "method": "Quiver portrait", "why": "Organic illustrated style matching brand; Figma circles lack personality", "visualRef": "—", "criterion": "Illustrated, not a colored circle" },
-            { "parent": "Slack thread mockup", "element": "Inkeep bot avatar", "tier": 1, "method": "Brand Assets clone", "visualRef": "—", "criterion": "Canonical asset" },
-            { "parent": "Slack thread mockup", "element": "Approve button", "tier": 1, "method": "Figma, Slack green", "visualRef": "tmp/reference/slack-buttons.jpg", "criterion": "Slack Block Kit style" }
+            { "atom": "Slack thread mockup", "candidates": ["Figma native", "Image Gen"], "selected": "Figma native", "why": "Compound element requiring editable sub-elements" }
           ]
         }
-      },
-      "status": "active",
-      "color": "green",
-      "iterations": [
-        {
-          "id": "1A",
-          "frameNodeId": "32:152",
-          "frameName": "Blog/Cover/1A-Immersive-Thread",
-          "trigger": "initial-diverge",
-          "instruction": null,
-          "reviewerVerdict": "PASS",
-          "userVerdict": "needs-fixes",
-          "userFeedback": "Logo is wrong, avatar looks generic"
-        },
-        {
-          "id": "1A-v2",
-          "frameNodeId": "33:335",
-          "frameName": "Blog/Cover/1A-v2",
-          "trigger": "user-feedback",
-          "instruction": "Fix logo with real SVG, use Inkeep icon for bot avatar",
-          "reviewerVerdict": "PASS",
-          "userVerdict": "approved"
-        }
-      ]
-    }
-  },
-  "lastUpdated": "2026-03-18T18:45:00Z"
+      }
+    },
+
+    { "type": "spec-update", "by": "child",
+      "data": { "field": "atomAudit.userAvatar.method", "to": "Quiver illustration", "reason": "Figma circle looked flat — organic portrait matches brand better" } },
+
+    { "type": "build", "by": "child",
+      "data": { "id": "1A", "frameNodeId": "32:152", "frameName": "Blog/Cover/1A-Immersive-Thread", "trigger": "initial-diverge" } },
+
+    { "type": "feedback", "by": "reviewer",
+      "data": { "verdict": "NEEDS REVISION", "findings": [
+        { "issue": "Arrows form sequential cycle instead of converging to center", "severity": "critical" }
+      ] } },
+
+    { "type": "feedback", "by": "reviewer",
+      "data": { "verdict": "PASS" } },
+
+    { "type": "feedback", "by": "user",
+      "data": { "verdict": "needs-fixes", "feedback": "Logo is wrong, avatar looks generic" } },
+
+    { "type": "spec-update", "by": "child",
+      "data": { "field": "atomAudit.botAvatar.method", "to": "Brand Assets clone", "reason": "User feedback — use canonical asset" } },
+
+    { "type": "build", "by": "child",
+      "data": { "id": "1A-v2", "frameNodeId": "33:335", "frameName": "Blog/Cover/1A-v2", "trigger": "user-feedback" } },
+
+    { "type": "feedback", "by": "reviewer",
+      "data": { "verdict": "PASS" } },
+
+    { "type": "feedback", "by": "user",
+      "data": { "verdict": "approved" } }
+  ]
 }
 ```
 
@@ -452,91 +473,22 @@ State is organized by **direction** (not by frame). Each direction tracks its fu
 | `active` | Direction is being worked on |
 | `approved` | User approved the latest iteration |
 | `archived` | Direction was discarded |
-
-### Iteration fields
-
-| Field | Purpose |
-|---|---|
-| `id` | Short identifier (1A, 1A-v2, etc.) |
-| `frameNodeId` | Figma node ID of the built frame |
-| `frameName` | Frame name in Figma (slash-hierarchy) |
-| `trigger` | Why created: `initial-diverge`, `user-feedback`, `new-variant`, `split` |
-| `instruction` | What the user asked for (null on initial diverge) |
-| `reviewerVerdict` | `PASS`, `PASS WITH SUGGESTIONS`, or `NEEDS REVISION` |
-| `userVerdict` | `approved`, `needs-fixes`, `archived`, or null (not yet presented) |
-| `userFeedback` | What the user said (null if approved or not yet reviewed) |
-
-### Child result file (`build-results/<direction-slug>.json`)
-
-Each `/nest-claude` child writes one iteration entry that the parent appends to the direction. The `reviews` array captures every reviewer round with structured findings for retrospective visibility into reviewer performance.
-
-```json
-{
-  "directionSlug": "immersive-slack-thread",
-  "iteration": {
-    "id": "1A",
-    "frameNodeId": "61:392",
-    "frameName": "Blog/Cover/1A-Immersive-Thread",
-    "trigger": "initial-diverge",
-    "instruction": null
-  },
-  "reviews": [
-    {
-      "round": 1,
-      "verdict": "NEEDS REVISION",
-      "findings": [
-        {
-          "issue": "Arrows form a sequential cycle instead of converging to center agent",
-          "severity": "critical",
-          "evidence": "4 independent arcs connect nodes clockwise — none point to/from center hub"
-        },
-        {
-          "issue": "Arrow curves have inconsistent radii",
-          "severity": "minor",
-          "evidence": "Slack→Tickets arc is ~40% wider than GitHub→KB arc"
-        }
-      ],
-      "revisionInstructions": ["Redraw arrows converging to center", "Use consistent arc radius"]
-    },
-    {
-      "round": 2,
-      "verdict": "PASS",
-      "findings": []
-    }
-  ],
-  "decompositionChanges": [
-    {
-      "atom": "Slack thread mockup",
-      "change": "Further decomposed — parent listed 3 sub-elements, child found 7",
-      "addedSubElements": [
-        { "element": "typing indicator", "tier": 1, "method": "Figma native" },
-        { "element": "read receipts", "tier": 1, "method": "Figma native" }
-      ],
-      "methodChanges": [
-        { "element": "user avatar", "parentMethod": "Figma circle", "childMethod": "Quiver illustration", "reason": "Organic portrait needed for brand consistency" }
-      ]
-    }
-  ],
-  "status": "complete",
-  "error": null
-}
-```
+| `error` | Child failed after 3 reviewer iterations |
 
 ### When state is updated
 
-Event-driven (not cadence-based):
-
-| Event | What updates in state.json |
-|---|---|
-| Step 1c complete | Write `productContext` (feature, fidelity, referenceDir, key elements) |
-| Phase 0 complete | Write `conceptsProposed` with selections |
-| Page + Sections created | Write `figma.pageId`, per-direction `sectionNodeId` |
-| Frame built and verified | Append new iteration to direction's `iterations` array |
-| All frames presented | Set latest iterations' `userVerdict` to null (awaiting) |
-| User gives feedback | Set `userVerdict` to `needs-fixes`, record `userFeedback` |
-| User approves | Set `userVerdict` to `approved`, direction `status` to `approved` |
-| User archives a direction | Set direction `status` to `archived` |
-| Direction splits | Create new direction entries with `trigger: "split"` on first iteration |
+| Event | Where | What happens |
+|---|---|---|
+| Step 1c complete | `state.json` | Write `productContext` |
+| Phase 0 complete | `state.json` | Write `conceptsProposed` with selections |
+| Page + Sections created | `state.json` + direction files | Write `figma.pageId` to state.json. Create direction files with `sectionNodeId` and initial `spec` event |
+| Child adjusts spec | direction file | Child appends `spec-update` event |
+| Frame built and verified | direction file | Child appends `build` event |
+| Reviewer returns verdict | direction file | Child appends `feedback` event (with findings) |
+| User gives feedback | direction file + `state.json` | Parent appends `feedback` event to direction file. Updates direction status in state.json index if needed |
+| User approves | direction file + `state.json` | Parent appends `feedback` event with `"verdict": "approved"`. Sets status to `approved` in both |
+| User archives a direction | `state.json` + direction file | Sets `status` to `archived` in both |
+| Direction splits | `state.json` + new direction files | Create new direction files with `spec` events. Add entries to state.json index |
 
 ### Session detection and re-entry
 
@@ -545,7 +497,8 @@ Event-driven (not cadence-based):
 > "I found an existing graphics session for 'Agents in Slack covers' with 3 directions built. Resume that project, or start fresh?"
 
 **On re-entry after context compression**, the agent:
-1. Reads `state.json` — knows current phase, all directions, their full iteration histories
-2. Re-anchors to the Creative Brief — verifies work still aligns with messaging goals
-3. Checks Figma canvas via `figma_get_status` — verifies canvas matches state
-4. Identifies next action: find directions with `status: active` where the latest iteration has `userVerdict: needs-fixes`, or where no iteration exists yet
+1. Reads `state.json` — knows current phase, direction index with statuses
+2. Reads direction files for active directions — the timeline has the full history (specs, builds, feedback)
+3. Re-anchors to the Creative Brief (in state.json) — verifies work still aligns with messaging goals
+4. Checks Figma canvas via `figma_get_status` — verifies canvas matches state
+5. Identifies next action: find directions with `status: active` where the latest `feedback` event has `"verdict": "needs-fixes"`, or where no `build` event exists yet
