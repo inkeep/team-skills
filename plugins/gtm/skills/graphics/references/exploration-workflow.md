@@ -92,10 +92,8 @@ Your direction slug is: immersive-slack-thread
    - references/brand-guide.md (illustration style, diagram rules, gradient tiers, decorative elements)
    - tokens/marketing.md (exact token values: colors, typography, spacing, radius, shadows)
    Then read conditional files as your Build Spec dictates:
-   - Graphics content-types (content-types/*.md) and tool files (tools/quiver.md, etc.) — only what your atoms need
-   - Brand product-representation.md — if building product mockups
-   - Brand data-visualization.md — if building charts/graphs
-   - Brand create-brand-packet.md — if delegating to Quiver or Image Gen
+   - Graphics content-types (content-types/*.md) and tool files (tools/quiver.md, etc.) — only what your atoms need. Check the graphics SKILL.md Step 1 content analysis table and the output format routing table for which content-type file matches your atoms.
+   - Brand conditional refs — check the brand skill's "Deep Reference" routing table (§ "If your content includes...") for additional files your content type needs (product-representation.md for mockups, data-visualization.md for charts, create-brand-packet.md for Quiver/Image Gen delegation, etc.)
 4. Read directions/immersive-slack-thread.json — this is YOUR direction file. It has your concept, Build Spec, sectionNodeId, and full timeline of what's happened so far. The spec and assets are the parent's best starting point — NOT a prescription. You have full authority to adjust the spec, source better assets, or omit what doesn't serve your frame.
 5. CRITICAL: ALL Figma nodes you create must go inside YOUR Section (sectionNodeId from your direction file). Never create at page root. Never touch other Sections. Use getNodeByIdAsync(sectionNodeId) to scope all operations.
 6. Build the frame in your Section, run Phase B-E (decomposition, build, elevation)
