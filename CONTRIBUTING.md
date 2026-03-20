@@ -204,6 +204,18 @@ cd plugins/gtm/skills && ln -s ../../shared/skills/my-skill my-skill
 
 Symlinks must use **relative paths** (`../../shared/skills/my-skill`) — absolute paths break when the repo is cloned to a different location. Only symlink into the plugins that actually need the skill.
 
+**Hooks for shared skills:** The `shared` plugin is NOT in `installed_plugins.json` — Claude Code only loads hooks from installed plugins (`eng`, `gtm`). If a shared skill needs a lifecycle hook (e.g., `SessionEnd` cleanup), add the hook entry to each consuming plugin's `hooks/hooks.json` and symlink the script:
+
+```bash
+# Symlink the hook script into each team plugin
+ln -s ../../../shared/hooks/scripts/my-cleanup.sh plugins/eng/hooks/scripts/my-cleanup.sh
+ln -s ../../../shared/hooks/scripts/my-cleanup.sh plugins/gtm/hooks/scripts/my-cleanup.sh
+
+# Then add the hook entry to each plugin's hooks/hooks.json
+```
+
+Do NOT put hooks only in `plugins/shared/hooks/` — they will never fire.
+
 ### Background knowledge skills
 
 Skills with `user-invocable: false` in frontmatter are not commands — they're background knowledge loaded by other skills. They appear in the agent's context when a consumer skill says "Load `/skill-name`."
