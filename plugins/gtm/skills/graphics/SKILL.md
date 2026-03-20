@@ -837,6 +837,7 @@ Example — "Slack thread mockup" compound atom:
 - Color mapping: exact token names from brand-tokens.md for Inkeep elements (not hex from memory). **For third-party brand elements** (competitor side of a comparison, customer in a case study), use colors from the brand profile fetched in Step 2f — map `brand` → primary accent, `dark` → text color, `light` → background tint. If no brand profile was fetched, default to Inkeep palette.
 - Typography mapping: font + weight + size for each text element. If the brand profile includes a Google Fonts title font, consider using it for the third-party brand's name/heading to reinforce their identity.
 - Illustration style (if applicable): hand-drawn rules from brand-guide.md
+- Connection plan (if the graphic has connectors/arrows): connector type (elbowed for technical diagrams, curved for brand/creative, straight for simple 1:1), endpoint styles (dot at source + arrow at target, dot+dot for peer relationships, etc.), flow direction (clockwise for cycles, L-to-R or T-to-B for linear), whether connectors need labels, stroke weight and dash pattern for primary vs secondary flows. See connector recipes in `tools/figma-console.md` file.
 
 ### Scaling validation
 - [ ] Heading is 11-15% of canvas height (landscape/wide) or 5-7% (square/portrait)
@@ -858,6 +859,7 @@ Example — "Slack thread mockup" compound atom:
 - [ ] Every generative atom (Tier 2) has a method justification grounded in quality/fidelity — not just a method declaration
 - [ ] No generative atom defaults to Figma shapes without explicitly ruling out Quiver (for organic/illustrative) or Image Gen (for photorealistic/atmospheric)
 - [ ] Every multi-tool atom spells out the full pipeline end-to-end (e.g., "Quiver → SVG import → Figma brand overlay"), not just the primary tool
+- [ ] Connectors (if present) use consistent type, curvature, endpoint style, and stroke weight across the diagram — see connector consistency rules in `tools/figma-console.md` file
 ```
 
 **Rules for the Build Spec:**
@@ -1110,6 +1112,8 @@ For each element in the build plan:
    | Colored bar for a chart element | Properly styled data bar with value label and brand color token | Figma rectangle + text with exact token binding |
 
    Every sub-element in a compound atom deserves its real visual treatment. If you catch yourself building a shape that "represents" something rather than "looks like" it, that's the signal to elevate.
+
+   **Connector-specific craft check** (for arrow/connector atoms): Screenshot the connector and verify: (a) curve direction is correct (not looping backward), (b) arrowhead aligns with the curve tangent (use native `strokeCap`, not separate shapes), (c) endpoint touches the target node edge (not center), (d) curvature is consistent with sibling connectors in the same diagram. See connector AI failure modes in `references/craft-elevation.md` file.
 6. **Fix issues** — if the screenshot or craft-check shows problems, fix before continuing
 
 Once simple atoms are verified and elevated, compose them into compound elements (group into auto-layout frames, set spacing/padding, screenshot and verify).
