@@ -493,7 +493,10 @@ function searchIndex(args: string[]) {
     } else if (arg === "--limit" && args[i + 1]) {
       limit = parseInt(args[++i], 10) || 10;
     } else if (!arg.startsWith("--")) {
-      textTerms.push(arg.toLowerCase());
+      // Split on whitespace so "figma hook" becomes two terms
+      for (const word of arg.toLowerCase().split(/\s+/).filter(Boolean)) {
+        textTerms.push(word);
+      }
     }
   }
 

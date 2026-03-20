@@ -51,10 +51,10 @@ Use the unified search script. It runs keyword search (our index) and semantic s
 
 ```bash
 # Free-text search (runs both keyword + semantic, merges results)
-bun ~/.claude/skills/find-claude/scripts/search.ts "figma hook cleanup"
+bun ~/.claude/skills/find-claude/scripts/search.ts "figma hook"
 
 # Filtered searches (keyword filters + semantic in parallel)
-bun ~/.claude/skills/find-claude/scripts/search.ts --skill eng:spec "openbolt"
+bun ~/.claude/skills/find-claude/scripts/search.ts --skill eng:spec "openbolt credential"
 bun ~/.claude/skills/find-claude/scripts/search.ts --pr 2212
 bun ~/.claude/skills/find-claude/scripts/search.ts --branch feat/auth
 bun ~/.claude/skills/find-claude/scripts/search.ts --today
@@ -65,6 +65,26 @@ bun ~/.claude/skills/find-claude/scripts/search.ts --limit 30 "auth"
 ```
 
 Flags can be combined: `--skill eng:spec --branch feat/auth "credential"` requires all flag conditions AND scores text terms.
+
+**How to construct the query:**
+
+Pass a single query string with 2-3 distinctive keywords. The script splits on whitespace — each word must appear in the session's indexed fields (AND logic for keyword engine). The same string is also used as a natural language query for the semantic engine.
+
+Use flags (`--skill`, `--pr`, `--branch`, `--file`, `--worktree`, `--repo`, `--today`) for structured filters. These apply to the keyword engine only.
+
+**Rules:**
+- Use 2-3 distinctive keywords, not full sentences. Drop generic words ("the", "where", "conversation").
+- If the user mentions a PR, branch, skill, or file — use the flag, not a text term.
+- Don't over-specify — more terms = stricter AND matching. `"figma hook"` is better than `"figma bridge port cleanup hook"`.
+
+| User says | Query |
+|---|---|
+| "find the figma bridge port cleanup hook conversation" | `"figma hook"` |
+| "the one where we were speccing out openbolts credential delegation" | `--skill eng:spec "openbolt credential"` |
+| "conversations about PR 2212" | `--pr 2212` |
+| "what was I working on today?" | `--today` |
+| "where we were debugging doltgres timestamp issues" | `--skill eng:debug "doltgres timestamp"` |
+| "all conversations that touched manage-schema.ts" | `--file manage-schema.ts` |
 
 **How scoring works:**
 - **Keyword score:** `lastUserMessages` (3x), `firstUserMessages` (2x), `continuationSummaries` (2x), structured fields (1x)

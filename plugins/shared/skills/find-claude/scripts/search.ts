@@ -70,6 +70,7 @@ for (let i = 0; i < rawArgs.length; i++) {
       passthrough.push(rawArgs[++i]);
     }
   } else {
+    // Pass the full string to both engines — keyword engine splits on whitespace internally
     textTerms.push(rawArgs[i]);
     passthrough.push(rawArgs[i]);
   }
