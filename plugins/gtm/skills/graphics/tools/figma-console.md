@@ -473,6 +473,90 @@ When a diagram has multiple connectors:
 - **Straight** = simple 1:1 relationships between aligned elements
 - Never mix types within a diagram unless semantically meaningful (e.g., solid elbowed for primary flow + dashed curved for optional)
 
+### Pattern: Connector label (text at midpoint)
+
+Place a text label at the midpoint of a connector. Compute the bezier midpoint, then position a text node offset above the line.
+
+```javascript
+// Add a label to a connector at its midpoint
+function addConnectorLabel(parent, v0, tangentStart, v1, tangentEnd, labelText, color, fontSize) {
+  // Compute bezier midpoint at t=0.5
+  // P0=v0, P1=v0+tangentStart, P2=v1+tangentEnd, P3=v1
+  const p1x = v0.x + (tangentStart?.x || 0), p1y = v0.y + (tangentStart?.y || 0);
+  const p2x = v1.x + (tangentEnd?.x || 0),   p2y = v1.y + (tangentEnd?.y || 0);
+
+  const midX = 0.125*v0.x + 0.375*p1x + 0.375*p2x + 0.125*v1.x;
+  const midY = 0.125*v0.y + 0.375*p1y + 0.375*p2y + 0.125*v1.y;
+
+  // For straight lines: midX = (v0.x+v1.x)/2, midY = (v0.y+v1.y)/2
+
+  const text = figma.createText();
+  parent.appendChild(text);
+  await figma.loadFontAsync({ family: "JetBrains Mono", style: "Medium" });
+  text.characters = labelText;
+  text.fontSize = fontSize || 10;
+  text.fills = [{ type: 'SOLID', color }];
+  text.textCase = 'UPPER';
+
+  // Position above the midpoint (offset perpendicular to line)
+  text.x = midX - text.width / 2;
+  text.y = midY - text.height - 6; // 6px above the line
+  text.name = `label-${labelText.toLowerCase().replace(/\s+/g, '-')}`;
+  return text;
+}
+```
+
+**Label placement rules:**
+- Keep text **horizontal** — rotated text is harder to read. Only rotate if the connector is nearly vertical.
+- Use small text (JetBrains Mono, 9-11px) — labels should not compete with node content
+- For elbowed connectors: place label on the longest segment, not at the corner
+- For multiple parallel connectors: offset labels to different sides to avoid overlap
+
+### Pattern: Bidirectional arrow
+
+Set `strokeCap` on both vertices. Any cap values can be mixed per vertex.
+
+```javascript
+// Bidirectional arrow — arrowheads at both ends
+const vertices = [
+  { x: x1, y: y1, strokeCap: 'ARROW_EQUILATERAL' },
+  { x: x2, y: y2, strokeCap: 'ARROW_EQUILATERAL' }
+];
+```
+
+**Native cap alternatives to separate shapes:**
+- `CIRCLE_FILLED` on a vertex = native dot endpoint (simpler than separate ellipse, but less control over size)
+- `DIAMOND_FILLED` = aggregation/ownership endpoint (UML)
+- `TRIANGLE_FILLED` = generalization endpoint
+
+Mix caps freely: `CIRCLE_FILLED` at source + `ARROW_EQUILATERAL` at target = dot-to-arrow flow.
+
+### Pattern: Bus/trunk connector (shared junction)
+
+Use a single vectorNetwork with shared junction vertices for trunk-and-branch patterns.
+
+```javascript
+// Trunk from left, branching to 3 targets on the right
+vector.vectorNetwork = {
+  vertices: [
+    { x: 100, y: 200 },                                    // trunk start
+    { x: 300, y: 200, cornerRadius: 12 },                  // junction
+    { x: 450, y: 100, strokeCap: 'ARROW_EQUILATERAL' },    // branch 1
+    { x: 450, y: 200, strokeCap: 'ARROW_EQUILATERAL' },    // branch 2
+    { x: 450, y: 300, strokeCap: 'ARROW_EQUILATERAL' }     // branch 3
+  ],
+  segments: [
+    { start: 0, end: 1 },   // trunk
+    { start: 1, end: 2 },   // branch 1
+    { start: 1, end: 3 },   // branch 2
+    { start: 1, end: 4 }    // branch 3
+  ],
+  regions: []
+};
+```
+
+This creates a single vector node where the junction naturally connects all branches. Visually cleaner than separate vectors.
+
 ### Pattern: Hero graphic with text overlay
 
 1. Create background frame at target dimensions
