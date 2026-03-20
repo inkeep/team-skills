@@ -458,10 +458,20 @@ Set endpoints via `strokeCap` on vertices in `vectorNetwork`:
 
 When a diagram has multiple connectors:
 - **Same curvature factor** for all connectors of the same type (normalize by `distance × constant`)
-- **Same stroke weight** across all connectors (2-3px for content diagrams, 1-2px for detailed technical)
-- **Same stroke color** for connectors of the same semantic role (blue for data flow, gray for structural)
+- **Same stroke weight** across all connectors (2-3px primary flow, 1-2px secondary, 1px reference)
+- **Same stroke color** for connectors of the same semantic role (blue for data/AI flow, gray for structural, golden for user actions)
 - **Same arrowhead style** (all `ARROW_EQUILATERAL` or all `ARROW_LINES` — don't mix)
+- **Line style for flow hierarchy** — use `dashPattern` to distinguish flow types:
+  - **Solid** (default) = primary flow, strong relationship
+  - **Dashed** (`vector.dashPattern = [8, 4]`) = alternate path, dependency, conditional
+  - **Dotted** (`vector.dashPattern = [2, 4]`) = informational, reference, weak association
 - **Screenshot each connector individually** — a single sign error in a tangent vector reverses the curve. Batch creation without per-connector verification compounds errors.
+
+**Choosing connector type for the diagram:**
+- **Elbowed** (right-angle turns) = default for technical diagrams (architecture, flowcharts, ER, sequence)
+- **Curved** (smooth arcs) = default for brand illustrations, infographics, cycle diagrams
+- **Straight** = simple 1:1 relationships between aligned elements
+- Never mix types within a diagram unless semantically meaningful (e.g., solid elbowed for primary flow + dashed curved for optional)
 
 ### Pattern: Hero graphic with text overlay
 
