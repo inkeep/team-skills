@@ -899,14 +899,48 @@ Present the Build Spec to the user for review before generating.
 
 ### 4. Generate the graphic
 
-⛔ **Routing decision (before building anything):**
+⛔ **Who builds: parent vs child Claude Code (applies to ALL phases — initial diverge and iteration)**
+
+**Parent edits a frame in-place** only when ALL of these are true:
+- No nodes are created
+- Any deletions are leaf nodes that don't require layout rearrangement (removing a small accent icon = OK; removing a compound element like a mockup = not OK)
+- No layout or hierarchy is restructured
+- The change doesn't cascade across multiple element types (changing one heading's color = OK; "make it dark theme" touching background + text + shadows + cards = not OK)
+- It's a single frame
+- The source is user feedback during iteration (never during initial diverge — Phase 1 always spawns children)
+
+**Spawn a child Claude Code instance** (new iteration frame) when ANY of these are true:
+- New atoms are being created
+- Compound elements are being removed or rebuilt
+- Layout or composition structure is changing
+- Changes cascade across multiple element types
+- Multiple frames need changes (spawn one child per frame, parallel)
+- It's initial diverge (Phase 1) — always spawn, even for a single direction
+
+**Reviewer feedback is always fixed in place on the current frame.** The reviewer is internal QA — its rounds never produce new frames. The child builds, the reviewer evaluates, the child fixes in place, the reviewer re-evaluates — all within the same frame. A `build` event in the direction timeline represents a frame that **passed review** and is ready for the user.
+
+**When uncertain, default to spawning a child.** A new iteration frame preserves rollback and gets independent review. An in-place edit that goes wrong on the Figma canvas has no undo.
+
+| Feedback | Example | Who builds |
+|---|---|---|
+| User: property tweak | "Fix the typo," "make the badge blue," "swap the logo" | Parent in-place |
+| User: delete small element | "Remove that accent icon" | Parent in-place |
+| User: add element | "Add a code snippet block" | Child → new frame |
+| User: remove compound element | "Remove the mockup, try typography-only" | Child → new frame |
+| User: cascading change | "Make it dark theme," "try the warm palette" | Child → new frame |
+| User: layout change | "Try a different layout," "flip the hierarchy" | Child → new frame |
+| User: multiple frames | "Fix the logo on all 3 frames" | Child per frame (parallel) |
+| Reviewer: any finding | "Badge color wrong," "arrows form star pattern" | Fix in place on current frame |
+| Initial diverge | Any | Child (always) |
+
+---
+
+⛔ **Mode routing (before building anything):**
 
 | Situation | Path |
 |---|---|
-| **Exploration mode (any number of directions)** | **Always spawn `/nest-claude` children.** Create `state.json`, spawn one child per direction. The parent NEVER builds frames — it orchestrates and verifies. **Load:** `references/exploration-workflow.md` file for the full coordination protocol, state.json schema, and child spawn template. |
+| **Exploration mode (any number of directions)** | **Spawn `/nest-claude` children.** Create `state.json` + direction files, spawn one child per direction. **Load:** `references/exploration-workflow.md` for the full coordination protocol, state.json schema, and child spawn template. |
 | **Single-pass mode (trivial edits only)** | **Direct build.** The parent builds the frame using Phase A-E below. Single-pass is for trivial edits to existing assets (changing title text, swapping a logo) — not for new graphics. |
-
-**The parent is always the orchestrator, never the builder.** Even for a single direction in exploration mode, spawn a child. This ensures: (1) the parent can independently verify all frames without reviewing its own work, (2) consistent code path regardless of direction count, (3) children always run the full build cycle including the reviewer subagent.
 
 The parent's job is: (1) write `state.json` (shared context) + direction files (per-direction `spec` events), (2) create Figma Sections, (3) spawn children, (4) read direction files and present results. Each child loads `/brand` and `/graphics`, reads `state.json` for shared context and its direction file for its Build Spec, builds its frame, and runs its own self-critique + reviewer loop. Children have full authority to adjust the spec, source better assets, create new ones, or omit provided assets that don't serve their direction. See `references/exploration-workflow.md` for the full protocol.
 

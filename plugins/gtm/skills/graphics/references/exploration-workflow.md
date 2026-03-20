@@ -130,14 +130,14 @@ Your direction slug is: immersive-slack-thread
    - Then plan the build order (method-aware: asset fetches → external generations → Figma shapes → imports → compounds → connections).
 8. Step 4, Phases A, C-D: Stage assets, build atoms bottom-up, compose final design (targeting Section by node ID). **Place the final composition frame at the x-position computed in step 6** — the working atoms frame can go anywhere within the Section, but the final frame must be positioned for left-to-right iteration progression.
 9. **Phase E: 3-pass self-critique (all passes mandatory, recursive).** `references/craft-elevation.md` should already be loaded from step 3. Pass 1: structural correctness (meet success criteria). Pass 2: craft elevation (push every element from "correct" to "rich" — count depth stack layers, evaluate each atom against elevation strategies, implement ≥2 elevations). Pass 3: cohesion and polish (unified composition, spacing rhythm, thumbnail integrity, micro-polish). **Recursive:** after Pass 3, ask "what would a design lead push back on?" — if the answer isn't "nothing," run another Pass 2 → Pass 3 cycle. Max 5 total passes. Stop when: depth stack ≥5, all atoms at "Elevated," cohesion test passes, no actionable improvement remaining. Do not proceed to the reviewer until the elevation loop exits.
-10. Step 5: Two-layer verification loop (max 3 iterations):
-    - Layer 1: programmatic checks (`figma_lint_design`, bounds, dimensions). Fix until clean.
+10. Step 5: Two-layer verification loop (max 3 iterations). **All reviewer fixes are in place on the current frame — never create a new frame for a reviewer finding.** The reviewer is internal QA; its rounds are not user-facing iterations.
+    - Layer 1: programmatic checks (`figma_lint_design`, bounds, dimensions, spatial fidelity). Fix in place until clean.
     - Layer 2: reviewer subagent (`capture-for-review.ts` → reviewer evaluates at 1568px + 400px). Pass the Build Spec's success criteria AND information architecture as evaluation context.
     - The reviewer returns structured findings. **Append a `feedback` event** to your direction file for each review round — verdict, findings with evidence, and revision instructions.
-    - Read verdict: **PASS** → proceed. **PASS WITH SUGGESTIONS** → implement quick fixes, proceed. **NEEDS REVISION** → assess findings against context, apply valid fixes, restart from Layer 1.
+    - Read verdict: **PASS** → proceed to step 11. **PASS WITH SUGGESTIONS** → implement quick fixes in place, proceed. **NEEDS REVISION** → fix the current frame in place, restart from Layer 1.
     - After 3 iterations without PASS → set direction file `status` to `error`.
     - **Every frame must pass the self-critique loop AND the reviewer before the user sees it.** No exceptions. Self-reported verdicts (`SELF-REVIEWED`, `SELF_PASS`) do not count.
-11. Append a `build` event to your direction file with the frame's iteration ID, node ID, and name.
+11. **After reviewer PASS:** Append a `build` event to your direction file with the frame's iteration ID, node ID, and name. A `build` event means the frame passed review and is ready for the user.
 
 ### Collect results (parent, serialized)
 
@@ -164,11 +164,12 @@ Respond to whatever the user says. The user might:
 
 The agent's job is always the same:
 1. **Interpret** — What is the user asking for? New direction, refinement, fix, or split?
-2. **Build** — If ≥2 independent frames: spawn `/nest-claude` children (parallel). If 1 frame or orchestration: parent builds directly (sequential).
-3. **Verify** — Step 5 two-layer verification on every frame (children handle this internally when parallel; parent handles when sequential)
-4. **Organize** — Place in the correct Section (new section for new direction, next column for iteration)
-5. **Persist** — Append `feedback` event (with user's verdict and feedback) to the direction file. Set `status` and `color` on the direction file if needed (approved/archived).
-6. **Present** — Direct the user to the canvas
+2. **Route** — Apply the "Who builds" rule from SKILL.md Step 4. Is this a property tweak on a single frame (parent in-place), or a structural change / new iteration (child)?
+3. **Build** — Parent edits in-place, OR spawns child Claude Code instance(s) for new iteration frame(s).
+4. **Verify** — Children handle review internally (reviewer rounds fix in place until PASS). For parent in-place edits, screenshot and verify after each change.
+5. **Organize** — New iteration frames go in the correct Section (new section for new direction, next column for iteration). In-place edits don't change canvas organization.
+6. **Persist** — Append `feedback` event (with user's verdict and feedback) to the direction file. Set `status` and `color` on the direction file if needed (approved/archived).
+7. **Present** — Direct the user to the canvas
 
 ### Sub-variant diversity
 
@@ -193,16 +194,22 @@ Countermeasures:
 - When the user says "something feels off" after several iterations, consider whether the direction has drifted from the original concept. The fix may be a reset, not another incremental change.
 - The re-anchor to intent check (every 3-4 rounds) exists for this reason — creative drift is the norm, not the exception.
 
-**When to parallelize vs build sequentially:**
+**When to parallelize, spawn a child, or edit in-place:**
 
-| Situation | Parallel or sequential? |
-|---|---|
-| Build N selected directions | **Parallel** — each is independent |
-| "Build 3 new variations of option 1" | **Parallel** — each variation is independent |
-| "Fix the logo on all 3 frames" | **Parallel** — same fix applied independently |
-| "Make option 1 darker" | **Sequential** — single frame |
-| Canvas orchestration (archive, recolor sections) | **Sequential** — coordination-dependent |
-| Feedback interpretation ("something feels off") | **Sequential** — requires parent judgment |
+| Situation | Who builds | Why |
+|---|---|---|
+| Build N selected directions | **Children (parallel)** | Each is independent; each needs its own review |
+| "Build 3 new variations of option 1" | **Children (parallel)** | Each variation is a new frame |
+| "Fix the logo on all 3 frames" | **Children (parallel)** | Multiple frames = always children |
+| "Make the heading bigger" (single frame) | **Parent in-place** | Property change on one node, no structural change |
+| "Swap the logo SVG" (single frame) | **Parent in-place** | Asset replace on one node |
+| "Remove that small accent" (single frame) | **Parent in-place** | Leaf node deletion, layout holds |
+| "Make it dark theme" | **Child → new frame** | Cascades across background, text, shadows, cards |
+| "Add a code snippet block" | **Child → new frame** | New atom being created |
+| "Try a different layout" | **Child → new frame** | Hierarchy restructure |
+| "Remove the mockup, try typography-only" | **Child → new frame** | Compound element removed, layout reflows |
+| Canvas orchestration (archive, recolor sections) | **Parent** | Coordination, not building |
+| Feedback interpretation ("something feels off") | **Parent** | Requires judgment before routing |
 
 **Expect 3-5+ feedback rounds.** Creative preferences emerge progressively. This is normal.
 
@@ -394,8 +401,8 @@ Each direction gets its own file at `directions/<slug>.json`. This is the **sing
 |---|---|---|
 | `spec` | parent | The full Build Spec — concept, end-state vision, success criteria, thumbnail sketch, recipes, atom audit with sub-element decomposition. Written once as the initial entry. Immutable. For split directions, includes `splitFrom` provenance. |
 | `spec-update` | child | A delta to the spec — what field changed, what it changed to, and why. Covers method changes, new/removed atoms, asset replacements, layout adjustments, recipe additions, criteria changes. |
-| `build` | child | A frame was built — iteration ID, Figma node ID, frame name, trigger, and instruction (what this iteration was responding to). |
-| `feedback` | reviewer / user | Reviewer: verdict + findings + revision instructions. User: verdict + feedback text. |
+| `build` | child | A frame that **passed review** and is ready for the user — iteration ID, Figma node ID, frame name, trigger, and instruction (what this iteration was responding to). Reviewer rounds happen before this event; they fix the frame in place until PASS. Multiple reviewer `feedback` events may precede a single `build` event. |
+| `feedback` | reviewer / user | Reviewer: verdict + findings + revision instructions (internal QA — never triggers a new frame). User: verdict + feedback text (may trigger a new iteration via child). |
 
 **Reading pattern for the child:** `spec` event = the brief. All `spec-update` events = adjustments. Last `feedback` event = what to act on. All `build` events = previous iterations for positioning.
 
