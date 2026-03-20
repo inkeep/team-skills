@@ -47,6 +47,8 @@ The primary interactive/focal elements — chat panels, calendar frames, flow di
 
 The meaningful content — icons, data shapes, indicators, active buttons. These use solid fills.
 
+> **For standalone icons** (not inside an illustration container), use `content-types/icons.md` instead. Tier 3 rules apply only when icons appear INSIDE illustration containers — the container's hand-drawn quality carries the brand warmth, so the icon content is clean and geometric.
+
 | Property | Value | Notes |
 |---|---|---|
 | **Fill color** | `#3784FF` (brand/primary) | Solid fill for icons and active elements |

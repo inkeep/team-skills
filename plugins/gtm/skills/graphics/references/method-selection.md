@@ -50,7 +50,7 @@ For each Tier 2 atom or sub-element in the Build Spec, walk this tree top-to-bot
 → **YES:** **Quiver (Option D).** Produces editable SVG with semantic layering that scales infinitely.
   - Set `--instructions` with brand color constraints (hex codes, style rules, negative constraints)
   - Use reference images (`--references`) for style consistency with existing brand illustrations
-  - For icon sets: generate the first icon, pass as `--references` for subsequent icons
+  - For icon sets: **Load** `content-types/icons.md` for the reference-chaining protocol, set coherence rules, and Quiver template
   - **Exception → Figma shapes** only if the illustration is purely geometric with <10 elements (box-and-arrow diagrams, simple grids, basic shape compositions). If the illustration requires >10 distinct shape elements or any organic curves, use Quiver.
 
 → **NO:** Continue to step 4.

@@ -80,6 +80,8 @@ To run N children concurrently, launch each as a background Bash command. Two pa
 
 Launch each child with `run_in_background: true` on the Bash tool. This returns immediately and gives you a task ID for polling.
 
+**Do NOT use `&` (shell backgrounding) inside the command.** The Bash tool's `run_in_background: true` already runs the entire command in a background subprocess. Adding `&` inside causes the shell to exit immediately after spawning the claude process, which orphans it and breaks any output pipes — the parent sees "completed (exit code 0)" instantly while the claude process runs as an orphan with no captured output.
+
 ```
 Bash(command: "env -u CLAUDECODE -u CLAUDE_CODE_ENTRYPOINT claude -p '...' --dangerously-skip-permissions --max-turns 75 --output-format json < /dev/null 2>&1 | tee /tmp/child-1-output.json",
      run_in_background: true,
@@ -601,3 +603,4 @@ env -u CLAUDECODE -u CLAUDE_CODE_ENTRYPOINT claude \
 | "command not found: claude" | Claude CLI not on PATH | Check `which claude` or use full path |
 | Bash tool times out (600s) | Child takes longer than 10 minutes | Use `run_in_background: true` |
 | Children write conflicting files | Shared output paths | Use unique paths per child (include `$$` or index) |
+| Child appears to complete instantly with 0-byte output | Used `&` inside a `run_in_background: true` Bash command (double-backgrounding). The shell exits after `&`, orphaning the claude process and breaking output pipes. | Remove `&` from the command. The Bash tool's `run_in_background: true` already handles backgrounding. The claude command must be the foreground process inside that shell. |

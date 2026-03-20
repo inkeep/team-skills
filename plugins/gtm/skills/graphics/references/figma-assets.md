@@ -38,14 +38,11 @@ Master design files are team-maintained Figma files containing canonical compone
 | Page | Node ID |
 |---|---|
 | Brand Assets (master asset page) | `5003:63` |
-| Logos section | `5003:64` |
 | Icon Set section | `5006:187898` |
+| Logos section | `5003:64` |
 | Illustrations section | `5003:66` |
-| Customers section | `5045:158` |
-| Third-Party Logos section | `5003:70` |
-| Decorative & Backgrounds section | `5003:69` |
-| UI Elements section | `5003:68` |
-| Brand Mascot section | `5003:65` |
+| Decorative section | `5169:600` |
+| Backgrounds section | `5003:69` |
 | Reference Examples section | `5097:4194` |
 
 > For other pages, use the Figma MCP to get their node IDs dynamically. Node IDs may change if pages are restructured.
@@ -55,15 +52,13 @@ Master design files are team-maintained Figma files containing canonical compone
 | What you need | Where to look first | Fallback |
 |---|---|---|
 | Logo (any format) | Brand Assets → Logos (`logo/`) | — |
-| Any icon | Brand Assets → Icon Set (`iconset/`) | — |
+| Any icon | Brand Assets → Icon Set (21 style-based sub-sections) | Check `tokens/marketing.md` for component keys |
 | Illustrations | Brand Assets → Illustrations (`illustration/`) | — |
-| Customer assets (logo + case study hero) | Brand Assets → Customers (`customer/`) | — |
-| Integration partner logo | Brand Assets → Third-Party Logos (`third-party/`) | `tools/fetch-logo.ts` for logos not in the library |
-| Background, gradient, texture | Brand Assets → Decorative & Backgrounds (`background/`) | — |
-| Product UI mockup | Brand Assets → UI Elements (`ui/`) | — |
-| Mascot/Keepie | Brand Assets → Brand Mascot (`mascot/`) | — |
+| Integration partner logo | `tools/fetch-logo.ts` | — |
+| Background, gradient, texture | Brand Assets → Backgrounds (`background/`) | — |
+| Decorative lines, arrows, marks | Brand Assets → Decorative (`decorative/`) | — |
 | Brand colors, typography, spacing | Design tokens in the Inkeep Brand Assets file | Token values in `tokens/marketing.md` |
-| Need visual inspiration or style reference | Reference Examples (`_reference/` prefix) | Gradient swatches, UI screenshots, illustration variants. For style matching only — do NOT place in compositions. |
+| Need visual inspiration or style reference | Reference Examples (`_reference/` prefix) | For style matching only — do NOT place in compositions. |
 
 ## Brand Assets Page
 
@@ -81,14 +76,11 @@ All assets use **slash-separated hierarchical names**: `{section}/{subcategory}/
 
 | Section | Path prefix | What's here | How to search |
 |---|---|---|---|
+| **Icon Set** | (style-group sub-sections) | 94 unique icons across 21 style-based sub-sections (Marketing Dark/Blue, Concept Dark/Blue, Bullets, Arrows, etc.). Normalized to 40×40 viewBox. **Search here first for any icon.** | Search by icon name within the Icon Set section |
 | **Logos** | `logo/` | Brand marks in all variants — full logo, icon-only, wordmark, dual-mark, .com, favicons. Each in color/black/white. | `logo/full-color`, `logo/icon/black`, `logo/favicon/` |
-| **Icon Set** | `iconset/` | All atomic icons normalized to ~40px. **Search here first for any icon.** Covers use cases, products, platform, utility, navigation, status, brand marks, favicons. | `iconset/search`, `iconset/ai-chat-sparkle`, `iconset/status/` |
-| **Illustrations** | `illustration/` | Product illustrations, use-case illustrations, developer page, homepage, security. Descriptively named by subject. | `illustration/use-case/`, `illustration/product/`, `illustration/security/` |
-| **Customers** | `customer/` | Per-customer assets — brand mark logo + case study hero illustration, grouped by company. | `customer/posthog/`, `customer/payabli/` |
-| **Third-Party Logos** | `third-party/` | Integration partner wordmarks (Slack, GitHub, etc.). For customer logos, check the Customers section instead. | `third-party/slack`, `third-party/github` |
-| **Decorative & Backgrounds** | `background/` | Footer gradients, grid patterns, dots, polygons, gradient backgrounds (by size and color), textures. | `background/gradient/wide/`, `background/texture/` |
-| **UI Elements** | `ui/` | Product UI mockups — search bar, data visualizations, chat widget. | `ui/data-viz/`, `ui/chat-widget` |
-| **Brand Mascot** | `mascot/` | Keepie character. | `mascot/keepie/` |
+| **Illustrations** | `illustration/` | Product illustrations, use-case illustrations, developer page, homepage, security, process steps, product UI screens, building blocks. | `illustration/use-case/`, `illustration/product/`, `illustration/process/` |
+| **Decorative** | `decorative/` | Hand-drawn arrows, lines, marks & shapes (brand hex ring, scribble loop, splash, etc.). | `decorative/arrow-down-blue`, `decorative/orbital-arcs` |
+| **Backgrounds** | `background/` | Footer gradients, grid patterns, gradient backgrounds (square and wide formats). | `background/gradient/wide/`, `background/gradient/square/` |
 
 > **Do not hardcode asset counts or specific names** — the library evolves. Always search dynamically using the path prefixes above.
 
@@ -103,12 +95,12 @@ Use `figma_execute` to search by name or prefix. Always scope searches to the Br
 const page = await figma.getNodeByIdAsync('5003:63');
 const logo = page.findOne(n => n.name === 'logo/full-color');
 
-// Find all assets matching a prefix
-const icons = page.findAll(n => n.name.startsWith('iconset/'));
-
-// Find within a specific section
+// Find all icons (search within Icon Set section)
 const iconSet = await figma.getNodeByIdAsync('5006:187898');
-const searchIcon = iconSet.findOne(n => n.name === 'iconset/search');
+const allIcons = iconSet.findAll(n => n.type === 'FRAME' || n.type === 'COMPONENT');
+
+// Find a specific icon by name
+const searchIcon = iconSet.findOne(n => n.name === 'search');
 ```
 
 ### How to use an asset

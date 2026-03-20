@@ -88,7 +88,7 @@ Reference images are the highest-fidelity brand signal you can pass to an extern
 | **Photorealistic image** | An existing product mockup or brand photo | Export from Figma Brand Assets → UI Elements section |
 | **Background/texture** | An existing gradient or decorative background | `assets/decorative-and-backgrounds/` |
 
-**Compounding consistency:** When generating multiple assets in the same style (e.g., an icon set of 4 icons), generate the first one, then use it as the reference for all subsequent ones. Each generation anchors to the previous output, compounding style consistency across the set.
+**Compounding consistency:** When generating multiple assets in the same style (e.g., an icon set of 4 icons), generate the first one, then use it as the reference for all subsequent ones. Each generation anchors to the previous output, compounding style consistency across the set. For icon set generation specifically, see `graphics` skill `content-types/icons.md` for the validated reference-chaining protocol (sliding window with re-anchoring every 3rd icon).
 
 **Sizing:** Export reference images at 768-1024px on the longest edge. Too small loses detail; too large wastes tokens. PNG format for all references.
 

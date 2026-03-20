@@ -1,459 +1,4 @@
 {
-  "custom-agent": {
-    "key": "",
-    "id": "5161:103",
-    "fileKey": "D7NDSM2peo1iLhkjLxmGP5"
-  },
-  "support-copilot": {
-    "key": "",
-    "id": "5168:262",
-    "fileKey": "D7NDSM2peo1iLhkjLxmGP5"
-  },
-  "list-cursor": {
-    "key": "",
-    "id": "5168:277",
-    "fileKey": "D7NDSM2peo1iLhkjLxmGP5"
-  },
-  "visual-builder": {
-    "key": "",
-    "id": "5168:336",
-    "fileKey": "D7NDSM2peo1iLhkjLxmGP5"
-  },
-  "b2b-customer-support": {
-    "key": "",
-    "id": "5168:361",
-    "fileKey": "D7NDSM2peo1iLhkjLxmGP5"
-  },
-  "flowchart": {
-    "key": "",
-    "id": "5168:377",
-    "fileKey": "D7NDSM2peo1iLhkjLxmGP5"
-  },
-  "docs": {
-    "key": "",
-    "id": "5168:385",
-    "fileKey": "D7NDSM2peo1iLhkjLxmGP5"
-  },
-  "ask-ai-assistant": {
-    "key": "",
-    "id": "5168:401",
-    "fileKey": "D7NDSM2peo1iLhkjLxmGP5"
-  },
-  "documentation-teams": {
-    "key": "",
-    "id": "5168:424",
-    "fileKey": "D7NDSM2peo1iLhkjLxmGP5"
-  },
-  "documents": {
-    "key": "",
-    "id": "5168:437",
-    "fileKey": "D7NDSM2peo1iLhkjLxmGP5"
-  },
-  "b2c-customer-service": {
-    "key": "",
-    "id": "5168:442",
-    "fileKey": "D7NDSM2peo1iLhkjLxmGP5"
-  },
-  "doc-search": {
-    "key": "",
-    "id": "5168:449",
-    "fileKey": "D7NDSM2peo1iLhkjLxmGP5"
-  },
-  "docs-writer": {
-    "key": "",
-    "id": "5168:486",
-    "fileKey": "D7NDSM2peo1iLhkjLxmGP5"
-  },
-  "marketing-teams": {
-    "key": "",
-    "id": "5168:500",
-    "fileKey": "D7NDSM2peo1iLhkjLxmGP5"
-  },
-  "webpage-chat": {
-    "key": "",
-    "id": "5168:513",
-    "fileKey": "D7NDSM2peo1iLhkjLxmGP5"
-  },
-  "blog": {
-    "key": "",
-    "id": "5168:541",
-    "fileKey": "D7NDSM2peo1iLhkjLxmGP5"
-  },
-  "content-marketer": {
-    "key": "",
-    "id": "5168:554",
-    "fileKey": "D7NDSM2peo1iLhkjLxmGP5"
-  },
-  "visual-builder-blue": {
-    "key": "",
-    "id": "5168:314",
-    "fileKey": "D7NDSM2peo1iLhkjLxmGP5"
-  },
-  "b2b-customer-support-blue": {
-    "key": "",
-    "id": "5168:324",
-    "fileKey": "D7NDSM2peo1iLhkjLxmGP5"
-  },
-  "docs-blue": {
-    "key": "",
-    "id": "5168:412",
-    "fileKey": "D7NDSM2peo1iLhkjLxmGP5"
-  },
-  "documentation-teams-blue": {
-    "key": "",
-    "id": "5168:418",
-    "fileKey": "D7NDSM2peo1iLhkjLxmGP5"
-  },
-  "b2c-customer-service-blue": {
-    "key": "",
-    "id": "5168:430",
-    "fileKey": "D7NDSM2peo1iLhkjLxmGP5"
-  },
-  "case-studies-blue": {
-    "key": "",
-    "id": "5168:457",
-    "fileKey": "D7NDSM2peo1iLhkjLxmGP5"
-  },
-  "marketing-teams-blue": {
-    "key": "",
-    "id": "5168:522",
-    "fileKey": "D7NDSM2peo1iLhkjLxmGP5"
-  },
-  "blog-blue": {
-    "key": "",
-    "id": "5168:563",
-    "fileKey": "D7NDSM2peo1iLhkjLxmGP5"
-  },
-  "no-code-agent-studio": {
-    "key": "",
-    "id": "5168:344",
-    "fileKey": "D7NDSM2peo1iLhkjLxmGP5"
-  },
-  "developer-framework": {
-    "key": "",
-    "id": "5168:396",
-    "fileKey": "D7NDSM2peo1iLhkjLxmGP5"
-  },
-  "agent-workforce": {
-    "key": "",
-    "id": "5168:464",
-    "fileKey": "D7NDSM2peo1iLhkjLxmGP5"
-  },
-  "developers-blue": {
-    "key": "",
-    "id": "5168:471",
-    "fileKey": "D7NDSM2peo1iLhkjLxmGP5"
-  },
-  "product-teams-blue": {
-    "key": "",
-    "id": "5168:586",
-    "fileKey": "D7NDSM2peo1iLhkjLxmGP5"
-  },
-  "enterprise": {
-    "key": "",
-    "id": "5168:592",
-    "fileKey": "D7NDSM2peo1iLhkjLxmGP5"
-  },
-  "content-writer-pen": {
-    "key": "",
-    "id": "5160:91",
-    "fileKey": "D7NDSM2peo1iLhkjLxmGP5"
-  },
-  "profile": {
-    "key": "",
-    "id": "5160:95",
-    "fileKey": "D7NDSM2peo1iLhkjLxmGP5"
-  },
-  "account": {
-    "key": "",
-    "id": "5168:258",
-    "fileKey": "D7NDSM2peo1iLhkjLxmGP5"
-  },
-  "internal-copilot": {
-    "key": "",
-    "id": "5168:303",
-    "fileKey": "D7NDSM2peo1iLhkjLxmGP5"
-  },
-  "content-writer": {
-    "key": "",
-    "id": "5168:352",
-    "fileKey": "D7NDSM2peo1iLhkjLxmGP5"
-  },
-  "bring-clarity": {
-    "key": "",
-    "id": "5168:355",
-    "fileKey": "D7NDSM2peo1iLhkjLxmGP5"
-  },
-  "customer-assistant": {
-    "key": "",
-    "id": "5168:373",
-    "fileKey": "D7NDSM2peo1iLhkjLxmGP5"
-  },
-  "chat": {
-    "key": "",
-    "id": "5168:392",
-    "fileKey": "D7NDSM2peo1iLhkjLxmGP5"
-  },
-  "sales-teams": {
-    "key": "",
-    "id": "5168:478",
-    "fileKey": "D7NDSM2peo1iLhkjLxmGP5"
-  },
-  "website": {
-    "key": "",
-    "id": "5168:535",
-    "fileKey": "D7NDSM2peo1iLhkjLxmGP5"
-  },
-  "lines": {
-    "key": "",
-    "id": "5168:551",
-    "fileKey": "D7NDSM2peo1iLhkjLxmGP5"
-  },
-  "ui-component-library": {
-    "key": "",
-    "id": "5165:184",
-    "fileKey": "D7NDSM2peo1iLhkjLxmGP5"
-  },
-  "mcp": {
-    "key": "",
-    "id": "5165:189",
-    "fileKey": "D7NDSM2peo1iLhkjLxmGP5"
-  },
-  "multi-agent-architecture": {
-    "key": "",
-    "id": "5166:194",
-    "fileKey": "D7NDSM2peo1iLhkjLxmGP5"
-  },
-  "ai-unified-search": {
-    "key": "",
-    "id": "5168:253",
-    "fileKey": "D7NDSM2peo1iLhkjLxmGP5"
-  },
-  "build-trust": {
-    "key": "",
-    "id": "5168:272",
-    "fileKey": "D7NDSM2peo1iLhkjLxmGP5"
-  },
-  "technical-guidance": {
-    "key": "",
-    "id": "5168:300",
-    "fileKey": "D7NDSM2peo1iLhkjLxmGP5"
-  },
-  "billing": {
-    "key": "",
-    "id": "5168:495",
-    "fileKey": "D7NDSM2peo1iLhkjLxmGP5"
-  },
-  "bug": {
-    "key": "",
-    "id": "5168:575",
-    "fileKey": "D7NDSM2peo1iLhkjLxmGP5"
-  },
-  "product-teams": {
-    "key": "",
-    "id": "5168:589",
-    "fileKey": "D7NDSM2peo1iLhkjLxmGP5"
-  },
-  "send-circle": {
-    "key": "",
-    "id": "5159:84",
-    "fileKey": "D7NDSM2peo1iLhkjLxmGP5"
-  },
-  "globe": {
-    "key": "",
-    "id": "5168:538",
-    "fileKey": "D7NDSM2peo1iLhkjLxmGP5"
-  },
-  "02-thin-crescent": {
-    "key": "",
-    "id": "5163:170",
-    "fileKey": "D7NDSM2peo1iLhkjLxmGP5"
-  },
-  "04-crescent": {
-    "key": "",
-    "id": "5164:177",
-    "fileKey": "D7NDSM2peo1iLhkjLxmGP5"
-  },
-  "03-quarter": {
-    "key": "",
-    "id": "5168:234",
-    "fileKey": "D7NDSM2peo1iLhkjLxmGP5"
-  },
-  "01-outline": {
-    "key": "",
-    "id": "5168:241",
-    "fileKey": "D7NDSM2peo1iLhkjLxmGP5"
-  },
-  "07-crescent-filled": {
-    "key": "",
-    "id": "5163:173",
-    "fileKey": "D7NDSM2peo1iLhkjLxmGP5"
-  },
-  "09-bean": {
-    "key": "",
-    "id": "5164:180",
-    "fileKey": "D7NDSM2peo1iLhkjLxmGP5"
-  },
-  "08-three-quarter": {
-    "key": "",
-    "id": "5168:237",
-    "fileKey": "D7NDSM2peo1iLhkjLxmGP5"
-  },
-  "06-filled": {
-    "key": "",
-    "id": "5168:244",
-    "fileKey": "D7NDSM2peo1iLhkjLxmGP5"
-  },
-  "arrow-upward": {
-    "key": "",
-    "id": "5160:57",
-    "fileKey": "D7NDSM2peo1iLhkjLxmGP5"
-  },
-  "arrow-downward": {
-    "key": "",
-    "id": "5160:61",
-    "fileKey": "D7NDSM2peo1iLhkjLxmGP5"
-  },
-  "arrow-straight": {
-    "key": "",
-    "id": "5160:65",
-    "fileKey": "D7NDSM2peo1iLhkjLxmGP5"
-  },
-  "arrow-left": {
-    "key": "",
-    "id": "5162:138",
-    "fileKey": "D7NDSM2peo1iLhkjLxmGP5"
-  },
-  "arrow-right": {
-    "key": "",
-    "id": "5162:148",
-    "fileKey": "D7NDSM2peo1iLhkjLxmGP5"
-  },
-  "arrow-circle-left": {
-    "key": "",
-    "id": "5162:126",
-    "fileKey": "D7NDSM2peo1iLhkjLxmGP5"
-  },
-  "arrow-circle-right": {
-    "key": "",
-    "id": "5162:132",
-    "fileKey": "D7NDSM2peo1iLhkjLxmGP5"
-  },
-  "up": {
-    "key": "",
-    "id": "5168:213",
-    "fileKey": "D7NDSM2peo1iLhkjLxmGP5"
-  },
-  "down": {
-    "key": "",
-    "id": "5168:217",
-    "fileKey": "D7NDSM2peo1iLhkjLxmGP5"
-  },
-  "trend-up": {
-    "key": "",
-    "id": "5168:221",
-    "fileKey": "D7NDSM2peo1iLhkjLxmGP5"
-  },
-  "trend-down": {
-    "key": "",
-    "id": "5168:225",
-    "fileKey": "D7NDSM2peo1iLhkjLxmGP5"
-  },
-  "tick": {
-    "key": "",
-    "id": "5168:248",
-    "fileKey": "D7NDSM2peo1iLhkjLxmGP5"
-  },
-  "circle-minus": {
-    "key": "",
-    "id": "5168:283",
-    "fileKey": "D7NDSM2peo1iLhkjLxmGP5"
-  },
-  "hex-puzzle": {
-    "key": "",
-    "id": "5168:288",
-    "fileKey": "D7NDSM2peo1iLhkjLxmGP5"
-  },
-  "hex-person": {
-    "key": "",
-    "id": "5168:306",
-    "fileKey": "D7NDSM2peo1iLhkjLxmGP5"
-  },
-  "circle-person": {
-    "key": "",
-    "id": "5168:310",
-    "fileKey": "D7NDSM2peo1iLhkjLxmGP5"
-  },
-  "color": {
-    "key": "",
-    "id": "5160:73",
-    "fileKey": "D7NDSM2peo1iLhkjLxmGP5"
-  },
-  "filled-light": {
-    "key": "",
-    "id": "5160:77",
-    "fileKey": "D7NDSM2peo1iLhkjLxmGP5"
-  },
-  "brand-mark-stroke": {
-    "key": "",
-    "id": "5160:82",
-    "fileKey": "D7NDSM2peo1iLhkjLxmGP5"
-  },
-  "filled-blue": {
-    "key": "",
-    "id": "5160:86",
-    "fileKey": "D7NDSM2peo1iLhkjLxmGP5"
-  },
-  "white": {
-    "key": "",
-    "id": "5161:99",
-    "fileKey": "D7NDSM2peo1iLhkjLxmGP5"
-  },
-  "brand-mark-outline": {
-    "key": "",
-    "id": "5162:122",
-    "fileKey": "D7NDSM2peo1iLhkjLxmGP5"
-  },
-  "outline-interlocking": {
-    "key": "",
-    "id": "5168:229",
-    "fileKey": "D7NDSM2peo1iLhkjLxmGP5"
-  },
-  "close": {
-    "key": "",
-    "id": "5159:81",
-    "fileKey": "D7NDSM2peo1iLhkjLxmGP5"
-  },
-  "x": {
-    "key": "",
-    "id": "5167:209",
-    "fileKey": "D7NDSM2peo1iLhkjLxmGP5"
-  },
-  "polygon": {
-    "key": "",
-    "id": "5159:78",
-    "fileKey": "D7NDSM2peo1iLhkjLxmGP5"
-  },
-  "arrow-prominent": {
-    "key": "",
-    "id": "5162:158",
-    "fileKey": "D7NDSM2peo1iLhkjLxmGP5"
-  },
-  "copy": {
-    "key": "",
-    "id": "5160:69",
-    "fileKey": "D7NDSM2peo1iLhkjLxmGP5"
-  },
-  "padlock": {
-    "key": "",
-    "id": "5168:292",
-    "fileKey": "D7NDSM2peo1iLhkjLxmGP5"
-  },
-  "password-lock": {
-    "key": "",
-    "id": "5168:578",
-    "fileKey": "D7NDSM2peo1iLhkjLxmGP5"
-  },
   "logo/dual-mark-outline/black": {
     "key": "3e0f5d1d6712c1527965073c325cbf255e7f89a5",
     "id": "5097:4195",
@@ -654,26 +199,6 @@
     "id": "5097:4214",
     "fileKey": "D7NDSM2peo1iLhkjLxmGP5"
   },
-  "illustration/homepage/multi-agent-sdk": {
-    "key": "",
-    "id": "5169:601",
-    "fileKey": "D7NDSM2peo1iLhkjLxmGP5"
-  },
-  "illustration/homepage/ui-components": {
-    "key": "",
-    "id": "5169:629",
-    "fileKey": "D7NDSM2peo1iLhkjLxmGP5"
-  },
-  "illustration/homepage/rag-data-connectors": {
-    "key": "",
-    "id": "5169:648",
-    "fileKey": "D7NDSM2peo1iLhkjLxmGP5"
-  },
-  "illustration/homepage/mcp-and-tools": {
-    "key": "",
-    "id": "5169:663",
-    "fileKey": "D7NDSM2peo1iLhkjLxmGP5"
-  },
   "illustration/ui-screen/analytics-performance": {
     "key": "795bd20fb58c432c77c8beed740e35054fcf033d",
     "id": "5104:4544",
@@ -744,11 +269,6 @@
     "id": "5113:219",
     "fileKey": "D7NDSM2peo1iLhkjLxmGP5"
   },
-  "_reference/decorative/depth-workflow-composition": {
-    "key": "",
-    "id": "5119:238",
-    "fileKey": "D7NDSM2peo1iLhkjLxmGP5"
-  },
   "ui/search-bar": {
     "key": "9481b97c8b3d5c6e77376988f7d06f0adaa9835a",
     "id": "5097:4234",
@@ -769,11 +289,6 @@
     "id": "5121:476",
     "fileKey": "D7NDSM2peo1iLhkjLxmGP5"
   },
-  "background/dots/scattered-hexagons": {
-    "key": "c67d26eb291f504f3eef2172b65fa3e9a44f8f18",
-    "id": "5097:4235",
-    "fileKey": "D7NDSM2peo1iLhkjLxmGP5"
-  },
   "background/footer/developer": {
     "key": "1ffb35afcd4a5e6f8507d0360b7429d0a674ebe6",
     "id": "5097:4236",
@@ -787,16 +302,6 @@
   "background/grid": {
     "key": "2b0ad900e8f95646482543498a51fb3b2a935c0a",
     "id": "5097:4238",
-    "fileKey": "D7NDSM2peo1iLhkjLxmGP5"
-  },
-  "background/accent-hex/large": {
-    "key": "1e4aeebaba6a92763b64135cfe59b495b23cbe26",
-    "id": "5097:4239",
-    "fileKey": "D7NDSM2peo1iLhkjLxmGP5"
-  },
-  "background/accent-hex/small": {
-    "key": "2c12980b1d86f78f9d0b31df155f95f0f4daa441",
-    "id": "5097:4240",
     "fileKey": "D7NDSM2peo1iLhkjLxmGP5"
   },
   "background/texture/lavender-light": {
@@ -989,26 +494,6 @@
     "id": "5104:4589",
     "fileKey": "D7NDSM2peo1iLhkjLxmGP5"
   },
-  "Frame": {
-    "key": "",
-    "id": "5116:233",
-    "fileKey": "D7NDSM2peo1iLhkjLxmGP5"
-  },
-  "_reference/customer/fingerprint/case-study-hero": {
-    "key": "",
-    "id": "5003:95984",
-    "fileKey": "D7NDSM2peo1iLhkjLxmGP5"
-  },
-  "_reference/customer/payabli/case-study-hero": {
-    "key": "",
-    "id": "5003:96966",
-    "fileKey": "D7NDSM2peo1iLhkjLxmGP5"
-  },
-  "_reference/customer/posthog/case-study-hero": {
-    "key": "",
-    "id": "5003:95059",
-    "fileKey": "D7NDSM2peo1iLhkjLxmGP5"
-  },
   "decorative/arrow-down-blue": {
     "key": "567f1f867b0ec620ebbb3cbb5ac28a81d087bc77",
     "id": "5097:4244",
@@ -1112,6 +597,21 @@
   "decorative/circle-orange": {
     "key": "bf991184c600aba8b3774a99cff318381a353d0c",
     "id": "5119:334",
+    "fileKey": "D7NDSM2peo1iLhkjLxmGP5"
+  },
+  "decorative/accent-hex/large": {
+    "key": "1e4aeebaba6a92763b64135cfe59b495b23cbe26",
+    "id": "5097:4239",
+    "fileKey": "D7NDSM2peo1iLhkjLxmGP5"
+  },
+  "decorative/accent-hex/smalla": {
+    "key": "2c12980b1d86f78f9d0b31df155f95f0f4daa441",
+    "id": "5097:4240",
+    "fileKey": "D7NDSM2peo1iLhkjLxmGP5"
+  },
+  "background/dots/scattered-hexagons": {
+    "key": "c67d26eb291f504f3eef2172b65fa3e9a44f8f18",
+    "id": "5097:4235",
     "fileKey": "D7NDSM2peo1iLhkjLxmGP5"
   }
 }

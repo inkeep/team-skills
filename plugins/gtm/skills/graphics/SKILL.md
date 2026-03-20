@@ -205,7 +205,8 @@ As each step begins, mark its task `in_progress`. When the step completes, mark 
 ### 1. Parse the request
 
 Identify:
-- **Graphic type**: diagram, illustration, icon, social image, chart, infographic, hero image, badge
+- **Graphic type**: diagram, illustration, icon, icon set, social image, chart, infographic, hero image, badge
+- **Icon detection**: If the request is for standalone icons or an icon set (feature grid icons, capability icons, slide deck icons), **Load:** `content-types/icons.md` — it supersedes brand-guide.md's Icon Rules for marketing icons. Route to the icon taxonomy (Cat A/B/C) based on complexity and context.
 - **Purpose**: where it will be used (slide deck, docs, website, social media, email)
 - **Output medium**: how it will be displayed — this determines minimum text sizes and visual weight
 
@@ -295,7 +296,8 @@ Present the suggestion to the user: "Based on the content, I'd suggest a [type] 
 | Slide assets, marketing cards, social images, multi-element layouts | **Figma (Option A)** — default | Editable by designers; precise layout; auto-layout; text control |
 | Text-heavy designs (feature tables, pricing, comparisons) | **Figma (Option A)** | Quiver converts text to paths — no editability, imprecise for body copy |
 | Illustrations, icons, logos, abstract art, decorative elements | **Quiver (Option D)** | AI generates layered, stylized vectors with complex paths impractical to hand-code |
-| Icon sets (multiple matching icons) | **Quiver (Option D)** with references | Generate one, pass it as `--references` for the rest — maintains visual consistency |
+| Icon sets (multiple matching icons) | **Quiver (Option D)** with references | **Load:** `content-types/icons.md` for taxonomy, reference-chaining protocol, and set coherence rules |
+| Single standalone icon | **Quiver (Option D)** or existing asset | **Load:** `content-types/icons.md` — check existing assets first (mandatory), then generate with category-matched refs |
 | Background patterns, textures, abstract decorative art | **Quiver (Option D)** | Hard to hand-code, easy to describe |
 | Charts, graphs, data visualizations (bar, line, pie, donut, sparkline) | **Figma (Option A)** | Native primitives produce editable, brand-consistent output. **Load:** `content-types/data-visualization.md` file — contains both design guidelines (chart selection, colors, labeling) AND code recipes (arcData, vectorPaths) |
 | Simple structural SVGs (basic shapes, inline diagrams) | **Hand-coded SVG (Option B) → Figma** | Exact control; import into Figma for review; SVG file is the deliverable |
@@ -1832,6 +1834,13 @@ For Quiver SVG:
 - Check for `<text>` elements that shouldn't be present (Quiver should render text as paths)
 - Flag SVG files >500KB for simple illustrations (indicates path fragmentation or decimal bloat)
 
+**Element consistency check (for composed graphics with icons):**
+When a graphic contains both standalone icons and illustration elements, verify style coherence:
+- Standalone icons must use hand-drawn brush texture (per `content-types/icons.md`)
+- Icons inside illustration containers must use clean geometric fills (per `illustration.md` Tier 3)
+- Do NOT place hand-drawn brush icons inside hand-drawn containers — that's "imperfect inside imperfect" and looks chaotic
+- The principle: the container provides "Imperfect," the content provides "Precision." A standalone icon provides both.
+
 Fix any findings. Re-run until Layer 1 is clean (max 3 iterations). Do not proceed to Layer 2 until Layer 1 passes.
 
 **Layer 2: Visual evaluation via reviewer subagent (max 3 iterations)**
@@ -1857,6 +1866,8 @@ Agent tool:
        <path-to-graphics-skill>/references/visual-inspection.md
     5. Read the craft elevation guide at:
        <path-to-graphics-skill>/references/craft-elevation.md
+    6. If the graphic contains standalone icons or icon sets,
+       also read: <path-to-graphics-skill>/content-types/icons.md
 
     Capture your own screenshots using the capture script:
     ```bash
