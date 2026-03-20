@@ -95,7 +95,7 @@ For each element type, what separates "Correct" from "Elevated." Evaluate each e
 | Right font, right size, right color | Deliberate letter-spacing (tighter on headings, looser on labels), optical alignment, weight contrast between hierarchy levels, proper leading |
 | Text placed in the layout | Text that creates visual rhythm — headline dominates (10x badge weight), subhead breathes, body recedes. JetBrains Mono uppercase for all labels/badges. Optionally add blue swoosh underline on key word (predefined asset only). |
 
-### Product mockups / UI recreations
+### Product mockups
 | Correct | Elevated |
 |---|---|
 | Rectangles with text approximating UI | Realistic chrome — toolbar, button styles, status bar, tab bar with active state, contextual content matching the key message |
@@ -264,6 +264,241 @@ Two or more elements that serve the same semantic role in the composition — tw
 **Failure: Misaligned elements that should share an axis**
 Elements that should be vertically or horizontally aligned (e.g., a row of cards, a column of labels, items in a grid) are slightly off — one card is 3px lower than its siblings, labels don't share a baseline, icons in a column aren't horizontally centered on the same axis. The model positions each element independently rather than aligning to a shared reference line.
 → **Fix:** Use auto-layout for any group of elements that should share alignment — it enforces alignment structurally. When manual positioning is necessary, compute the shared axis explicitly (e.g., all items in a row share the same `y + height/2` for vertical centering, all items in a column share the same `x + width/2` for horizontal centering) and set each element's position from that shared value. The alignment check in Phase D catches this programmatically.
+
+---
+
+## AI failure mode callouts: tables
+
+Tables are the most structurally demanding content type. See `content-types/table.md` for the complete construction architecture and code recipes.
+
+**Failure: Inconsistent column widths**
+Cell widths set per-cell instead of per-column. Each row has slightly different column positions. The grid doesn't align.
+→ **Fix:** Define a column-width array BEFORE creating any rows. Apply the exact same FIXED width to every cell at column index N across all rows. This is the single most critical constraint.
+
+**Failure: Wrong text alignment**
+All content left-aligned, or all content center-aligned, regardless of data type. Number columns don't compare visually because digits don't align.
+→ **Fix:** Alignment is deterministic by data type: LEFT for text, RIGHT for numbers/currency/percentages, CENTER for icons/checkmarks. Headers inherit their column's alignment — never default all headers to LEFT.
+
+**Failure: No header separation**
+Header row styled identically to body rows. The reader can't distinguish labels from data.
+→ **Fix:** The header must differ from body in at least 2 visual properties: background color + font weight, or background + bottom border weight, or font size + weight.
+
+**Failure: No row striping or separators**
+All body rows have the same background, no borders, no padding distinction. The table reads as a wall of undifferentiated text — the eye loses horizontal tracking.
+→ **Fix:** At minimum: 2-3% gray zebra striping OR 1px horizontal dividers OR generous vertical padding (16px+).
+
+**Failure: Cell misalignment across columns**
+Different rows have different cell counts, or a row is missing cells. Data shifts into the wrong column.
+→ **Fix:** Every row must have exactly `columns.length` cells. Validate before building.
+
+**Failure: Text overflow/truncation**
+Content exceeds cell bounds. Text is clipped or invisible.
+→ **Fix:** Use `textAutoResize: 'HEIGHT'` for wrapping, or validate content length against available cell width before inserting.
+
+**Failure: Missing grid structure**
+No borders, no striping, no padding distinction. The table looks like unstructured paragraph text rather than a grid of data.
+→ **Fix:** Every table needs at least one structural signal: row striping, column dividers, outer border, or explicit cell padding that creates visual cells.
+
+---
+
+## AI failure mode callouts: annotations
+
+Annotations use algorithmic placement — see `content-types/annotation.md` for the placement engine.
+
+**Failure: Badge placed on top of annotated element (Critical)**
+The badge occludes the element it's highlighting. The AI places the badge at or near the target's center.
+→ **Fix:** AABB collision test — the badge must NOT overlap the target bounding box. Use the Imhof 8-position fallback to find a non-colliding adjacent position.
+
+**Failure: Leader lines crossing each other (High)**
+Two or more leader lines intersect, creating confusion about which badge points to which target.
+→ **Fix:** After placing all badges, run the crossing elimination algorithm (greedy endpoint swap — see `content-types/annotation.md`).
+
+**Failure: Zoom inset occludes source region (Critical)**
+The magnified inset covers the area it's supposed to show in context.
+→ **Fix:** Exclusion zone — inset bounding box must not overlap source bbox + 20px margin.
+
+**Failure: Wrong reading order (High)**
+Badge numbers don't follow spatial position — badge "3" appears visually before badge "2."
+→ **Fix:** Sort targets by reading order (top-to-bottom, left-to-right) before assigning numbers.
+
+**Failure: Centroid attachment instead of edge (High)**
+Leader line terminates at the center of the target, appearing to pierce the element.
+→ **Fix:** Compute attachment at the nearest edge point: `clamp(badgeCenter, targetBBox)` per axis.
+
+**Failure: Leader lines behind content (High)**
+Lines render behind content elements, invisible to the viewer.
+→ **Fix:** Append all annotation nodes (badges + lines) AFTER content nodes for correct z-ordering.
+
+---
+
+## AI failure mode callouts: gradient strokes
+
+See `tools/figma-console.md` § "Pattern: Gradient strokes" for the `angleToGradientTransform()` helper and diagnostic checklist.
+
+**Failure: Identity matrix for all gradients**
+Using `[[1,0,0],[0,1,0]]` regardless of intended direction — always produces left-to-right.
+→ **Fix:** Use the `angleToGradientTransform(angleDeg)` helper or the named direction constants lookup table. Never hardcode the identity matrix.
+
+**Failure: Strokes assigned as plain object instead of array**
+`node.strokes = gradientPaint` (not wrapped in array) — silently fails, no error, no stroke appears.
+→ **Fix:** Always `node.strokes = [gradientPaint]`.
+
+**Failure: Missing translation offset in rotated gradients**
+`gradientTransform` has rotation but tx/ty are 0 — the gradient renders mostly outside the visible area.
+→ **Fix:** The translation must center the rotated gradient: `tx = 0.5 - cos*0.5 + sin*0.5`, `ty = 0.5 - sin*0.5 - cos*0.5`. The helper function handles this automatically.
+
+**Failure: Cross-hue muddy interpolation**
+Blue (#3784FF) → Golden (#FFC883) without a mid-stop produces desaturated gray center from RGB interpolation.
+→ **Fix:** Add bridging mid-stops that transition through a perceptually clean intermediate color, or use alpha fade to transparency instead of cross-hue interpolation.
+
+---
+
+## AI failure mode callouts: image fills and masks
+
+See `tools/figma-console.md` § "Pattern: Image fills, shaped crops, and masking" for the code patterns.
+
+**Failure: Wrong scaleMode (FILL vs FIT confusion)**
+Using `FIT` when `FILL` is needed (letterboxing) or `FILL` when `FIT` is needed (important content cropped).
+→ **Fix:** Always specify `scaleMode` explicitly. FILL for avatars/cards/thumbnails (cover + crop). FIT for logos/icons (contain + letterbox).
+
+**Failure: Readonly array mutation**
+`node.fills[0] = newFill` or `node.fills.push(newFill)` — throws TypeError because Figma fill arrays are readonly.
+→ **Fix:** Always assign a new array: `node.fills = [{ type: 'IMAGE', imageHash: hash, scaleMode: 'FILL' }]`.
+
+**Failure: Boolean operation z-order reversal**
+SUBTRACT produces an inverted result because the base and cutout shapes are in the wrong order. In Figma boolean operations, `children[0]` is the base (bottom), `children[last]` is the cutout (top).
+→ **Fix:** Always place the base shape first in the array, cutout shapes after.
+
+**Failure: Image fill on unsupported node type**
+Attempting to set fills on a GroupNode — silently ignored, no error.
+→ **Fix:** Check `node.type` against fillable types: RECTANGLE, ELLIPSE, POLYGON, STAR, VECTOR, FRAME, COMPONENT, INSTANCE, BOOLEAN_OPERATION, TEXT.
+
+**Failure: Low resolution after cropping**
+Image looks pixelated because the source image is smaller than the display frame, especially at 2x/retina export.
+→ **Fix:** Validate with `image.getSizeAsync()` — source dimensions should be ≥2× the frame dimensions for retina-quality output.
+
+---
+
+## Per-element elevation strategies (additional types)
+
+### Tables
+| Correct | Elevated |
+|---|---|
+| Uniform cells, same background, flat grid | Data-type-driven alignment (numbers right, text left), header distinct in 2+ properties, zebra striping for tracking |
+| Fixed column widths for all columns | First column wider for feature names, data columns equal — deliberate proportion |
+| Checkmarks as text characters | Checkmarks with semantic color (green ✓, red ✕, amber ◐) inside centered cells with consistent sizing |
+| Plain table on canvas | Table with rounded outer corners, subtle outer border, card-like shadow for floating depth |
+
+### Tree nodes
+| Correct | Elevated |
+|---|---|
+| Same-size boxes at every level | Depth-scaled sizing (root 240px → leaf 120px), visual weight decreasing with depth |
+| All nodes same style | Color-coded by semantic role (blue for AI/system, golden for user, gray for structural), border weight decreasing with depth |
+| Straight line connectors | Bus connectors with cornerRadius turns, dot endpoints at connection points |
+| Algorithm-positioned nodes | Algorithm + subtle shadow on upper levels (none on leaves), creating depth hierarchy |
+
+### Annotations
+| Correct | Elevated |
+|---|---|
+| Badges placed adjacent to targets | Collision-avoidant placement (Imhof 8-position), crossing-free leader lines |
+| All badges same size and color | Consistent size + accent color, with white ring stroke for contrast against any background |
+| Leader lines drawn to target center | Lines to nearest target edge point, at oblique angles (30°/45°/60°), thin weight (1-1.5px) |
+| Annotations scattered | Reading-order numbering (top-to-bottom, left-to-right), annotations that guide the eye through a narrative sequence |
+
+### Gradient borders
+| Correct | Elevated |
+|---|---|
+| Solid stroke | Gradient stroke at correct angle with proper gradientTransform matrix |
+| Uniform border around element | Gradient that fades — brand color at the eye-catching corner, transparent at the trailing edge |
+| Border alone | Border + multi-layer shadow cascade for glow effect (neon glow pattern) |
+| Full-opacity gradient | Restrained opacity (20-60%) for subtle premium effect rather than vivid decoration |
+
+---
+
+## Shadow depth recipes
+
+Named shadow recipes for the visual depth stack. Reference these by name in the Build Spec.
+
+**Shadow/subtle** — card at rest, minimal elevation:
+```javascript
+[{ type: 'DROP_SHADOW', color: { r: 0, g: 0, b: 0, a: 0.05 },
+   offset: { x: 0, y: 1 }, radius: 3, spread: 0, visible: true, blendMode: 'NORMAL' },
+ { type: 'DROP_SHADOW', color: { r: 0, g: 0, b: 0, a: 0.04 },
+   offset: { x: 0, y: 2 }, radius: 8, spread: 0, visible: true, blendMode: 'NORMAL' }]
+```
+
+**Shadow/medium** — featured card, moderate elevation:
+```javascript
+[{ type: 'DROP_SHADOW', color: { r: 0, g: 0, b: 0, a: 0.06 },
+   offset: { x: 0, y: 1 }, radius: 3, spread: 0, visible: true, blendMode: 'NORMAL' },
+ { type: 'DROP_SHADOW', color: { r: 0, g: 0, b: 0, a: 0.10 },
+   offset: { x: 0, y: 4 }, radius: 16, spread: 0, visible: true, blendMode: 'NORMAL' },
+ { type: 'DROP_SHADOW', color: { r: 0, g: 0, b: 0, a: 0.05 },
+   offset: { x: 0, y: 12 }, radius: 40, spread: 0, visible: true, blendMode: 'NORMAL' }]
+```
+
+**Shadow/floating** — hero element, high elevation with atmospheric spread:
+```javascript
+[{ type: 'DROP_SHADOW', color: { r: 0, g: 0, b: 0, a: 0.08 },
+   offset: { x: 0, y: 2 }, radius: 6, spread: 0, visible: true, blendMode: 'NORMAL' },
+ { type: 'DROP_SHADOW', color: { r: 0, g: 0, b: 0, a: 0.12 },
+   offset: { x: 0, y: 8 }, radius: 32, spread: 0, visible: true, blendMode: 'NORMAL' },
+ { type: 'DROP_SHADOW', color: { r: 0, g: 0, b: 0, a: 0.06 },
+   offset: { x: 0, y: 20 }, radius: 80, spread: 0, visible: true, blendMode: 'NORMAL' }]
+```
+
+**Shadow/brand-glow** — brand-tinted glow for emphasis (substitute brand color values):
+```javascript
+[{ type: 'DROP_SHADOW', color: { r: 0.216, g: 0.518, b: 1.0, a: 0.15 },
+   offset: { x: 0, y: 0 }, radius: 20, spread: 4, visible: true, blendMode: 'NORMAL' },
+ { type: 'DROP_SHADOW', color: { r: 0, g: 0, b: 0, a: 0.08 },
+   offset: { x: 0, y: 4 }, radius: 16, spread: 0, visible: true, blendMode: 'NORMAL' }]
+```
+
+**Shadow/tinted** — Stripe-style blue-navy tinted shadows (industry standard for refined depth — tinted shadows look more natural than pure black because real-world shadows pick up ambient color):
+```javascript
+[{ type: 'DROP_SHADOW', color: { r: 0.196, g: 0.196, b: 0.365, a: 0.25 },
+   offset: { x: 0, y: 13 }, radius: 27, spread: -5, visible: true, blendMode: 'NORMAL' },
+ { type: 'DROP_SHADOW', color: { r: 0, g: 0, b: 0, a: 0.3 },
+   offset: { x: 0, y: 8 }, radius: 16, spread: -8, visible: true, blendMode: 'NORMAL' }]
+```
+The tint color `{r:0.196, g:0.196, b:0.365}` (`rgba(50,50,93)` in CSS) is the Stripe convention adopted across the SaaS industry. Use this for hero mockups and featured elements where pure-black shadows would look flat. The pure-black recipes above remain valid for general use.
+
+---
+
+## Glassmorphism technique
+
+Frosted glass effect: `BACKGROUND_BLUR` + reduced-opacity fill + subtle border + shadow. Useful as a background texture layer (Layer 1 in the depth stack) or for floating panels.
+
+```javascript
+// Glassmorphism on a frame
+frame.effects = [{
+  type: 'BACKGROUND_BLUR',
+  radius: 24,       // 16-32 typical range
+  visible: true,
+}];
+frame.fills = [{
+  type: 'SOLID',
+  color: { r: 1, g: 1, b: 1 },
+  opacity: 0.15,    // 0.10-0.25 for light mode, 0.05-0.15 for dark mode
+}];
+frame.strokes = [{
+  type: 'SOLID',
+  color: { r: 1, g: 1, b: 1 },
+  opacity: 0.2,     // subtle border defines the glass edge
+}];
+frame.strokeWeight = 1;
+frame.strokeAlign = 'INSIDE';
+```
+
+**Parameter relationships (getting any wrong breaks the effect):**
+- Blur radius too high (>40): content behind glass becomes unreadable mush
+- Fill opacity too high (>0.4): glass becomes opaque, no blur visible
+- Fill opacity too low (<0.05): glass is invisible, just blur with no surface
+- Missing border: glass panel blends into background with no defined edge
+- Missing shadow: glass doesn't appear to float — add shadow/subtle or shadow/medium
+
+**When glassmorphism works:** floating panels, overlays, hero elements, navigation bars over image backgrounds. **When it fails:** text-heavy content (readability), small elements (effect invisible at <80px), contexts without a visible background behind the glass (nothing to blur = flat opaque fill).
 
 ---
 

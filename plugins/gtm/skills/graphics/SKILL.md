@@ -264,10 +264,14 @@ The standard files also contain **design guidelines specific to each medium** (t
 | Comparison between options/products | **Split layout or comparison table** — side-by-side with pros/cons |
 | Step-by-step process or workflow | **Sequential diagram** — numbered steps with flow arrows |
 | Customer quote or testimonial | **Quote card** — speaker photo + quote text |
-| Product feature or UI explanation | **Annotated product mockup** — simplified UI with callouts. **Load:** `/brand` skill, then load `references/product-representation.md` file (fidelity decision) → `tokens/product.md` file (product UI tokens for inside the mockup) → `references/element-patterns.md` file (styling recipe). **Critical:** product mockups use product tokens inside (Inter, white bg, 8px radii) and marketing tokens outside (Neue Haas, cream, 32px radii). |
+| Product feature or UI explanation | **Annotated product mockup** — simplified UI with callouts. **Load:** `/brand` skill, then load `references/product-representation.md` file (fidelity decision) → `tokens/product.md` file (product tokens for inside the mockup) → `references/element-patterns.md` file (styling recipe). **Critical:** product mockups use product tokens inside (Inter, white bg, 8px radii) and marketing tokens outside (Neue Haas, cream, 32px radii). |
 | Tutorial, walkthrough, or "click here" guide | **Spotlight cutout** — screenshot with dimmed overlay + highlighted target element (see Pattern: Spotlight cutout in `tools/figma-console.md`) |
 | Abstract concept or architecture | **Illustration or diagram** — visual metaphor for the concept |
-| List of criteria or evaluation rubric | **Data grid or scorecard** — structured table with ratings |
+| List of criteria or evaluation rubric | **Data grid or scorecard** — structured table with ratings. **Load:** `content-types/table.md` file for the column-spec-first architecture |
+| Pricing plans, feature comparison matrix | **Feature comparison table** — column-per-plan with checkmarks. **Load:** `content-types/table.md` file |
+| Hierarchy, taxonomy, org structure, or "this contains these" | **Tree diagram** — nodes positioned by layout algorithm with bus connectors. **Load:** `content-types/tree-diagram.md` file |
+| Product screenshot needing callouts or labels | **Annotated screenshot** — numbered badges with leader lines and collision-avoidant placement. **Load:** `content-types/annotation.md` file |
+| Timeline, roadmap, or milestone sequence | **Timeline graphic** — milestones along axis with alternating content cards. See timeline pattern in `tools/figma-console.md` |
 | Announcement or launch | **Bold headline + product visual** — clean, editorial feel |
 
 Present the suggestion to the user: "Based on the content, I'd suggest a [type] approach because [reason]. Does that work, or did you have something different in mind?"
@@ -310,6 +314,9 @@ Present the suggestion to the user: "Based on the content, I'd suggest a [type] 
 | 3D texture library (render once, reuse as Figma backgrounds) | **Three.js (Option F)** | One-time renders stored as reusable PNG assets. |
 | Precise geometric branded shape (logo carved into surface) | **Three.js (Option F)** with CSG | Image gen can't carve exact shapes — use `@react-three/csg` boolean operations. |
 | Infographic (compound: data + illustration + text) | **Figma (Option A)** | Decompose into sub-elements per this routing table. Data viz → Figma primitives, illustrations → Quiver, text → Figma. |
+| Feature comparison table, pricing matrix, spec table | **Figma (Option A)** | Requires precise grid alignment. **Load:** `content-types/table.md` for column-spec-first architecture. |
+| Org chart, decision tree, hierarchy diagram | **Figma (Option A)** | Requires layout algorithm for balanced positioning. **Load:** `content-types/tree-diagram.md` for Walker algorithm. |
+| Annotated screenshot, "how it works" callout graphic | **Figma (Option A)** | Requires collision-avoidant badge placement. **Load:** `content-types/annotation.md` for placement engine. |
 | Badge / trust seal (SOC 2, G2 Leader, etc.) | **Figma (Option A)** | Simple shape + text + optional icon. Native Figma elements. |
 | Brand-styled technical diagram | **D2/Mermaid (Option C) → Figma (Option A)** | Generate structure in D2, export SVG, import into Figma via `createNodeFromSvg`, apply brand colors/typography. |
 
@@ -457,15 +464,18 @@ Write in the Build Spec (Step 3) under "Product context":
 - Visual reference paths (`tmp/reference/<project-name>/...`)
 - Fidelity level (per `references/product-representation.md`)
 
-**In exploration mode:** Also write `productContext` to `state.json` so nested claudes get the references:
+**In exploration mode:** Also write `productContext` and `contentTypes` to `state.json` so nested claudes get the references and know which content-type files to load:
 ```json
 "productContext": {
   "feature": "...",
   "fidelityLevel": "Level 3",
   "referenceDir": "tmp/reference/<project-name>/",
   "keyUIElements": ["..."]
-}
+},
+"contentTypes": ["table", "tree-diagram", "annotation"]
 ```
+
+Children should load the corresponding `content-types/<name>.md` file for each entry in the `contentTypes` array before building. This ensures children use the correct construction recipes (e.g., the Walker layout algorithm for trees, the column-spec-first pattern for tables) instead of improvising.
 
 This grounds the visual in the actual product. Every sub-element in the Build Spec's sub-element plan should cite a specific reference from this discovery.
 
@@ -852,7 +862,7 @@ Example — "Slack thread mockup" compound atom:
 ### Anti-pattern check
 - [ ] Background is NOT flat (has texture/gradient)
 - [ ] Surround uses ≤3 colors (mockup internals don't count)
-- [ ] No raw screenshots (all product UI is stylized)
+- [ ] All product mockups use the full treatment (float, shadow, round corners) — product screenshots (Level 1-2) use product tokens but are not stylized
 - [ ] Max 2 typefaces in this graphic
 - [ ] Illustrations use Quiver (not hand-built Figma shapes) unless purely geometric
 - [ ] Third-party logos are real assets (not text/shape approximations)
@@ -860,6 +870,10 @@ Example — "Slack thread mockup" compound atom:
 - [ ] No generative atom defaults to Figma shapes without explicitly ruling out Quiver (for organic/illustrative) or Image Gen (for photorealistic/atmospheric)
 - [ ] Every multi-tool atom spells out the full pipeline end-to-end (e.g., "Quiver → SVG import → Figma brand overlay"), not just the primary tool
 - [ ] Connectors (if present) use consistent type, curvature, endpoint style, and stroke weight across the diagram — see connector consistency rules in `tools/figma-console.md` file
+- [ ] Tables (if present) use the column-specification-first pattern — column widths defined before any rows are created, alignment from data type not aesthetic preference. **Load:** `content-types/table.md` if not already loaded
+- [ ] Tree/hierarchy diagrams (if present) use the layout algorithm from `content-types/tree-diagram.md` — NOT ad-hoc positioning. Parents must be centered over children, sibling spacing must be balanced
+- [ ] Annotations (if present) use collision-avoidant placement — badges must not overlap targets or each other, leader lines must not cross. **Load:** `content-types/annotation.md` if not already loaded
+- [ ] Gradient strokes (if present) use `angleToGradientTransform()` helper — NOT hardcoded identity matrix. See gradient stroke diagnostic checklist in `tools/figma-console.md`
 ```
 
 **Rules for the Build Spec:**
@@ -1148,6 +1162,14 @@ For each element in the build plan:
    Every sub-element in a compound atom deserves its real visual treatment. If you catch yourself building a shape that "represents" something rather than "looks like" it, that's the signal to elevate.
 
    **Connector-specific craft check** (for arrow/connector atoms): Screenshot the connector and verify: (a) curve direction is correct (not looping backward), (b) arrowhead aligns with the curve tangent (use native `strokeCap`, not separate shapes), (c) endpoint touches the target node edge (not center), (d) curvature is consistent with sibling connectors in the same diagram. See connector AI failure modes in `references/craft-elevation.md` file.
+
+   **Table-specific craft check** (for table atoms): Verify: (a) column widths are identical across all rows at the same column index, (b) text alignment matches data type (LEFT for text, RIGHT for numbers, CENTER for icons), (c) header row differs from body in ≥2 visual properties, (d) row striping or separators provide horizontal tracking. See table failure modes in `references/craft-elevation.md` file.
+
+   **Tree-specific craft check** (for tree node atoms): Verify: (a) nodes at the same level share the same y-coordinate (or x for L-to-R), (b) parents are centered over their children, (c) node sizing decreases with depth. These are guaranteed by the layout algorithm — if any fail, the algorithm wasn't used.
+
+   **Annotation-specific craft check** (for annotation atoms): Verify: (a) no badge overlaps its target element (AABB collision test), (b) no two badges overlap each other, (c) no leader lines cross, (d) badge numbers follow reading order (top-to-bottom, left-to-right). See annotation failure modes in `references/craft-elevation.md` file.
+
+   **Image fill craft check** (for image fill atoms): Verify: (a) `scaleMode` is explicitly set (not relying on defaults), (b) image resolution is ≥2× the frame dimensions for retina output, (c) for shaped crops, the shape doesn't clip important content (faces in avatars, logos in badges).
 6. **Fix issues** — if the screenshot or craft-check shows problems, fix before continuing
 
 Once simple atoms are verified and elevated, compose them into compound elements (group into auto-layout frames, set spacing/padding, screenshot and verify).

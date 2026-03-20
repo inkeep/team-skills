@@ -1112,6 +1112,531 @@ SVG import via `figma.createNodeFromSvg(svgString)` has known issues (confirmed 
 
 INSTEAD of importing complex SVGs: screenshot the original for reference, then recreate a simplified version using basic Figma shapes and vector paths.
 
+### Pattern: Bus connector (parent to multiple children)
+
+For tree diagrams and hierarchy layouts where one parent connects to N children. Uses a vertical stem from the parent, a horizontal bus at the midpoint, and vertical drops to each child.
+
+```javascript
+// Bus connector: parent bottom-center to all children top-center
+async function createBusConnector(parent, parentNode, childNodes, levelGap, color, strokeWeight) {
+  const px = parentNode.x + parentNode.width / 2;
+  const py = parentNode.y + parentNode.height;
+  const busY = py + levelGap / 2;
+
+  // Vertical stem from parent to bus
+  const stem = figma.createVector();
+  parent.appendChild(stem);
+  await stem.setVectorNetworkAsync({
+    vertices: [{ x: px, y: py }, { x: px, y: busY }],
+    segments: [{ start: 0, end: 1 }],
+    regions: []
+  });
+  stem.strokes = [{ type: 'SOLID', color }];
+  stem.strokeWeight = strokeWeight;
+
+  // Horizontal bus + vertical drops to each child
+  for (const child of childNodes) {
+    const cx = child.x + child.width / 2;
+    const cy = child.y;
+    const vector = figma.createVector();
+    parent.appendChild(vector);
+    await vector.setVectorNetworkAsync({
+      vertices: [
+        { x: px, y: busY },
+        { x: cx, y: busY, cornerRadius: 8 },
+        { x: cx, y: cy }
+      ],
+      segments: [{ start: 0, end: 1 }, { start: 1, end: 2 }],
+      regions: []
+    });
+    vector.strokes = [{ type: 'SOLID', color }];
+    vector.strokeWeight = strokeWeight;
+  }
+}
+```
+
+Used by tree/org chart layouts. See `content-types/tree-diagram.md` for the full layout algorithm that computes the node positions this connector routes between.
+
+### Pattern: Gradient strokes
+
+Figma supports gradient strokes natively via `GradientPaint` in the `strokes` array. The non-obvious part is the `gradientTransform` matrix — a 2×3 affine transform in normalized (0-1) bounding-box space.
+
+**Angle conversion helper** (CSS convention: 0° = top, clockwise):
+
+```javascript
+function angleToGradientTransform(angleDeg) {
+  const rad = ((angleDeg - 90) * Math.PI) / 180;
+  const cos = Math.cos(rad), sin = Math.sin(rad);
+  return [
+    [cos, -sin, 0.5 - cos * 0.5 + sin * 0.5],
+    [sin,  cos, 0.5 - sin * 0.5 - cos * 0.5]
+  ];
+}
+```
+
+**Named direction constants:**
+
+| CSS angle | Direction | gradientTransform |
+|---|---|---|
+| 0° | Top → bottom | `[[0, -1, 1], [1, 0, 0]]` |
+| 45° | TL → BR | `[[0.707, -0.707, 0.293], [0.707, 0.707, -0.293]]` |
+| 90° | Left → right | `[[1, 0, 0], [0, 1, 0]]` |
+| 135° | BL → TR | `[[0.707, 0.707, -0.293], [-0.707, 0.707, 0.707]]` |
+| 180° | Bottom → top | `[[0, 1, 0], [-1, 0, 1]]` |
+| 270° | Right → left | `[[-1, 0, 1], [0, -1, 1]]` |
+
+**Applying a gradient stroke:**
+
+```javascript
+node.strokes = [{
+  type: 'GRADIENT_LINEAR',
+  gradientTransform: angleToGradientTransform(135), // diagonal
+  gradientStops: [
+    { position: 0, color: { r: 0.216, g: 0.518, b: 1.0, a: 1.0 } },
+    { position: 1, color: { r: 0.984, g: 0.976, b: 0.957, a: 0.3 } }
+  ]
+}];
+node.strokeWeight = 2;
+node.strokeAlign = 'OUTSIDE';
+```
+
+All four gradient types work on strokes: `GRADIENT_LINEAR`, `GRADIENT_RADIAL`, `GRADIENT_ANGULAR`, `GRADIENT_DIAMOND`.
+
+**Neon glow border** (gradient stroke + 3-layer shadow cascade):
+
+```javascript
+function applyNeonGlow(node, glowColor, strokeW = 2) {
+  node.strokes = [{
+    type: 'GRADIENT_LINEAR',
+    gradientTransform: [[0, 1, 0], [1, 0, 0]],
+    gradientStops: [
+      { position: 0,   color: { ...glowColor, r: glowColor.r * 0.7, g: glowColor.g * 0.7 } },
+      { position: 0.5, color: glowColor },
+      { position: 1,   color: { ...glowColor, r: glowColor.r * 0.7, g: glowColor.g * 0.7 } }
+    ]
+  }];
+  node.strokeWeight = strokeW;
+  node.strokeAlign = 'OUTSIDE';
+  node.effects = [
+    { type: 'DROP_SHADOW', color: { ...glowColor, a: 0.9 }, offset: { x: 0, y: 0 }, radius: 4, spread: 0, visible: true, blendMode: 'NORMAL' },
+    { type: 'DROP_SHADOW', color: { ...glowColor, a: 0.5 }, offset: { x: 0, y: 0 }, radius: 12, spread: 0, visible: true, blendMode: 'NORMAL' },
+    { type: 'DROP_SHADOW', color: { ...glowColor, a: 0.25 }, offset: { x: 0, y: 0 }, radius: 28, spread: 0, visible: true, blendMode: 'NORMAL' },
+  ];
+}
+```
+
+**Double border** (stroke + inner shadow):
+
+```javascript
+node.strokes = [{ type: 'SOLID', color: outerColor }];
+node.strokeWeight = 3;
+node.strokeAlign = 'OUTSIDE';
+node.effects = [{
+  type: 'INNER_SHADOW', color: innerColor,
+  offset: { x: 0, y: 0 }, radius: 0, spread: innerWeight + gap,
+  visible: true, blendMode: 'NORMAL'
+}];
+```
+
+**Diagnostic checklist for gradient strokes** (if output looks wrong, check these in order):
+1. Is `strokes` an array? (`[paint]` not `paint` — non-array silently fails)
+2. Is `gradientTransform` correct for the intended angle? (Use `angleToGradientTransform()`)
+3. Are translation offsets (tx, ty) present? (Rotated gradients without them render off-center)
+4. Is `strokeWeight` ≥ 1.5? (Sub-pixel strokes are invisible)
+5. Is the gradient in `strokes` not `fills`? (Both accept GradientPaint — wrong placement is a silent error)
+6. Is the property named `gradientStops`? (Not `colorStops` — SVG convention fails silently)
+7. Are RGBA values in 0-1 range? (Not 0-255)
+8. For cross-hue pairings (blue→golden), is there a bridging mid-stop? (Direct interpolation produces muddy gray center)
+
+### Pattern: Image fills, shaped crops, and masking
+
+Every image in Figma is an `ImagePaint` fill applied to a geometry node. The shape of the node becomes the crop boundary.
+
+**scaleMode reference:**
+
+| Mode | Behavior | CSS equivalent | Use for |
+|---|---|---|---|
+| `FILL` | Scale to cover, crop overflow | `object-fit: cover` | Avatars, cards, thumbnails |
+| `FIT` | Scale to fit, may letterbox | `object-fit: contain` | Logos, icons |
+| `CROP` | Manual position via `imageTransform` | cover + manual pan | Fine-tuned positioning |
+| `TILE` | Repeat at `scalingFactor` scale | `background-repeat` | Patterns, textures |
+
+**Loading and applying an image:**
+
+```javascript
+const image = await figma.createImageAsync('https://example.com/photo.jpg');
+node.fills = [{ type: 'IMAGE', imageHash: image.hash, scaleMode: 'FILL' }];
+```
+
+Constraints: PNG/JPEG/GIF only, max 4096×4096px.
+
+**Shaped crops** — apply IMAGE fill to any geometry node:
+
+```javascript
+// Circle crop
+const circle = figma.createEllipse();
+circle.resize(200, 200);
+circle.fills = [{ type: 'IMAGE', imageHash: hash, scaleMode: 'FILL' }];
+
+// Hexagon crop
+const hex = figma.createPolygon();
+hex.pointCount = 6;
+hex.resize(200, 200);
+hex.fills = [{ type: 'IMAGE', imageHash: hash, scaleMode: 'FILL' }];
+```
+
+**imageTransform for CROP mode** (normalized 0-1 coordinates — INFERRED from community examples, verify empirically for edge cases):
+
+```javascript
+// Zoom-N centered utility
+function zoomTransform(scale) {
+  const s = 1 / scale;
+  const offset = (1 - s) / 2;
+  return [[s, 0, offset], [0, s, offset]];
+}
+// 2x zoom centered: zoomTransform(2) → [[0.5, 0, 0.25], [0, 0.5, 0.25]]
+```
+
+**Boolean masks:**
+
+```javascript
+// INTERSECT for masking — result gets first child's fill
+const masked = figma.intersect([maskShape, imageRect], parent);
+// SUBTRACT for cutouts — children[0] = base, children[last] = cutout
+const withHole = figma.subtract([baseRect, cutoutCircle], parent);
+```
+
+⚠️ `figma.flatten()` drops image fills — always apply IMAGE fill AFTER flattening.
+
+**Critical: readonly fill arrays.** Never mutate in place:
+
+```javascript
+// WRONG: node.fills[0] = newFill → TypeError
+// WRONG: node.fills.push(newFill) → TypeError
+// CORRECT: assign a new array
+node.fills = [{ type: 'IMAGE', imageHash: hash, scaleMode: 'FILL' }];
+```
+
+### Pattern: Circular avatar with status indicator
+
+```javascript
+async function createAvatarWithStatus(url, size, status) {
+  const STATUS_COLORS = {
+    online:  { r: 0.07, g: 0.72, b: 0.39 },
+    offline: { r: 0.60, g: 0.64, b: 0.70 },
+    busy:    { r: 0.91, g: 0.27, b: 0.27 },
+    away:    { r: 0.96, g: 0.62, b: 0.13 },
+  };
+
+  const frame = figma.createFrame();
+  frame.resize(size + 4, size + 4);
+  frame.fills = [];
+  frame.clipsContent = false;
+
+  const image = await figma.createImageAsync(url);
+  const avatar = figma.createEllipse();
+  avatar.resize(size, size);
+  avatar.fills = [{ type: 'IMAGE', imageHash: image.hash, scaleMode: 'FILL' }];
+  frame.appendChild(avatar);
+
+  const indicatorSize = Math.round(size * 0.28);
+  const dot = figma.createEllipse();
+  dot.resize(indicatorSize, indicatorSize);
+  dot.fills = [{ type: 'SOLID', color: STATUS_COLORS[status] }];
+  dot.strokes = [{ type: 'SOLID', color: { r: 1, g: 1, b: 1 } }];
+  dot.strokeWeight = 2;
+  dot.strokeAlign = 'OUTSIDE';
+  dot.x = size - indicatorSize + indicatorSize * 0.1;
+  dot.y = size - indicatorSize + indicatorSize * 0.1;
+  frame.appendChild(dot);
+  return frame;
+}
+```
+
+**Avatar stack with negative spacing:**
+
+```javascript
+const stack = figma.createFrame();
+stack.layoutMode = 'HORIZONTAL';
+stack.itemSpacing = -8;             // negative = overlap
+stack.itemReverseZIndex = true;     // first child renders on top
+stack.primaryAxisSizingMode = 'AUTO';
+stack.counterAxisSizingMode = 'AUTO';
+stack.fills = [];
+// Each avatar needs white stroke for visual separation
+```
+
+Overlap guidelines: 24px→6px, 32px→8px, 40px→10px, 48px→12px overlap.
+
+**Shape semantics:** Circle = individual human. Rounded square (radius ~20-25% of size) = non-human entity (org, team, bot).
+
+### Pattern: Browser chrome frame (device mockup)
+
+```javascript
+async function createBrowserFrame(width, contentHeight, imageHash) {
+  const CHROME_H = 80; // 40px title bar + 40px URL bar area
+
+  const outer = figma.createFrame();
+  outer.resize(width, CHROME_H + contentHeight);
+  outer.cornerRadius = 10;
+  outer.clipsContent = true;
+  outer.fills = [{ type: 'SOLID', color: { r: 1, g: 1, b: 1 } }];
+  outer.effects = [
+    { type: 'DROP_SHADOW', color: { r: 0, g: 0, b: 0, a: 0.08 },
+      offset: { x: 0, y: 8 }, radius: 24, visible: true, blendMode: 'NORMAL' },
+    { type: 'DROP_SHADOW', color: { r: 0, g: 0, b: 0, a: 0.12 },
+      offset: { x: 0, y: 24 }, radius: 64, visible: true, blendMode: 'NORMAL' },
+  ];
+
+  // Title bar with traffic lights
+  const titleBar = figma.createFrame();
+  titleBar.resize(width, 40);
+  titleBar.fills = [{ type: 'SOLID', color: { r: 0.91, g: 0.91, b: 0.91 } }];
+  outer.appendChild(titleBar);
+  titleBar.layoutPositioning = 'ABSOLUTE';
+
+  [{ c: { r: 1, g: 0.38, b: 0.35 }, x: 16 },
+   { c: { r: 1, g: 0.74, b: 0.18 }, x: 36 },
+   { c: { r: 0.16, g: 0.79, b: 0.25 }, x: 56 }]
+    .forEach(({ c, x }) => {
+      const dot = figma.createEllipse();
+      dot.resize(12, 12); dot.x = x; dot.y = 14;
+      dot.fills = [{ type: 'SOLID', color: c }];
+      titleBar.appendChild(dot);
+    });
+
+  // Content area
+  const content = figma.createFrame();
+  content.resize(width, contentHeight);
+  content.y = CHROME_H;
+  content.layoutPositioning = 'ABSOLUTE';
+  content.clipsContent = true;
+  content.fills = [{ type: 'IMAGE', imageHash, scaleMode: 'FILL' }];
+  outer.appendChild(content);
+  return outer;
+}
+```
+
+### Pattern: Multi-layer shadows (effects array)
+
+Multiple `DROP_SHADOW` entries in the `effects` array create realistic depth. Single shadows look flat.
+
+⚠️ **Every shadow MUST include `visible: true` and `blendMode: 'NORMAL'`** — omitting either causes a silent failure (no error, no shadow).
+
+```javascript
+// Layered shadow: contact + key + ambient
+node.effects = [
+  { type: 'DROP_SHADOW', color: { r: 0, g: 0, b: 0, a: 0.06 },
+    offset: { x: 0, y: 1 }, radius: 3, spread: 0,
+    visible: true, blendMode: 'NORMAL' },    // contact: tight, grounding
+  { type: 'DROP_SHADOW', color: { r: 0, g: 0, b: 0, a: 0.10 },
+    offset: { x: 0, y: 4 }, radius: 16, spread: 0,
+    visible: true, blendMode: 'NORMAL' },    // key: directional elevation
+  { type: 'DROP_SHADOW', color: { r: 0, g: 0, b: 0, a: 0.05 },
+    offset: { x: 0, y: 12 }, radius: 40, spread: 0,
+    visible: true, blendMode: 'NORMAL' },    // ambient: atmospheric
+];
+```
+
+Effects stack order: first in array renders on top. Max 8 drop shadows + 8 inner shadows per node.
+
+See `references/craft-elevation.md` for named shadow recipes (subtle, medium, brand glow, floating) with exact parameter sets for the visual depth stack.
+
+### Pattern: Timeline axis with milestones
+
+For roadmap, release timeline, and milestone graphics. Positions milestone markers evenly along a horizontal axis with content cards alternating above and below.
+
+```javascript
+function computeTimelinePositions(milestones, config = {}) {
+  const {
+    axisY = 300,          // vertical center of timeline
+    startX = 80,
+    endX = 1120,
+    cardWidth = 180,
+    cardHeight = 80,
+    cardGap = 20,         // vertical gap from axis to card
+    markerRadius = 6,
+  } = config;
+
+  const count = milestones.length;
+  const spacing = (endX - startX) / Math.max(count - 1, 1);
+
+  return milestones.map((m, i) => {
+    const x = startX + i * spacing;
+    const above = i % 2 === 0; // alternate above/below
+    return {
+      label: m.label,
+      markerX: x,
+      markerY: axisY,
+      markerRadius,
+      cardX: x - cardWidth / 2,
+      cardY: above
+        ? axisY - cardGap - cardHeight
+        : axisY + cardGap,
+      cardWidth,
+      cardHeight,
+      stemX: x,
+      stemY1: above ? axisY - cardGap : axisY,
+      stemY2: above ? axisY : axisY + cardGap,
+    };
+  });
+}
+```
+
+Draw the horizontal axis line first, then marker dots, then stem lines, then content cards. Append markers and stems last for correct z-ordering.
+
+### Pattern: Redacted text bars (simplified content placeholder)
+
+For product mockups where real text content would be too dense or distracting. Varying-width grey rectangles simulate multi-line text without the viewer trying to read it. Used by Stripe, Linear, and others to simplify product UI for marketing.
+
+```javascript
+// Create redacted text block (simulates a paragraph of text)
+function createRedactedText(parent, x, y, maxWidth, lineCount, options = {}) {
+  const {
+    lineHeight = 20,
+    barHeight = 12,
+    color = { r: 0.87, g: 0.87, b: 0.87 },  // #DDDDDD
+    cornerRadius = 4,
+    // Width variation is the key visual signal — uniform widths look like a loading error
+    widthPattern = [1.0, 0.85, 0.75, 0.92, 0.6],  // proportion of maxWidth
+  } = options;
+
+  const bars = [];
+  for (let i = 0; i < lineCount; i++) {
+    const widthFraction = widthPattern[i % widthPattern.length];
+    const bar = figma.createRectangle();
+    bar.resize(maxWidth * widthFraction, barHeight);
+    bar.x = x;
+    bar.y = y + i * lineHeight;
+    bar.cornerRadius = cornerRadius;
+    bar.fills = [{ type: 'SOLID', color }];
+    bar.name = `redacted-line-${i + 1}`;
+    parent.appendChild(bar);
+    bars.push(bar);
+  }
+  return bars;
+}
+```
+
+Use 3-5 lines for body text, 1 line at 60% width for a heading, 2 lines at 40% width for labels. The width variation (not all the same) is what makes it read as "text content" rather than "broken loading state."
+
+### Pattern: Ambient glow (radial gradient behind focal element)
+
+Creates the "glowing" atmospheric effect behind a product mockup or hero element. A blurred radial gradient using the brand accent color, positioned behind the focal element. On dark backgrounds, use `SCREEN` blend mode for additive light.
+
+```javascript
+function createAmbientGlow(parent, centerX, centerY, radius, accentColor, options = {}) {
+  const {
+    opacity = 0.5,        // 0.4-0.7 typical range
+    blurRadius = 40,      // 25-60 depending on glow softness
+    blendMode = 'NORMAL', // use 'SCREEN' on dark backgrounds
+  } = options;
+
+  const glow = figma.createEllipse();
+  glow.resize(radius * 2, radius * 2);
+  glow.x = centerX - radius;
+  glow.y = centerY - radius;
+  glow.fills = [{
+    type: 'GRADIENT_RADIAL',
+    gradientTransform: [[0.5, 0, 0.5], [0, 0.5, 0.5]],
+    gradientStops: [
+      { position: 0, color: { ...accentColor, a: 0.8 } },
+      { position: 0.6, color: { ...accentColor, a: 0.3 } },
+      { position: 1, color: { ...accentColor, a: 0 } },
+    ],
+  }];
+  glow.opacity = opacity;
+  glow.blendMode = blendMode;
+  glow.effects = [{
+    type: 'LAYER_BLUR', radius: blurRadius, visible: true,
+  }];
+  glow.name = 'ambient-glow';
+  parent.insertChild(0, glow); // behind other content
+  return glow;
+}
+```
+
+Position the glow behind the focal element (use `insertChild(0, ...)` for bottom z-order). The glow radius should be 1.5-2x the focal element's largest dimension.
+
+### Pattern: Mesh gradient / aurora background
+
+Multiple overlapping radial gradients creating the multi-color atmospheric effect seen on Linear, Vercel, and other SaaS marketing pages. Each gradient is a separate frame stacked and blended.
+
+```javascript
+function createMeshGradient(parent, width, height, colorSpots) {
+  // colorSpots: [{ x: 0.4, y: 0.2, color: {r,g,b}, radius: 0.5 }, ...]
+  // x, y are 0-1 proportions of the canvas
+
+  const container = figma.createFrame();
+  container.resize(width, height);
+  container.fills = [{ type: 'SOLID', color: { r: 0.03, g: 0.03, b: 0.03 } }]; // near-black base
+  container.clipsContent = true;
+  container.name = 'mesh-gradient';
+  parent.appendChild(container);
+
+  for (const spot of colorSpots) {
+    const orb = figma.createEllipse();
+    const orbSize = width * spot.radius * 2;
+    orb.resize(orbSize, orbSize);
+    orb.x = width * spot.x - orbSize / 2;
+    orb.y = height * spot.y - orbSize / 2;
+    orb.fills = [{
+      type: 'GRADIENT_RADIAL',
+      gradientTransform: [[0.5, 0, 0.5], [0, 0.5, 0.5]],
+      gradientStops: [
+        { position: 0, color: { ...spot.color, a: 1.0 } },
+        { position: 0.5, color: { ...spot.color, a: 0.4 } },
+        { position: 1, color: { ...spot.color, a: 0 } },
+      ],
+    }];
+    orb.blendMode = 'SCREEN';
+    orb.effects = [{ type: 'LAYER_BLUR', radius: 80, visible: true }];
+    orb.name = `gradient-orb`;
+    container.appendChild(orb);
+  }
+  return container;
+}
+
+// Example: Linear-style dark aurora
+createMeshGradient(parent, 1280, 720, [
+  { x: 0.3, y: 0.2, color: { r: 0.29, g: 0.0, b: 1.0 }, radius: 0.4 },   // purple
+  { x: 0.7, y: 0.1, color: { r: 0.0, g: 0.71, b: 1.0 }, radius: 0.35 },   // cyan
+  { x: 0.5, y: 0.6, color: { r: 0.4, g: 0.0, b: 0.8 }, radius: 0.3 },     // violet
+]);
+```
+
+### Pattern: Grain / noise texture overlay
+
+Adds subtle grain texture to backgrounds, preventing flat-fill syndrome. Figma has no procedural noise — use a pre-generated noise texture PNG as an image fill at low opacity.
+
+```javascript
+// Apply grain overlay to a frame
+// Requires a pre-generated noise texture (e.g., 512x512 fractal noise PNG)
+async function addGrainOverlay(parent, width, height, noiseImageHash, options = {}) {
+  const {
+    opacity = 0.12,           // 0.08-0.15 typical range
+    blendMode = 'SOFT_LIGHT', // SOFT_LIGHT preserves colors, OVERLAY is more dramatic
+  } = options;
+
+  const grain = figma.createRectangle();
+  grain.resize(width, height);
+  grain.x = 0; grain.y = 0;
+  grain.fills = [{
+    type: 'IMAGE',
+    imageHash: noiseImageHash,
+    scaleMode: 'TILE',
+    scalingFactor: 0.5,  // adjust for grain density (smaller = finer grain)
+  }];
+  grain.opacity = opacity;
+  grain.blendMode = blendMode;
+  grain.name = 'grain-overlay';
+  parent.appendChild(grain); // on top of content
+  return grain;
+}
+```
+
+If no noise texture is available, generate one: create a 512×512 canvas with random grey pixels at varying opacity via AI Image Gen, or use a publicly available noise texture. The `TILE` scaleMode repeats the texture seamlessly. `scalingFactor: 0.5` produces fine grain; `1.0` produces coarser grain.
+
 ## Execution strategy
 
 **Execute figma-console tool calls sequentially, not in parallel.** When multiple tool calls are batched in parallel and one fails, all sibling calls are cancelled. This is a Claude Code platform behavior — one failed `figma_execute` call can cascade and cancel 3-5 other valid operations. Run figma-console operations one at a time.
