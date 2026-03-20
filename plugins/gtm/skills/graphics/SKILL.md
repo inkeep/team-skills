@@ -153,7 +153,7 @@ Phase 1: Diverge (PARALLEL via /nest-claude)
   Parent: spawn N child processes (concurrent)
     Each child: read state.json + its direction file → load skills → build → verify (spawns reviewer) → place in Section
     Each child: append results to its direction file (spec-update, build, feedback events)
-  Parent: read direction files, update state.json index
+  Parent: read direction files, present to user
   Present to user              ← USER REACTS
 
 Phase 2: Iterate (loop)
@@ -913,7 +913,7 @@ The parent's job is: (1) write `state.json` with Build Specs, collected assets, 
 - [ ] **Brand tokens collected** — you have exact hex colors and font families from the design system, not from memory or the user's message
 - [ ] **Logos are real** — any Inkeep or third-party logos are cloned from the Brand Assets page or fetched via `tools/fetch-logo.ts`, not approximated with text or shapes
 - [ ] **Build Spec was produced** — Step 3 produced a Build Spec with end-state vision, success criteria, and sub-element plan with visual references
-- [ ] **In exploration mode: `state.json` exists** with creativeBrief, collectedAssets, and direction index — AND `directions/<slug>.json` files exist for each direction with a `spec` event containing the Build Spec
+- [ ] **In exploration mode: `state.json` exists** with creativeBrief and collectedAssets — AND `directions/<slug>.json` files exist for each direction with a `spec` event containing the Build Spec
 
 **If any of these are not met, STOP and complete the missing step before proceeding.**
 

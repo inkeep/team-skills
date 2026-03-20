@@ -210,7 +210,7 @@ Countermeasures:
 
 **Re-anchor to intent:** After every 3-4 iteration rounds, re-read the Creative Brief from `state.json` to verify work still aligns with the original messaging goals. Internal discipline — don't announce it.
 
-**When a direction splits into sub-directions:** Create new direction files in `directions/`, each with its own `sectionNodeId` and a `spec` event containing the new concept. Add entries to `state.json`'s direction index. Create new Figma Sections. The new direction's first `build` event gets `trigger: "split"`. The parent direction's `status` stays `active` if it still has its own path, or moves to `archived` if fully replaced.
+**When a direction splits into sub-directions:** Create new direction files in `directions/`, each with its own `sectionNodeId` and a `spec` event containing the new concept (with `splitFrom` provenance). Create new Figma Sections. The original direction gets a `feedback` event with `"verdict": "split"`. The new direction's first `build` event gets `trigger: "split"`. The original direction's `status` stays `active` if it still has its own path, or moves to `archived` if fully replaced.
 
 Repeat until user approves, then proceed to Step 6 (export).
 
