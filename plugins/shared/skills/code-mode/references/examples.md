@@ -12,7 +12,7 @@ Get design tokens in multiple formats from a single Figma file.
 
 ```typescript
 #!/usr/bin/env bun
-import { getServerConfig, createTransport } from "./mcp-client.ts";
+import { getServerConfig, createTransport } from "<path-to-skill>/scripts/mcp-client.ts";
 import { Client } from "@modelcontextprotocol/sdk/client/index.js";
 
 const config = getServerConfig("figma-console");
@@ -63,7 +63,7 @@ Process a list of items using the same tool repeatedly.
 
 ```typescript
 #!/usr/bin/env bun
-import { getServerConfig, createTransport } from "./mcp-client.ts";
+import { getServerConfig, createTransport } from "<path-to-skill>/scripts/mcp-client.ts";
 import { Client } from "@modelcontextprotocol/sdk/client/index.js";
 
 const config = getServerConfig("figma-console");
@@ -105,7 +105,7 @@ Discover what tools a server provides and their schemas.
 
 ```typescript
 #!/usr/bin/env bun
-import { getServerConfig, createTransport } from "./mcp-client.ts";
+import { getServerConfig, createTransport } from "<path-to-skill>/scripts/mcp-client.ts";
 import { Client } from "@modelcontextprotocol/sdk/client/index.js";
 
 const serverName = process.argv[2] || "figma-console";
@@ -139,7 +139,7 @@ Use the output of one tool as input to another.
 
 ```typescript
 #!/usr/bin/env bun
-import { getServerConfig, createTransport } from "./mcp-client.ts";
+import { getServerConfig, createTransport } from "<path-to-skill>/scripts/mcp-client.ts";
 import { Client } from "@modelcontextprotocol/sdk/client/index.js";
 
 const config = getServerConfig("figma-console");

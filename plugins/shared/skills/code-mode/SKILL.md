@@ -24,15 +24,19 @@ Write and execute Bun scripts that call MCP tools programmatically — multiple 
 
 ## The Pattern
 
-Scripts run from `<path-to-skill>/scripts/` and use relative imports for both the helper module and the SDK.
+Scripts are written to `/tmp/claude-code-mode/` (auto-cleaned on session end via hook). The SDK resolves via `NODE_PATH` pointing to the skill's `node_modules/`.
 
 ### Step 1: Write the script
 
-Write a `_run.ts` file in the skill's scripts directory:
+```bash
+mkdir -p /tmp/claude-code-mode
+```
+
+Write the script to `/tmp/claude-code-mode/_run.ts`:
 
 ```typescript
 #!/usr/bin/env bun
-import { getServerConfig, createTransport } from "./mcp-client.ts";
+import { getServerConfig, createTransport } from "<path-to-skill>/scripts/mcp-client.ts";
 import { Client } from "@modelcontextprotocol/sdk/client/index.js";
 
 const config = getServerConfig("SERVER_NAME");
@@ -69,7 +73,7 @@ try {
 ### Step 2: Execute the script
 
 ```bash
-cd <path-to-skill>/scripts && bun _run.ts
+NODE_PATH=<path-to-skill>/scripts/node_modules bun /tmp/claude-code-mode/_run.ts
 ```
 
 ### Step 3: Parse and present results
@@ -103,13 +107,13 @@ Creates the appropriate MCP transport (StdioClientTransport, StreamableHTTPClien
 Before writing a script, check what's available:
 
 ```bash
-cd <path-to-skill>/scripts && bun mcp-client.ts list
+bun <path-to-skill>/scripts/mcp-client.ts list
 ```
 
 To inspect a specific server's resolved config:
 
 ```bash
-cd <path-to-skill>/scripts && bun mcp-client.ts get figma-console
+bun <path-to-skill>/scripts/mcp-client.ts get figma-console
 ```
 
 ---
@@ -202,7 +206,7 @@ All three MCP transport types are supported. `createTransport()` auto-selects ba
 ### Multi-tool Figma workflow
 
 ```typescript
-import { getServerConfig, createTransport } from "./mcp-client.ts";
+import { getServerConfig, createTransport } from "<path-to-skill>/scripts/mcp-client.ts";
 import { Client } from "@modelcontextprotocol/sdk/client/index.js";
 
 const config = getServerConfig("figma-console");
@@ -233,7 +237,7 @@ try {
 ### Cross-server workflow
 
 ```typescript
-import { getServerConfig, createTransport } from "./mcp-client.ts";
+import { getServerConfig, createTransport } from "<path-to-skill>/scripts/mcp-client.ts";
 import { Client } from "@modelcontextprotocol/sdk/client/index.js";
 
 // Connect to server A
