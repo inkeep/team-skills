@@ -77,14 +77,21 @@ env -u CLAUDECODE -u CLAUDE_CODE_ENTRYPOINT claude \
     -p "Your state directory is: tmp/graphics/<page-slug>/
 Your direction slug is: immersive-slack-thread
 
-1. Load '/brand' skill and '/graphics' skill. Then read ALL reference files, tools docs, content-type guides, and format files in the graphics skill directory — they contain craft knowledge, code recipes, failure modes, and brand-specific patterns you need throughout. Reference brand and graphics guidance continuously as you build — not just at the start.
-2. Read state.json for shared context (Creative Brief, collected assets, Figma IDs, product context)
-3. Read directions/immersive-slack-thread.json — this is YOUR direction file. It has your concept, Build Spec, sectionNodeId, and full timeline of what's happened so far. The spec and assets are the parent's best starting point — NOT a prescription. You have full authority to adjust the spec, source better assets, or omit what doesn't serve your frame.
-4. CRITICAL: ALL Figma nodes you create must go inside YOUR Section (sectionNodeId from your direction file). Never create at page root. Never touch other Sections. Use getNodeByIdAsync(sectionNodeId) to scope all operations.
-5. Build the frame in your Section, run Phase B-E (decomposition, build, elevation)
-6. Run Step 5 two-layer verification (spawn reviewer subagent)
-7. Fix NEEDS REVISION findings, re-verify (max 3 iterations)
-8. Append results to your direction file: spec-update events (if you adjusted the spec), a build event, and feedback events from reviewer rounds" \
+1. Load '/brand' skill and '/graphics' skill.
+2. Read these P0 files BEFORE building (they are blocking — you cannot produce quality output without them):
+   - references/craft-elevation.md (craft quality: elevation strategies, AI failure modes, visual depth stack)
+   - references/method-selection.md (atom method: decision tree for choosing Figma vs Quiver vs Image Gen vs etc.)
+   - tools/figma-console.md (Figma recipes: connectors, auto-layout, patterns, MCP tool reference)
+   - references/figma-patterns.md (token code: how to bind brand variables in Figma)
+   - formats/<format>.md where <format> comes from state.json (canvas size, typography tiers, design rules for this specific medium)
+   Then read content-type files (content-types/*.md) and tool-specific files (tools/quiver.md, tools/openai-image.md, etc.) as your Build Spec's atom audit dictates — only load what your atoms actually need.
+3. Read state.json for shared context (Creative Brief, collected assets, Figma IDs, product context)
+4. Read directions/immersive-slack-thread.json — this is YOUR direction file. It has your concept, Build Spec, sectionNodeId, and full timeline of what's happened so far. The spec and assets are the parent's best starting point — NOT a prescription. You have full authority to adjust the spec, source better assets, or omit what doesn't serve your frame.
+5. CRITICAL: ALL Figma nodes you create must go inside YOUR Section (sectionNodeId from your direction file). Never create at page root. Never touch other Sections. Use getNodeByIdAsync(sectionNodeId) to scope all operations.
+6. Build the frame in your Section, run Phase B-E (decomposition, build, elevation)
+7. Run Step 5 two-layer verification (spawn reviewer subagent)
+8. Fix NEEDS REVISION findings, re-verify (max 3 iterations)
+9. Append results to your direction file: spec-update events (if you adjusted the spec), a build event, and feedback events from reviewer rounds" \
     --dangerously-skip-permissions \
     --output-format json \
     < /dev/null 2>&1 | tee tmp/graphics/<page-slug>/directions/immersive-slack-thread-stdout.json
@@ -98,7 +105,13 @@ Your direction slug is: immersive-slack-thread
 
 1. Read `state.json` for shared context → Creative Brief, collected assets, Figma file key, product context
 2. Read `directions/<your-slug>.json` → your direction file. The latest `spec` event is your Build Spec. Scan `feedback` events for what to act on. Scan `build` events for previous iterations.
-3. Load `/brand` skill and `/graphics` skill. Read ALL reference files, tools docs, content-type guides, and format files in the graphics skill directory — they contain craft knowledge, code recipes, failure modes, and brand-specific patterns you need throughout. Reference brand and graphics guidance continuously as you build — not just at the start.
+3. Load `/brand` skill and `/graphics` skill. Then read these P0 files before building:
+   - `references/craft-elevation.md` — craft quality, AI failure modes, visual depth stack
+   - `references/method-selection.md` — atom method decision tree
+   - `tools/figma-console.md` — Figma recipes, connectors, MCP tool reference
+   - `references/figma-patterns.md` — token application in Figma code
+   - `formats/<format>.md` — canvas dimensions and design rules (format from state.json)
+   Then load content-type files (`content-types/*.md`) and tool-specific files as your Build Spec's atom audit dictates. Reference brand and graphics guidance continuously as you build — not just at the start.
 4. **Autonomy — you own this direction file.** The parent's `spec` event is a starting point, not a contract. You have full authority to:
    - **Adjust the spec** — change composition, layout, success criteria, atom methods, or anything else that serves the direction better. Append a `spec-update` event for each adjustment with what you changed and why.
    - **Replace, augment, or omit assets** — source different icons from the brand library, create new illustrations via Quiver, fetch additional third-party logos, or skip assets that don't strengthen the composition. Record in `spec-update` events.
