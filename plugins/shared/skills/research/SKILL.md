@@ -212,7 +212,7 @@ Default to **Path A** (formal report, Steps 1–6) unless the user explicitly as
 
 ⛔ **HARD GATE (Supervised mode).** Do NOT start any research (web searches, code analysis, evidence gathering) until the user explicitly confirms the rubric. After proposing the rubric, **STOP and WAIT for user response.** Mark the Scoping task as `completed` only after receiving user confirmation.
 
-**Headless mode:** Propose the rubric based on the prompt/arguments provided, then **proceed immediately** without waiting for confirmation. If the prompt includes explicit dimensions, questions, or scope constraints, use those directly as the rubric. If the prompt is open-ended, infer a reasonable rubric from the topic. Mark the Scoping task as `completed` after proposing.
+**Headless mode:** Run `/ground` first to discover the topic landscape (see scoping-protocol.md §2A), then propose the rubric and **proceed immediately** without waiting for confirmation. If the prompt includes explicit dimensions, `/ground` runs in context-aware mode (supplements the user's dimensions with discovered gaps). Mark the Scoping task as `completed` after proposing.
 
 **Load:** `references/scoping-protocol.md`
 

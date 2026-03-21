@@ -33,9 +33,15 @@ If unclear, ask:
 
 **This is the critical alignment step.** Do not skip or rush it.
 
-### A) Load the dimension framework
+### A) Ground the topic landscape
 
-Read `references/dimension-frameworks.md` and select the framework matching the report type. Present the starter dimensions to the user.
+Always run `/ground` on the research topic to discover the actual landscape before proposing dimensions — even when the user provides explicit dimensions. Grounding uncovers facets, terminology, and concepts the user may not have thought of, which helps the agent do better research regardless of how well-specified the input is.
+
+When the user provides explicit dimensions, `/ground` runs in context-aware mode: it identifies the areas the user already covered and focuses probes on gaps rather than re-discovering known areas. The user's dimensions are preserved; the topic map supplements them.
+
+When no user dimensions are provided, the topic map becomes the rubric skeleton — dimensions from the topic map map to rubric dimensions, research questions map to facets, priorities are preserved.
+
+In both cases, supplement with `references/dimension-frameworks.md` for any standard dimensions neither the user nor the topic map covers (e.g., "Licensing & Cost" rarely surfaces in web probes but matters for capability assessments).
 
 ### B) Iterate on each dimension using Decision Support Protocol
 
