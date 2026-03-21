@@ -24,10 +24,9 @@ When an assumption is refuted → cascade: what other decisions relied on this? 
 
 ## Tagging schema (apply to every Open Question / Decision)
 1) **Type:** Product / Technical / Cross-cutting
-2) **Priority:** P0 (must), P1 (should), P2 (nice)
+2) **Priority:** P0 (must resolve — In Scope) / P2 (deferred — Future Work). No P1. See SKILL.md "Priority definitions" for criteria.
 3) **Reversibility:** 1-way door / reversible
-4) **Blocking:** blocks In Scope work? yes/no
-5) **Confidence:** HIGH / MEDIUM / LOW (or CONFIRMED / INFERRED / UNCERTAIN)
+4) **Confidence:** HIGH / MEDIUM / LOW (or CONFIRMED / INFERRED / UNCERTAIN)
 
 ## The numbered decision batch (default interaction contract)
 When it's time for user input, present:

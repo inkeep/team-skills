@@ -8,6 +8,6 @@ Impact: Open questions get lost; sessions restart with repeated discovery.
 
 **Last updated:** YYYY-MM-DD
 
-| ID | Question | Type (Product/Technical/Cross) | Priority (P0/P1/P2) | 1-way door? | Blocks In Scope? | Plan to resolve / next action | Owner | Status |
-|---|---|---|---|---|---|---|---|---|
-| Q1 |  |  | P0 | Yes/No | Yes/No |  |  | Open |
+| ID | Question | Type (Product/Technical/Cross) | Priority (P0/P2) | 1-way door? | Plan to resolve / next action | Owner | Status |
+|---|---|---|---|---|---|---|---|
+| Q1 |  |  | P0 | Yes/No |  |  | Open |

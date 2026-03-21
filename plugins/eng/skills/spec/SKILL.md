@@ -29,7 +29,7 @@ argument-hint: "[feature/product] (optional: context, constraints, target users,
    - Before asking the human anything, check whether the answer is findable through code, web, or docs. Only surface questions that genuinely require human judgment or domain knowledge that exists only in their head — product intent, priority, risk appetite, scope.
    - Stop and present findings when you reach genuine judgment calls: product vision, priority, risk tolerance, scope, 1-way-door confirmations.
    - Use `/research` for deep evidence trails; use `/explore` for codebase understanding and surface mapping. Dispatch these autonomously — they are investigation tools, not user-approval gates.
-   - Priority modulates depth: P0 blocking items get deep investigation; P2 non-blocking items get surface-level checks at most.
+   - Priority modulates depth: P0 items get deep investigation; P2 items get surface-level checks at most.
 
 4. **Keep the user in the driver seat via batched decisions.**
    - Present decisions as a **numbered batch** that the user can answer in-order.
@@ -192,14 +192,36 @@ Do:
   - **Risks / Unknowns** (downside + mitigation)
 - Tag each item:
   - Type: Product / Technical / Cross-cutting
-  - Priority: P0/P1/P2
+  - Priority: P0 or P2 (see criteria below — every item must be classified upfront, no middle tier)
   - Reversibility: 1-way door vs reversible
-  - Blocking: blocks In Scope work or not
   - Confidence: HIGH / MEDIUM / LOW
+
+#### Priority definitions
+
+Priority and scope are the same decision:
+
+**P0 (Must Resolve) ↔ In Scope.** Any decision or open question that affects or could affect:
+- Customer-facing experience or UX surfaces
+- Data contracts (schemas, APIs, SDK interfaces)
+- 1-way door decisions on customer expectations or internal architecture
+- Dependencies that break or create constraints for end-users (devs or non-devs)
+- Architectural choices that foreclose future options
+
+If it's In Scope, it's P0. Must be resolved before the spec is done.
+
+**P2 (Deferred) ↔ Future Work.** Questions or decisions that belong to deferred or future work. Noted for context, not deeply investigated. If it's Out of Scope, it's P2.
+
+A P2 question can be *about* an In Scope item without being P0 — e.g., "Should this API support batch operations?" where the API is In Scope but batch is Future Work. The question is P2 (deferred to when batch is In Scope), tagged as "relevant to [In Scope item] but resolution deferred to future scope."
+
+There is no P1. Every item is either P0 (must resolve in this spec) or P2 (explicitly deferred). If you're unsure, default to P0 — the iterative loop will correct over-classification through scope checkpoints, but under-classification lets important decisions slip.
+
+#### Priority triage (user-facing)
+
+After tagging, present the priority assignments to the user for confirmation: "Here's what I think is P0 vs P2. Adjust?" This is the same decision as scope — promoting an item to P0 means it's In Scope, demoting to P2 means it's Future Work.
 
 Then:
 - For each Open Question, identify investigation paths that would help resolve it.
-- **Investigate P0/blocking items autonomously** — run code traces, dependency checks, prior art searches, blast radius analysis. Persist findings to `evidence/` as you go.
+- **Investigate P0 items autonomously** — run code traces, dependency checks, prior art searches, blast radius analysis. Persist findings to `evidence/` as you go.
 - After investigating, present the first **Decision Batch** (numbered) and **Open Threads** (remaining unknowns with investigation status and action hooks). See Output format §2-§3.
 
 ---
@@ -213,11 +235,10 @@ This is the core of the skill. Repeat until In Scope items are fully resolved.
 **Load (for challenge calibration):** `references/challenge-protocol.md`
 
 Loop steps:
-1. **Identify what needs investigation** — extract from the OQ backlog + cascade from prior decisions. Prioritize: P0 blocking items first.
+1. **Identify what needs investigation** — extract from the OQ backlog + cascade from prior decisions. P0 items first.
 2. **Investigate autonomously:**
-   - **P0 / blocking:** Deep investigation — dispatch `general-purpose` Task subagents that load `/research` skill or `/explore` skill, multi-file traces, external prior art searches.
-   - **P1:** Moderate investigation — direct file reads, targeted searches, quick dependency checks.
-   - **P2 non-blocking:** Surface-level only — note the question, don't investigate deeply.
+   - **P0:** Deep investigation — dispatch `general-purpose` Task subagents that load `/research` skill or `/explore` skill, multi-file traces, external prior art searches.
+   - **P2:** Surface-level only — note the question, don't investigate deeply.
    - Before drafting options for any non-trivial decision, verify (by investigating, not by proposing):
      - [ ] Current system behavior relevant to this decision: checked.
      - [ ] How similar systems solve this: checked.
@@ -248,9 +269,9 @@ Loop steps:
      - If an assumption is refuted, trace and edit all dependent sections
      - Append new cascading questions to Open Questions (SPEC.md §11)
      - Update evidence files if the decision changes factual understanding
-   - Re-prioritize the backlog
+   - Re-classify the backlog — decisions may reveal that a P2 item is actually P0 (now blocks In Scope work) or a P0 item can be deferred to P2 (moved to Future Work). Priority changes are scope changes.
    - **Completeness re-sweep** (every 2-3 loop iterations, or after a cluster of decisions resolves): Re-run the three extraction probes from Step 4 against the current state of the spec. Decisions change the shape of the problem; new dimensions may now be relevant that weren't before. A backlog that only shrinks is a signal you're not probing deeply enough. For each major decision made this round, reverse the question — what *should* be affected but hasn't been traced? What areas are suspiciously untouched?
-   - **Scope checkpoint** (same cadence as completeness re-sweep, or when investigation changes the cost/feasibility of an item): Present the current scope picture — what's In Scope, what's Out of Scope, what's uncertain. If investigation revealed new cost, new dependencies, new risks, or new opportunities, propose scope changes with evidence: "Investigation revealed X. This means [item] should move in/out because [reason]." The user confirms or adjusts. Scope changes are explicit and evidence-driven, never implicit.
+   - **Scope + priority checkpoint** (same cadence as completeness re-sweep, or when investigation changes the cost/feasibility of an item): Present the current scope picture — what's In Scope, what's Out of Scope, what's uncertain. If investigation revealed new cost, new dependencies, new risks, or new opportunities, propose scope changes with evidence: "Investigation revealed X. This means [item] should move in/out because [reason]." The user confirms or adjusts. Scope changes are explicit and evidence-driven, never implicit. Because priority and scope are the same decision, moving an item In Scope promotes it to P0; moving it to Future Work demotes it to P2. If the user says "go deeper on N" for a P2 item, treat that as a signal to promote to P0.
    - **Introspective checkpoint** (same cadence as completeness re-sweep): Before presenting the next batch, run these self-checks silently — they're agent discipline, not user-facing output. Flag any that fire:
      - **Convergence:** Are options narrowing because evidence supports it, or because the agent stopped looking?
      - **Confirmation bias:** Is the agent seeking evidence for its preferred direction while under-investigating alternatives?
@@ -341,7 +362,7 @@ For each verified assertion, classify:
 
 Present the summary in two tiers:
 
-**Tier 1 — Design-affecting issues:** Any contradiction or staleness that could change a product decision, invalidate a requirement, affect scope, or alter the recommended architecture. These are not just fact corrections — they may reopen design questions. Present each as a candidate Open Question or Decision using the existing spec format (type, priority, blocking, what it affects).
+**Tier 1 — Design-affecting issues:** Any contradiction or staleness that could change a product decision, invalidate a requirement, affect scope, or alter the recommended architecture. These are not just fact corrections — they may reopen design questions. Present each as a candidate Open Question or Decision using the existing spec format (type, priority, what it affects).
 
 **Tier 2 — Factual corrections:** Contradictions or staleness that are localized — the fix is updating a detail in the spec without affecting any design decisions. List each with the current (wrong) claim and the correct information.
 
@@ -390,7 +411,7 @@ Everything the user needs to respond to this turn — decisions with formed opti
 Items the agent is tracking that don't need user input this turn. Only **○ Can investigate further** items belong here — the agent stopped (diminishing returns, lower priority, or time cost) but could go deeper if directed.
 
 For each thread:
-- The question (tagged: type, priority, blocking?)
+- The question (tagged: type, priority)
 - **Investigation status:** What the agent already checked + what it found (brief — substance, not mechanics).
 - Unlocks: what decision or downstream clarity this enables once resolved.
 
@@ -422,7 +443,7 @@ When the user says "finalize":
 - **Proposing investigation instead of doing it.** If information is accessible (code, dependencies, web, prior art), investigate autonomously — don't stop to ask permission. Match tool to scope: a function name lookup doesn't need `/research`; a multi-system trace does. But in both cases, do it rather than proposing it. Stop only for genuine judgment gaps (product vision, priority, risk tolerance, scope decisions).
 - **Letting the user skip problem framing.** Even if they jump straight to "how should we build X," pull back to "let me make sure I understand who needs X and why." Step 1 is not optional.
 - **Letting insights accumulate only in conversation without persisting to files.** If you learned something factual (code trace, dependency behavior, current state), it belongs in an evidence file now — not "later" or "when we finalize." Conversation context compresses; artifacts survive.
-- **Under-extracting open questions (balance fallacy).** The agent generates open questions and silently filters for importance during extraction — listing only items that feel "significant enough." The result is a comfortable handful that looks balanced but reflects the agent's significance threshold, not reality. Fix: separate extraction from prioritization. List every candidate uncertainty; use the tagging step (P0/P1/P2) to prioritize, not the extraction step to filter.
+- **Under-extracting open questions (balance fallacy).** The agent generates open questions and silently filters for importance during extraction — listing only items that feel "significant enough." The result is a comfortable handful that looks balanced but reflects the agent's significance threshold, not reality. Fix: separate extraction from prioritization. List every candidate uncertainty; use the tagging step (P0/P2) to prioritize, not the extraction step to filter.
 - **Directing the human to do async work.** Never say "go check with team X," "run an experiment," "talk to customers about this." If you need information the human might have, ask about what they know or think. If you need external information, investigate it yourself using code, web, and docs.
 - **Questioning the human's process instead of probing their thinking.** Don't ask "Have you talked to customers?" or "Have you validated this with users?" Instead, propose options and ask about intent: "Do you want customers to be able to do X? One alternative is Y, which might satisfy the need because Z."
 - **Deferring 3P dependency choices or architectural viability to "future work."** Decisions like "which library/server to use" and "does the recommended path actually work in our runtime" determine whether In Scope items are implementable. They look like implementation details but are spec-time concerns. If someone can't implement the spec without re-opening these choices, the item fails the resolution completeness gate and isn't truly In Scope.
@@ -456,7 +477,7 @@ Recommendation: B (high confidence)
 ### Correct (open thread with investigation status)
 
 ```txt
-3. [Technical, P0, blocks In Scope] How does our auth middleware handle
+3. [Technical, P0] How does our auth middleware handle
    token refresh during long-running requests?
 
    Investigation status: Traced the token refresh path through auth
@@ -474,7 +495,7 @@ Recommendation: B (high confidence)
 ### Correct (judgment call in §2 — needs user vision)
 
 ```txt
-5. [Product, P0, blocks In Scope] Which persona is the primary target
+5. [Product, P0] Which persona is the primary target
    for the initial onboarding flow?
 
    Investigation status: Found 3 distinct entry patterns in analytics

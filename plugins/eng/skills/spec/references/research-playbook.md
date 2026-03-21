@@ -52,7 +52,7 @@ If the product research needs citations/evidence, it's valid to use `/research` 
 
 ## Investigation types (execute autonomously; match scope to priority)
 
-These are the agent's investigation tools. Execute them as part of autonomous investigation — don't propose them as options for the user to approve. Match depth to priority: P0 blocking items get thorough investigation across multiple types; P2 items get a quick check at most.
+These are the agent's investigation tools. Execute them as part of autonomous investigation — don't propose them as options for the user to approve. Match depth to priority: P0 items get thorough investigation across multiple types; P2 items get a quick check at most.
 
 ### A) External prior art (product + technical)
 - 3-5 comparable products/projects
