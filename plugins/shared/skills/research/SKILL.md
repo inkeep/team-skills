@@ -20,12 +20,13 @@ Research supports two execution modes:
 |---|---|---|
 | **Supervised** (default) | Pause at scoping gate for user rubric confirmation; present routing options interactively | Default when invoked by a user in an interactive session |
 | **Headless** | Auto-confirm rubric after proposing it; auto-select routing decisions; skip interactive follow-up prompts. All other quality gates (routing gate scan, validation, evidence standards) remain enforced. | `$ARGUMENTS` includes `--headless`, OR container environment detected (`/.dockerenv` exists or `CONTAINER=true`), OR invoked via `-p` non-interactive mode |
-| **`--fanout`** | After Step 6, auto-select all follow-ups assessed as "heavy" (3+ facets, multi-source) and enter nested-fanout workflow. Lighter follow-ups handled by subagents. Requires `--headless`. | `$ARGUMENTS` includes `--fanout` (must also include `--headless`) |
+| **`--fanout`** | At Step 3 or Step 6, use nested fanout whenever the routing heuristic says it's warranted. At Step 3: if rubric has 5+ P0/Deep independent dimensions, fanout replaces standard research. At Step 6: auto-select all follow-ups assessed as "heavy." Lighter items handled by subagents. Requires `--headless`. | `$ARGUMENTS` includes `--fanout` (must also include `--headless`) |
 
 **Headless mode adjustments:**
 - **Routing Gate:** Still mandatory. Scan for existing research. But instead of presenting options to the user, auto-select: fully covered → proceed to new report (assume the caller wants fresh research on this specific angle), partially covered → start new report, not covered → start new report.
 - **Scoping (Step 1):** Propose the rubric AND proceed immediately — do not stop and wait for confirmation. The rubric is derived from the prompt/arguments provided. If the prompt includes explicit dimensions or questions, use those as the rubric.
 - **Step 6 (Recap + Follow-up):** Write the recap into the report or output. Skip the interactive "where we could go from here" prompt — there is no user to respond.
+- **`--fanout` (Step 3):** After scoping, assess rubric dimensions using the routing heuristic in Step 3.0. If 5+ P0/Deep independent dimensions, use nested fanout mode (replaces Steps 3-4). Otherwise, use standard deep research mode.
 - **`--fanout` (Step 6):** After the recap, assess all follow-up directions using the routing heuristic in Step 6.3. Auto-select those assessed as "heavy" (3+ facets, multi-source) for nested fanout. Handle "light" follow-ups via subagents. If zero follow-ups qualify as "heavy," complete normally without fanout.
 - **Tasks:** Still created for structural enforcement and progress tracking, but no blocking on user input.
 
@@ -343,11 +344,29 @@ Mark the "Conduct research" task as `in_progress` (if not already). Mark it `com
 
 ### 3.0 Choose research execution mode
 
-| Condition                                          | Mode                   | What to do                                 |
-| -------------------------------------------------- | ---------------------- | ------------------------------------------ |
-| Small scope (≤2 dimensions), no parallelism needed | **Solo mode**          | Work through rubric dimension-by-dimension |
-| Using subagents (any parallel work)                | **Deep research mode** | Load orchestration reference               |
-| Many dimensions, shared sources likely             | **Deep research mode** | Load orchestration reference               |
+| Condition                                          | Mode                      | What to do                                 |
+| -------------------------------------------------- | ------------------------- | ------------------------------------------ |
+| Small scope (≤2 dimensions), no parallelism needed | **Solo mode**             | Work through rubric dimension-by-dimension |
+| Moderate scope (3-5 dimensions), shared sources    | **Deep research mode**    | Load orchestration reference               |
+| Many dimensions, shared sources likely             | **Deep research mode**    | Load orchestration reference               |
+| Large scope (5+ P0/Deep, independent dimensions)   | **Nested fanout mode**    | Load `references/nested-fanout.md`         |
+
+**Routing heuristic (for choosing between deep research and nested fanout):**
+
+Assess the rubric dimensions on two axes:
+- **Facet count per dimension:** How many independent sub-questions? (1-2 = light, 3+ = heavy)
+- **Source diversity per dimension:** Same codebase/domain, or multiple external repos/ecosystems?
+
+| Rubric shape | Mode |
+|---|---|
+| Most dimensions are light (1-2 facets, single source) | Deep research mode (subagents) |
+| 5+ dimensions are heavy (3+ facets, multi-source) and independent | Nested fanout mode |
+
+When uncertain, bias toward fanout — the cost of over-fanouting (thin sub-reports, wasted tokens) is lower than under-fanouting (shallow coverage of deep topics).
+
+State what you're doing and why before proceeding. Not as a question — as a transparent assessment the user can redirect if they disagree.
+
+When nested fanout mode is chosen at Step 3, it **replaces Steps 3 AND 4** — the fanout sub-instances each produce their own research, and the consolidation produces the final REPORT.md. Proceed to Step 5 (Validate) after consolidation completes.
 
 ### 3.1 Solo mode (no subagents)
 
@@ -692,7 +711,7 @@ The goal is the quality of thinking a senior colleague would bring — "given wh
 If the user picks a follow-up direction:
 - **For additive dimensions:** Treat it as a Path C update (load `references/updating-existing-reports.md`) if a report exists, or continue the conversation if it was a direct answer.
 - **For deeper dives (single direction):** Narrow scope to the specific facet and re-enter Step 3 with a focused mini-rubric.
-- **For multiple deep dives (2+ directions):** **Load** `references/nested-fanout.md`. Spawns parallel `/research --headless` instances, consolidates findings back into the parent report. Sub-reports are ephemeral and deleted after consolidation.
+- **For multiple deep dives (2+ directions):** **Load** `references/nested-fanout.md`. Spawns parallel `/research --headless` instances, consolidates findings back into the parent report. Sub-reports are preserved in `fanout/` for auditability.
 - **For action-oriented follow-ups:** Transition out of the research skill naturally — e.g., "That moves us from research into implementation. Want me to [specific next action]?"
 
 Each iteration gets its own recap + follow-up cycle. The conversation continues until the user signals they have what they need.

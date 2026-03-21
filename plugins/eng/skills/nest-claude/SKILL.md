@@ -238,7 +238,8 @@ Always cross-verify. LLMs can output false completion signals.
 
 ## What children inherit and don't
 
-**Inherited (from the filesystem):**
+**Inherited (automatic, no action needed):**
+- **Environment variables from the parent shell** — any env var set or exported before the `claude` command is visible to the child process. This is the primary mechanism for cross-level configuration (e.g., `CLAUDE_REPORTS_DIR`, `CLAUDE_FANOUT_DEPTH`).
 - Project-level `CLAUDE.md` / `AGENTS.md`
 - `.claude/settings.local.json` and `~/.claude/settings.json`
 - MCP server configurations (unless `--strict-mcp-config` is used)
@@ -249,8 +250,12 @@ Always cross-verify. LLMs can output false completion signals.
 - Parent's conversation history
 - Parent's loaded skill content or in-session context
 - Parent's permission approvals
+- **Parent's CLI flags** (`--model`, `--effort`, `--append-system-prompt`, etc.) — each child gets its own flags via its `claude` command
+- **Skill `$ARGUMENTS`** — per-invocation strings that must be explicitly included in the child's `-p` prompt if propagation is desired
 
 Each child starts completely fresh. The prompt you pass via `-p` is their entire instruction.
+
+**Critical distinction from Task-tool subagents:** Task/Agent tool subagents (spawned via the Agent tool within a session) do **NOT** inherit parent shell environment variables — they run in fresh, isolated shells. Only nested subprocesses (`claude -p`) inherit env vars. This means env vars are the only configuration mechanism that automatically propagates through subprocess nesting AND can be read deterministically (not LLM-interpreted). Use env vars for cross-level configuration; use prompt text for per-invocation intent signals.
 
 ---
 
