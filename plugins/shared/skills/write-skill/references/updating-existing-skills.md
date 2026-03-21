@@ -283,13 +283,14 @@ Propose changes before applying them.
 
 Use this table. For B/C changes, fill the "Consequences / drift risk" column by answering the three questions in the header:
 
-| Proposed change | Classification (A/B/C) | Why (benefit) | Consequences / drift risk (1. What else does this touch? 2. How else could this be read? 3. What breaks if this goes wrong?) | Requires author decision? |
+| Proposed change | Classification (A/B/C) | Why (benefit) | Consequences / drift risk (1. What else does this touch? 2. How else could this be read? 3. What breaks if this goes wrong? 4. Does this overfit?) | Requires author decision? |
 |---|---|---|---|---|
 
 **Guidance for consequence analysis:**
 - **What else does this touch?** — Does it interact with frontmatter routing, workflow ordering, terminology used elsewhere, or overall coherence?
 - **How else could this be read?** — Would a different agent interpret this the same way? What assumptions are embedded?
 - **What breaks if this goes wrong?** — What's the symptom? How hard to detect? Reversible?
+- **Does this overfit to the case that prompted the change?** — The skill is used across many contexts/domains/situations. Does this change work across that full range, or does it assume the specific scenario you're looking at right now? If a concept means different things in different contexts, use illustrative examples that teach the agent to choose — not a prescriptive default that biases toward one interpretation.
 
 Don't write "low risk" or "no issues" — explain specifically *why* (e.g., "isolated change to one example; no other sections reference this pattern").
 

@@ -53,9 +53,20 @@ For each proposed dimension, walk through:
 2. [Specific angle/aspect]
 3. [Specific angle/aspect]
 
+**Facet depth guidance:** For dimensions marked Deep, specify WHAT KIND of depth matters — not just the topic. If a facet only names a topic ("web search probes"), the agent defaults to conceptual coverage ("here's what exists and why it matters"). Deep should go further, but "further" means different things for different dimensions. Examples:
+
+- **Mechanical** — how it actually works step-by-step, with inputs, outputs, decision points (e.g., "how does Firecracker boot a microVM")
+- **Quantitative** — specific numbers, benchmarks, measurements at specific scales (e.g., "cost per sandbox-hour at 1K concurrent users")
+- **Adversarial** — failure modes, known issues, what critics say, strongest counterarguments (e.g., "gVisor CVE history and known syscall gaps")
+- **Comparative** — systematic matrix across multiple alternatives on specific axes (e.g., "isolation technologies compared on boot time, memory overhead, KVM requirement")
+- **Practical** — enough detail that someone could implement it, with specific techniques and examples (e.g., "how to generate maximally divergent search queries")
+- **Primary source** — go to ground truth (source code, specs, papers), not summaries or blog posts (e.g., "read the Kiwi binary format source, not the blog post about it")
+
+Choose what fits the dimension. A cost dimension needs quantitative depth. A security dimension needs adversarial depth. An architecture dimension might need mechanical + comparative. There's no single default — the right depth type depends on what the reader will DO with the findings.
+
 **Depth options:**
-- **Deep:** [What thorough investigation looks like]
-- **Moderate:** [What sufficient coverage looks like]
+- **Deep:** [What thorough investigation looks like — specify which kind(s) of depth]
+- **Moderate:** [What sufficient coverage looks like — conceptual understanding is usually acceptable]
 - **Skip:** [Why you might not need this]
 
 **My recommendation:** [Deep/Moderate/Skip] because [reason tied to their stated goal]

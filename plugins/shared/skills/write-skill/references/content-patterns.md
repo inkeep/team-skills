@@ -227,8 +227,9 @@ When writing each instruction, ensure it survives these questions:
 1. **Could this be read two ways?** — If yes, add a clarifying example or explicit constraint before moving on.
 2. **Does this assume context the reader won't have?** — Skills should be standalone; make implicit assumptions explicit as you write.
 3. **Would a different agent interpret this the same way?** — Consider different models, tool environments, first-time vs experienced users. If interpretation could vary, tighten the language now.
+4. **Would this be wrong in a different usage context?** — Skills are used across many domains and situations. If you're writing a default or prescription, ask: is there a context where the opposite would be correct? If yes, use illustrative examples that teach the agent to choose the right interpretation for its context — not a prescriptive default that overfits to one scenario.
 
-Don't draft loosely and fix later — get it right as you write. An explicit "do X, not Y" or a short example is usually enough to eliminate ambiguity.
+Don't draft loosely and fix later — get it right as you write. An explicit "do X, not Y" or a short example is usually enough to eliminate ambiguity. For context-dependent concepts, examples of different contexts with different right answers are more durable than a single default.
 
 **Cross-file consistency:** When a skill has multiple reference files that cover related topics, verify they don't provide conflicting guidance. If references contain legitimately different approaches for different situations, establish explicit precedence or selection criteria in SKILL.md (e.g., "For REST services use `references/api.md`; for GraphQL use `references/graphql.md`"). Without this, the agent loads both and has no basis to choose — a common source of confused output.
 

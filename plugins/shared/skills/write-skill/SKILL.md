@@ -185,6 +185,7 @@ Before you draft structure, capture an intent snapshot (for you, not necessarily
 Then write down (briefly):
 
 - **Scope**: what tasks the skill covers, and what it explicitly does *not* cover
+- **Usage breadth**: what range of contexts, domains, or situations will this skill be used in? If a concept in the skill means different things in different contexts (e.g., "deep" research means different things for cost analysis vs security analysis vs architecture review), the skill should use illustrative examples rather than prescriptive defaults — examples teach the agent to choose the right interpretation for the specific context
 - **Primary failure modes**: what the model commonly gets wrong without this skill
 
 If the request is high-stakes (security, production deploys, destructive ops), require a validation step.
@@ -205,6 +206,7 @@ Copy/paste template (optional but recommended):
 - Operating assumptions (tools, workflow model, platform, user intent):
 - Success criteria (what "done" means):
 - Primary failure modes to prevent:
+- Usage breadth (contexts/domains/situations where this skill will be used):
 - Output format expectations (if any):
 - Safety posture (invocation + side-effects policy):
 - Assumptions (if any):
