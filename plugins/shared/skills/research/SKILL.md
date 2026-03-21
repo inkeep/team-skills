@@ -625,37 +625,50 @@ Keep this short. The user already has the full report/answer — the recap is a 
 
 ### 6.2 Surface follow-up directions (always do this)
 
-Based on what emerged during research, offer **2–4 natural follow-up options**. These should feel like a knowledgeable colleague saying "here's what I'd look at next" — not a generic menu.
+Based on what emerged during research, offer **2–4 natural follow-up options** that would **enrich or extend this report** with additional depth or dimensions. These should feel like a knowledgeable colleague saying "here's what would make this research more complete" — not a generic menu or a pivot to a different task.
 
-**Where follow-ups come from (research angles only):**
-- Gaps/open questions that emerged during research (the "we couldn't confirm X" items)
-- Adjacent dimensions the rubric didn't cover but findings suggest matter (e.g., "performance didn't come up in scoping, but the architecture we found has known scaling concerns")
-- Deeper dives into findings that were covered at moderate depth but could go deeper (e.g., "we confirmed the auth model at a high level — a deeper dive into token lifecycle and revocation semantics would sharpen the security assessment")
-- Cross-cutting perspectives that would reframe or stress-test existing findings (e.g., "we assessed features from the builder's perspective — investigating from the operator/SRE perspective might reveal different trade-offs")
-- Emerging questions that the research itself surfaced — things you didn't know to ask before starting (e.g., "the codebase revealed an undocumented plugin system — investigating its stability and API surface could change the extensibility assessment")
-- **Coherence review** — proactively suggest this (not just list as a generic option) when you observed 2+ of these signals during research:
-  - Conflicting evidence across dimensions (sources disagree, or findings tension with each other)
-  - High density of UNCERTAIN findings on pivotal claims
-  - Late-breaking findings that reframe or undermine earlier conclusions
-  - Complex cross-dimension interactions (same capability assessed differently in different contexts)
+**The purpose of follow-ups is to deepen this report, not to escape depth during research.** Follow-ups exist for AFTER thorough initial coverage — they are not a substitute for going deep on the rubric's P0 dimensions. If a dimension was scoped as "Deep" in the rubric, it must be covered deeply in the initial pass. "I'll save that for follow-ups" is a failure mode, not a strategy. Follow-ups surface what you *couldn't have known to cover* until after the research was done, or what would benefit from even more depth than the rubric prescribed.
 
-  When signals are present, frame it specifically:
-  > "This research surfaced [specific tension]. A coherence audit would help reconcile these findings. Want me to run one?" (load `references/coherence-audit.md`)
+**Follow-ups must be standalone research topics.** Each follow-up must be investigable via external sources (web, OSS repos, public documentation, academic papers) without requiring access to the user's proprietary codebase, internal systems, or specific assets. "Evaluate our X against Y" or "apply these findings to our system" are not follow-ups — they are downstream actions that belong outside the research skill. Follow-ups should produce findings that are independently valuable and could enrich the report for any reader.
 
-  When signals are absent, omit — don't offer a coherence audit as a default follow-up on every report.
+**Where follow-ups come from (ranked by value for report enrichment):**
 
-**Stay in the research lane.** Follow-ups must be *further research* — additional angles, deeper investigation, adjacent domains, unexplored dimensions. Never suggest derivative deliverables (checklists, templates, scorecards, playbooks, audits of the user's own assets) or productized outputs that belong to other skills. If a research finding naturally implies a downstream action ("this finding suggests you'd benefit from X"), name the implication in the report's findings — but the follow-up option should be "investigate X further," not "let me build X for you."
+1. **Deeper dives into dimensions covered at moderate depth** — dimensions the rubric scoped as "Moderate" or findings where evidence was thin, where going deeper would reveal additional insight that strengthens the report's overall value. (e.g., "We confirmed the auth model at a high level — a deeper dive into token lifecycle and revocation semantics would sharpen the security assessment")
+
+2. **Adjacent dimensions that surfaced organically during research** — topics the rubric didn't anticipate but that emerged as potentially relevant to the user's original intent. These are the "you don't know what you don't know" angles that only become visible after research begins. (e.g., "The codebase revealed an undocumented plugin system — investigating its stability and API surface could change the extensibility assessment")
+
+3. **Gaps and open questions from the research** — specific claims that couldn't be confirmed, negative searches that warrant a different search strategy, or findings labeled UNCERTAIN that could be resolved with targeted investigation.
+
+4. **Cross-cutting perspectives that would stress-test or reframe existing findings** — looking at the same topic from a different stakeholder lens, time horizon, or scale assumption. (e.g., "We assessed features from the builder's perspective — investigating from the operator/SRE perspective might reveal different trade-offs")
+
+5. **Coherence review** — proactively suggest this (not just list as a generic option) when you observed 2+ of these signals during research:
+   - Conflicting evidence across dimensions (sources disagree, or findings tension with each other)
+   - High density of UNCERTAIN findings on pivotal claims
+   - Late-breaking findings that reframe or undermine earlier conclusions
+   - Complex cross-dimension interactions (same capability assessed differently in different contexts)
+
+   When signals are present, frame it specifically:
+   > "This research surfaced [specific tension]. A coherence audit would help reconcile these findings. Want me to run one?" (load `references/coherence-audit.md`)
+
+   When signals are absent, omit — don't offer a coherence audit as a default follow-up on every report.
+
+**Stay in the research lane.** Follow-ups must be *further research* — additional angles, deeper investigation, adjacent domains, unexplored dimensions. Never suggest:
+- Derivative deliverables (checklists, templates, scorecards, playbooks) that belong to other skills
+- Actions on the user's own assets ("evaluate your X against Y", "run this tool on your system", "apply these findings to your codebase")
+- Topics that only make sense in relation to the user's particular system rather than as standalone research
+
+If a research finding naturally implies a downstream action, name the implication in the report's findings — but the follow-up option should be "investigate X further" (standalone, external-source research), not "let me apply X to your system."
 
 **When the user asks "anything else to research?" / "what else should we look at?" / "is there more?":**
 
-This is an invitation to exercise deep judgment — not just recite the gap list. Re-ground in the report's purpose before responding:
+This is an invitation to exercise deep judgment about what would make *this report* more valuable — not to recite the gap list or pivot to a different topic. Re-ground in the user's original intent before responding:
 
 1. Re-read the rubric's **Research Purpose** ("reader cares most about") and the report's current coverage.
-2. Ask yourself: given what this report is trying to accomplish, what angles would most improve its value? Think beyond the existing rubric — what perspectives, framings, or cross-cutting concerns would a domain expert consider that the original scoping might have missed?
-3. Evaluate candidate angles against the purpose. Rank by constructiveness — which would most move the needle on what the reader cares about? Not just "we have a gap here" but "this gap matters because it directly affects [priority]."
-4. Present 2-4 options ranked by value, each tied to the report's purpose. If nothing constructive remains within scope, say so honestly rather than inventing busywork.
+2. Ask yourself: given what the user was trying to learn, what angles would most enrich this report? Think beyond the existing rubric — what dimensions would a domain expert add that the original scoping missed? What would make the report more complete, more nuanced, or more useful as a standalone reference?
+3. Evaluate candidate angles against the original intent. Rank by how much they would improve the report's value to its stated audience — not just "we have a gap here" but "this gap matters because filling it would [specific enrichment tied to the user's goal]."
+4. Present 2-4 options ranked by value, each tied to the report's purpose and investigable via external sources. If nothing constructive remains within scope, say so honestly rather than inventing busywork.
 
-The goal is the quality of thinking a senior colleague would bring — "given what you're trying to accomplish, here's what I'd investigate next and why" — not a mechanical scan of unchecked boxes.
+The goal is the quality of thinking a senior colleague would bring — "given what you're trying to learn, here's what would make this research more complete and why" — not a mechanical scan of unchecked boxes or a pivot to action items.
 
 **How to present them:**
 
@@ -707,7 +720,7 @@ Use consistently throughout:
 * **Defaulting to conclusions without asking** (must honor stance)
 * **Over-updating**: rewriting a report wholesale when the user asked for a delta (use Path C)
 * **Generic follow-ups**: offering "want to learn more?" without tying options to specific findings or gaps from the research
-* **Deliverable follow-ups instead of research follow-ups**: suggesting checklists, templates, scorecards, style guides, audits-of-user-assets, or other productized outputs as "where we could go from here" — follow-ups must be further research directions (deeper dives, adjacent dimensions, unexplored angles), not downstream deliverables that belong to other skills
+* **Deliverable or user-asset follow-ups instead of report-enriching research**: suggesting checklists, templates, scorecards, style guides, or other productized outputs — OR suggesting actions on the user's own system ("evaluate your X against Y", "apply this to your codebase", "run this tool on your project") — as "where we could go from here." Follow-ups must be standalone research directions (deeper dives, adjacent dimensions, unexplored angles) investigable via external sources that would enrich the current report, not downstream actions or topics that only make sense in relation to the user's particular system
 * **Skipping the recap**: dumping a report and going silent — always close with a recap + natural follow-up options unless the user explicitly signals they're done
 * **Ignoring existing reports**: starting new research without scanning the resolved reports directory first — the user may not know what prior research exists, and duplicate work wastes time
 * **Skipping the routing gate and scoping to jump straight to research**: The most common failure mode. When invoked, the agent immediately starts web searching and delivers informal findings without completing the routing gate or getting rubric confirmation. This bypasses the entire protocol. The routing gate and scoping confirmation are hard gates — not optional steps (though in headless mode, scoping auto-confirms after proposing the rubric). If you catch yourself about to run a web search before the routing gate is complete, STOP.
