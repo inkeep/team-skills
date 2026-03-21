@@ -162,11 +162,10 @@ You are conducting deep technical research as a follow-up to an existing report.
 
 **Load:** The `/nest-claude` skill for subprocess spawning conventions.
 
-For each selected direction, spawn a nested Claude Code instance. Use `CLAUDE_REPORTS_DIR` to direct sub-reports into the fanout directory, and decrement `CLAUDE_FANOUT_DEPTH` so children have one fewer level of nesting available:
+For each selected direction, spawn a nested Claude Code instance. Decrement `CLAUDE_FANOUT_DEPTH` so children have one fewer level of nesting available:
 
 ```bash
 CLAUDE_FANOUT_DEPTH=$((${CLAUDE_FANOUT_DEPTH:-1} - 1)) \
-CLAUDE_REPORTS_DIR="<parent-report-dir>/fanout/<run-id>" \
 env -u CLAUDECODE -u CLAUDE_CODE_ENTRYPOINT claude \
   -p "<constructed prompt from Phase 2>" \
   --dangerously-skip-permissions \
@@ -174,13 +173,15 @@ env -u CLAUDECODE -u CLAUDE_CODE_ENTRYPOINT claude \
   < /dev/null 2>&1
 ```
 
+**Output directory is controlled via the prompt, not env vars.** The Phase 2 prompt template includes `"Output location: Write your report to {{fanout_dir}}/."` — this is Priority 1 in the research skill's resolution hierarchy and cannot be overridden by settings.json. Do NOT rely on `CLAUDE_REPORTS_DIR` — it is commonly defined in `settings.json` `env`, which overrides any command-line value (see `/nest-claude` "What children inherit").
+
+`CLAUDE_FANOUT_DEPTH` propagates correctly because it is a novel env var not defined in any settings.json. It is read by the child's Phase 1 depth guard via Bash (`echo $CLAUDE_FANOUT_DEPTH`).
+
 If `CLAUDE_FANOUT_DEPTH` after decrement is > 0 AND propagation is desired, include `--fanout` in the sub-instance's prompt so the child can fan out further. If depth reaches 0, omit `--fanout` — the child's Phase 1 depth guard will prevent fanout regardless, but omitting the flag avoids unnecessary routing heuristic evaluation.
 
 Launch all instances **in parallel** — use `run_in_background: true` on each Bash tool call, sending all calls in a single message.
 
 Update RUN.md sub-instance tracking: status → spawned.
-
-The research skill inside each subprocess picks up `CLAUDE_REPORTS_DIR` and creates `<parent-report>/fanout/<run-id>/<topic-kebab>/REPORT.md` using its normal naming conventions. `CLAUDE_FANOUT_DEPTH` propagates automatically via env var inheritance (see `/nest-claude` "What children inherit").
 
 ---
 

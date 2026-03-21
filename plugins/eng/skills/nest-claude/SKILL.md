@@ -240,7 +240,7 @@ Always cross-verify. LLMs can output false completion signals.
 ## What children inherit and don't
 
 **Inherited (automatic, no action needed):**
-- **Environment variables from the parent shell** — any env var set or exported before the `claude` command is visible to the child process. This is the primary mechanism for cross-level configuration (e.g., `CLAUDE_REPORTS_DIR`, `CLAUDE_FANOUT_DEPTH`). **Caveat:** If the child loads a skill that has its own configuration resolution hierarchy (e.g., a skill that checks "user said so in the prompt" before "env var"), the env var may not be the highest priority. Always also state the configuration in the prompt text as a belt-and-suspenders approach.
+- **Environment variables from the parent shell** — inherited by the child process, but with a critical limitation: **`settings.json` `env` key overrides command-line values.** If `~/.claude/settings.json` (or project/managed settings) defines a key in `"env": {}`, that value overrides any command-line env var of the same name. This means common vars like `CLAUDE_REPORTS_DIR` (often in settings.json) CANNOT be overridden on children. **Novel env vars not in any settings.json** (e.g., `CLAUDE_FANOUT_DEPTH`) propagate correctly. For overridable configuration, use **prompt text as the primary mechanism** — tell the child where to write in the `-p` prompt. Use env vars only for novel keys you control.
 - Project-level `CLAUDE.md` / `AGENTS.md`
 - `.claude/settings.local.json` and `~/.claude/settings.json`
 - MCP server configurations (unless `--strict-mcp-config` is used)
@@ -256,7 +256,7 @@ Always cross-verify. LLMs can output false completion signals.
 
 Each child starts completely fresh. The prompt you pass via `-p` is their entire instruction.
 
-**Critical distinction from Task-tool subagents:** Task/Agent tool subagents (spawned via the Agent tool within a session) do **NOT** inherit parent shell environment variables — they run in fresh, isolated shells. Only nested subprocesses (`claude -p`) inherit env vars. This means env vars are the only configuration mechanism that automatically propagates through subprocess nesting AND can be read deterministically (not LLM-interpreted). Use env vars for cross-level configuration; use prompt text for per-invocation intent signals.
+**Critical distinction from Task-tool subagents:** Task/Agent tool subagents (spawned via the Agent tool within a session) do **NOT** inherit parent shell environment variables — they run in fresh, isolated shells. Only nested subprocesses (`claude -p`) inherit env vars. However, env var inheritance is NOT fully reliable — `settings.json` `env` values override command-line values for matching keys. **Use prompt text as the primary mechanism for directing child behavior** (it's Priority 1 in skill resolution hierarchies and cannot be clobbered). Use novel env vars (not in any settings.json) for custom cross-level signaling (e.g., depth counters).
 
 ---
 
