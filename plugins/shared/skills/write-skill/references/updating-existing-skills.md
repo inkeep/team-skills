@@ -294,6 +294,16 @@ Use this table. For B/C changes, fill the "Consequences / drift risk" column by 
 
 Don't write "low risk" or "no issues" — explain specifically *why* (e.g., "isolated change to one example; no other sections reference this pattern").
 
+**For B/C changes with context-dependent implications, surface in Step 6:**
+
+When the overfitting check (#4) reveals that a change behaves differently across the skill's usage contexts, include this in the Step 6 plan presentation:
+
+> "This change was prompted by [specific context]. The skill also serves [other contexts]. I verified it works for [contexts checked] but [concept X] may need different treatment in [context Y]."
+
+If the user identifies a context where the change would be wrong, enter an engagement loop: revise the change (e.g., prescriptive default → illustrative examples), trace what else is affected, present the revision, and confirm. Continue until the user and agent agree the change works across all known contexts.
+
+If the overfitting check found no context-dependent concerns, no additional interaction is needed — present the plan normally.
+
 Rules:
 - Classify every change as A, B, or C.
 - All changes — including A — are presented to the user for confirmation in Step 6 before any files are modified.

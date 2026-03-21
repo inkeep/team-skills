@@ -213,6 +213,30 @@ Copy/paste template (optional but recommended):
 - Open questions / pending decisions (if any):
 ```
 
+**Usage breadth: mandatory thinking, conditional context negotiation.**
+
+After capturing the intent snapshot, enumerate the usage contexts for this skill: the distinct contexts, domains, workflows, or situations where it will be invoked. Write these in the "Usage breadth" field. This thinking is mandatory — do not skip it even for seemingly simple skills.
+
+Then check: do any concepts in the skill (depth labels, defaults, workflows, output formats) mean different things or need different treatment across these contexts? Signs a concept likely varies: subjective labels ("deep", "thorough", "simple"), behavioral defaults, approach choices ("use X vs Y"). Signs it likely doesn't vary: factual statements, structural conventions, platform constraints.
+
+**If yes — negotiate context with the user:**
+
+The user knows about usage contexts the agent can't infer from the goal description alone. Present your enumeration as a structured comparison (table or list) showing what varies across contexts:
+
+> "I've identified these usage contexts and where key concepts vary:
+>
+> | Context | [Concept X] means... | [Concept Y] means... |
+> |---|---|---|
+> | [Context A] | [treatment 1] | [treatment 3] |
+> | [Context B] | [treatment 2] | [treatment 3] |
+> | [Context C] | [treatment 1] | [treatment 4] |
+>
+> This means [Concept X] should be illustrative examples rather than a single default. If I'm missing a context, what guidance in this skill would need to be written differently?"
+
+If the user adds contexts or flags new variation, trace the implications: what other design decisions are affected? Surface those and confirm. Continue until the usage model stabilizes.
+
+**If no — proceed.** If all contexts get the same treatment for all concepts, note this in the intent snapshot and move to Step 3. No interaction needed.
+
 ---
 
 ### Step 3: Choose invocation and safety posture
