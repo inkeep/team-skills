@@ -210,6 +210,7 @@ When your examples use `/tmp`, that signals throwaway output. If the child's wor
 | Output type | Where | Why |
 |---|---|---|
 | Throwaway (logs, scratch, intermediate) | `/tmp/nested-claude-$$/<child-id>/` | Auto-cleaned, no project clutter, `$$` prevents collisions between runs |
+| Pass-scoped (parallel results, iteration artifacts) | `<project-dir>/<pass-id>/` (e.g., `output/2026-03-20-batch1/`) | Scope to a pass identifier to prevent collisions between repeated runs; preserved for auditability |
 | Deliverables the parent or user needs after the session | Project-relative path (e.g., `reports/`, `output/`) | Survives session, findable, version-controllable |
 | Source code modifications | Dedicated directory or git worktree per child | Prevents merge conflicts between parallel children (see "Concurrent source code edits" below) |
 
@@ -239,7 +240,7 @@ Always cross-verify. LLMs can output false completion signals.
 ## What children inherit and don't
 
 **Inherited (automatic, no action needed):**
-- **Environment variables from the parent shell** — any env var set or exported before the `claude` command is visible to the child process. This is the primary mechanism for cross-level configuration (e.g., `CLAUDE_REPORTS_DIR`, `CLAUDE_FANOUT_DEPTH`).
+- **Environment variables from the parent shell** — any env var set or exported before the `claude` command is visible to the child process. This is the primary mechanism for cross-level configuration (e.g., `CLAUDE_REPORTS_DIR`, `CLAUDE_FANOUT_DEPTH`). **Caveat:** If the child loads a skill that has its own configuration resolution hierarchy (e.g., a skill that checks "user said so in the prompt" before "env var"), the env var may not be the highest priority. Always also state the configuration in the prompt text as a belt-and-suspenders approach.
 - Project-level `CLAUDE.md` / `AGENTS.md`
 - `.claude/settings.local.json` and `~/.claude/settings.json`
 - MCP server configurations (unless `--strict-mcp-config` is used)
@@ -309,6 +310,8 @@ This preserves Claude Code's built-in defaults and adds your instructions on top
 
 Write context to a known path; instruct the child to read it in the prompt. Already covered in "File-based IPC" above. Best for large context (>10KB), context that changes between children, or context shared across children with different roles.
 
+**When the child needs the parent's judgment (not just data):** Write a "brief" — a synthesis of what the parent learned during the session, what the user cares about, what evolved. This is different from copying a file or passing raw data. The parent reflects on what it knows and distills it into actionable guidance. A brief captures judgment calls ("inotify over NFS is a dealbreaker, not just a consideration") that raw data doesn't convey.
+
 ### When to use which
 
 | Situation | Mechanism |
@@ -317,6 +320,7 @@ Write context to a known path; instruct the child to read it in the prompt. Alre
 | One-off child needs a few extra instructions | `--append-system-prompt` — inline, no files |
 | Context is large, dynamic, or per-child | File-based — write to disk, child reads it |
 | Children need different skills for the same task | Multiple agent files, each with their own `skills:` list |
+| Parent has quality standards (validation checklist, stance rules) child must enforce | Embed the key checks directly in the child's prompt. Skills are NOT inherited — if the parent loaded a skill with quality gates, the child won't have them unless given explicitly. |
 
 ### Headless mode for loaded skills (mandatory)
 
@@ -427,6 +431,7 @@ Each child has zero context from the parent. The prompt must be self-contained. 
 - Assuming the child knows anything not in its prompt
 - Vague instructions like "continue the work" without specifying what work
 - **First-person context that causes misattribution.** If your prompt includes context from the parent session, reframe it to third-person. A child that reads "I analyzed the auth flow and found a session fixation bug" may believe *it* performed that analysis. Write instead: "A prior analysis found a session fixation bug in the auth flow" — this gives the child the fact without the false ownership.
+- **Long multi-step prompts where later steps are cleanup.** Children may complete the primary task (the "real work") and skip later steps — especially cleanup, logging, and verification. Prefer: give the child the core task only; have the parent handle verification and cleanup after the child exits (see pattern 5: Delegate + validate).
 
 **Template:**
 
@@ -521,7 +526,7 @@ The child has no way to signal "I'm stuck" in real-time. It keeps going until it
 | Crash / error | Process exits non-zero | `"error_during_execution"` |
 | Child wrote "I'm stuck" | Parent reads output file after exit | Grep output for blocker keywords |
 
-### Five interaction patterns (from simplest to most capable)
+### Six interaction patterns (from simplest to most capable)
 
 **1. Fire-and-forget (default, recommended for most use cases)**
 
@@ -562,7 +567,17 @@ With `--output-format stream-json`, the child emits NDJSON lines in real-time:
 
 A wrapper script can parse this stream to detect tool calls, errors, or keywords as they happen. The parent Claude Code instance cannot easily consume this live (it's waiting on the Bash tool), but an external script can watch and write status to a file the parent polls.
 
-**5. Custom MCP server (most powerful, requires building infrastructure)**
+**5. Delegate + validate (for quality-controlled heavy work)**
+
+```
+Parent writes brief + dispatches child → child does heavy work (bulk merge, large writes) →
+  child exits → parent reads output → parent validates against quality standards →
+  parent corrects/synthesizes → parent handles cleanup
+```
+
+The child does the context-heavy lifting (reading many files, writing large outputs). The parent retains quality control — it reads the child's output and validates against standards the child may not have (loaded skills, conversation context, user intent). The parent also handles cleanup steps the child might skip. Use when the child's work product needs to meet quality standards the parent enforces.
+
+**6. Custom MCP server (most powerful, requires building infrastructure)**
 
 ```
 Parent starts custom MCP server → passes it via --mcp-config →
@@ -590,7 +605,8 @@ env -u CLAUDECODE -u CLAUDE_CODE_ENTRYPOINT claude \
 | Multi-step workflow, children build on prior work | 2. Shared state file |
 | Child might get stuck and needs guidance | 3. Terminate and resume |
 | Need to watch what children are doing | 4. Stream-json monitoring |
-| Child needs human approval mid-task | 5. Custom MCP server |
+| Child does heavy work, parent must ensure quality | 5. Delegate + validate |
+| Child needs human approval mid-task | 6. Custom MCP server |
 
 ---
 
