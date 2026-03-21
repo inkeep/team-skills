@@ -19,7 +19,6 @@ This is the pattern `/implement` uses via `implement.sh`. It generalizes to any 
 set -e
 
 MAX_ITERATIONS=10
-MAX_TURNS=75
 STATE_FILE="state.json"       # Durable state — survives across children
 PROMPT_FILE="prompt.md"       # Child's instructions (reads STATE_FILE)
 PROGRESS_FILE="progress.txt"  # Append-only log across iterations
@@ -31,7 +30,6 @@ for ((i=1; i<=MAX_ITERATIONS; i++)); do
     env -u CLAUDECODE -u CLAUDE_CODE_ENTRYPOINT claude \
         -p "$(cat "$PROMPT_FILE")" \
         --dangerously-skip-permissions \
-        --max-turns "$MAX_TURNS" \
         --output-format json \
         < /dev/null \
         2>&1 | tee "$OUTPUT_FILE" || true
@@ -126,7 +124,7 @@ fi
 
 ## Context exhaustion handling
 
-When a child hits `--max-turns`, it simply exits. This is not a crash — it's the normal end of a child that ran out of context window. The loop handles it identically to any other exit:
+When a child exhausts its context window or completes its work, it exits. The loop handles all exits identically:
 
 1. `|| true` prevents the non-zero exit code from killing the loop
 2. The loop reads the state file to check progress
@@ -178,17 +176,6 @@ A work item is "stuck" when it fails across consecutive iterations with the same
 | Parameter | What it controls | Guidance |
 |---|---|---|
 | `--max-iterations` | Total loop iterations (safety limit) | Not a target. Well-sized items complete in 1-2 iterations each. Set to 2-3x the number of work items. |
-| `--max-turns` | Context budget per child | 50 for focused tasks, 75 for medium complexity, 100 for complex items. Higher = more work per iteration but risk of quality degradation near context limits. |
-
-| Work complexity | --max-iterations | --max-turns |
-|---|---|---|
-| Small (1-3 items) | 10-15 | 50 |
-| Medium (4-8 items) | 20-30 | 75 |
-| Large (9+ items) | 30-50 | 100 |
-
-**Reduce `--max-turns`** if children produce low-quality output near the end of their context (sign of context exhaustion degradation).
-
-**Increase `--max-turns`** if children consistently exit mid-item (sign they need more room to finish each unit of work).
 
 ---
 
@@ -197,7 +184,7 @@ A work item is "stuck" when it fails across consecutive iterations with the same
 The loop script will typically exceed the Bash tool's 600-second timeout. Launch it in the background:
 
 ```
-Bash(command: "scripts/my-loop.sh --max-iterations 15 --max-turns 75 --force",
+Bash(command: "scripts/my-loop.sh --max-iterations 15 --force",
      run_in_background: true,
      description: "Iteration loop run")
 ```

@@ -28,7 +28,6 @@ Every nested invocation requires these flags. Missing any one causes failures.
 env -u CLAUDECODE -u CLAUDE_CODE_ENTRYPOINT claude \
     -p "Your prompt here" \
     --dangerously-skip-permissions \
-    --max-turns 75 \
     < /dev/null \
     2>&1
 ```
@@ -38,7 +37,6 @@ env -u CLAUDECODE -u CLAUDE_CODE_ENTRYPOINT claude \
 | `env -u CLAUDECODE -u CLAUDE_CODE_ENTRYPOINT` | Claude Code sets these env vars on startup. When inherited by a child `claude -p` process, they can cause the child to **hang silently** — the process starts but never connects to the API ([open issue](https://github.com/anthropics/claude-code/issues/26190)). Unsetting them prevents this. |
 | `-p "..."` | Non-interactive mode. The prompt is the child's sole instruction. |
 | `--dangerously-skip-permissions` | No TTY exists for permission prompts in `-p` mode. Without this, the child hangs waiting for confirmation. |
-| `--max-turns N` | **Non-negotiable safety limit.** Prevents runaway children. Set at EVERY nesting level. 50-100 for focused tasks, 25-50 for simple tasks. |
 | `< /dev/null` | **Critical for Level 2+ nesting.** Claude Code's Bash tool connects stdin via a unix socket. Without this redirect, grandchild processes hang indefinitely at 0% CPU. Always include it — it's harmless at Level 1 and required at Level 2+. |
 
 ### Optional flags
@@ -49,7 +47,6 @@ Add these based on your needs:
 env -u CLAUDECODE -u CLAUDE_CODE_ENTRYPOINT claude \
     -p "Your prompt here" \
     --dangerously-skip-permissions \
-    --max-turns 75 \
     --output-format json \
     --append-system-prompt "Additional instructions appended to system prompt" \
     --agent my-agent-name \
@@ -83,11 +80,11 @@ Launch each child with `run_in_background: true` on the Bash tool. This returns 
 **Do NOT use `&` (shell backgrounding) inside the command.** The Bash tool's `run_in_background: true` already runs the entire command in a background subprocess. Adding `&` inside causes the shell to exit immediately after spawning the claude process, which orphans it and breaks any output pipes — the parent sees "completed (exit code 0)" instantly while the claude process runs as an orphan with no captured output.
 
 ```
-Bash(command: "env -u CLAUDECODE -u CLAUDE_CODE_ENTRYPOINT claude -p '...' --dangerously-skip-permissions --max-turns 75 --output-format json < /dev/null 2>&1 | tee /tmp/child-1-output.json",
+Bash(command: "env -u CLAUDECODE -u CLAUDE_CODE_ENTRYPOINT claude -p '...' --dangerously-skip-permissions --output-format json < /dev/null 2>&1 | tee /tmp/child-1-output.json",
      run_in_background: true,
      description: "Child 1: research topic A")
 
-Bash(command: "env -u CLAUDECODE -u CLAUDE_CODE_ENTRYPOINT claude -p '...' --dangerously-skip-permissions --max-turns 75 --output-format json < /dev/null 2>&1 | tee /tmp/child-2-output.json",
+Bash(command: "env -u CLAUDECODE -u CLAUDE_CODE_ENTRYPOINT claude -p '...' --dangerously-skip-permissions --output-format json < /dev/null 2>&1 | tee /tmp/child-2-output.json",
      run_in_background: true,
      description: "Child 2: research topic B")
 ```
@@ -115,7 +112,6 @@ for i in "${!PROMPTS[@]}"; do
     env -u CLAUDECODE -u CLAUDE_CODE_ENTRYPOINT claude \
         -p "${PROMPTS[$i]}" \
         --dangerously-skip-permissions \
-        --max-turns 75 \
         --output-format json \
         < /dev/null \
         > "$OUTPUT_DIR/child-$i.json" 2>&1 &
@@ -147,9 +143,13 @@ Run this script via the Bash tool with `run_in_background: true` since it will t
 
 ## Monitoring and result collection
 
+A child Claude Code instance typically runs for **5-30 minutes** depending on task complexity. Plan your polling accordingly.
+
 ### For background children (Pattern A)
 
-Poll with `TaskOutput(block: false)` to check if each child has finished. Don't poll too frequently — children typically take 3-15 minutes for substantial tasks.
+Poll with `TaskOutput(block: false)` to check if each child has finished. Polling every ~5 minutes is reasonable.
+
+**Initial spot check:** If the child uses shared state files (e.g., `spec.json`, `progress.txt`), do an early read of those files (~1-2 minutes after launch) to verify the child got started properly — writing to the correct paths, reading the right inputs, not immediately erroring out. This catches misconfigured prompts or missing files early, before you've waited the full runtime for nothing.
 
 Between polls, read output files to check progress:
 
@@ -266,7 +266,7 @@ Run the child as a specific agent. The agent's markdown body becomes the system 
 env -u CLAUDECODE -u CLAUDE_CODE_ENTRYPOINT claude \
     --agent security-reviewer \
     -p "Review the auth changes in src/auth.ts" \
-    --dangerously-skip-permissions --max-turns 50 \
+    --dangerously-skip-permissions \
     < /dev/null 2>&1
 ```
 
@@ -294,7 +294,7 @@ For one-off children that need specific guidance but don't warrant a full agent 
 env -u CLAUDECODE -u CLAUDE_CODE_ENTRYPOINT claude \
     -p "Review src/auth.ts for vulnerabilities" \
     --append-system-prompt "Focus on OWASP top 10. Check for SQL injection, XSS, and CSRF. Return findings as JSON." \
-    --dangerously-skip-permissions --max-turns 50 \
+    --dangerously-skip-permissions \
     < /dev/null 2>&1
 ```
 
@@ -346,7 +346,7 @@ Level 0: Your interactive session
 - **Subprocess path** (`env -u ... claude -p`): unlimited depth. Each level applies the same guard pattern.
 - **Task-tool path**: single level only. Subagents spawned via the Task tool cannot spawn further subagents. This is a hard platform constraint.
 - There is no hard depth limit beyond the env var check.
-- At every level, include `env -u`, `--max-turns`, `--dangerously-skip-permissions`, and `< /dev/null`.
+- At every level, include `env -u`, `--dangerously-skip-permissions`, and `< /dev/null`.
 
 ---
 
@@ -370,7 +370,6 @@ CLAUDE_CODE_TMPDIR="/tmp/claude-tmp-$$-$i" \
 env -u CLAUDECODE -u CLAUDE_CODE_ENTRYPOINT claude \
     -p "..." \
     --dangerously-skip-permissions \
-    --max-turns 75 \
     --no-session-persistence \
     < /dev/null \
     2>&1
@@ -394,7 +393,7 @@ git worktree add "/tmp/worktree-child-$i" HEAD
 # Spawn child in its own worktree
 env -u CLAUDECODE -u CLAUDE_CODE_ENTRYPOINT claude \
     -p "Edit src/auth.ts to fix the session bug. Work in $(pwd)." \
-    --dangerously-skip-permissions --max-turns 50 \
+    --dangerously-skip-permissions \
     < /dev/null 2>&1
 
 # After all children finish, merge worktree changes back
@@ -457,28 +456,28 @@ Spin up 5 Claude Code instances to research 5 different topics simultaneously:
 ```
 # Launch all 5 in parallel (single message with multiple Bash tool calls)
 
-Bash(command: "mkdir -p /tmp/research && env -u CLAUDECODE -u CLAUDE_CODE_ENTRYPOINT claude -p 'Research how React Server Components handle streaming. Write a comprehensive analysis to /tmp/research/rsc-streaming.md with a ## Summary at the top.' --dangerously-skip-permissions --max-turns 50 --output-format json --no-session-persistence < /dev/null > /tmp/research/rsc-streaming-meta.json 2>&1",
+Bash(command: "mkdir -p /tmp/research && env -u CLAUDECODE -u CLAUDE_CODE_ENTRYPOINT claude -p 'Research how React Server Components handle streaming. Write a comprehensive analysis to /tmp/research/rsc-streaming.md with a ## Summary at the top.' --dangerously-skip-permissions --output-format json --no-session-persistence < /dev/null > /tmp/research/rsc-streaming-meta.json 2>&1",
      run_in_background: true,
      description: "Research: RSC streaming")
 
-Bash(command: "env -u CLAUDECODE -u CLAUDE_CODE_ENTRYPOINT claude -p 'Research how Next.js App Router caching works. Write findings to /tmp/research/nextjs-caching.md with a ## Summary at the top.' --dangerously-skip-permissions --max-turns 50 --output-format json --no-session-persistence < /dev/null > /tmp/research/nextjs-caching-meta.json 2>&1",
+Bash(command: "env -u CLAUDECODE -u CLAUDE_CODE_ENTRYPOINT claude -p 'Research how Next.js App Router caching works. Write findings to /tmp/research/nextjs-caching.md with a ## Summary at the top.' --dangerously-skip-permissions --output-format json --no-session-persistence < /dev/null > /tmp/research/nextjs-caching-meta.json 2>&1",
      run_in_background: true,
      description: "Research: Next.js caching")
 
-Bash(command: "env -u CLAUDECODE -u CLAUDE_CODE_ENTRYPOINT claude -p 'Research Remix loader patterns and how they compare to Next.js. Write findings to /tmp/research/remix-loaders.md with a ## Summary at the top.' --dangerously-skip-permissions --max-turns 50 --output-format json --no-session-persistence < /dev/null > /tmp/research/remix-loaders-meta.json 2>&1",
+Bash(command: "env -u CLAUDECODE -u CLAUDE_CODE_ENTRYPOINT claude -p 'Research Remix loader patterns and how they compare to Next.js. Write findings to /tmp/research/remix-loaders.md with a ## Summary at the top.' --dangerously-skip-permissions --output-format json --no-session-persistence < /dev/null > /tmp/research/remix-loaders-meta.json 2>&1",
      run_in_background: true,
      description: "Research: Remix loaders")
 
-Bash(command: "env -u CLAUDECODE -u CLAUDE_CODE_ENTRYPOINT claude -p 'Research TanStack Router architecture and its approach to type-safe routing. Write findings to /tmp/research/tanstack-router.md with a ## Summary at the top.' --dangerously-skip-permissions --max-turns 50 --output-format json --no-session-persistence < /dev/null > /tmp/research/tanstack-router-meta.json 2>&1",
+Bash(command: "env -u CLAUDECODE -u CLAUDE_CODE_ENTRYPOINT claude -p 'Research TanStack Router architecture and its approach to type-safe routing. Write findings to /tmp/research/tanstack-router.md with a ## Summary at the top.' --dangerously-skip-permissions --output-format json --no-session-persistence < /dev/null > /tmp/research/tanstack-router-meta.json 2>&1",
      run_in_background: true,
      description: "Research: TanStack Router")
 
-Bash(command: "env -u CLAUDECODE -u CLAUDE_CODE_ENTRYPOINT claude -p 'Research Astro Islands architecture and partial hydration. Write findings to /tmp/research/astro-islands.md with a ## Summary at the top.' --dangerously-skip-permissions --max-turns 50 --output-format json --no-session-persistence < /dev/null > /tmp/research/astro-islands-meta.json 2>&1",
+Bash(command: "env -u CLAUDECODE -u CLAUDE_CODE_ENTRYPOINT claude -p 'Research Astro Islands architecture and partial hydration. Write findings to /tmp/research/astro-islands.md with a ## Summary at the top.' --dangerously-skip-permissions --output-format json --no-session-persistence < /dev/null > /tmp/research/astro-islands-meta.json 2>&1",
      run_in_background: true,
      description: "Research: Astro Islands")
 ```
 
-After launching, wait for all to complete (poll every 3-5 minutes), then read and synthesize:
+After launching, poll every ~5 minutes to check completion, then read and synthesize:
 
 ```
 # Read all results
@@ -508,12 +507,11 @@ A child spawned with `env -u ... claude -p` is fundamentally **fire-and-read**: 
 
 ### What the parent sees when a child gets stuck
 
-The child has no way to signal "I'm stuck" in real-time. It keeps going until it hits `--max-turns` or `--max-budget-usd`, then exits. The parent discovers what happened after the fact:
+The child has no way to signal "I'm stuck" in real-time. It keeps going until it completes, exhausts its context, or hits `--max-budget-usd` (if set), then exits. The parent discovers what happened after the fact:
 
 | Exit reason | How parent detects it | JSON `subtype` field |
 |---|---|---|
 | Natural completion | Process exits 0 | `"success"` |
-| Ran out of turns | Process exits | `"error_max_turns"` |
 | Budget exhausted | Process exits | `"error_max_budget_usd"` |
 | Crash / error | Process exits non-zero | `"error_during_execution"` |
 | Child wrote "I'm stuck" | Parent reads output file after exit | Grep output for blocker keywords |
@@ -576,7 +574,6 @@ env -u CLAUDECODE -u CLAUDE_CODE_ENTRYPOINT claude \
     -p "Do the task. If you need human input, call mcp__parent__requestInput." \
     --mcp-config '{"mcpServers":{"parent":{"command":"node","args":["./my-mcp-server.js"]}}}' \
     --dangerously-skip-permissions \
-    --max-turns 75 \
     < /dev/null 2>&1
 ```
 
@@ -599,7 +596,6 @@ env -u CLAUDECODE -u CLAUDE_CODE_ENTRYPOINT claude \
 | "Claude Code cannot be launched inside another Claude Code session" | Missing `env -u CLAUDECODE -u CLAUDE_CODE_ENTRYPOINT` | Add the env guard |
 | Child process hangs at 0% CPU, no output | Missing `< /dev/null` (Level 2+) | Add `< /dev/null` to the command |
 | Child hangs waiting for permission | Missing `--dangerously-skip-permissions` | Add the flag |
-| Child runs forever, burns budget | Missing `--max-turns` | Always set `--max-turns` |
 | "command not found: claude" | Claude CLI not on PATH | Check `which claude` or use full path |
 | Bash tool times out (600s) | Child takes longer than 10 minutes | Use `run_in_background: true` |
 | Children write conflicting files | Shared output paths | Use unique paths per child (include `$$` or index) |
